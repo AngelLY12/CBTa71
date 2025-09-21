@@ -7,7 +7,7 @@ use App\Models\Roles;
 use App\Models\User;
 
 
-class User_roles extends Model
+class UserRole extends Model
 {
     protected $fillable = ['id_user','id_role'];
 

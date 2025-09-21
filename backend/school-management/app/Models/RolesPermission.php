@@ -7,7 +7,7 @@ use App\Models\Roles;
 use App\Models\Permissions;
 
 
-class Roles_permissions extends Model
+class RolesPermissions extends Model
 {
     protected $fillable = ['id_role','id_permission'];
 

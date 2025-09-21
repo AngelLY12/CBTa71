@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Career;
-use App\Models\Payment_method;
+use App\Models\PaymentMethod;
 use App\Models\Roles;
-use App\Models\User_roles;
+use App\Models\UserRole;
+use App\Models\StudentConcept;
 
 
 class User extends Authenticatable
@@ -45,19 +46,35 @@ class User extends Authenticatable
         return $this->belongsTo(Career::class,'id_career');
     }
 
-    public function user_roles(){
-        return $this->hasMany(User_roles::class,'id_user');
+    public function userRoles(){
+        return $this->hasMany(UserRole::class,'id_user');
     }
 
     public function roles() {
         return $this->belongsToMany(Roles::class, 'users_roles', 'id_user', 'id_role');
     }
 
-    public function payment_method()
+    public function paymentMethods()
     {
-        return $this->hasMany(Payment_method::class,'id_user');
+        return $this->hasMany(PaymentMethod::class,'id_user');
 
     }
+
+    public function studentConcepts(){
+        return $this->hasMany(StudentConcept::class,'id_user');
+    }
+    public function payments(){
+        return $this->hasMany(Payment::class,'id_user');
+    }
+
+    public function paymentConcepts() {
+        return $this->belongsToMany(PaymentConcept::class, 'student_concepts', 'id_user', 'id_concept')
+                    ->withTimestamps();
+    }
+
+
+
+
     /**
      * The attributes that should be hidden for serialization.
      *
