@@ -1,0 +1,37 @@
+---
+interface Props {
+  total: number;
+  percentage: number;
+}
+
+const { total, percentage } = Astro.props;
+
+const radius = 60;
+const circumference = 2 * Math.PI * radius;
+const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
+---
+<div class="relative w-40 h-40 flex items-center justify-center">
+  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 128 128">
+    <circle
+      cx="64"
+      cy="64"
+      r={radius}
+      stroke="#e0e0e0"
+      stroke-width="12"
+      fill="transparent"
+    ></circle>
+    <circle
+      cx="64"
+      cy="64"
+      r={radius}
+      stroke="#10b981"
+      stroke-width="12"
+      fill="transparent"
+      stroke-dasharray={strokeDasharray}
+      stroke-linecap="round"
+    ></circle>
+  </svg>
+  <div class="absolute text-2xl font-bold text-gray-800">
+    {percentage}%
+  </div>
+</div>
