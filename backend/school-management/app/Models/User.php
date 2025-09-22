@@ -8,15 +8,17 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Career;
 use App\Models\PaymentMethod;
-use App\Models\Roles;
-use App\Models\UserRole;
 use App\Models\StudentConcept;
+use App\Models\PaymentConcept;
+use App\Models\Payment;
+use Spatie\Permission\Traits\HasRoles;
 
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    use HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -44,14 +46,6 @@ class User extends Authenticatable
 
     public function career(){
         return $this->belongsTo(Career::class,'id_career');
-    }
-
-    public function userRoles(){
-        return $this->hasMany(UserRole::class,'id_user');
-    }
-
-    public function roles() {
-        return $this->belongsToMany(Roles::class, 'users_roles', 'id_user', 'id_role');
     }
 
     public function paymentMethods()
