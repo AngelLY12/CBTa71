@@ -53,3 +53,4 @@ php artisan make:migration create_MigrationName_table --create=Table_Name
 php artisan config:cache
 php artisan migrate
 ```
+
