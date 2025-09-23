@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Career;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -22,9 +23,9 @@ return new class extends Migration
             $table->string('address',100)->nullable()->after('curp');
             $table->string('state',30)->after('address');
             $table->string('municipality',30)->after('state');
-            $table->foreignId('id_career')->nullable()->after('password')->constrained('careers');
-            $table->date('registration_date')->nullable()->after('id_career');
-            $table->boolean('status')->default(1)->after('registration_date');
+            $table->foreignIdFor(Career::class)->nullable()->constrained('careers')->onDelete('set null')->after('password');
+            $table->date('registration_date');
+            $table->boolean('status')->default(1);
 
 
 
@@ -39,7 +40,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['id_career']);
+            $table->dropForeign(['career_id']);
             $table->dropColumn([
                 'last_name',
                 'n_control',
@@ -51,7 +52,7 @@ return new class extends Migration
                 'address',
                 'state',
                 'municipality',
-                'id_career',
+                'career_id',
                 'registration_date',
                 'status',
             ]);
