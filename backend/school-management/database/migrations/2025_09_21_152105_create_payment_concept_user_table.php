@@ -3,6 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Models\PaymentConcept;
+use App\Models\User;
 
 return new class extends Migration
 {
@@ -11,10 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('career_concepts', function (Blueprint $table) {
+        Schema::create('payment_concept_user', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_concept')->constrained('payment_concepts')->onDelete('cascade');
-            $table->foreignId('id_career')->constrained('careers')->onDelete('cascade');
+            $table->foreignIdFor(PaymentConcept::class)->constrained('payment_concepts')->onDelete('cascade');
+            $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -24,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('career_concepts');
+        Schema::dropIfExists('payment_concept_user');
     }
 };

@@ -2,27 +2,33 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
+use App\Models\PaymentConcept;
+use App\Models\PaymentMethod;
 
 class Payment extends Model
 {
+    use HasFactory;
     protected $fillable = [
-        'id_user',
-        'id_concept',
-        'id_payment_method',
+        'user_id',
+        'payment_concept_id',
+        'payment_method_id',
         'status',
         'transaction_date',
         'payment_intent_id',
         'url'
     ];
 
-    public function users(){
-        return $this->belongsTo(User::class,'id_user');
+    public function user(){
+        return $this->belongsTo(User::class);
     }
-    public function paymentConcepts(){
-        return $this->belongsTo(PaymentConcept::class,'id_concept');
+    public function paymentConcept(){
+        return $this->belongsTo(PaymentConcept::class);
     }
-    public function paymentMethods(){
-        return $this->belongsTo(PaymentMethod::class,'id_payment_method');
+    public function paymentMethod(){
+        return $this->belongsTo(PaymentMethod::class);
     }
+
 }

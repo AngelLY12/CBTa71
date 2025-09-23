@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PaymentConcept;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,10 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('student_concepts', function (Blueprint $table) {
+        Schema::create('payment_concept_semester', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_concept')->constrained('payment_concepts')->onDelete('cascade');
-            $table->foreignId('id_user')->constrained('users')->onDelete('cascade');
+            $table->foreignIdFor(PaymentConcept::class)->constrained('payment_concepts')->onDelete('cascade');
+            $table->integer('semestre');
             $table->timestamps();
         });
     }
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('student_concepts');
+        Schema::dropIfExists('payment_concept_semester');
     }
 };

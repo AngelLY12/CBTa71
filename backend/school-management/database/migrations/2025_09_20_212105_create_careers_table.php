@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('semestre_concepts', function (Blueprint $table) {
+        Schema::create('careers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_concept')->constrained('payment_concepts')->onDelete('cascade');
-            $table->integer('semestre');
+            $table->string('career_name',50);
             $table->timestamps();
         });
     }
@@ -24,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('semestre_concepts');
+        Schema::dropIfExists('careers');
     }
 };

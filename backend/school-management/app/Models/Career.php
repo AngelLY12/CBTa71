@@ -2,26 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
-use App\Models\CareerConcept;
+use App\Models\PaymentConcept;
 
 class Career extends Model
 {
+    use HasFactory;
     protected $fillable = ['career_name'];
 
-
+    //Relaciones
     public function users(){
-        return $this->hasMany(User::class,'id_career');
+        return $this->hasMany(User::class);
     }
 
-    public function concept(){
-        return $this->hasMany(CareerConcept::class,'id_career');
-    }
-
-    public function paymentConcepts() {
-        return $this->belongsToMany(PaymentConcept::class, 'career_concepts', 'id_career', 'id_concept')
-                    ->withTimestamps();
+    public function paymentConcepts(){
+        return $this->belongsToMany(PaymentConcept::class);
     }
 
 }

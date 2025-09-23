@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\CareerConcept;
-use App\Models\StudentConcept;
-use App\Models\SemesterConcept;
+use App\Models\Career;
+use App\Models\User;
+use App\Models\Payment;
+use App\Models\PaymentConceptSemester;
+
 
 class PaymentConcept extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'concept_name',
         'description',
@@ -19,28 +23,20 @@ class PaymentConcept extends Model
         'is_global'
     ];
 
-    // asignaciones
-    public function careerConcepts() {
-        return $this->hasMany(CareerConcept::class, 'id_concept');
+    public function careerPaymentConcepts(){
+        return $this->belongsToMany(Career::class);
     }
 
-    public function semesterConcepts() {
-        return $this->hasMany(SemesterConcept::class, 'id_concept');
+    public function users(){
+        return $this->belongsToMany(User::class);
     }
 
-    public function studentConcepts() {
-        return $this->hasMany(StudentConcept::class, 'id_concept');
+    public function payments(){
+        return $this->hasMany(Payment::class);
     }
 
-    // shortcut: alumnos relacionados
-    public function students() {
-        return $this->belongsToMany(User::class, 'student_concepts', 'id_concept', 'id_user')
-                    ->withTimestamps();
+    public function semesterPaymentConcepts(){
+        return $this->hasMany(PaymentConceptSemester::class);
     }
 
-    // shortcut: carreras relacionadas
-    public function careers() {
-        return $this->belongsToMany(Career::class, 'career_concepts', 'id_concept', 'id_career')
-                    ->withTimestamps();
-    }
 }
