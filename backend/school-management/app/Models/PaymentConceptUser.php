@@ -20,7 +20,7 @@ class PaymentConceptUser extends Model
     public function user(){
         return $this->belongsTo(User::class);
     }
-    public function concept(){
+    public function paymentConcept(){
         return $this->belongsTo(PaymentConcept::class);
     }
 }

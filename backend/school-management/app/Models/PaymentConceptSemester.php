@@ -15,7 +15,7 @@ class PaymentConceptSemester extends Model
         'semestre'
     ];
     protected $table = 'payment_concept_semester';
-    public function concept(){
+    public function paymentConcept(){
         return $this->belongsTo(PaymentConcept::class);
     }
 }
