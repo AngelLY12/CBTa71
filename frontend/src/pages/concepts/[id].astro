@@ -1,29 +1,26 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import ConceptForm from '../../components/ConceptForm.astro';
+import { conceptsStore } from '../../store.js';
 
-// Exporta una función `getStaticPaths` para que Astro pueda generar las rutas.
-// En un proyecto real, esto obtendría los IDs de los conceptos de la API.
+// getStaticPaths se sigue usando para generar las páginas estáticas
+// para los conceptos iniciales, mejorando el rendimiento.
 export async function getStaticPaths() {
-  const concepts = [
-    { id: '1', name: "Colegiatura Semestre I - AGO/2024", amount: 1067.00, description: "Pago de colegiatura correspondiente al primer semestre del año 2024.", status: "activo" },
-    { id: '2', name: "Colegiatura Semestre II - FEB/2025", amount: 3067.00, description: "Pago de colegiatura correspondiente al segundo semestre del año 2025.", status: "inactivo" },
-    { id: '2DDB', name: "Colegiatura Semestre I - AGO/2024", amount: 1067.00, description: "Pago de colegiatura correspondiente al primer semestre del año 2024.", status: "activo" },
-    { id: '5D24', name: "Colegiatura Semestre II - FEB/2024", amount: 3067.00, description: "Pago de colegiatura correspondiente al segundo semestre del año 2024.", status: "finalizado" },
-  ];
-
-  return concepts.map(concept => ({
+  const allConcepts = conceptsStore.get();
+  return allConcepts.map(concept => ({
     params: { id: concept.id },
     props: { concept },
   }));
 }
 
-// En un proyecto real, aquí se obtendría el concepto del servidor por su ID.
-// Como estamos sin API, simplemente obtenemos el concepto de las `props`
-const { concept } = Astro.props;
+// Ahora también manejamos la carga en el lado del cliente.
+// Esto nos permite obtener conceptos que se crearon dinámicamente.
+const { id } = Astro.params;
+const initialConcept = conceptsStore.get().find(c => c.id === id);
+const concept = initialConcept || Astro.props.concept;
 ---
 
-<Layout title={`Editar ${concept.name}`}>
+<Layout title={`Editar ${concept ? concept.title : 'Concepto'}`}>
     <div class="flex items-center gap-4 mb-8">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-invoice" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -35,5 +32,5 @@ const { concept } = Astro.props;
         </svg>
         <h1 class="text-3xl font-bold text-gray-800">Editar Concepto</h1>
     </div>
-    <ConceptForm concept={concept} />
+    {concept ? <ConceptForm concept={concept} /> : <p>Concepto no encontrado.</p>}
 </Layout>

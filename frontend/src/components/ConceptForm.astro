@@ -1,79 +1,218 @@
 ---
+import { conceptsStore } from '../store.js';
+
 interface Props {
   concept?: {
-    id: number;
-    name: string;
-    amount: number;
+    id: string;
+    title: string;
+    amount: string;
     description: string;
     status: string;
+    applyTo?: string; // Nuevo campo opcional para guardar la opción
+    semester?: string;
+    career?: string;
+    students?: string;
   };
 }
 
 const { concept } = Astro.props;
-
-// Función para manejar el envío del formulario
-const handleSubmit = (e) => {
-  e.preventDefault();
-  const form = e.target;
-  const formData = new FormData(form);
-
-  const data = Object.fromEntries(formData.entries());
-
-  console.log('Datos del formulario enviados:', data);
-  alert('Formulario enviado. (Sin conexión a la API)');
-};
 ---
 
-<form onSubmit={handleSubmit} class="bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto">
+<form id="conceptForm" class="bg-white rounded-lg shadow-lg p-8 max-w-2xl mx-auto">
+  <input type="hidden" name="id" value={concept?.id || ''} />
+
   <div class="mb-6">
-    <label for="conceptName" class="block text-gray-700 font-semibold mb-2">Concepto</label>
-    <input 
-      type="text" 
-      id="conceptName" 
-      name="name"
+    <label for="conceptTitle" class="block text-gray-700 font-semibold mb-2">Concepto</label>
+    <input
+      type="text"
+      id="conceptTitle"
+      name="title"
       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2e594d]"
-      value={concept?.name || ''}
+      value={concept?.title || ''}
       placeholder="Colegiatura Semestral"
     />
   </div>
 
   <div class="mb-6">
     <label for="amount" class="block text-gray-700 font-semibold mb-2">Monto</label>
-    <input 
-      type="number" 
-      id="amount" 
+    <input
+      type="text"
+      id="amount"
       name="amount"
       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2e594d]"
-      value={concept?.amount || 0}
+      value={concept?.amount || ''}
       placeholder="1200"
     />
   </div>
 
   <div class="mb-6">
     <label for="description" class="block text-gray-700 font-semibold mb-2">Descripción</label>
-    <textarea 
-      id="description" 
+    <textarea
+      id="description"
       name="description"
-      rows="3" 
+      rows="3"
       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2e594d]"
-      value={concept?.description || ''}
+      set:html={concept?.description || ''}
       placeholder="Escribe la descripción del concepto"
     ></textarea>
   </div>
 
+  <div class="mb-6">
+    <label class="block text-gray-700 font-semibold mb-2">Aplicar a</label>
+    <input type="hidden" name="applyTo" id="applyTo" value={concept?.applyTo || 'todos'} />
+    <div class="flex items-center gap-2 mb-4" id="target-buttons">
+      <button type="button" data-target="todos" class="px-4 py-1 rounded-full bg-[#2e594d] text-white font-semibold text-sm">Todos</button>
+      <button type="button" data-target="semestre" class="px-4 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-sm">Semestre</button>
+      <button type="button" data-target="carrera" class="px-4 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-sm">Carrera</button>
+      <button type="button" data-target="alumnos" class="px-4 py-1 rounded-full bg-green-100 text-green-800 font-semibold text-sm">Alumnos</button>
+    </div>
+    
+    <select
+      id="semesterSelect"
+      name="semester"
+      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2e594d] mt-2"
+      style="display: none;"
+    >
+      <option value="" disabled selected>Selecciona un semestre</option>
+      <option value="1">1ro</option>
+      <option value="2">2do</option>
+      <option value="3">3ro</option>
+      <option value="4">4to</option>
+      <option value="5">5to</option>
+      <option value="6">6to</option>
+    </select>
+    
+    <select
+      id="careerSelect"
+      name="career"
+      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2e594d] mt-2"
+      style="display: none;"
+    >
+      <option value="" disabled selected>Selecciona una carrera</option>
+      <option value="Programacion">Programación</option>
+      <option value="Agropecuario">Agropecuario</option>
+      <option value="Alimentos">Alimentos</option>
+    </select>
+    
+    <input
+      type="text"
+      id="studentNameInput"
+      name="students"
+      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2e594d] mt-2"
+      placeholder="Ej. Juanito Pérez, Ana López"
+      style="display: none;"
+    />
+  </div>
+
   <div class="flex justify-end gap-4 mt-8">
-    <button 
-      type="button" 
+    <button
+      type="button"
       class="px-6 py-2 rounded-lg text-gray-700 border border-gray-300 font-semibold"
       onClick={() => window.history.back()}
     >
       Cancelar
     </button>
-    <button 
-      type="submit" 
+    <button
+      type="submit"
       class="px-6 py-2 rounded-lg bg-[#2e594d] text-white font-semibold"
     >
       {concept ? 'Guardar Cambios' : 'Crear'}
     </button>
   </div>
 </form>
+
+<script>
+  import { conceptsStore } from '../store.js';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('conceptForm');
+    const targetButtons = document.getElementById('target-buttons');
+    const applyToInput = document.getElementById('applyTo');
+    const semesterSelect = document.getElementById('semesterSelect');
+    const careerSelect = document.getElementById('careerSelect');
+    const studentNameInput = document.getElementById('studentNameInput');
+
+    // Función para actualizar los estilos de los botones y mostrar el campo correcto
+    function updateUI(target) {
+      targetButtons.querySelectorAll('button').forEach(btn => {
+        btn.classList.remove('bg-[#2e594d]', 'text-white');
+        btn.classList.add('bg-green-100', 'text-green-800');
+        if (btn.dataset.target === target) {
+          btn.classList.remove('bg-green-100', 'text-green-800');
+          btn.classList.add('bg-[#2e594d]', 'text-white');
+        }
+      });
+      
+      // Ocultar todos los campos primero
+      semesterSelect.style.display = 'none';
+      careerSelect.style.display = 'none';
+      studentNameInput.style.display = 'none';
+      
+      // Mostrar el campo correspondiente
+      if (target === 'semestre') {
+        semesterSelect.style.display = 'block';
+      } else if (target === 'carrera') {
+        careerSelect.style.display = 'block';
+      } else if (target === 'alumnos') {
+        studentNameInput.style.display = 'block';
+      }
+    }
+    
+    // Establecer el estado inicial al cargar la página
+    updateUI(applyToInput.value);
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const data = Object.fromEntries(formData.entries());
+
+      const allConcepts = conceptsStore.get();
+      const existingConceptIndex = allConcepts.findIndex(c => c.id === data.id);
+
+      if (existingConceptIndex !== -1) {
+        // Lógica para editar un concepto existente
+        const updatedConcepts = [...allConcepts];
+        updatedConcepts[existingConceptIndex] = {
+          ...updatedConcepts[existingConceptIndex],
+          title: data.title,
+          amount: `$${data.amount}`,
+          description: data.description,
+          applyTo: data.applyTo,
+          semester: data.semester || null,
+          career: data.career || null,
+          students: data.students || null
+        };
+        conceptsStore.set(updatedConcepts);
+        alert('Concepto actualizado con éxito.');
+      } else {
+        // Lógica para crear un nuevo concepto
+        const newConcept = {
+          id: Math.random().toString(36).substring(2, 6).toUpperCase(),
+          title: data.title,
+          amount: `$${data.amount}`,
+          description: data.description,
+          status: 'Activo',
+          applyTo: data.applyTo,
+          semester: data.semester || null,
+          career: data.career || null,
+          students: data.students || null
+        };
+        conceptsStore.set([...allConcepts, newConcept]);
+        alert('Concepto creado con éxito.');
+      }
+
+      window.history.back();
+    });
+
+    if (targetButtons) {
+      targetButtons.addEventListener('click', (event) => {
+        const clickedButton = event.target.closest('button');
+        if (clickedButton) {
+          const target = clickedButton.dataset.target;
+          applyToInput.value = target; // Actualiza el campo oculto
+          updateUI(target);
+        }
+      });
+    }
+  });
+</script>

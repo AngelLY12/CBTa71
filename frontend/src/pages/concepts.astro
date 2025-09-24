@@ -1,36 +1,19 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ConceptCard from '../components/ConceptCard.astro';
-
-// Datos de ejemplo para los conceptos.
-// Más adelante, estos datos vendrán de una API.
-const concepts = [
-  { 
-    id: '2DDB', 
-    title: 'Colegiatura Semestre I - AGO/2024', 
-    amount: '$1,067.00', 
-    description: 'Pago de colegiatura correspondiente al primer semestre del año 2024.', 
-    status: 'Activa' 
-  },
-  { 
-    id: '5FD4', 
-    title: 'Colegiatura Semestre II - FEB/2024', 
-    amount: '$3,067.00', 
-    description: 'Pago de colegiatura correspondiente al segundo semestre del año 2024.', 
-    status: 'Finalizado' 
-  },
-];
+import { conceptsStore } from '../store.js';
+import ConceptsTable from '../components/ConceptsTable.jsx';
 ---
 
 <Layout title="Conceptos - CBTA 71">
   <div class="flex items-center gap-4 mb-8">
     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-invoice" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-        <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
-        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
-        <path d="M9 7h1"></path>
-        <path d="M9 13h9"></path>
-        <path d="M13 17h5"></path>
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+      <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+      <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+      <path d="M9 7h1"></path>
+      <path d="M9 13h9"></path>
+      <path d="M13 17h5"></path>
     </svg>
     <h1 class="text-3xl font-bold text-gray-800">Conceptos</h1>
   </div>
@@ -38,18 +21,82 @@ const concepts = [
   <div class="flex justify-between items-center mb-6">
     <div class="flex items-center gap-4">
       <h2 class="text-xl font-bold text-gray-800">Todos los conceptos</h2>
-      <div class="flex gap-2">
-        <button class="px-4 py-1 rounded-lg bg-[#2e594d] text-white text-sm">Todos</button>
-        <button class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Activos</button>
-        <button class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Finalizados</button>
+      <div class="flex gap-2" id="filter-buttons">
+        <button data-filter="todos" class="px-4 py-1 rounded-lg bg-[#2e594d] text-white text-sm">Todos</button>
+        <button data-filter="activos" class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Activos</button>
+        <button data-filter="finalizados" class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Finalizados</button>
       </div>
     </div>
-    <button class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold">Agregar</button>
+    <a href="/concepts/new" class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold">Agregar</a>
   </div>
 
-  <div class="flex flex-col gap-4">
-    {concepts.map(concept => (
-      <ConceptCard concept={concept} />
-    ))}
-  </div>
+  <div class="flex flex-col gap-4" id="concept-list">
+    </div>
 </Layout>
+
+<script>
+  import { conceptsStore } from '../store.js';
+
+  const filterButtons = document.getElementById('filter-buttons');
+  const conceptList = document.getElementById('concept-list');
+
+  // Renders the concepts based on the provided data array.
+  function renderConcepts(data) {
+    conceptList.innerHTML = '';
+    data.forEach(concept => {
+      const card = document.createElement('div');
+      card.innerHTML = `
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold text-gray-800">${concept.title}</h3>
+            <div class="flex gap-2">
+              ${concept.status !== 'Finalizado' ? `<button class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm">Finalizar</button>` : ''}
+              <a href="/concepts/${concept.id}" class="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 font-semibold text-sm">
+                Editar
+              </a>
+            </div>
+          </div>
+          <p class="text-3xl font-bold text-gray-800 mb-2">${concept.amount}</p>
+          <p class="text-gray-500 text-sm">${concept.description}</p>
+        </div>
+      `;
+      conceptList.appendChild(card.firstElementChild);
+    });
+  }
+
+  // Updates the list of concepts based on the selected filter.
+  function updateConceptList(filter) {
+    // Accede directamente a la tienda de datos
+    const allConcepts = conceptsStore.get();
+    let filteredConcepts = allConcepts;
+    if (filter === 'activos') {
+      filteredConcepts = allConcepts.filter(concept => concept.status === 'Activo');
+    } else if (filter === 'finalizados') {
+      filteredConcepts = allConcepts.filter(concept => concept.status === 'Finalizado');
+    }
+    renderConcepts(filteredConcepts);
+  }
+
+  // Llama a la función de actualización inicial para renderizar los conceptos cuando la página se carga.
+  // También se suscribe a los cambios en la tienda para que se actualice automáticamente.
+  conceptsStore.subscribe(newConcepts => {
+    updateConceptList('todos'); // O el filtro que desees por defecto
+  });
+
+  filterButtons.addEventListener('click', (event) => {
+    if (event.target.tagName === 'BUTTON') {
+      const filter = event.target.dataset.filter;
+      filterButtons.querySelectorAll('button').forEach(btn => {
+        btn.classList.remove('bg-[#2e594d]', 'text-white');
+        btn.classList.add('bg-white', 'text-gray-700');
+      });
+      event.target.classList.remove('bg-white', 'text-gray-700');
+      event.target.classList.add('bg-[#2e594d]', 'text-white');
+      
+      updateConceptList(filter);
+    }
+  });
+
+  // Llama a la función de renderizado inicial para que la lista se muestre al cargar la página
+  renderConcepts(conceptsStore.get());
+</script>
