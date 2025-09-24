@@ -3,34 +3,30 @@ import Layout from '../../layouts/Layout.astro';
 import ConceptForm from '../../components/ConceptForm.astro';
 import { conceptsStore } from '../../store.js';
 
-// getStaticPaths se sigue usando para generar las páginas estáticas
-// para los conceptos iniciales, mejorando el rendimiento.
-export async function getStaticPaths() {
-  const allConcepts = conceptsStore.get();
-  return allConcepts.map(concept => ({
-    params: { id: concept.id },
-    props: { concept },
-  }));
-}
-
-// Ahora también manejamos la carga en el lado del cliente.
-// Esto nos permite obtener conceptos que se crearon dinámicamente.
 const { id } = Astro.params;
-const initialConcept = conceptsStore.get().find(c => c.id === id);
-const concept = initialConcept || Astro.props.concept;
+const concepts = conceptsStore.get();
+const concept = concepts.find(c => c.id === id);
+
+if (!concept) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not found'
+  });
+}
 ---
 
-<Layout title={`Editar ${concept ? concept.title : 'Concepto'}`}>
-    <div class="flex items-center gap-4 mb-8">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-invoice" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-            <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
-            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
-            <path d="M9 7h1"></path>
-            <path d="M9 13h9"></path>
-            <path d="M13 17h5"></path>
-        </svg>
-        <h1 class="text-3xl font-bold text-gray-800">Editar Concepto</h1>
-    </div>
-    {concept ? <ConceptForm concept={concept} /> : <p>Concepto no encontrado.</p>}
+<Layout title="Editar Concepto - CBTA 71">
+  <div class="flex items-center gap-4 mb-8">
+    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-invoice" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+      <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+      <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+      <path d="M9 7h1"></path>
+      <path d="M9 13h9"></path>
+      <path d="M13 17h5"></path>
+    </svg>
+    <h1 class="text-3xl font-bold text-gray-800">Editar Concepto</h1>
+  </div>
+
+  <ConceptForm concept={concept} />
 </Layout>
