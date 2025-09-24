@@ -44,3 +44,32 @@ All commands are run from the root of the project, from a terminal:
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+
+📂 Estructura del Proyecto
+La estructura del proyecto sigue una organización clara y modular para facilitar el desarrollo y mantenimiento.
+
+    src/assets: Contiene recursos estáticos como imágenes.
+    
+    src/components: Componentes reutilizables de Astro.
+    
+        ConceptForm.astro: El formulario para crear y editar conceptos.
+        
+        ConceptCard.astro: La tarjeta que muestra los detalles de cada concepto.
+        
+    src/layouts: Plantillas de página para mantener un diseño consistente.
+    
+        Layout.astro: El layout principal de la aplicación.
+    
+    src/pages: Las rutas de la aplicación.
+    
+        index.astro: La página de inicio (dashboard).
+    
+        concepts.astro: La página principal de listado de conceptos.
+        
+        concepts/new.astro: La página para crear un nuevo concepto.
+        
+        concepts/[id].astro: La ruta dinámica para editar un concepto específico.
+    
+    src/store.js: La tienda de nanostores para la gestión del estado de los conceptos.
+    
+    src/styles: Archivos CSS globales y de Tailwind.
