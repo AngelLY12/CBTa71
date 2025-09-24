@@ -21,7 +21,7 @@ class CareerPaymentConcept extends Model
     public function career(){
         return $this->belongsTo(Career::class);
     }
-    public function concept(){
+    public function paymentConcept(){
         return $this->belongsTo(PaymentConcept::class);
     }
 }

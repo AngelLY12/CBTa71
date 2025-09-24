@@ -23,7 +23,7 @@ class PaymentConcept extends Model
         'is_global'
     ];
 
-    public function careerPaymentConcepts(){
+    public function careers(){
         return $this->belongsToMany(Career::class);
     }
 
@@ -35,7 +35,7 @@ class PaymentConcept extends Model
         return $this->hasMany(Payment::class);
     }
 
-    public function semesterPaymentConcepts(){
+    public function paymentConceptSemesters(){
         return $this->hasMany(PaymentConceptSemester::class);
     }
 
