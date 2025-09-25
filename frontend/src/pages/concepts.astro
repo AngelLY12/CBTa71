@@ -10,7 +10,7 @@ const concepts = conceptsStore.get() || [];
   <div class="flex items-center gap-4 mb-8">
     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-invoice" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-      <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+      <path d="M14 3v4a1 0 0 0 1 1h4"></path>
       <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
       <path d="M9 7h1"></path>
       <path d="M9 13h9"></path>
@@ -64,7 +64,6 @@ const concepts = conceptsStore.get() || [];
     const card = document.createElement('div');
     card.className = "bg-white p-6 rounded-lg shadow-sm border border-gray-200";
 
-    // Generar el texto para la sección "Aplicar a"
     let applyToText = '';
     if (concept.applyTo === 'alumnos') {
         applyToText = `Alumnos Específicos: ${concept.studentName || 'N/A'}`;
@@ -161,13 +160,11 @@ const concepts = conceptsStore.get() || [];
               });
               conceptsStore.set(updatedConcepts);
           } else if (deleteButton) {
-              // Add the confirmation message here
               const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este concepto?');
               
               if (confirmDelete) {
                   const conceptId = deleteButton.dataset.id;
                   const allConcepts = conceptsStore.get();
-                  // Filter the array to remove the concept with the ID
                   const updatedConcepts = allConcepts.filter(concept => concept.id !== conceptId);
                   conceptsStore.set(updatedConcepts);
               }
@@ -175,11 +172,9 @@ const concepts = conceptsStore.get() || [];
       });
   }
 
-  // Subscribe to store changes to update the list in real-time
-  document.addEventListener('DOMContentLoaded', () => {
-    conceptsStore.subscribe(() => {
-        const currentFilter = document.querySelector('#filter-buttons .bg-[#2e594d]')?.dataset.filter || 'todos';
-        updateConceptList(currentFilter);
-    });
+  // Suscríbete a los cambios de la tienda para actualizar la lista en tiempo real.
+  conceptsStore.subscribe(() => {
+    const currentFilter = document.querySelector('#filter-buttons .bg-[#2e594d]')?.dataset.filter || 'todos';
+    updateConceptList(currentFilter);
   });
 </script>
