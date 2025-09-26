@@ -15,8 +15,8 @@ class PendingPayment{
             ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $user->id))
             ->where(function($q) use ($user) {
                 $q->where('is_global', true)
-                  ->orWhereHas('users', fn($q) => $q->where('id', $user->id))
-                  ->orWhereHas('careers', fn($q) => $q->where('id', $user->career_id))
+                  ->orWhereHas('users', fn($q) => $q->where('users.id', $user->id))
+                  ->orWhereHas('careers', fn($q) => $q->where('careers.id', $user->career_id))
                   ->orWhereHas('paymentConceptSemesters', fn($q) => $q->where('semestre', $user->semestre));
             })
             ->get()
