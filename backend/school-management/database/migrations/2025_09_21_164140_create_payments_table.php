@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
             $table->foreignIdFor(PaymentConcept::class)->nullable()->constrained('payment_concepts')->onDelete('set null');
             $table->foreignIdFor(PaymentMethod::class)->nullable()->constrained('payment_methods')->onDelete('set null');
-            $table->enum('status',['Pagado','Pendiente'])->default('Pagado');
+            $table->string('status');
             $table->date('transaction_date');
             $table->string('payment_intent_id',50)->unique();
             $table->string('url');
