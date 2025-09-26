@@ -39,6 +39,7 @@ class User extends Authenticatable
         'municipality',
         'password',
         'career_id',
+        'stripe_customer_id',
         'registration_date',
         'status'
     ];
