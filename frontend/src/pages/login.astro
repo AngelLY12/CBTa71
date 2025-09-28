@@ -4,6 +4,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import RadioButton from "../components/RadioButton.astro";
 import CarouselImg from "../components/CarouselImg.astro";
+import { routes } from "../data/routes";
 
 const images = [
     {
@@ -201,6 +202,7 @@ const typeLogin = [
         }
 
         const onSubmit = async () => {
+            // Llmar a la API con su debida ruta de auteticación de Login
             // try {
             //     const response = await fetch("/api/login", {
             //         method: "POST", // o "GET" según tu API

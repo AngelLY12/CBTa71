@@ -61,7 +61,7 @@ const { isMovil = false } = Astro.props;
         <!-- Inicio -->
         {
             routesNavbar.map((route) => (
-                <LinksNavbar url={route.url} title={route.name} isMovil={true}>
+                <LinksNavbar url={route.url} title={route.name} isMovil={isMovil}>
                     <svg
                         slot="iconFilled"
                         xmlns="http://www.w3.org/2000/svg"
