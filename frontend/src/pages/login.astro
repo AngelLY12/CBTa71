@@ -1,0 +1,231 @@
+---
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import RadioButton from "../components/RadioButton.astro";
+import CarouselImg from "../components/CarouselImg.astro";
+
+const images = [
+    {
+        src: "/img/bg-1.png",
+        alt: "Imagen 1",
+    },
+    {
+        src: "/img/bg-2.png",
+        alt: "Imagen 2",
+    },
+];
+
+const typeLogin = [
+    {
+        value: "Alumno",
+        name: "login",
+        classShare: "login-type",
+    },
+    {
+        value: "Personal",
+        name: "login",
+        classShare: "login-type",
+    },
+    {
+        value: "Aspirantes",
+        name: "login",
+        classShare: "login-type",
+    },
+];
+---
+
+<div
+    class="flex w-full h-full overflow-auto relative justify-center lg:static lg:justify-start"
+>
+    <div class="w-full overflow-auto lg:block lg:static absolute h-full">
+        <CarouselImg imgs={images} showControlsPhone={false} />
+    </div>
+
+    <div
+        class="flex pl-4 w-[34rem] items-center justify-center bg-transparent border-l-0 z-10 h-96 mt-12 rounded-xl lg:h-full lg:rounded-none lg:mt-0 lg:bg-white lg:border-l-2"
+    >
+        <div class="w-11/12 h-11/12 border-2 rounded-xl py-2 gap-2 bg-white">
+            <div class="flex flex-col">
+                <p class="text-center font-bold text-xl border-b-2 pb-2">
+                    Inicio de sesión
+                </p>
+                <div class="flex">
+                    {
+                        typeLogin.map((type) => (
+                            <RadioButton
+                                value={type.value}
+                                name={type.name}
+                                classShare={type.classShare}
+                                checked = {type.value == "Alumno"}
+                            />
+                        ))
+                    }
+                </div>
+            </div>
+
+            <form id="loginForm" class="mt-3 px-2 flex flex-col gap-3">
+                <div class="flex gap-1">
+                    <div class="w-12 border-2 border-gray-500 rounded-sm">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-9"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                            ></path>
+                        </svg>
+                    </div>
+                    <input
+                        class="w-full px-2 border-2 border-gray-400 rounded-sm"
+                        type="text"
+                        name="usuario"
+                        id="usuario"
+                        placeholder="Usuario"
+                        required
+                    />
+                </div>
+
+                <div class="flex gap-1">
+                    <div class="w-12 border-2 border-gray-500 rounded-sm">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-9"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
+                            ></path>
+                        </svg>
+                    </div>
+                    <input
+                        class="w-full px-2 border-2 border-gray-400 rounded-sm"
+                        type="password"
+                        name="password"
+                        value=""
+                        id="password"
+                        placeholder="Contraseña"
+                        required
+                    />
+                </div>
+
+                <div class="flex items-center gap-1">
+                    <input
+                        class="w-4 h-4"
+                        type="checkbox"
+                        name=""
+                        id="rememberMe"
+                    />
+                    <label for="rememberMe">Recordar usuario</label>
+                </div>
+
+                <div class="flex justify-center items-center">
+                    <button
+                        id="loginButton"
+                        class="w-56 hover:bg-blue-200 p-2 rounded-md border-2"
+                    >
+                        Iniciar sesión
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("loginForm") as HTMLFormElement;
+        // Find all buttons with the `alert` class on the page.
+        const checkboxs = document.querySelectorAll("input.login-type");
+        const inputUser = document.getElementById(
+            "usuario",
+        ) as HTMLInputElement;
+        const inputPassword = document.getElementById(
+            "password",
+        ) as HTMLInputElement;
+        const buttonLogin = document.getElementById(
+            "loginButton",
+        ) as HTMLButtonElement;
+
+        // Handle clicks on each button.
+        checkboxs.forEach((checkbox) => {
+            checkbox.addEventListener("change", (e) => {
+                const target = e.target as HTMLInputElement;
+                switch (target.value) {
+                    case "Alumno":
+                        changeNames();
+                        break;
+                    case "Personal":
+                        changeNames("email", "Correo");
+                        break;
+                    case "Aspirantes":
+                        changeNames(
+                            "",
+                            "Usuario (Aspirante)",
+                            "Contraseña (0)",
+                            "Entrar",
+                        );
+                        break;
+                }
+            });
+        });
+
+        form.addEventListener("submit", (e) => {
+            e.preventDefault(); // evita recarga
+            onSubmit();
+        });
+
+        function changeNames(
+            typeUserInput = "text",
+            inputUserHolder = "Usuario",
+            inputPasswordHolder = "Contraseña",
+            buttonHolder = "Iniciar sesión",
+        ) {
+            if (typeUserInput == "") {
+                inputUser.type = "text";
+            } else {
+                inputUser.type = typeUserInput;
+            }
+            inputUser.placeholder = inputUserHolder;
+            inputPassword.placeholder = inputPasswordHolder;
+            buttonLogin.textContent = buttonHolder;
+        }
+
+        const onSubmit = async () => {
+            // try {
+            //     const response = await fetch("/api/login", {
+            //         method: "POST", // o "GET" según tu API
+            //         headers: {
+            //             "Content-Type": "application/json",
+            //         },
+            //         body: JSON.stringify({
+            //             username: "tu_usuario",
+            //             password: "tu_contraseña",
+            //         }),
+            //     });
+
+            //     if (response.ok) {
+            //         // Login exitoso
+            //         window.location.href = "/home"; // o cualquier ruta que necesites
+            //     } else {
+            //         // Login fallido
+            //         const errorData = await response.json();
+            //         alert("Error de login: " + errorData.message);
+            //     }
+            // } catch (error) {
+            //     console.error("Error de red:", error);
+            //     alert("No se pudo conectar con el servidor.");
+            // }
+            window.location.href = "/home"; // o cualquier ruta que necesites
+        };
+    </script>
+</div>

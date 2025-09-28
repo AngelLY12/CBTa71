@@ -1,0 +1,33 @@
+---
+interface Props {
+    value: string;
+    name: string;
+    className?: string,
+    classShare : string,
+    checked?: boolean
+}
+
+const { value, name, className, classShare, checked = false } = Astro.props;
+
+const id = `${name}-${value}`;
+---
+
+<div class={`w-full ${className}`}>
+    <input
+        type="radio"
+        id={id}
+        name={name}
+        value={value}
+        class={`${classShare} hidden peer`}
+        required
+        checked = {checked}
+    />
+    <label
+        for={id}
+        class="inline-flex items-center justify-center w-full h-12 bg-white rounded-md cursor-pointer peer-checked:bg-green-400 peer-checked:font-semibold hover:text-gray-600 hover:bg-green-300"
+    >
+        <div class="block">
+            <div class="w-full text-lg">{value}</div>
+        </div>
+    </label>
+</div>
