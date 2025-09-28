@@ -11,6 +11,6 @@ const active = currentPath == url;
 ---
 
 <a href={url} title={title} class={`${!isMovil ? "links-navbar" : ""} w-full flex gap-2 items-center font-normal py-2 pl-2 rounded-md hover:bg-white/35 ${active && "bg-white/35 font-semibold"}`}>
-    {active ? <slot name="iconOutline" /> : <slot name="iconFilled" />}
+    {active ? <slot name="iconFilled" /> : <slot name="iconOutline" />}
     <p class={`${!isMovil ? "showText" : ""}`}>{title}</p>
 </a>
