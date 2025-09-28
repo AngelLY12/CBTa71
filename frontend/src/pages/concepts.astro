@@ -19,35 +19,20 @@ const concepts = conceptsStore.get() || [];
     <h1 class="text-3xl font-bold text-gray-800">Conceptos</h1>
   </div>
 
-  <div class="flex justify-between items-center mb-6">
-    <div class="flex items-center gap-4">
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+    <div class="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4 md:mb-0">
       <h2 class="text-xl font-bold text-gray-800">Todos los conceptos</h2>
-      <div class="flex gap-2" id="filter-buttons">
+      <div class="flex gap-2 flex-wrap" id="filter-buttons">
         <button data-filter="todos" class="px-4 py-1 rounded-lg bg-[#2e594d] text-white text-sm">Todos</button>
         <button data-filter="activos" class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Activos</button>
         <button data-filter="finalizados" class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Finalizados</button>
       </div>
     </div>
-    <a href="/concepts/new" class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold">Agregar</a>
+    <a href="/concepts/new" class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold w-full text-center md:w-auto">Agregar</a>
   </div>
 
   <div class="flex flex-col gap-4" id="concept-list">
-    {concepts.length > 0 ? (
-      concepts.map(concept => (
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-semibold text-gray-800">{concept.title}</h3>
-            <div class="flex gap-2">
-              <a href={`/concepts/${concept.id}`} class="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 font-semibold text-sm">
-                Editar
-              </a>
-            </div>
-          </div>
-          <p class="text-3xl font-bold text-gray-800 mb-2">${concept.amount}</p>
-          <p class="text-gray-500 text-sm">{concept.description}</p>
-        </div>
-      ))
-    ) : (
+    {concepts.length === 0 && (
       <p class="text-center text-gray-500 mt-10">Aún no hay conceptos creados.</p>
     )}
   </div>
@@ -76,9 +61,9 @@ const concepts = conceptsStore.get() || [];
     }
 
     card.innerHTML = `
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="text-lg font-semibold text-gray-800">${concept.title}</h3>
-        <div class="flex gap-2">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2">
+        <h3 class="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">${concept.title}</h3>
+        <div class="flex gap-2 flex-wrap">
           ${concept.status === 'Activo' ? `
             <button class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm finalize-btn" data-id="${concept.id}">Finalizar</button>
           ` : ''}
