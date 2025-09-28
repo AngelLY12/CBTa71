@@ -1,88 +1,136 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { conceptsStore } from '../store.js';
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import Layout from "../layouts/Layout.astro";
+import { conceptsStore } from "../store.js";
 
 // Get the concepts from the store when the page is rendered on the server.
 const concepts = conceptsStore.get() || [];
 ---
 
 <Layout title="Conceptos - CBTA 71">
-  <div class="flex items-center gap-4 mb-8">
-    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-invoice" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-      <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
-      <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
-      <path d="M9 7h1"></path>
-      <path d="M9 13h9"></path>
-      <path d="M13 17h5"></path>
-    </svg>
-    <h1 class="text-3xl font-bold text-gray-800">Conceptos</h1>
-  </div>
+  <DivWithNavbar title="Conceptos">
+    
+    <!-- <div class="flex items-center gap-4 mb-8">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="icon icon-tabler icon-tabler-file-invoice"
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        stroke-width="2"
+        stroke="currentColor"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+        <path
+          d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"
+        ></path>
+        <path d="M9 7h1"></path>
+        <path d="M9 13h9"></path>
+        <path d="M13 17h5"></path>
+      </svg>
+      <h1 class="text-3xl font-bold text-gray-800">Conceptos</h1>
+    </div> -->
 
-  <div class="flex justify-between items-center mb-6">
-    <div class="flex items-center gap-4">
-      <h2 class="text-xl font-bold text-gray-800">Todos los conceptos</h2>
-      <div class="flex gap-2" id="filter-buttons">
-        <button data-filter="todos" class="px-4 py-1 rounded-lg bg-[#2e594d] text-white text-sm">Todos</button>
-        <button data-filter="activos" class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Activos</button>
-        <button data-filter="finalizados" class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Finalizados</button>
-      </div>
-    </div>
-    <a href="/concepts/new" class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold">Agregar</a>
-  </div>
-
-  <div class="flex flex-col gap-4" id="concept-list">
-    {concepts.length > 0 ? (
-      concepts.map(concept => (
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-semibold text-gray-800">{concept.title}</h3>
-            <div class="flex gap-2">
-              <a href={`/concepts/${concept.id}`} class="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 font-semibold text-sm">
-                Editar
-              </a>
-            </div>
-          </div>
-          <p class="text-3xl font-bold text-gray-800 mb-2">${concept.amount}</p>
-          <p class="text-gray-500 text-sm">{concept.description}</p>
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-4">
+        <h2 class="text-xl font-bold text-gray-800">Todos los conceptos</h2>
+        <div class="flex gap-2" id="filter-buttons">
+          <button
+            data-filter="todos"
+            class="px-4 py-1 rounded-lg bg-[#2e594d] text-white text-sm"
+            >Todos</button
+          >
+          <button
+            data-filter="activos"
+            class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm"
+            >Activos</button
+          >
+          <button
+            data-filter="finalizados"
+            class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm"
+            >Finalizados</button
+          >
         </div>
-      ))
-    ) : (
-      <p class="text-center text-gray-500 mt-10">Aún no hay conceptos creados.</p>
-    )}
-  </div>
+      </div>
+      <a
+        href="/concepts/new"
+        class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold"
+        >Agregar</a
+      >
+    </div>
+
+    <div class="flex flex-col gap-4" id="concept-list">
+      {
+        concepts.length > 0 ? (
+          concepts.map((concept) => (
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-semibold text-gray-800">
+                  {concept.title}
+                </h3>
+                <div class="flex gap-2">
+                  <a
+                    href={`/concepts/${concept.id}`}
+                    class="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 font-semibold text-sm"
+                  >
+                    Editar
+                  </a>
+                </div>
+              </div>
+              <p class="text-3xl font-bold text-gray-800 mb-2">
+                ${concept.amount}
+              </p>
+              <p class="text-gray-500 text-sm">{concept.description}</p>
+            </div>
+          ))
+        ) : (
+          <p class="text-center text-gray-500 mt-10">
+            Aún no hay conceptos creados.
+          </p>
+        )
+      }
+    </div>
+  </DivWithNavbar>
 </Layout>
 
 <script>
-  import { conceptsStore } from '../store.js';
+  import { conceptsStore } from "../store.js";
 
-  const filterButtons = document.getElementById('filter-buttons');
-  const conceptList = document.getElementById('concept-list');
+  const filterButtons = document.getElementById("filter-buttons");
+  const conceptList = document.getElementById("concept-list");
 
   // Function to create a concept card HTML element
   function createConceptCard(concept) {
-    const card = document.createElement('div');
+    const card = document.createElement("div");
     card.className = "bg-white p-6 rounded-lg shadow-sm border border-gray-200";
 
     // Generar el texto para la sección "Aplicar a"
-    let applyToText = '';
-    if (concept.applyTo === 'alumnos') {
-        applyToText = `Alumnos Específicos: ${concept.studentName || 'N/A'}`;
-    } else if (concept.applyTo === 'semestre') {
-        applyToText = `Semestre: ${concept.semester || 'N/A'}`;
-    } else if (concept.applyTo === 'carrera') {
-        applyToText = `Carrera: ${concept.career || 'N/A'}`;
+    let applyToText = "";
+    if (concept.applyTo === "alumnos") {
+      applyToText = `Alumnos Específicos: ${concept.studentName || "N/A"}`;
+    } else if (concept.applyTo === "semestre") {
+      applyToText = `Semestre: ${concept.semester || "N/A"}`;
+    } else if (concept.applyTo === "carrera") {
+      applyToText = `Carrera: ${concept.career || "N/A"}`;
     } else {
-        applyToText = 'Todos';
+      applyToText = "Todos";
     }
 
     card.innerHTML = `
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-lg font-semibold text-gray-800">${concept.title}</h3>
         <div class="flex gap-2">
-          ${concept.status === 'Activo' ? `
+          ${
+            concept.status === "Activo"
+              ? `
             <button class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm finalize-btn" data-id="${concept.id}">Finalizar</button>
-          ` : ''}
+          `
+              : ""
+          }
           <a href="/concepts/${concept.id}" class="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 font-semibold text-sm">
             Editar
           </a>
@@ -104,12 +152,13 @@ const concepts = conceptsStore.get() || [];
   // Function to render the concept list
   function renderConcepts(data) {
     if (!conceptList) return;
-    conceptList.innerHTML = '';
+    conceptList.innerHTML = "";
     if (data.length === 0) {
-      conceptList.innerHTML = '<p class="text-center text-gray-500 mt-10">Aún no hay conceptos creados.</p>';
+      conceptList.innerHTML =
+        '<p class="text-center text-gray-500 mt-10">Aún no hay conceptos creados.</p>';
       return;
     }
-    data.forEach(concept => {
+    data.forEach((concept) => {
       conceptList.appendChild(createConceptCard(concept));
     });
   }
@@ -118,68 +167,88 @@ const concepts = conceptsStore.get() || [];
   function updateConceptList(filter) {
     const allConcepts = conceptsStore.get() || [];
     let filteredConcepts = allConcepts;
-    if (filter === 'activos') {
-      filteredConcepts = allConcepts.filter(concept => concept.status === 'Activo');
-    } else if (filter === 'finalizados') {
-      filteredConcepts = allConcepts.filter(concept => concept.status === 'Finalizado');
+    if (filter === "activos") {
+      filteredConcepts = allConcepts.filter(
+        (concept) => concept.status === "Activo",
+      );
+    } else if (filter === "finalizados") {
+      filteredConcepts = allConcepts.filter(
+        (concept) => concept.status === "Finalizado",
+      );
     }
     renderConcepts(filteredConcepts);
   }
 
   // Event listener for filter buttons
   if (filterButtons) {
-    filterButtons.addEventListener('click', (event) => {
-      const clickedButton = event.target.closest('button');
+    filterButtons.addEventListener("click", (event) => {
+      const clickedButton = event.target.closest("button");
       if (clickedButton) {
         const filter = clickedButton.dataset.filter;
-        filterButtons.querySelectorAll('button').forEach(btn => {
-          btn.classList.remove('bg-[#2e594d]', 'text-white');
-          btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
+        filterButtons.querySelectorAll("button").forEach((btn) => {
+          btn.classList.remove("bg-[#2e594d]", "text-white");
+          btn.classList.add(
+            "bg-white",
+            "text-gray-700",
+            "border",
+            "border-gray-300",
+          );
         });
-        clickedButton.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
-        clickedButton.classList.add('bg-[#2e594d]', 'text-white');
-        
+        clickedButton.classList.remove(
+          "bg-white",
+          "text-gray-700",
+          "border",
+          "border-gray-300",
+        );
+        clickedButton.classList.add("bg-[#2e594d]", "text-white");
+
         updateConceptList(filter);
       }
     });
   }
-  
+
   // Event listener for the "Finalizar" and "Eliminar" buttons using event delegation
   if (conceptList) {
-      conceptList.addEventListener('click', (event) => {
-          const finalizeButton = event.target.closest('.finalize-btn');
-          const deleteButton = event.target.closest('.delete-btn');
-          
-          if (finalizeButton) {
-              const conceptId = finalizeButton.dataset.id;
-              const allConcepts = conceptsStore.get();
-              const updatedConcepts = allConcepts.map(concept => {
-                  if (concept.id === conceptId) {
-                      return { ...concept, status: 'Finalizado' };
-                  }
-                  return concept;
-              });
-              conceptsStore.set(updatedConcepts);
-          } else if (deleteButton) {
-              // Add the confirmation message here
-              const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este concepto?');
-              
-              if (confirmDelete) {
-                  const conceptId = deleteButton.dataset.id;
-                  const allConcepts = conceptsStore.get();
-                  // Filter the array to remove the concept with the ID
-                  const updatedConcepts = allConcepts.filter(concept => concept.id !== conceptId);
-                  conceptsStore.set(updatedConcepts);
-              }
+    conceptList.addEventListener("click", (event) => {
+      const finalizeButton = event.target.closest(".finalize-btn");
+      const deleteButton = event.target.closest(".delete-btn");
+
+      if (finalizeButton) {
+        const conceptId = finalizeButton.dataset.id;
+        const allConcepts = conceptsStore.get();
+        const updatedConcepts = allConcepts.map((concept) => {
+          if (concept.id === conceptId) {
+            return { ...concept, status: "Finalizado" };
           }
-      });
+          return concept;
+        });
+        conceptsStore.set(updatedConcepts);
+      } else if (deleteButton) {
+        // Add the confirmation message here
+        const confirmDelete = confirm(
+          "¿Estás seguro de que deseas eliminar este concepto?",
+        );
+
+        if (confirmDelete) {
+          const conceptId = deleteButton.dataset.id;
+          const allConcepts = conceptsStore.get();
+          // Filter the array to remove the concept with the ID
+          const updatedConcepts = allConcepts.filter(
+            (concept) => concept.id !== conceptId,
+          );
+          conceptsStore.set(updatedConcepts);
+        }
+      }
+    });
   }
 
   // Subscribe to store changes to update the list in real-time
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener("DOMContentLoaded", () => {
     conceptsStore.subscribe(() => {
-        const currentFilter = document.querySelector('#filter-buttons .bg-[#2e594d]')?.dataset.filter || 'todos';
-        updateConceptList(currentFilter);
+      const currentFilter =
+        document.querySelector("#filter-buttons .bg-[#2e594d]")?.dataset
+          .filter || "todos";
+      updateConceptList(currentFilter);
     });
   });
 </script>

@@ -11,7 +11,7 @@ const { isMovil = false } = Astro.props;
 
 <div
     id={`${!isMovil ? "container-navbar" : "container-navbarMobil"}`}
-    class={`bg-green-500 ${!isMovil ? "w-28 h-full fixed hidden lg:visible lg:block" : "w-32 fixed inset-y-0 right-0 z-10 hidden"} `}
+    class={`bg-green-500 ${!isMovil ? "w-[8.7rem] h-full fixed hidden lg:visible lg:block" : "w-36 fixed inset-y-0 right-0 z-10 hidden"} `}
 >
     <nav class="w-full flex flex-col gap-2 pt-2 px-1 text-white">
         {
@@ -116,7 +116,7 @@ const { isMovil = false } = Astro.props;
                 e.classList.add("justify-center");
                 e.classList.remove("pl-2");
             });
-            divNavbar.classList.remove("w-28");
+            divNavbar.classList.remove("w-36");
             divNavbar.classList.add("w-20");
         }
 
@@ -126,7 +126,7 @@ const { isMovil = false } = Astro.props;
                 e.classList.toggle("justify-center");
                 e.classList.toggle("pl-2");
             });
-            divNavbar.classList.toggle("w-28");
+            divNavbar.classList.toggle("w-36");
             divNavbar.classList.toggle("w-20");
 
             const isNowCollapsed = divNavbar.classList.contains("w-20");
