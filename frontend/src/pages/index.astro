@@ -1,87 +1,103 @@
 ---
-// src/pages/index.astro (CORRECCIÓN FINAL)
+// src/pages/index.astro
 import Layout from '../layouts/Layout.astro';
 import CardInfo from '../components/CardInfo.astro';
+// Asegúrate de que estos componentes existan en src/components/
 import ChartLine from '../components/ChartLine.astro';
 import ChartDonut from '../components/ChartDonut.astro';
 import ConceptsTable from '../components/ConceptsTable.astro';
+
+// Datos de ejemplo para los gráficos (ajústalos según tus necesidades reales)
+const chartData = {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+    ganancias: [30, 45, 40, 50, 60, 55, 65, 70],
+    pendientes: [20, 25, 22, 28, 30, 28, 32, 35],
+    estudiantes: [100, 110, 105, 120, 130, 125, 140, 150],
+};
+
+const conceptData = [
+    { id: '2DDB', concept: 'Colegiatura', amount: '$1067.00', start: '08/2024', end: '-', status: 'Activa' },
+    { id: '5FD4', concept: 'Colegiatura', amount: '$3067.00', start: '02/2024', end: '03/2024', status: 'Finalizado' },
+    { id: '9A1C', concept: 'Inscripción', amount: '$1500.00', start: '08/2024', end: '-', status: 'Activa' },
+    { id: 'B2E7', concept: 'Mensualidad', amount: '$800.00', start: '09/2024', end: '10/2024', status: 'Finalizado' },
+];
 ---
 <Layout title="Dashboard - CBTA 71">
-    <div class="flex items-center gap-4 mb-6 md:mb-8"> 
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-            <path d="M4 4h8v4h-8z"></path>
-            <path d="M4 12h8v8h-8z"></path>
-            <path d="M16 4h4v8h-4z"></path>
-            <path d="M16 16h4v4h-4z"></path>
-        </svg>
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Resumen General</h1>
-    </div>
+    
+    <!-- CONTENEDOR DE ANCHO COMPLETO PARA ASEGURAR ESPACIO -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-    <div class="flex flex-col md:flex-row gap-4 mb-8">
-        
-        <div class="flex-1 min-w-0"> {/* Tarjeta 1 ocupa 1/3 del espacio */}
-            <CardInfo 
-                title="Total Estudiantes" 
-                value="706" 
-                description="Matriculados 2024" 
-                icon="students" 
-                href="/estudiantes" 
-            />
-        </div>
-        
-        <div class="flex-1 min-w-0"> {/* Tarjeta 2 ocupa 1/3 del espacio */}
-            <CardInfo 
-                title="Pagos pendientes" 
-                value="$4460" 
-                description="2 conceptos" 
-                icon="pending" 
-                href="/pagos?status=pendientes" 
-            />
-        </div>
-        
-        <div class="flex-1 min-w-0"> {/* Tarjeta 3 ocupa 1/3 del espacio */}
-            <CardInfo 
-                title="Total Recaudado" 
-                value="$10560.00" 
-                description="Ganancia estimada" 
-                icon="recaudado" 
-                href="/reportes/recaudacion" 
-            />
-        </div>
-    </div>
-    <div class="flex gap-4 mb-6 md:mb-8">
-    <button class="px-4 md:px-6 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm md:text-base">Año actual</button>
-    <button class="px-4 md:px-6 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-semibold text-sm md:text-base">Todos</button>
-    </div>
+        {/* --- TÍTULO DE LA SECCIÓN --- */}
+        <div class="flex items-center gap-4 mb-6 md:mb-8"> 
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 4h8v4h-8z"></path>
+                <path d="M4 12h8v8h-8z"></path>
+                <path d="M16 4h4v8h-4z"></path>
+                <path d="M16 16h4v4h-4z"></path>
+            </svg>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Resumen General</h1>
+        </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
-        <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm">
-        <ChartLine
-            data={{
-            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
-            ganancias: [30, 45, 40, 50, 60, 55, 65, 70],
-            pendientes: [20, 25, 22, 28, 30, 28, 32, 35],
-            estudiantes: [100, 110, 105, 120, 130, 125, 140, 150],
-            }}
-        />
-        </div>
-        <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm flex flex-col justify-center items-center">
-        <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-4">Anual</h2>
-        <ChartDonut total={10560.00} percentage={70.30} />
-        <p class="text-md md:text-lg font-semibold text-gray-700 mt-4">$10,560.00</p>
-        </div>
-    </div>
+        {/* --- SECCIÓN DE TARJETAS: FORZANDO 1x3 EN TODAS LAS PANTALLAS --- */}
+        {/* Usamos 'flex' y 'overflow-x-auto' para que las tarjetas permanezcan en línea y permitan scroll en móvil */}
+        <div class="flex flex-row space-x-4 mb-8 overflow-x-auto pb-4">
+            
+            <CardInfo 
+                title="Total Estudiantes" 
+                value="706" 
+                description="Matriculados 2024" 
+                icon="students" 
+                href="/estudiantes" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+            
+            <CardInfo 
+                title="Pagos pendientes" 
+                value="$4460" 
+                description="2 conceptos" 
+                icon="pending" 
+                href="/pagos?status=pendientes" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+            
+            <CardInfo 
+                title="Total Recaudado" 
+                value="$10560.00" 
+                description="Ganancia estimada" 
+                icon="recaudado" 
+                href="/reportes/recaudacion" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+        </div>
 
-    <div class="bg-white p-4 md:p-6 rounded-lg shadow-sm overflow-x-auto"> 
-        <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Conceptos</h2>
-        <ConceptsTable
-        concepts={[
-            { id: '2DDB', concept: 'Colegiatura', amount: '$1067.00', start: '08/2024', end: '-', status: 'Activa' },
-            { id: '5FD4', concept: 'Colegiatura', amount: '$3067.00', start: '02/2024', end: '03/2024', status: 'Finalizado' },
-            { id: '9A1C', concept: 'Inscripción', amount: '$1500.00', start: '08/2024', end: '-', status: 'Activa' },
-            { id: 'B2E7', concept: 'Mensualidad', amount: '$800.00', start: '09/2024', end: '10/2024', status: 'Finalizado' },
-        ]}
-        />
+        {/* --- BOTONES DE FILTRO --- */}
+        <div class="flex gap-4 mb-6 md:mb-8">
+        <button class="px-4 md:px-6 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm md:text-base">Año actual</button>
+        <button class="px-4 md:px-6 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-semibold text-sm md:text-base">Todos</button>
+        </div>
+
+        {/* --- SECCIÓN DE GRÁFICOS (LAYOUT 1x2 en desktop) --- */}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+            {/* Gráfico de Línea */}
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Evolución de Pagos y Estudiantes</h2>
+                <ChartLine data={chartData} />
+            </div>
+            {/* Gráfico de Donut/Anillo */}
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 flex flex-col justify-center items-center">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Recaudación Anual</h2>
+            {/* Asegúrate de que ChartDonut acepte las props 'total' y 'percentage' */}
+            <ChartDonut total={10560.00} percentage={70.30} /> 
+            <p class="text-md md:text-lg font-semibold text-gray-700 mt-4">Meta: $10,560.00</p>
+            </div>
+        </div>
+
+        {/* --- SECCIÓN DE TABLA DE CONCEPTOS --- */}
+        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 overflow-x-auto"> 
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Conceptos Activos</h2>
+            <ConceptsTable concepts={conceptData} />
+        </div>
+
     </div>
 </Layout>

@@ -2,29 +2,29 @@
 // src/components/CardInfo.astro - Versión FINAL con ÍCONOS DE COLOR y AÑO AUTOMÁTICO
 
 interface Props {
-    title: string;
-    value: string;
-    description: string;
-    icon: 'students' | 'pending' | 'recaudado';
-    href: string;
+    title: string;
+    value: string;
+    description: string;
+    icon: 'students' | 'pending' | 'recaudado';
+    href: string;
 }
 
-const { title, value, description, icon, href } = Astro.props; 
+const { title, value, description, icon, href } = Astro.props; 
 
 // --- LÓGICA DE FECHA AUTOMÁTICA ---
 let finalDescription = description;
 // Verifica si es la tarjeta de estudiantes para sobrescribir la descripción con el año actual
 if (icon === 'students') {
-    const currentYear = new Date().getFullYear();
-    finalDescription = `Matriculados ${currentYear}`;
+    const currentYear = new Date().getFullYear();
+    finalDescription = `Matriculados ${currentYear}`;
 }
 // ----------------------------------
 
 // Colores de los íconos
 const iconColors = {
-    students: 'text-[#3b7666]',  // Verde oscuro
-    pending: 'text-yellow-600',  // Amarillo/Naranja para pendiente
-    recaudado: 'text-blue-600',  // Azul para dinero/recaudado
+    students: 'text-[#3b7666]',  // Verde oscuro
+    pending: 'text-yellow-600',  // Amarillo/Naranja para pendiente
+    recaudado: 'text-blue-600',  // Azul para dinero/recaudado
 };
 
 // Función para obtener el SVG de los íconos
@@ -46,20 +46,23 @@ const getIconSvg = (iconName: string, sizeClass: string) => {
 };
 ---
 
-<a href={href} class="bg-white px-4 py-3 rounded-lg border border-[#3b7666]/30 shadow-sm flex flex-col items-center justify-between h-auto w-full text-center
-            transition-all duration-200 hover:shadow-lg focus:outline-none cursor-pointer">
+<a href={href} class="bg-white px-4 py-3 rounded-xl border border-[#3b7666]/30 shadow-lg flex flex-col items-center justify-between h-auto w-full text-center
+            transition-all duration-200 hover:shadow-xl focus:outline-none cursor-pointer">
     
-    <div class="flex justify-between items-start w-full mb-2">
+    {/* SECCIÓN 1: TÍTULO e ÍCONO */}
+    <div class="flex justify-between items-start w-full mb-1">
         <h3 class="text-sm font-medium text-gray-700">
             {title}
         </h3>
-        {/* ÍCONO EN LA ESQUINA SUPERIOR DERECHA CON COLOR */}
+        {/* ÍCONO EN LA ESQUINA SUPERIOR DERECHA CON COLOR */}
         <span class="flex-shrink-0" class:list={[iconColors[icon]]} set:html={getIconSvg(icon, 'w-5 h-5')}></span>
     </div>
     
-    <div class="flex flex-col items-center justify-center w-full mt-auto">
-        <p class="text-xl font-bold text-gray-900 mb-0.5">{value}</p> 
-        {/* DESCRIPCIÓN FINAL (CON AÑO ACTUAL PARA ESTUDIANTES) */}
-        <p class="text-xs text-gray-500">{finalDescription}</p> 
+    {/* SECCIÓN 2: VALOR PRINCIPAL Y DESCRIPCIÓN */}
+    <div class="flex flex-col items-center justify-center w-full my-2">
+        {/* El valor usa el color principal de la tarjeta/ícono */}
+        <p class:list={['text-2xl md:text-3xl font-bold', iconColors[icon]]}>{value}</p> 
+        {/* DESCRIPCIÓN FINAL (CON AÑO ACTUAL PARA ESTUDIANTES) */}
+        <p class="text-xs text-gray-500 mt-1">{finalDescription}</p> 
     </div>
 </a>

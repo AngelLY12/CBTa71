@@ -1,8 +1,10 @@
 ---
+// src/layouts/Layout.astro
+
 import '../styles/global.css';
 import '../styles/tailwind.css';
 
-// Obtiene la ruta actual para saber en qué página estás.
+// 🛑 ESTO ES LO QUE ARREGLA el error "currentPath is not defined" 🛑
 const currentPath = Astro.url.pathname;
 const { title } = Astro.props;
 ---
@@ -14,20 +16,25 @@ const { title } = Astro.props;
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
 </head>
-<body>
-  <div class="flex h-screen">
-        <div class="w-[250px] bg-[#2e594d] text-white flex flex-col p-6 fixed h-full shadow-md">
-      <div class="flex items-center gap-4 mb-8 px-4">
+<body class="flex min-h-screen bg-[#f0f2f5]">
+
+  {/* 1. SIDEBAR: Ancho Fijo y Alto Completo (Usando Flexbox para que no haya conflicto) */}
+  <div class="w-[250px] bg-[#2e594d] text-white flex flex-col p-6 sticky top-0 h-screen shadow-md flex-shrink-0">
+    
+    {/* Contenido del logo y título */}
+    <div class="flex items-center gap-4 mb-8 px-4">
         <img src="/Logo.png" alt="Logo CBTA 71" class="h-10 w-10" />
         <div>
           <h1 class="text-xl font-bold">CBTA 71</h1>
           <p class="text-sm">Sistema de pagos</p>
         </div>
       </div>
-      <nav class="flex-grow">
+    
+    {/* Contenido de la Navegación (nav) */}
+    <nav class="flex-grow">
         <ul class="space-y-2">
           <li>
-            <a 
+            <a 
               href="/"
               class:list={[
                 'flex items-center gap-4 py-3 px-4 rounded-lg transition-colors duration-200',
@@ -46,7 +53,7 @@ const { title } = Astro.props;
             </a>
           </li>
           <li>
-            <a 
+            <a 
               href="/concepts"
               class:list={[
                 'flex items-center gap-4 py-3 px-4 rounded-lg transition-colors duration-200',
@@ -66,7 +73,7 @@ const { title } = Astro.props;
             </a>
           </li>
           <li>
-            <a 
+            <a 
               href="/students"
               class:list={[
                 'flex items-center gap-4 py-3 px-4 rounded-lg transition-colors duration-200',
@@ -85,7 +92,7 @@ const { title } = Astro.props;
             </a>
           </li>
           <li>
-            <a 
+            <a 
               href="/payments"
               class:list={[
                 'flex items-center gap-4 py-3 px-4 rounded-lg transition-colors duration-200',
@@ -103,10 +110,12 @@ const { title } = Astro.props;
           </li>
         </ul>
       </nav>
+    
+    {/* Contenido del botón Salir */}
       <div class="mt-auto pt-4">
         <ul>
           <li>
-            <a 
+            <a 
               href="/logout"
               class="flex items-center gap-4 py-3 px-4 rounded-lg text-white hover:bg-[#3b7666] transition-colors duration-200"
             >
@@ -120,10 +129,13 @@ const { title } = Astro.props;
           </li>
         </ul>
       </div>
-    </div>
-    <main class="flex-grow ml-[250px] p-8 bg-[#f0f2f5]">
-      <slot />
-    </main>
+    
   </div>
+
+  {/* 2. MAIN CONTENT: Ahora ocupa todo el espacio restante */}
+  <main class="flex-1 p-8 overflow-auto"> 
+    <slot />
+  </main>
+
 </body>
 </html>
