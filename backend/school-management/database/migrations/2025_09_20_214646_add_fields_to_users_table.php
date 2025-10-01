@@ -24,14 +24,11 @@ return new class extends Migration
             $table->string('state',30)->after('address');
             $table->string('municipality',30)->after('state');
             $table->foreignIdFor(Career::class)->nullable()->constrained('careers')->onDelete('set null')->after('password');
+            $table->string('stripe_customer_id',50)->nullable()->unique();
             $table->date('registration_date');
             $table->boolean('status')->default(1);
-
-
-
-
-
         });
+
     }
 
     /**

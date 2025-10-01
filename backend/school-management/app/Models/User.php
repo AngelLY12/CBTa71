@@ -39,18 +39,13 @@ class User extends Authenticatable
         'municipality',
         'password',
         'career_id',
+        'stripe_customer_id',
         'registration_date',
         'status'
     ];
 
     public function career(){
         return $this->belongsTo(Career::class);
-    }
-
-    public function paymentMethods()
-    {
-        return $this->hasMany(PaymentMethod::class);
-
     }
 
     public function paymentConcepts(){
