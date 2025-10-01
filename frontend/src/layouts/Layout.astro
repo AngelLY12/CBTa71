@@ -1,141 +1,320 @@
 ---
-// src/layouts/Layout.astro
+// 1. ASTRO FRONTMATTER: Definición de las Props
+interface Props {
+	title: string;
+}
 
+const { title } = Astro.props;
+
+// Se añaden los imports de estilos globales solicitados
 import '../styles/global.css';
 import '../styles/tailwind.css';
 
-// 🛑 ESTO ES LO QUE ARREGLA el error "currentPath is not defined" 🛑
+// Se define el path actual.
 const currentPath = Astro.url.pathname;
-const { title } = Astro.props;
 ---
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{title}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 3. Título dinámico usando la Prop 'title' -->
+  <title>{title} | CBTA 71</title>
+  
+  <!-- Enlace a la fuente Inter desde Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Estilos base */
+    body { 
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Clases de animación para móvil */
+    .sidebar-open { transform: translateX(0%); }
+    .sidebar-closed { transform: translateX(-100%); }
+    .transition-transform-fast { transition: transform 0.3s ease-in-out; }
+    
+    /* Pestaña de Desplazamiento Personalizada para la Sidebar */
+    #sidebar-menu {
+      scrollbar-width: thin; 
+      scrollbar-color: #3b7666 #2e594d;
+    }
+    #sidebar-menu::-webkit-scrollbar {
+      width: 8px;
+    }
+    #sidebar-menu::-webkit-scrollbar-track {
+      background: #2e594d;
+    }
+    #sidebar-menu::-webkit-scrollbar-thumb {
+      background-color: #3b7666;
+      border-radius: 20px;
+      border: 2px solid #2e594d;
+    }
+
+    /* Clase para la animación de aparición del contenido principal */
+    .content-fade-in {
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
-<body class="flex min-h-screen bg-[#f0f2f5]">
+<!-- El body es el contenedor flex principal -->
+<body class="flex min-h-screen bg-[#f0f2f5] antialiased">
+  
+  <!-- 1. SIDEBAR: Configuración Responsive -->
+  <nav 
+    id="sidebar-menu"
+    class="
+      bg-[#2e594d] text-white flex-col p-6 
+      shadow-2xl z-50 overflow-y-auto rounded-r-xl
+      /* MÓVIL: overlay fijo y oculto */
+      fixed inset-0 w-full max-w-[250px] h-full transition-transform-fast sidebar-closed hidden 
+      
+      /* CAMBIO CLAVE para ESCRITORIO: 
+         - md:fixed: Se mantiene fija para toda la altura de la ventana (no del contenido).
+         - md:h-screen y md:top-0: Asegura que ocupe el 100% de la altura de la ventana.
+         - md:flex: La hace visible en escritorio.
+      */
+      md:fixed md:top-0 md:flex md:h-screen md:w-[250px] md:shadow-none md:rounded-r-none
+    "
+  >
+    
+    <!-- Contenido del logo y título -->
+    <div class="flex items-center gap-4 mb-8 px-0 relative">
+      <!-- Botón de Cierre (Solo visible en móvil: md:hidden) -->
+      <button 
+        id="close-sidebar-button"
+        class="md:hidden absolute top-0 right-[-40px] p-2 rounded-full bg-white/20 hover:bg-white/40 z-50 transition text-white"
+        aria-label="Cerrar menú lateral"
+      >
+        <!-- SVG para el ícono de CERRAR -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <div class="h-10 w-10 bg-white/50 rounded-lg shadow-md flex items-center justify-center text-xl font-bold text-[#2e594d]">
+        CB
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold tracking-wide">CBTA 71</h1>
+        <p class="text-xs opacity-70">Sistema de pagos</p>
+      </div>
+    </div>
+    
+    <!-- Contenido de la Navegación -->
+    <div class="flex-grow overflow-y-auto pr-2">
+      <ul id="main-navigation" class="space-y-2">
+        <li>
+          <!-- Usamos data-path para el script de JS -->
+          <a href="/" data-path="/" class="nav-link flex items-center gap-4 py-3 px-4 rounded-xl transition-all duration-200 text-white hover:bg-[#3b7666]">
+            <!-- Dashboard Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M4 4h8v4h-8z"></path>
+              <path d="M4 12h8v8h-8z"></path>
+              <path d="M16 4h4v8h-4z"></path>
+              <path d="M16 16h4v4h-4z"></path>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="/concepts" data-path="/concepts" class="nav-link flex items-center gap-4 py-3 px-4 rounded-xl transition-all duration-200 text-white hover:bg-[#3b7666]">
+            <!-- Conceptos Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-book" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"></path>
+              <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"></path>
+              <path d="M3 6v13"></path>
+              <path d="M12 6v13"></path>
+              <path d="M21 6v13"></path>
+            </svg>
+            Conceptos
+          </a>
+        </li>
+        <li>
+          <a href="/students" data-path="/students" class="nav-link flex items-center gap-4 py-3 px-4 rounded-xl transition-all duration-200 text-white hover:bg-[#3b7666]">
+            <!-- Estudiantes Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-users" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
+              <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+              <path d="M16 3.161a3 3 0 1 0 3.839 3.839"></path>
+              <path d="M16 14v-1a4 4 0 0 1 4 -4h1"></path>
+            </svg>
+            Estudiantes
+          </a>
+        </li>
+        <li>
+          <a href="/payments" data-path="/payments" class="nav-link flex items-center gap-4 py-3 px-4 rounded-xl transition-all duration-200 text-white hover:bg-[#3b7666]">
+            <!-- Pagos Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-wallet" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 0 0 4h12a1 1 0 0 0 1 -1v-3"></path>
+              <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4"></path>
+            </svg>
+            Pagos
+          </a>
+        </li>
+      </ul>
+    </div>
+    
+    <!-- Contenido del botón Salir -->
+    <div class="mt-auto pt-4 border-t border-white/10">
+      <ul class="space-y-2">
+        <li>
+          <a 
+            href="/logout"
+            class="flex items-center gap-4 py-3 px-4 rounded-xl text-white hover:bg-[#3b7666] transition-colors duration-200"
+          >
+            <!-- Salir Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-logout" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+              <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"></path>
+              <path d="M7 12h14l-3 -3m0 6l3 -3"></path>
+            </svg>
+            Salir
+          </a>
+        </li>
+      </ul>
+    </div>
+    
+  </nav>
+  
+  <!-- 2. MAIN CONTENT: flex-1 para que crezca y ocupe el espacio restante -->
+  <!-- CAMBIO CLAVE: Agregamos ml-[250px] en escritorio para dejar espacio a la barra lateral fija -->
+  <main class="flex-1 p-4 md:p-8 overflow-y-auto md:ml-[250px]">
+    
+    <!-- Botón de Menú para abrir la Sidebar (Solo visible en móvil: md:hidden) -->
+    <button 
+      id="open-sidebar-button" 
+      class="md:hidden fixed top-4 left-4 p-2 rounded-xl bg-[#2e594d] text-white shadow-lg z-40 transition hover:bg-[#1d382f]"
+      aria-label="Abrir menú lateral"
+    >
+      <!-- SVG para el ícono de MENÚ -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-menu-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6l16 0" /><path d="M4 12l16 0" /><path d="M4 18l16 0" />
+      </svg>
+    </button>
+    
+    <!-- Mantenemos este div de relleno solo para el móvil -->
+    <div class="h-14 md:hidden"></div>
+    
+    <!-- CONTENIDO DINÁMICO: Aquí se renderizará el contenido de la página que use este layout -->
+    <div class="space-y-8 content-fade-in">
+        <slot />
+    </div>
 
-  {/* 1. SIDEBAR: Ancho Fijo y Alto Completo (Usando Flexbox para que no haya conflicto) */}
-  <div class="w-[250px] bg-[#2e594d] text-white flex flex-col p-6 sticky top-0 h-screen shadow-md flex-shrink-0">
-    
-    {/* Contenido del logo y título */}
-    <div class="flex items-center gap-4 mb-8 px-4">
-        <img src="/Logo.png" alt="Logo CBTA 71" class="h-10 w-10" />
-        <div>
-          <h1 class="text-xl font-bold">CBTA 71</h1>
-          <p class="text-sm">Sistema de pagos</p>
-        </div>
-      </div>
-    
-    {/* Contenido de la Navegación (nav) */}
-    <nav class="flex-grow">
-        <ul class="space-y-2">
-          <li>
-            <a 
-              href="/"
-              class:list={[
-                'flex items-center gap-4 py-3 px-4 rounded-lg transition-colors duration-200',
-                { 'bg-white text-[#2e594d] font-bold shadow-sm': currentPath === '/' },
-                { 'text-white hover:bg-[#3b7666]': currentPath !== '/' },
-              ]}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M4 4h8v4h-8z"></path>
-                <path d="M4 12h8v8h-8z"></path>
-                <path d="M16 4h4v8h-4z"></path>
-                <path d="M16 16h4v4h-4z"></path>
-              </svg>
-              Dashboard
-            </a>
-          </li>
-          <li>
-            <a 
-              href="/concepts"
-              class:list={[
-                'flex items-center gap-4 py-3 px-4 rounded-lg transition-colors duration-200',
-                { 'bg-white text-[#2e594d] font-bold shadow-sm': currentPath === '/concepts' },
-                { 'text-white hover:bg-[#3b7666]': currentPath !== '/concepts' },
-              ]}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-book" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0"></path>
-                <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0"></path>
-                <path d="M3 6v13"></path>
-                <path d="M12 6v13"></path>
-                <path d="M21 6v13"></path>
-              </svg>
-              Conceptos
-            </a>
-          </li>
-          <li>
-            <a 
-              href="/students"
-              class:list={[
-                'flex items-center gap-4 py-3 px-4 rounded-lg transition-colors duration-200',
-                { 'bg-white text-[#2e594d] font-bold shadow-sm': currentPath === '/students' },
-                { 'text-white hover:bg-[#3b7666]': currentPath !== '/students' },
-              ]}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-users" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
-                <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
-                <path d="M16 3.161a3 3 0 1 0 3.839 3.839"></path>
-                <path d="M16 14v-1a4 4 0 0 1 4 -4h1"></path>
-              </svg>
-              Estudiantes
-            </a>
-          </li>
-          <li>
-            <a 
-              href="/payments"
-              class:list={[
-                'flex items-center gap-4 py-3 px-4 rounded-lg transition-colors duration-200',
-                { 'bg-white text-[#2e594d] font-bold shadow-sm': currentPath === '/payments' },
-                { 'text-white hover:bg-[#3b7666]': currentPath !== '/payments' },
-              ]}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-wallet" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M17 8v-3a1 1 0 0 0 -1 -1h-10a2 2 0 0 0 0 4h12a1 1 0 0 1 1 1v3m0 4v3a1 1 0 0 1 -1 1h-12a2 2 0 0 0 0 4h12a1 1 0 0 0 1 -1v-3"></path>
-                <path d="M20 12v4h-4a2 2 0 0 1 0 -4h4"></path>
-              </svg>
-              Pagos
-            </a>
-          </li>
-        </ul>
-      </nav>
-    
-    {/* Contenido del botón Salir */}
-      <div class="mt-auto pt-4">
-        <ul>
-          <li>
-            <a 
-              href="/logout"
-              class="flex items-center gap-4 py-3 px-4 rounded-lg text-white hover:bg-[#3b7666] transition-colors duration-200"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-logout" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"></path>
-                <path d="M7 12h14l-3 -3m0 6l3 -3"></path>
-              </svg>
-              Salir
-            </a>
-          </li>
-        </ul>
-      </div>
-    
-  </div>
+  </main>
+    
+  <!-- SCRIPT para la lógica del Sidebar Móvil y Estado Activo -->
+  <script is:inline>
+    const sidebar = document.getElementById('sidebar-menu');
+    const openButton = document.getElementById('open-sidebar-button');
+    const closeButton = document.getElementById('close-sidebar-button');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const activeClass = 'bg-white text-[#2e594d] font-bold shadow-lg shadow-[#1d382f]/30';
+    const inactiveClass = 'text-white hover:bg-[#3b7666]';
 
-  {/* 2. MAIN CONTENT: Ahora ocupa todo el espacio restante */}
-  <main class="flex-1 p-8 overflow-auto"> 
-    <slot />
-  </main>
+    // --- Lógica del Estado Activo de la Navegación ---
+    function setActiveLink() {
+      // Obtenemos el path actual del navegador, limpiando el slash final si existe.
+      const currentPath = window.location.pathname.replace(/\/$/, "") || "/";
 
+      navLinks.forEach(link => {
+        const linkPath = link.getAttribute('data-path');
+        
+        // Removemos clases de estado anteriores
+        link.classList.remove(...activeClass.split(' '), ...inactiveClass.split(' '));
+
+        // Aplicamos la clase activa si el path coincide
+        if (linkPath === currentPath) {
+          link.classList.add(...activeClass.split(' '));
+        } else {
+          link.classList.add(...inactiveClass.split(' '));
+        }
+      });
+    }
+
+    // --- Lógica de la Sidebar Móvil ---
+    
+    function openSidebar() {
+      // Eliminamos la clase 'hidden' y añadimos 'fixed inset-0' para asegurar el overlay móvil
+      sidebar.classList.remove('hidden');
+      sidebar.classList.add('fixed', 'inset-0'); 
+      requestAnimationFrame(() => {
+        sidebar.classList.remove('sidebar-closed');
+        sidebar.classList.add('sidebar-open');
+      });
+      if (openButton) openButton.style.display = 'none';
+      document.body.style.overflow = 'hidden'; 
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('sidebar-open');
+      sidebar.classList.add('sidebar-closed');
+      
+      setTimeout(() => {
+        // En móvil, volvemos a ocultar y a quitar 'fixed'
+        if (window.innerWidth < 768) {
+            sidebar.classList.add('hidden');
+            sidebar.classList.remove('fixed', 'inset-0'); 
+        }
+        if (openButton) openButton.style.display = 'block';
+        document.body.style.overflow = '';
+      }, 300); 
+    }
+
+    // Event Listeners para abrir y cerrar
+    if (openButton) {
+      openButton.addEventListener('click', openSidebar);
+    }
+    if (closeButton) {
+      closeButton.addEventListener('click', closeSidebar);
+    }
+
+    // Cierra la sidebar si se hace clic en un enlace (solo en móvil)
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth < 768) {
+          closeSidebar();
+        }
+        setActiveLink();
+      });
+    });
+    
+    // Manejar el redimensionamiento para forzar el estado de escritorio
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        // En ESCRITORIO, aseguramos que esté visible y fijo.
+        sidebar.classList.remove('hidden', 'sidebar-closed', 'sidebar-open', 'inset-0');
+        sidebar.classList.add('fixed', 'top-0'); // Clases forzadas para escritorio
+        if (openButton) openButton.style.display = 'none';
+        document.body.style.overflow = ''; 
+      } else {
+        // En MÓVIL, si no está abierta, la ocultamos y usamos las clases de móvil.
+        if (!sidebar.classList.contains('sidebar-open')) {
+          sidebar.classList.add('hidden', 'sidebar-closed', 'fixed', 'inset-0');
+        }
+        if (openButton) openButton.style.display = 'block';
+      }
+    };
+
+    // Inicialización al cargar y redimensionar
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('load', () => {
+        handleResize();
+        setActiveLink(); 
+    });
+  </script>
 </body>
 </html>

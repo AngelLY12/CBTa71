@@ -1,165 +1,237 @@
 ---
+// src/pages/concepts.astro
 import Layout from '../layouts/Layout.astro';
-import { conceptsStore } from '../store.js';
+// --- DATOS MOCK DE EJEMPLO ---
+// Nota: La propiedad 'status' ahora se usa para el filtrado: 'active' o 'finished'
+const concepts = [
+    { id: 1, title: 'Colegiatura Semestre I', period: 'AGO/2024', amount: 1067.00, description: 'Pago de colegiatura correspondiente al primer semestre del año 2024', status: 'active' },
+    { id: 2, title: 'Inscripción Semestral', period: 'FEB/2025', amount: 1200.00, description: 'Cuota obligatoria por concepto de inscripción al semestre.', status: 'active' },
+    { id: 3, title: 'Seguro Escolar Anual', period: '2024', amount: 150.00, description: 'Cobertura de seguro por accidentes durante el ciclo escolar.', status: 'finished' },
+    { id: 4, title: 'Examen de Certificación', period: 'JUN/2024', amount: 200.00, description: 'Costo del examen final de certificación técnica.', status: 'active' },
+    { id: 5, title: 'Donación Voluntaria', period: 'SEP/2024', amount: 50.00, description: 'Aportación voluntaria para mejora de instalaciones.', status: 'finished' },
+];
 
-// Get the concepts from the store when the page is rendered on the server.
-const concepts = conceptsStore.get() || [];
+// JSON.stringify es necesario para pasar la lista de Astro a JavaScript de Alpine.js
+// IMPORTANTE: Escapamos las comillas internas con JSON.stringify
+const conceptsJson = JSON.stringify(JSON.stringify(concepts));
 ---
 
 <Layout title="Conceptos - CBTA 71">
-  <div class="flex items-center gap-4 mb-8">
-    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-invoice" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-      <path d="M14 3v4a1 0 0 0 1 1h4"></path>
-      <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
-      <path d="M9 7h1"></path>
-      <path d="M9 13h9"></path>
-      <path d="M13 17h5"></path>
-    </svg>
-    <h1 class="text-3xl font-bold text-gray-800">Conceptos</h1>
-  </div>
+    
+    <!-- Contenedor principal para Alpine.js -->
+    <!-- client:load asegura que el JS se ejecute en el navegador -->
+    <div 
+        x-data="{ 
+            activeTab: 'all', 
+            // 🟢 SOLUCIÓN: Usar JSON.parse doble para manejar el string JSON escapado
+            concepts: JSON.parse(JSON.parse({conceptsJson})), 
+            
+            get filteredConcepts() {
+                if (this.activeTab === 'all') {
+                    return this.concepts;
+                }
+                // Si la pestaña es 'active', filtra por 'active'. Si es 'finished', filtra por 'finished'.
+                return this.concepts.filter(concept => concept.status === this.activeTab);
+            },
 
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-    <div class="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4 md:mb-0">
-      <h2 class="text-xl font-bold text-gray-800">Todos los conceptos</h2>
-      <div class="flex gap-2 flex-wrap" id="filter-buttons">
-        <button data-filter="todos" class="px-4 py-1 rounded-lg bg-[#2e594d] text-white text-sm">Todos</button>
-        <button data-filter="activos" class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Activos</button>
-        <button data-filter="finalizados" class="px-4 py-1 rounded-lg bg-white text-gray-700 border border-gray-300 text-sm">Finalizados</button>
-      </div>
-    </div>
-    <a href="/concepts/new" class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold w-full text-center md:w-auto">Agregar</a>
-  </div>
+            // Función de simulación para Finalizar Concepto
+            finishConcept(id) {
+                // Reemplazamos window.confirm con una simulación de modal/log para cumplir la restricción
+                if (typeof customConfirm !== 'undefined') {
+                    customConfirm('¿Estás seguro de que quieres finalizar este concepto?');
+                } else {
+                    console.log('Simulación de confirmación: Concepto Finalizado');
+                }
+                
+                const index = this.concepts.findIndex(c => c.id === id);
+                if (index !== -1 && this.concepts[index].status === 'active') {
+                    // Crea una copia reactiva para actualizar el array
+                    let newConcepts = [...this.concepts];
+                    newConcepts[index].status = 'finished';
+                    this.concepts = newConcepts;
+                    console.log(`Concepto ${id} finalizado.`);
+                }
+            },
+            
+            // Función de simulación para la Edición (solo mensaje en consola)
+            editConcept(id) {
+                console.log(`Navegando a la página de edición para el Concepto ${id}`);
+                // Reemplazamos alert() con una simulación de log para cumplir la restricción
+                console.log(`Simulación de Edición: Navegar a /concepts/edit/${id}`);
+                // Aquí se haría la navegación a /concepts/edit/${id}
+            }
+        }"
+        class="space-y-6 max-w-4xl mx-auto p-4"
+    >
 
-  <div class="flex flex-col gap-4" id="concept-list">
-    {concepts.length === 0 && (
-      <p class="text-center text-gray-500 mt-10">Aún no hay conceptos creados.</p>
-    )}
-  </div>
-</Layout>
-
-<script>
-  import { conceptsStore } from '../store.js';
-
-  const filterButtons = document.getElementById('filter-buttons');
-  const conceptList = document.getElementById('concept-list');
-
-  // Function to create a concept card HTML element
-  function createConceptCard(concept) {
-    const card = document.createElement('div');
-    card.className = "bg-white p-6 rounded-lg shadow-sm border border-gray-200";
-
-    let applyToText = '';
-    if (concept.applyTo === 'alumnos') {
-        applyToText = `Alumnos Específicos: ${concept.studentName || 'N/A'}`;
-    } else if (concept.applyTo === 'semestre') {
-        applyToText = `Semestre: ${concept.semester || 'N/A'}`;
-    } else if (concept.applyTo === 'carrera') {
-        applyToText = `Carrera: ${concept.career || 'N/A'}`;
-    } else {
-        applyToText = 'Todos';
-    }
-
-    card.innerHTML = `
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2">
-        <h3 class="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">${concept.title}</h3>
-        <div class="flex gap-2 flex-wrap">
-          ${concept.status === 'Activo' ? `
-            <button class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm finalize-btn" data-id="${concept.id}">Finalizar</button>
-          ` : ''}
-          <a href="/concepts/${concept.id}" class="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 font-semibold text-sm">
-            Editar
-          </a>
-          <button class="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold text-sm delete-btn" data-id="${concept.id}">
-            Eliminar
-          </button>
+        {/* Encabezado y Título */}
+        <div class="flex items-center gap-4 text-2xl md:text-3xl font-bold text-gray-800 border-b pb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-users-group h-8 w-8 text-[#2e594d]" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M10 13a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                <path d="M8 21v-1a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v1"></path>
+                <path d="M15 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                <path d="M17 10h2a2 2 0 0 1 2 2v1"></path>
+                <path d="M5 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                <path d="M3 13v-1a2 2 0 0 1 2 -2h2"></path>
+            </svg>
+            <h1>Conceptos</h1>
         </div>
-      </div>
-      <p class="text-3xl font-bold text-gray-800 mb-2">${concept.amount}</p>
-      <p class="text-gray-500 text-sm mb-2">${concept.description}</p>
-      <div class="mt-4 border-t pt-4 border-gray-200">
-        <p class="text-xs text-gray-600">Estado: <span class="font-semibold">${concept.status}</span></p>
-        <p class="text-xs text-gray-600">Aplicar a: <span class="font-semibold">${applyToText}</span></p>
-      </div>
-    `;
-    return card;
-  }
 
-  // Function to render the concept list
-  function renderConcepts(data) {
-    if (!conceptList) return;
-    conceptList.innerHTML = '';
-    if (data.length === 0) {
-      conceptList.innerHTML = '<p class="text-center text-gray-500 mt-10">Aún no hay conceptos creados.</p>';
-      return;
-    }
-    data.forEach(concept => {
-      conceptList.appendChild(createConceptCard(concept));
-    });
-  }
+        {/* TABS y Botón Agregar */}
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-700 flex items-center gap-2 mb-4 sm:mb-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M9 6l11 0"></path>
+                        <path d="M9 12l11 0"></path>
+                        <path d="M9 18l11 0"></path>
+                        <path d="M5 6l0 .01"></path>
+                        <path d="M5 12l0 .01"></path>
+                        <path d="M5 18l0 .01"></path>
+                    </svg>
+                    Todos los conceptos
+                </h2>
 
-  // Function to filter and update the concept list
-  function updateConceptList(filter) {
-    const allConcepts = conceptsStore.get() || [];
-    let filteredConcepts = allConcepts;
-    if (filter === 'activos') {
-      filteredConcepts = allConcepts.filter(concept => concept.status === 'Activo');
-    } else if (filter === 'finalizados') {
-      filteredConcepts = allConcepts.filter(concept => concept.status === 'Finalizado');
-    }
-    renderConcepts(filteredConcepts);
-  }
+                <!-- MODIFICACIÓN: Enlace a la interfaz new.astro -->
+                <a 
+                    href="/new" 
+                    class="flex items-center gap-2 px-4 py-2 bg-[#e6f4e6] text-[#2e594d] font-semibold rounded-lg shadow-md hover:bg-[#d0e9d0] transition-all duration-200"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Agregar
+                </a>
+                <!-- FIN MODIFICACIÓN -->
+            </div>
+            
+            {/* Controles de Pestaña */}
+            <div class="flex flex-wrap gap-3 mb-6">
+                <!-- Botón Todos -->
+                <button 
+                    @click="activeTab = 'all'"
+                    :class="{ 
+                        'bg-[#2e594d] text-white': activeTab === 'all', 
+                        'bg-gray-100 text-gray-700 hover:bg-gray-200': activeTab !== 'all' 
+                    }"
+                    class="px-4 py-2 font-semibold rounded-lg transition-colors duration-150 shadow-sm"
+                >
+                    Todos
+                </button>
+                
+                <!-- Botón Activos -->
+                <button 
+                    @click="activeTab = 'active'"
+                    :class="{ 
+                        'bg-[#2e594d] text-white': activeTab === 'active', 
+                        'bg-green-100 text-green-700 hover:bg-green-200': activeTab !== 'active' 
+                    }"
+                    class="px-4 py-2 font-semibold rounded-lg transition-colors duration-150 shadow-sm"
+                >
+                    Activos
+                </button>
+                
+                <!-- Botón Finalizados -->
+                <button 
+                    @click="activeTab = 'finished'"
+                    :class="{ 
+                        'bg-[#2e594d] text-white': activeTab === 'finished', 
+                        'bg-red-100 text-red-700 hover:bg-red-200': activeTab !== 'finished' 
+                    }"
+                    class="px-4 py-2 font-semibold rounded-lg transition-colors duration-150 shadow-sm"
+                >
+                    Finalizados
+                </button>
+            </div>
 
-  // Event listener for filter buttons
-  if (filterButtons) {
-    filterButtons.addEventListener('click', (event) => {
-      const clickedButton = event.target.closest('button');
-      if (clickedButton) {
-        const filter = clickedButton.dataset.filter;
-        filterButtons.querySelectorAll('button').forEach(btn => {
-          btn.classList.remove('bg-[#2e594d]', 'text-white');
-          btn.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-300');
-        });
-        clickedButton.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-300');
-        clickedButton.classList.add('bg-[#2e594d]', 'text-white');
-        
-        updateConceptList(filter);
-      }
-    });
-  }
-  
-  // Event listener for the "Finalizar" and "Eliminar" buttons using event delegation
-  if (conceptList) {
-      conceptList.addEventListener('click', (event) => {
-          const finalizeButton = event.target.closest('.finalize-btn');
-          const deleteButton = event.target.closest('.delete-btn');
-          
-          if (finalizeButton) {
-              const conceptId = finalizeButton.dataset.id;
-              const allConcepts = conceptsStore.get();
-              const updatedConcepts = allConcepts.map(concept => {
-                  if (concept.id === conceptId) {
-                      return { ...concept, status: 'Finalizado' };
-                  }
-                  return concept;
-              });
-              conceptsStore.set(updatedConcepts);
-          } else if (deleteButton) {
-              const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este concepto?');
-              
-              if (confirmDelete) {
-                  const conceptId = deleteButton.dataset.id;
-                  const allConcepts = conceptsStore.get();
-                  const updatedConcepts = allConcepts.filter(concept => concept.id !== conceptId);
-                  conceptsStore.set(updatedConcepts);
-              }
-          }
-      });
-  }
+            {/* Listado de Conceptos (Cards) */}
+            <div class="space-y-4">
+                
+                <!-- x-for itera sobre la lista filtrada -->
+                <template x-for="concept in filteredConcepts" :key="concept.id">
+                    <div 
+                        class="p-4 border border-gray-200 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center bg-white transition-all duration-300"
+                    >
+                        {/* Información del Concepto */}
+                        <div class="flex-1 min-w-0 pr-4 mb-4 md:mb-0">
+                            <h3 class="text-lg font-bold text-gray-900 truncate" 
+                                x-text="`${concept.title} - ${concept.period}`">
+                            </h3>
+                            <p class="text-3xl font-extrabold text-[#2e594d] my-1" 
+                                x-text="`$${concept.amount.toFixed(2)}`">
+                            </p>
+                            <p class="text-sm text-gray-500" 
+                                x-text="concept.description">
+                            </p>
+                            
+                            <!-- Etiqueta de Estado (Solo visible en la vista Todos/Activos para los activos, y en la vista Finalizados para los finalizados) -->
+                            <span 
+                                x-show="concept.status === 'finished' && activeTab !== 'finished'" 
+                                class="mt-2 inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800"
+                            >
+                                Finalizado
+                            </span>
+                        </div>
+                        
+                        {/* Botones de Acción */}
+                        <div class="flex flex-col space-y-2 w-full md:w-auto md:min-w-[120px]">
+                            
+                            <!-- Botón Finalizar (Solo visible si el concepto está 'active') -->
+                            <button 
+                                x-show="concept.status === 'active'"
+                                @click="finishConcept(concept.id)"
+                                class="flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition-all duration-200 w-full"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-checkbox" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M9 11l3 3l8 -8"></path>
+                                    <path d="M20 12v3a5 5 0 0 1 -5 5h-4a5 5 0 0 1 -5 -5v-4a5 5 0 0 1 5 -5h3"></path>
+                                </svg>
+                                Finalizar
+                            </button>
 
-  // Suscríbete a los cambios de la tienda para actualizar la lista en tiempo real.
-  conceptsStore.subscribe(() => {
-    const currentFilter = document.querySelector('#filter-buttons .bg-[#2e594d]')?.dataset.filter || 'todos';
-    updateConceptList(currentFilter);
-  });
-</script>
+                            <!-- Botón Editar -->
+                            <button 
+                                @click="editConcept(concept.id)"
+                                class="flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-sm hover:bg-gray-50 transition-all duration-200 w-full"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-edit" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"></path>
+                                    <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.415v3h3l8.415 -8.415z"></path>
+                                    <path d="M16 5l3 3"></path>
+                                </svg>
+                                Editar
+                            </button>
+                            
+                            <!-- Etiqueta de Finalizado (Solo visible si el concepto está 'finished' y la pestaña NO es 'active') -->
+                             <button
+                                x-show="concept.status === 'finished' && activeTab !== 'active'"
+                                disabled
+                                class="flex items-center justify-center gap-2 px-3 py-2 bg-red-200 text-red-800 font-semibold rounded-lg w-full cursor-not-allowed"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M5 12l5 5l10 -10"></path>
+                                </svg>
+                                Finalizado
+                            </button>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- Mensaje de Sin Resultados -->
+                <div x-show="filteredConcepts.length === 0" class="text-center py-10 text-gray-500 bg-gray-50 rounded-lg">
+                    <p class="font-semibold text-lg">No se encontraron conceptos</p>
+                    <p>Ajusta el filtro o agrega un nuevo concepto para comenzar.</p>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</Layout>

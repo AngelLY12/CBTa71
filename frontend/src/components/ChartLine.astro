@@ -1,91 +1,115 @@
 ---
+// src/components/ChartLine.astro
+// Componente de Gráfico de Línea que utiliza Chart.js
+import { Fragment } from 'astro/jsx-runtime';
+
+interface ChartData {
+  labels: string[];
+  ganancias: number[];
+  estudiantes: number[];
+}
+
 interface Props {
-  data: {
-    labels: string[];
-    ganancias: number[];
-    pendientes: number[];
-    estudiantes: number[];
-  };
+  data: ChartData;
 }
 
 const { data } = Astro.props;
 
-const width = 400;
-const height = 180;
-const padding = 20;
-
-const maxY = Math.max(...data.ganancias, ...data.pendientes, ...data.estudiantes) * 1.2;
-const scaleY = (value: number) => height - padding - (value / maxY) * (height - 2 * padding);
-const scaleX = (index: number) => padding + (index / (data.labels.length - 1)) * (width - 2 * padding);
-
-const generateLinePath = (values: number[]) => {
-  return values.map((value, i) => `${scaleX(i)},${scaleY(value)}`).join('L');
-};
-
-const pathGanancias = generateLinePath(data.ganancias);
-const pathPendientes = generateLinePath(data.pendientes);
-const pathEstudiantes = generateLinePath(data.estudiantes);
+// Serializar los datos para pasarlos al script de forma segura
+const chartDataJSON = JSON.stringify(data);
 ---
-<div class="flex justify-between items-center mb-4">
-  <h2 class="text-xl font-bold text-gray-800">Métricas</h2>
-  <div class="flex gap-4 text-sm text-gray-600">
-    <div class="flex items-center">
-      <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span> Ganancias
-    </div>
-    <div class="flex items-center">
-      <span class="w-3 h-3 rounded-full bg-purple-500 mr-2"></span> Pendientes
-    </div>
-    <div class="flex items-center">
-      <span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span> Estudiantes
-    </div>
-  </div>
-</div>
 
-<svg class="w-full h-auto" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
-  {Array.from({ length: 5 }).map((_, i) => {
-    const y = padding + (i / 4) * (height - 2 * padding);
-    return <line x1={padding} y1={y} x2={width - padding} y2={y} stroke="#e0e0e0" stroke-dasharray="2 2" />;
-  })}
+<Fragment>
+  <canvas id="chartLine"></canvas>
+   
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
-  <polyline
-    fill="none"
-    stroke="#22c55e"
-    stroke-width="2"
-    points={pathGanancias}
-  />
-  {data.ganancias.map((value, i) => (
-    <circle cx={scaleX(i)} cy={scaleY(value)} r="3" fill="#22c55e" />
-  ))}
+  <script is:inline>
+    function initializeChartLine(dataJSON) {
+      const data = JSON.parse(dataJSON);
+      const ctx = document.getElementById('chartLine');
 
-  <polyline
-    fill="none"
-    stroke="#a855f7"
-    stroke-width="2"
-    points={pathPendientes}
-  />
-  {data.pendientes.map((value, i) => (
-    <circle cx={scaleX(i)} cy={scaleY(value)} r="3" fill="#a855f7" />
-  ))}
+      // Comprobación crucial: Si los datos no están definidos, salimos.
+      // Esta es la línea que fallaba en tu stack trace.
+      if (!ctx || !data || !data.labels || !data.ganancias || !data.estudiantes) {
+        console.error("ChartLine: Datos incompletos o inválidos.");
+        return;
+      }
 
-  <polyline
-    fill="none"
-    stroke="#ef4444"
-    stroke-width="2"
-    points={pathEstudiantes}
-  />
-  {data.estudiantes.map((value, i) => (
-    <circle cx={scaleX(i)} cy={scaleY(value)} r="3" fill="#ef4444" />
-  ))}
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Recaudación (Miles de $)',
+              data: data.ganancias.map(g => g / 1000),
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: 'rgba(75, 192, 192, 0.5)',
+              yAxisID: 'y1',
+              tension: 0.4,
+              fill: true,
+            },
+            {
+              label: 'Estudiantes',
+              data: data.estudiantes,
+              borderColor: 'rgb(46, 89, 77)',
+              backgroundColor: 'rgb(46, 89, 77, 0.8)',
+              yAxisID: 'y2',
+              tension: 0.4,
+              pointRadius: 5,
+              type: 'bar',
+            },
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          scales: {
+            x: {
+              grid: { display: false }
+            },
+            y1: {
+              type: 'linear',
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Monto Recaudado (Miles de $)'
+              },
+              beginAtZero: true,
+            },
+            y2: {
+              type: 'linear',
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Estudiantes'
+              },
+              grid: {
+                drawOnChartArea: false,
+              },
+              beginAtZero: true,
+              // max: Math.max(...data.estudiantes) * 1.1, // Comentado para evitar error si el array está vacío
+            }
+          },
+          plugins: {
+            legend: {
+              display: true
+            }
+          }
+        }
+      });
 
-  {data.labels.map((label, i) => (
-    <text
-      x={scaleX(i)}
-      y={height - padding / 2}
-      text-anchor="middle"
-      font-size="10"
-      fill="#6b7280"
-    >
-      {label}
-    </text>
-  ))}
-</svg>
+      // Aseguramos que el contenedor tenga una altura definida para que el gráfico se muestre
+      ctx.closest('div').style.height = '400px'; 
+    }
+
+    // Ejecutar la función cuando el script se cargue
+    initializeChartLine('{chartDataJSON}');
+
+  </script>
+</Fragment>
