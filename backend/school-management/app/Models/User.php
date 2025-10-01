@@ -48,12 +48,6 @@ class User extends Authenticatable
         return $this->belongsTo(Career::class);
     }
 
-    public function paymentMethods()
-    {
-        return $this->hasMany(PaymentMethod::class);
-
-    }
-
     public function paymentConcepts(){
         return $this->belongsToMany(PaymentConcept::class);
     }
