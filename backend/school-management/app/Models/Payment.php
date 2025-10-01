@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\PaymentConcept;
-use App\Models\PaymentMethod;
 
 class Payment extends Model
 {
@@ -14,9 +13,11 @@ class Payment extends Model
     protected $fillable = [
         'user_id',
         'payment_concept_id',
-        'payment_method_id',
+        'stripe_payment_method_id',
+        'last4',
+        'brand',
+        'type_payment_method',
         'status',
-        'transaction_date',
         'payment_intent_id',
         'url'
     ];
@@ -26,9 +27,6 @@ class Payment extends Model
     }
     public function paymentConcept(){
         return $this->belongsTo(PaymentConcept::class);
-    }
-    public function paymentMethod(){
-        return $this->belongsTo(PaymentMethod::class);
     }
 
 }

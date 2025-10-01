@@ -22,9 +22,8 @@ class PaymentFactory extends Factory
         return [
             'user_id' => User::factory(),
             'payment_concept_id' => PaymentConcept::factory(),
-            'payment_method_id' => PaymentMethod::factory(),
+            'stripe_payment_method_id' => 'pm_' . fake()->bothify('##########'),
             'status' => fake()->randomElement(['Pagado','Pendiente']),
-            'transaction_date' => fake()->dateTime(),
             'payment_intent_id' => 'pi_' . fake()->unique()->bothify('##########'),
             'url' => fake()->url(),
         ];
