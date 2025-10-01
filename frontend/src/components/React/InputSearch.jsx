@@ -10,7 +10,7 @@ function InputSearch({ value, setValue, title, options = [] }) {
         } else {
             setOpenOption(true)
         }
-        console.log("cerrado busqueda")
+        console.log("cerrado busqueda ")
     }
 
     const eraseButton = () => {
