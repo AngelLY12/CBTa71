@@ -40,6 +40,7 @@ class UserFactory extends Factory
             'state'=>fake()->state(),
             'municipality'=>fake()->city(),
             'career_id'=>Career::factory(),
+            'stripe_customer_id'=>fake()->unique()->bothify('##########'),
             'registration_date'=>fake()->dateTimeBetween('-4 years', 'now'),
             'status'=>fake()->boolean(80)
         ];
