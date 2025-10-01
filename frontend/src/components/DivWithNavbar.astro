@@ -12,7 +12,7 @@ const { title, routesMiddle } = Astro.props;
 
 <div class="flex relative">
     <NavigationSideBar />
-    <div class="lg:pl-44 lg:pr-6 px-2 pt-4 w-full">
+    <div id="div-body" class="lg:pl-44 lg:pr-6 px-2 pt-4 w-full">
         <Title title={title} routesMiddle={routesMiddle} />
         <div class="px-3 lg:px-6 mt-2">
             <slot />
