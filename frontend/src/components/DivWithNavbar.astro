@@ -3,16 +3,19 @@ import NavigationSideBar from "./NavigationSideBar.astro";
 import Title from "./Title.astro";
 
 interface Props {
-    title: string
+    title: string;
+    routesMiddle?: [{ url: string; title: string }];
 }
 
-const {title} = Astro.props
+const { title, routesMiddle } = Astro.props;
 ---
 
 <div class="flex relative">
     <NavigationSideBar />
-    <div class="lg:pl-44 lg:pr-6 px-2 pt-4 w-full">
-        <Title title={title} /> 
-        <slot></slot>
+    <div id="div-body" class="lg:pl-44 lg:pr-6 px-2 pt-4 w-full">
+        <Title title={title} routesMiddle={routesMiddle} />
+        <div class="px-3 lg:px-6 mt-2">
+            <slot />
+        </div>
     </div>
 </div>

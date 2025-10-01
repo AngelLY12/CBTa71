@@ -1,5 +1,5 @@
 ---
-import LinksNavbar from "./LinksNavbar.astro";
+import LinksNavbar from "./LinkNavbar.astro";
 import { routesNavbar } from "../data/routes";
 
 interface Props {
@@ -11,7 +11,7 @@ const { isMovil = false } = Astro.props;
 
 <div
     id={`${!isMovil ? "container-navbar" : "container-navbarMobil"}`}
-    class={`bg-green-500 ${!isMovil ? "w-[8.7rem] h-full fixed hidden lg:visible lg:block" : "w-36 fixed inset-y-0 right-0 z-10 hidden"} `}
+    class={`bg-green-500 ${!isMovil ? "w-[8.7rem] h-full fixed hidden lg:visible lg:block" : "w-[8.7rem] fixed inset-y-0 right-0 z-10 hidden"} `}
 >
     <nav class="w-full flex flex-col gap-2 pt-2 px-1 text-white">
         {
@@ -61,7 +61,11 @@ const { isMovil = false } = Astro.props;
         <!-- Inicio -->
         {
             routesNavbar.map((route) => (
-                <LinksNavbar url={route.url} title={route.name} isMovil={isMovil}>
+                <LinksNavbar
+                    url={route.url}
+                    title={route.name}
+                    isMovil={isMovil}
+                >
                     <svg
                         slot="iconFilled"
                         xmlns="http://www.w3.org/2000/svg"
@@ -69,8 +73,7 @@ const { isMovil = false } = Astro.props;
                         fill="currentColor"
                         class="size-6"
                         set:html={route.svg.filled}
-                    >
-                    </svg>
+                    />
                     <svg
                         slot="iconOutline"
                         xmlns="http://www.w3.org/2000/svg"
@@ -80,8 +83,7 @@ const { isMovil = false } = Astro.props;
                         stroke="currentColor"
                         class="size-6"
                         set:html={route.svg.outline}
-                    >
-                    </svg>
+                    />
                 </LinksNavbar>
             ))
         }
@@ -102,6 +104,9 @@ const { isMovil = false } = Astro.props;
         const divNavbarMobil = document.getElementById(
             "container-navbarMobil",
         ) as HTMLDivElement;
+        const divContainer = document.getElementById(
+            "div-body",
+        ) as HTMLDivElement;
         const bgNavbar = document.getElementById("bg-navbar") as HTMLDivElement;
         const textlink = document.querySelectorAll(".showText");
         const links = document.querySelectorAll(".links-navbar");
@@ -116,7 +121,9 @@ const { isMovil = false } = Astro.props;
                 e.classList.add("justify-center");
                 e.classList.remove("pl-2");
             });
-            divNavbar.classList.remove("w-36");
+            divNavbar.classList.remove("w-[8.7rem]");
+            divContainer.classList.toggle("lg:pl-44");
+            divContainer.classList.toggle("lg:pl-30");
             divNavbar.classList.add("w-20");
         }
 
@@ -126,7 +133,9 @@ const { isMovil = false } = Astro.props;
                 e.classList.toggle("justify-center");
                 e.classList.toggle("pl-2");
             });
-            divNavbar.classList.toggle("w-36");
+            divContainer.classList.toggle("lg:pl-44");
+            divContainer.classList.toggle("lg:pl-30");
+            divNavbar.classList.toggle("w-[8.7rem]");
             divNavbar.classList.toggle("w-20");
 
             const isNowCollapsed = divNavbar.classList.contains("w-20");

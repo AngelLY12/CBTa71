@@ -105,11 +105,15 @@ export const routesNavbar = [
 
 export const routes = {
   home: {
-    url: "home",
+    url: routesNavbar[0].url,
     title: "Inicio"
   },
   roles: {
-    url: "/roles",
-    title: "Personal"
+    url: routesNavbar[1].url,
+    title: "Roles"
   },
+  concept: {
+    url: routesNavbar[2].url,
+    title: "Conceptos"
+  }
 }
