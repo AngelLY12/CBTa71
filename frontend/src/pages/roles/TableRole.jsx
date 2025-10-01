@@ -4,7 +4,7 @@ import InputSearch from '../../components/React/InputSearch'
 function TableRole() {
     const [searchPersonal, setSearchPersonal] = useState("")
     const [personalResponse, setPersonalResponse] = useState([])
-    const optionsPersonal = ["a","a","a"]
+    const optionsPersonal = ["A","A","A"]
 
     const getPersonal = async () => {
         try {
