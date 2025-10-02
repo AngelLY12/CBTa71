@@ -8,7 +8,6 @@ class PaymentsService{
 
     public function showAllPayments(?string $search = null)
     {
-        try{
             $query = PaymentConcept::with(['payments.user'])
             ->when($search, function ($q) use ($search) {
                 $q->where('concept_name', 'like', "%$search%")
@@ -34,30 +33,7 @@ class PaymentsService{
             });
         });
 
-        if($paginated->isEmpty()){
-            return (new ResponseBuilder())
-            ->success(false)
-            ->message('No hay pagos registrados')
-            ->build();
-
-        }
-
-        return (new ResponseBuilder())
-        ->success(true)
-        ->data($paginated->toArray())
-        ->build();
-
-        }catch(\Exception $e){
-            logger()->error("Error mostrando métodos de pago: " . $e->getMessage());
-
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error mostrando todos los pagos registrados')
-                ->build();
-
-
-        }
-
+        return $paginated;
     }
 
 }

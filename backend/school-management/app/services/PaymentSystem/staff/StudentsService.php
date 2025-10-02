@@ -9,7 +9,6 @@ class StudentsService{
 
 
     public function showAllStudents(?string $search=null){
-        try{
             $studentsQuery = User::role('alumno');
 
 
@@ -45,27 +44,7 @@ class StudentsService{
                 ];
             });
 
-            if($students->isEmpty()){
-                return (new ResponseBuilder())
-                ->success(false)
-                ->message('No hay estudiantes registrados')
-                ->build();
-            }
-
-            return (new ResponseBuilder())
-            ->success(true)
-            ->data($students)
-            ->build();
-
-        }catch (\Exception $e) {
-            logger()->error("Error al mostrar alumnos: " . $e->getMessage());
-
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error mostrando alumnos')
-                ->build();
-        }
-
+           return $students;
 
     }
 

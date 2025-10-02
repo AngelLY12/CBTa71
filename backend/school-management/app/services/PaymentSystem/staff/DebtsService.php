@@ -11,7 +11,6 @@ class DebtsService{
 
     public function showAllpendingPayments(?string $search=null)
     {
-        try{
             $query = PaymentConcept::with('payments.user')
             ->when($search, function ($q) use ($search) {
                 $q->where('concept_name', 'like', "%$search%")
@@ -34,29 +33,7 @@ class DebtsService{
                 });
             });
 
-            if($paginated->isEmpty()){
-                return (new ResponseBuilder())
-                ->success(false)
-                ->message('No hay pagos registrados')
-                ->build();
-
-            }
-
-            return (new ResponseBuilder())
-            ->success(true)
-            ->data($paginated->toArray())
-            ->build();
-
-        }catch(\Exception $e){
-            logger()->error("Error mostrando métodos de pago: " . $e->getMessage());
-
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error mostrando todos los adeudos registrados')
-                ->build();
-
-        }
-
+            return $paginated;
 
     }
 
@@ -68,24 +45,19 @@ class DebtsService{
         ->first();
 
     if (!$student) {
-        return (new ResponseBuilder())
-        ->success(false)
-        ->message('Alumno no encontrado')
-        ->build();
+        throw new \InvalidArgumentException('Alumno no encontrado');
+
     }
 
     $payment = $student->payments()->where('payment_intent_id', $payment_intent_id)->first();
 
     if (!$payment) {
-        try {
             $intent = PaymentIntent::retrieve($payment_intent_id);
             $charge = $intent->charges->data[0] ?? null;
 
             if (!$charge) {
-                return (new ResponseBuilder())
-                ->success(false)
-                ->message('Pago no encontrado en Stripe')
-                ->build();
+                throw new \InvalidArgumentException('Pago no encontrado en Stripe');
+
             }
 
             $payment = $student->payments()->create([
@@ -97,14 +69,7 @@ class DebtsService{
                 'url'=>$paymentIntent->charges->data[0]->receipt_url ?? null
             ]);
 
-        } catch (\Exception $e) {
-            logger()->error("Error al verificar de pago: " . $e->getMessage());
 
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error al verificar el pago')
-                ->build();
-        }
     }
 
     $data = [
@@ -123,11 +88,7 @@ class DebtsService{
         ]
     ];
 
-    return (new ResponseBuilder())
-                ->success(true)
-                ->message('Pago validado correctamente')
-                ->data($data)
-                ->build();
+    return $data;
 }
 
 

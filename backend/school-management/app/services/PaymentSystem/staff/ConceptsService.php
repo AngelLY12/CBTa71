@@ -11,7 +11,6 @@ class ConceptsService{
 
 
     public function showConcepts(string $status = 'todos'){
-        try{
             $paymentConcepts = PaymentConcept::orderBy('created_at','desc');
 
         switch($status){
@@ -26,35 +25,15 @@ class ConceptsService{
                 break;
 
         }
-        $conceptsFiltered = $paymentConcepts->get();
-        if($conceptsFiltered->isEmpty()){
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('No hay conceptos registrados')
-                ->build();
-        }
-
-        return (new ResponseBuilder())
-        ->success(true)
-        ->data($conceptsFiltered)
-        ->build();
-
-        }catch(\Exception $e){
-            logger()->error("Error mostrando los conceptos: " . $e->getMessage());
-
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error mostrando los conceptos registrados')
-                ->build();
-        }
+;
+        return $paymentConcepts->get();
 
     }
 
     public function createPaymentConcept(PaymentConcept $pc, string $appliesTo='todos', ?int $semestre=null, ?string $career=null, array|string|null $students = null)
     {
-        DB::beginTransaction();
-        try{
-            PaymentConceptValidator::ensureConceptHasRequiredFields($pc);
+        return DB::transaction(function() use ($pc, $appliesTo, $semestre, $career, $students){
+        PaymentConceptValidator::ensureConceptHasRequiredFields($pc);
             $paymentConcept = PaymentConcept::create([
                 'concept_name' => $pc->concept_name,
                 'description' =>$pc->description ?? null,
@@ -91,32 +70,19 @@ class ConceptsService{
                 default:
                     break;
             }
-            DB::commit();
+            return $paymentConcept;
 
-            return (new ResponseBuilder())
-                ->success(true)
-                ->data($paymentConcept)
-                ->build();
+         });
 
-
-        }catch(\Exception $e){
-            logger()->error("Error al crear el concepto: " . $e->getMessage());
-            DB::rollBack();
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error al crear el concepto')
-                ->build();
-        }
 
 
     }
 
     public function updatePaymentConcept(PaymentConcept $pc, array $data, ?int $semestre = null, ?string $career = null, array|string|null $students = null)
     {
-    DB::beginTransaction();
-    try {
+         return DB::transaction(function() use ($pc, $data, $semestre, $career, $students){
 
-        $pc->update([
+            $pc->update([
             'concept_name' => $data['concept_name'] ?? $pc->concept_name,
             'description'  => $data['description'] ?? $pc->description,
             'status'       => $data['status'] ?? $pc->status,
@@ -156,45 +122,19 @@ class ConceptsService{
             }
         }
 
-        DB::commit();
+        return $pc;
+         });
 
-        return (new ResponseBuilder())
-            ->success(true)
-            ->data($pc->toArray())
-            ->build();
-
-    } catch (\Exception $e) {
-        logger()->error("Error al actualizar el concepto: " . $e->getMessage());
-        DB::rollBack();
-        return (new ResponseBuilder())
-            ->success(false)
-            ->message('Error al actualizar el concepto')
-            ->build();
-    }
 }
 
     public function finalizePaymentConcept(PaymentConcept $concept)
     {
-        try {
             $concept->update([
                 'end_date' => now(),
                 'status'   => 'Finalizado',
             ]);
 
-            return (new ResponseBuilder())
-                ->success(true)
-                ->message('Concepto finalizado correctamente')
-                ->data($concept->toArray())
-                ->build();
-
-        } catch (\Exception $e) {
-            logger()->error("Error finalizando el concepto: " . $e->getMessage());
-
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('No se pudo finalizar el concepto')
-                ->build();
-        }
+            return $concept;
     }
 
 

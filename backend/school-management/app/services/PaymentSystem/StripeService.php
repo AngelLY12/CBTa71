@@ -12,15 +12,19 @@ use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\CardException;
 use Stripe\Exception\RateLimitException;
 use App\Utils\Validators\StripeValidator;
+use App\Utils\Validators\PaymentConceptValidator;
 
 
 class StripeService{
+
+    public function __construct(){
+        Stripe::setApiKey(config('services.stripe.secret'));
+    }
 
     public function createStripeUser(User $user){
         try{
             StripeValidator::ensureUserHasEmailAndName($user);
 
-            Stripe::setApiKey(config('services.stripe.secret'));
             if(!$user->stripe_customer_id){
                 $customer = Customer::create([
                         'email'=>$user->email,
@@ -36,7 +40,7 @@ class StripeService{
             throw $e;
         }catch(ApiErrorException $e){
             logger()->error("Stripe error creating customer: " . $e->getMessage());
-            throw new \Exception("No se pudo asociar el usuario.");
+            throw $e;
         }
 
     }
@@ -44,8 +48,6 @@ class StripeService{
     public function createSetupIntent(User $user){
 
         try{
-            Stripe::setApiKey(config('services.stripe.secret'));
-
             $customerId = $this->createStripeUser($user);
 
             $setupIntent = SetupIntent::create([
@@ -56,11 +58,10 @@ class StripeService{
             return $setupIntent;
         }catch(ApiErrorException $e){
             logger()->error("Stripe error setupIntent: " . $e->getMessage());
-            throw new \Exception("Hubo un error en la solicitud.");
+            throw $e;
         }catch (RateLimitException $e) {
             logger()->error("Rate limit hit: " . $e->getMessage());
-            throw new \Exception("Demasiadas solicitudes, intenta más tarde.");
-
+            throw $e;
         }
 
     }
@@ -68,7 +69,6 @@ class StripeService{
     public function createStripePaymentMethod(string $paymentMethodId, User $user){
         try{
             StripeValidator::ensureValidPaymentMethodId($paymentMethodId);
-            Stripe::setApiKey(config('services.stripe.secret'));
             $stripePaymentMethod = StripePaymentMethod::retrieve($paymentMethodId);
             $stripePaymentMethod->attach(['customer' => $user->stripe_customer_id]);
             return $stripePaymentMethod;
@@ -77,47 +77,59 @@ class StripeService{
             throw $e;
         }catch(ApiErrorException $e){
             logger()->error("Stripe error attaching PaymentMethod: " . $e->getMessage());
-            throw new \Exception("No se pudo asociar el método de pago.");
+            throw $e;
         }
 
     }
 
-    public function createPaymentIntent(User $user,PaymentConcept $concept, string $paymentMethodId){
+    public function createPaymentIntent(User $user,PaymentConcept $concept, string $paymentMethodId, string $paymentType = 'card'){
 
         try {
 
+            StripeValidator::ensureValidPaymentType($paymentType);
             StripeValidator::ensureUserHasStripeCustomer($user);
             StripeValidator::ensureValidPaymentMethodId($paymentMethodId);
             StripeValidator::ensureValidConcept($concept);
             StripeValidator::ensureExistsPaymentMethodId($paymentMethodId, $user);
+            PaymentConceptValidator::ensureConceptIsActiveAndValid($user,$concept);
+            StripeValidator::ensureExistsPaymentMethodId($paymentMethodId, $user);
 
-            Stripe::setApiKey(config('services.stripe.secret'));
+           $data = [
+            'amount' => intval($concept->amount * 100),
+            'currency' => 'mxn',
+            'customer' => $user->stripe_customer_id,
+            'payment_method_types' => [$paymentType],
+            ];
 
-            $paymentIntent = PaymentIntent::create([
-                'amount'=>intval($concept->amount*100),
-                'currency'=>'mxn',
-                'customer'=>$user->stripe_customer_id,
-                'payment_method'=>$paymentMethodId,
-                'off_session'=>true,
-                'confirm'=>true
+            if ($paymentType === 'card' && $paymentMethodId) {
+                $data['payment_method'] = $paymentMethodId;
+                $data['off_session'] = true;
+                $data['confirm'] = true;
+            }
 
-            ]);
+            if ($paymentType === 'bank_transfer') {
+                $data['payment_method_options'] = [
+                    'bank_transfer' => [
+                        'type' => 'mxn_spei',
+                    ],
+                ];
+            }
 
-            return $paymentIntent;
+            return PaymentIntent::create($data);
 
         }catch (\InvalidArgumentException $e) {
             throw $e;
         }catch(ApiErrorException $e){
             logger()->error("Stripe error creating PaymentIntent: " . $e->getMessage());
-            throw new \Exception("No se pudo crear el PaymentIntent. Intenta más tarde.");
+            throw $e;
 
         }catch (CardException $e) {
             logger()->warning("Card declined for user {$user->id}: " . $e->getError()->message);
-            throw new \Exception("Tu tarjeta fue rechazada: " . $e->getError()->message);
+            throw $e;
 
         }catch (RateLimitException $e) {
             logger()->error("Rate limit hit: " . $e->getMessage());
-            throw new \Exception("Demasiadas solicitudes, intenta más tarde.");
+            throw $e;
 
         }
 
@@ -127,7 +139,6 @@ class StripeService{
 
         try{
             StripeValidator::ensureUserHasStripeCustomer($user);
-            Stripe::setApiKey(config('services.stripe.secret'));
             $paymentMethods= StripePaymentMethod::all([
                 'customer'=>$user->stripe_customer_id,
                 'type'=>'card'
@@ -137,10 +148,10 @@ class StripeService{
             throw $e;
         }catch(ApiErrorException $e){
             logger()->error("Stripe error showing PaymentMethods: " . $e->getMessage());
-            throw new \Exception("No es posible mostrar las tarjetas del usuario. Intenta más tarde.");
+            throw $e;
         }catch (RateLimitException $e) {
             logger()->error("Rate limit hit: " . $e->getMessage());
-            throw new \Exception("Demasiadas solicitudes, intenta más tarde.");
+            throw $e;
 
         }
 
@@ -152,7 +163,6 @@ class StripeService{
     {
     try {
         StripeValidator::ensureValidPaymentMethodId($stripePaymentMethodId);
-        Stripe::setApiKey(config('services.stripe.secret'));
         $stripePM = StripePaymentMethod::retrieve($stripePaymentMethodId);
         $stripePM->detach();
         return true;
@@ -160,7 +170,7 @@ class StripeService{
         throw $e;
     }catch (\Stripe\Exception\ApiErrorException $e) {
         logger()->error("Stripe error detaching PaymentMethod: " . $e->getMessage());
-        throw new \Exception("No se pudo eliminar el método de pago. Intenta más tarde.");
+        throw $e;
     }
     }
 
