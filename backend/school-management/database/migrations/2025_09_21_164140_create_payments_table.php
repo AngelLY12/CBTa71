@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('type_payment_method')->nullable();
             $table->string('status');
             $table->string('payment_intent_id',50)->unique();
-            $table->string('url');
+            $table->string('url')->nullable();
             $table->timestamps();
         });
     }
