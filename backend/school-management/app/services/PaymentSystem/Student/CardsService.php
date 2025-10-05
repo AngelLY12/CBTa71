@@ -3,90 +3,56 @@
 namespace App\Services\PaymentSystem\Student;
 
 use App\Models\User;
+use App\Models\PaymentMethod;
 use App\Services\PaymentSystem\StripeService;
-use App\Utils\ResponseBuilder;
+use Illuminate\Support\Facades\DB;
 
 class CardsService{
+protected StripeService $stripeService;
 
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
 
-    public function savedPaymentMethod(string $paymentMethodId, User $user){
-        try {
-            $stripeService = new StripeService();
-            $stripeService->createStripePaymentMethod($paymentMethodId, $user);
+    public function savedPaymentMethod(User $user){
+        return $this->stripeService->createSetupSession($user);
+    }
 
-            return (new ResponseBuilder())
-                ->success(true)
-                ->message('Método de pago creado correctamente')
-                ->build();
-        } catch (\Exception $e) {
-            logger()->error("Error guardando método de pago: " . $e->getMessage());
+     public function finalizeSetupFromSessionId(string $sessionId)
+    {
+        return $this->stripeService->getSetupIntentFromSession($sessionId);
+    }
 
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error guardando método de pago')
-                ->build();
-        }
+     public function getPaymentMethodDetails(User $user,string $paymentMethodId)
+    {
+        $paymentMethod = $this->stripeService->retrievePaymentMethod($paymentMethodId);
+        PaymentMethod::create([
+        'user_id' => $user->id,
+        'stripe_payment_method_id' => $paymentMethod->id,
+        'brand' => $paymentMethod->card->brand ?? null,
+        'last4' => $paymentMethod->card->last4 ?? null,
+        'bank_name' => $paymentMethod->card->bank ?? null,
+        'exp_month' => $paymentMethod->card->exp_month ?? null,
+        'exp_year' => $paymentMethod->card->exp_year ?? null,
+    ]);
+        return $paymentMethod;
     }
 
     public function showPaymentMethods(User $user){
+         return PaymentMethod::where('user_id', $user->id)
+            ->get()
+            ->makeHidden(['created_at', 'updated_at'])
+            ->toArray();
 
-        try {
-            $stripeService = new StripeService();
-            $paymentMethods = $stripeService->showPaymentMethods($user);
-
-            $cards = [];
-            foreach ($paymentMethods->data as $pm) {
-                $cards[] = [
-                    'id'        => $pm->id,
-                    'brand'     => $pm->card->brand,
-                    'last4'     => $pm->card->last4,
-                    'exp_month' => $pm->card->exp_month,
-                    'exp_year'  => $pm->card->exp_year,
-                    'funding'   => $pm->card->funding,
-                    'country'   => $pm->card->country,
-                ];
-            }
-
-            if(empty($cards)){
-                return (new ResponseBuilder())
-                ->success(false)
-                ->message("No hay métodos de pago guardados")
-                ->build();
-            }
-
-            return (new ResponseBuilder())
-                ->success(true)
-                ->data($cards)
-                ->build();
-        } catch (\Exception $e) {
-            logger()->error("Error mostrando métodos de pago: " . $e->getMessage());
-
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error mostrando métodos de pago')
-                ->build();
-        }
     }
 
     public function deletePaymentMethod($stripePaymentMethodId){
-        try {
-            $stripeService = new StripeService();
-            $stripeService->deletePaymentMethod($stripePaymentMethodId);
-
-            return (new ResponseBuilder())
-                ->success(true)
-                ->message('Método de pago eliminado correctamente')
-                ->build();
-        } catch (\Exception $e) {
-            logger()->error("Error eliminando método de pago: " . $e->getMessage());
-
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message("Error eliminando método de pago")
-                ->build();
-        }
-
-
+        return DB::transaction(function() use ($stripePaymentMethodId){
+            $this->stripeService->deletePaymentMethod($stripePaymentMethodId);
+            PaymentMethod::where('stripe_payment_method_id', $stripePaymentMethodId)->delete();
+            return true;
+        });
     }
 
 }

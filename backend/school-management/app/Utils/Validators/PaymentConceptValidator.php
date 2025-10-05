@@ -2,22 +2,45 @@
 
 namespace App\Utils\Validators;
 use App\Models\PaymentConcept;
-use App\Utils\ResponseBuilder;
 use Carbon\Carbon;
 use InvalidArgumentException;
+use App\Models\Payment;
+use App\Models\User;
+use App\Exceptions\ConceptExpiredException;
+use App\Exceptions\PaymentAlreadyExistsException;
+use App\Exceptions\ConceptInactiveException;
+use App\Exceptions\UserNotAllowedException;
+
 
 class PaymentConceptValidator{
 
-    public static function ensureConceptIsActiveAndValid(PaymentConcept $concept)
+    public static function ensureConceptIsActiveAndValid(User $user,PaymentConcept $concept)
     {
         $today = Carbon::today();
 
-        if ($concept->status !== 'Activo') {
-            throw new InvalidArgumentException('El concepto no está activo');
+        $existingPayment = Payment::where('user_id', $user->id)
+            ->where('payment_concept_id', $concept->id)
+            ->exists();
+
+        if ($existingPayment) {
+            throw new PaymentAlreadyExistsException();
         }
 
-        if ($concept->start_date > $today || $concept->end_date < $today) {
-            throw new InvalidArgumentException('El concepto no está vigente');
+        if ($concept->status !== 'Activo') {
+            throw new ConceptInactiveException();
+        }
+
+        if ($concept->start_date >= $today || $concept->end_date <= $today) {
+            throw new ConceptExpiredException();
+        }
+
+        $allowed = $concept->is_global
+            || $concept->users->contains($user->id)
+            || $concept->careers->contains($user->career_id)
+            || $concept->paymentConceptSemesters->contains('semestre', $user->semestre);
+
+        if (!$allowed) {
+            throw new UserNotAllowedException();
         }
     }
 

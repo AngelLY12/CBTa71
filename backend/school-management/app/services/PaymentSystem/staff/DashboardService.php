@@ -10,7 +10,6 @@ class DashboardService{
 
     public function pendingPaymentAmount(bool $onlyThisYear = false)
     {
-        try{
             $query = PaymentConcept::where('status','Activo')
             ->whereDoesntHave('payments');
 
@@ -18,101 +17,53 @@ class DashboardService{
                 $query->whereYear('created_at',now()->year);
             }
 
-            $conceptosPendientes = $query->get();
-
-
-            $data = [
-                'total_monto' => $conceptosPendientes->sum('amount'),
-                'total_conceptos' => $conceptosPendientes->count(),
+            return [
+                'total_monto' => $query->sum('amount'),
+                'total_conceptos' => $query->count(),
             ];
-
-            return (new ResponseBuilder())
-            ->success(true)
-            ->data($data)
-            ->build();
-
-        }catch(\Exception $e){
-            logger()->error("Error al obtener monto pendiente: " . $e->getMessage());
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error al obtener monto pendiente')
-                ->build();
-        }
-
 
 
     }
 
 
     public function getAllStudents(bool $onlyThisYear = false){
-        try{
             $students = User::role('alumno');
             if($onlyThisYear){
                 $students->whereYear('created_at',now()->year);
             }
-
-            return (new ResponseBuilder())
-            ->success(true)
-            ->data($students->get()->count())
-            ->build();
-
-        }catch(\Exception $e){
-            logger()->error("Error al obtener cantidad de estudiantes: " . $e->getMessage());
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error al obtener cantidad de estudiantes')
-                ->build();
-        }
+            return $students->count();
 
     }
 
 
     public function paymentsMade(bool $onlyThisYear = false)
     {
-        try{
-            $query = Payment::with('paymentConcept');
-        if($onlyThisYear){
-            $query->whereYear('created_at',now()->year);
-        }
-        $payments =$query->get()
-        ->sum(fn($payment) => $payment->paymentConcept->amount);
+        $query = Payment::join('payment_concepts', 'payments.payment_concept_id', '=', 'payment_concepts.id');
 
-        return (new ResponseBuilder())
-            ->success(true)
-            ->data($payments)
-            ->build();
-
-        }catch(\Exception $e){
-            logger()->error("Error al obtener cantidad de estudiantes: " . $e->getMessage());
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error al obtener cantidad de estudiantes')
-                ->build();
+        if ($onlyThisYear) {
+            $query->whereYear('payments.created_at', now()->year);
         }
 
+        return $query->sum('payment_concepts.amount');
 
     }
 
     public function getAllConcepts(bool $onlyThisYear = false){
 
-        try{
-            $query = PaymentConcept::orderBy('created_at', 'desc');
+            $query = PaymentConcept::select(
+                'id',
+                'concept_name',
+                'status',
+                'start_date',
+                'end_date',
+                'amount')
+            ->orderBy('created_at', 'desc');
 
             if($onlyThisYear){
                 $query->whereYear('created_at',now()->year);
             }
-            return (new ResponseBuilder())
-            ->success(true)
-            ->data($query->get())
-            ->build();
+            return $query->get();
 
-        }catch(\Exception $e){
-            logger()->error("Error al obtener los conceptos: " . $e->getMessage());
-            return (new ResponseBuilder())
-                ->success(false)
-                ->message('Error al obtener los conceptos')
-                ->build();
-        }
 
     }
 

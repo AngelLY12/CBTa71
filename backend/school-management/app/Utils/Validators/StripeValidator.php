@@ -5,6 +5,8 @@ namespace App\Utils\Validators;
 use App\Models\User;
 use App\Models\PaymentConcept;
 use App\Services\PaymentSystem\StripeService;
+use App\Exceptions\PaymentMethodNotSupportedException;
+
 
 class StripeValidator{
 
@@ -18,8 +20,11 @@ class StripeValidator{
     public static function ensureValidPaymentMethodId(?string $paymentMethodId): void
     {
         if (empty($paymentMethodId)) {
-            throw new \InvalidArgumentException("El ID del método de pago es inválido.");
+            throw new PaymentMethodNotSupportedException("El ID del método de pago es inválido.");
         }
+        if (!preg_match('/^pm_[a-zA-Z0-9]+$/', $paymentMethodId)) {
+        throw new PaymentMethodNotSupportedException("El ID del método de pago no tiene un formato válido.");
+    }
     }
 
     public static function ensureValidConcept(PaymentConcept $concept): void
@@ -44,9 +49,10 @@ class StripeValidator{
         $exists = collect($paymentMethods->data)->contains(fn($pm) => $pm->id === $paymentMethodId);
 
         if (!$exists) {
-            throw new \InvalidArgumentException('El método de pago no es válido o no pertenece al usuario.');
+            throw new PaymentMethodNotSupportedException('El método de pago no es válido o no pertenece al usuario.');
         }
     }
+
 
 
 }

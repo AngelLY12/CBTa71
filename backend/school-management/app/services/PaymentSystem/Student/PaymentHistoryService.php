@@ -11,8 +11,7 @@ class PaymentHistoryService{
 
     public function paymentHistory(User $user)
 {
-    try {
-        $payments = $user->payments()
+        return $user->payments()
             ->with('paymentConcept:id,concept_name,description,amount')
             ->orderBy('created_at', 'desc')
             ->get()
@@ -28,27 +27,14 @@ class PaymentHistoryService{
                     'brand' => $payment->brand,
                     'last4' => $payment->last4,
                 ] : null,
+                'tipo_metodo'=>$payment->type_payment_method,
+                'oxxo' => $payment->voucher_number??null,
+                'transferencia' =>$payment->spei_reference && $payment->instructions_url ? [
+                    'referencia' => $payment->spei_reference,
+                    'instrucciones'=>$payment->instructions_url
+                ]:null
             ]);
 
-        if ($payments->isEmpty()) {
-                return (new ResponseBuilder())->success(false)
-                                             ->message('No hay pagos en el historial')
-                                             ->build();
-        }
-
-        return (new ResponseBuilder())
-            ->success(true)
-            ->data($payments)
-            ->build();
-
-    } catch (\Exception $e) {
-        logger()->error("Error fetching payment history for user {$user->id}: " . $e->getMessage());
-
-        return (new ResponseBuilder())
-            ->success(false)
-            ->message('No se pudo obtener el historial de pagos. Intenta más tarde.')
-            ->build();
-    }
 }
 
 }
