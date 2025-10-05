@@ -1,0 +1,13 @@
+---
+
+interface Props {
+    href: string
+    title: string
+    active? : boolean
+}
+
+const {href, title, active = false} = Astro.props
+
+---
+
+<a href={href} class={`hover:underline hover:text-green-600 ${active && "text-green-500 font-semibold"}`}>{title}</a>
