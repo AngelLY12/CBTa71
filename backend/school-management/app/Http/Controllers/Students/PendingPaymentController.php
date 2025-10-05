@@ -33,7 +33,19 @@ class PendingPaymentController extends Controller
 
     public function store(Request $request)
     {
-        //
+        $user = Auth::user();
+        $payment= $this->pendingPaymentService->payConcept(
+                $user,
+                $request->input->integer('concept_id')
+            );
+
+
+        return response()->json([
+            'success'=>true,
+            'data'=>$payment,
+            'message' => 'El intento de pago se genero con exito.',
+        ], 201);
+
     }
 
 }

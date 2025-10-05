@@ -17,12 +17,9 @@ class DashboardService{
                 $query->whereYear('created_at',now()->year);
             }
 
-            $conceptosPendientes = $query->get();
-
-
             return [
-                'total_monto' => $conceptosPendientes->sum('amount'),
-                'total_conceptos' => $conceptosPendientes->count(),
+                'total_monto' => $query->sum('amount'),
+                'total_conceptos' => $query->count(),
             ];
 
 
@@ -34,28 +31,33 @@ class DashboardService{
             if($onlyThisYear){
                 $students->whereYear('created_at',now()->year);
             }
-            return $students->get()->count();
+            return $students->count();
 
     }
 
 
     public function paymentsMade(bool $onlyThisYear = false)
     {
-            $query = Payment::with('paymentConcept');
-        if($onlyThisYear){
-            $query->whereYear('created_at',now()->year);
+        $query = Payment::join('payment_concepts', 'payments.payment_concept_id', '=', 'payment_concepts.id');
+
+        if ($onlyThisYear) {
+            $query->whereYear('payments.created_at', now()->year);
         }
-        $payments =$query->get()
-        ->sum(fn($payment) => $payment->paymentConcept->amount);
 
-        return $payments;
-
+        return $query->sum('payment_concepts.amount');
 
     }
 
     public function getAllConcepts(bool $onlyThisYear = false){
 
-            $query = PaymentConcept::orderBy('created_at', 'desc');
+            $query = PaymentConcept::select(
+                'id',
+                'concept_name',
+                'status',
+                'start_date',
+                'end_date',
+                'amount')
+            ->orderBy('created_at', 'desc');
 
             if($onlyThisYear){
                 $query->whereYear('created_at',now()->year);

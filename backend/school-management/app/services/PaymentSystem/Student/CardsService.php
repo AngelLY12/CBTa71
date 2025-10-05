@@ -3,7 +3,9 @@
 namespace App\Services\PaymentSystem\Student;
 
 use App\Models\User;
+use App\Models\PaymentMethod;
 use App\Services\PaymentSystem\StripeService;
+use Illuminate\Support\Facades\DB;
 
 class CardsService{
 protected StripeService $stripeService;
@@ -13,32 +15,44 @@ protected StripeService $stripeService;
         $this->stripeService = $stripeService;
     }
 
-    public function savedPaymentMethod(string $paymentMethodId, User $user){
-        return $this->stripeService->createStripePaymentMethod($paymentMethodId, $user);
+    public function savedPaymentMethod(User $user){
+        return $this->stripeService->createSetupSession($user);
     }
 
-    public function setupIntent(User $user){
-        return $this->stripeService->createSetupIntent($user);
+     public function finalizeSetupFromSessionId(string $sessionId)
+    {
+        return $this->stripeService->getSetupIntentFromSession($sessionId);
+    }
 
+     public function getPaymentMethodDetails(User $user,string $paymentMethodId)
+    {
+        $paymentMethod = $this->stripeService->retrievePaymentMethod($paymentMethodId);
+        PaymentMethod::create([
+        'user_id' => $user->id,
+        'stripe_payment_method_id' => $paymentMethod->id,
+        'brand' => $paymentMethod->card->brand ?? null,
+        'last4' => $paymentMethod->card->last4 ?? null,
+        'bank_name' => $paymentMethod->card->bank ?? null,
+        'exp_month' => $paymentMethod->card->exp_month ?? null,
+        'exp_year' => $paymentMethod->card->exp_year ?? null,
+    ]);
+        return $paymentMethod;
     }
 
     public function showPaymentMethods(User $user){
+         return PaymentMethod::where('user_id', $user->id)
+            ->get()
+            ->makeHidden(['created_at', 'updated_at'])
+            ->toArray();
 
-        $paymentMethods = $this->stripeService->showPaymentMethods($user);
-        return array_map(fn($pm) => [
-        'id'        => $pm->id,
-        'brand'     => $pm->card->brand,
-        'last4'     => $pm->card->last4,
-        'exp_month' => $pm->card->exp_month,
-        'exp_year'  => $pm->card->exp_year,
-        'funding'   => $pm->card->funding,
-        'country'   => $pm->card->country,
-        ], $paymentMethods->data);
     }
 
     public function deletePaymentMethod($stripePaymentMethodId){
-        $this->stripeService->deletePaymentMethod($stripePaymentMethodId);
-        return true;
+        return DB::transaction(function() use ($stripePaymentMethodId){
+            $this->stripeService->deletePaymentMethod($stripePaymentMethodId);
+            PaymentMethod::where('stripe_payment_method_id', $stripePaymentMethodId)->delete();
+            return true;
+        });
     }
 
 }

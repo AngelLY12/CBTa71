@@ -17,8 +17,7 @@ class DashboardService{
                 ->orWhereHas('users', fn($q) => $q->where('users.id', $user->id))
                 ->orWhereHas('careers', fn($q) => $q->where('careers.id', $user->career_id))
                 ->orWhereHas('paymentConceptSemesters', fn($q) => $q->where('semestre', $user->semestre));
-            })
-            ->get();
+            });
 
             return [
                 'total_monto' => $conceptosPendientes->sum('amount'),
@@ -33,7 +32,6 @@ class DashboardService{
             return $user->payments()
             ->whereYear('created_at',now()->year)
             ->with('paymentConcept')
-            ->get()
             ->sum(fn($payment) => $payment->paymentConcept->amount);
     }
 

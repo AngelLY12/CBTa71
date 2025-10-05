@@ -2,7 +2,9 @@
 
 namespace App\Services\PaymentSystem\Staff;
 
+use App\Models\Career;
 use App\Models\PaymentConcept;
+use App\Models\User;
 use App\Utils\ResponseBuilder;
 use App\Utils\Validators\PaymentConceptValidator;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +13,14 @@ class ConceptsService{
 
 
     public function showConcepts(string $status = 'todos'){
-            $paymentConcepts = PaymentConcept::orderBy('created_at','desc');
+            $paymentConcepts = PaymentConcept::select('concept_name',
+            'description',
+            'status',
+            'start_date',
+            'end_date',
+            'amount',
+            'is_global')
+            ->orderBy('created_at','desc');
 
         switch($status){
             case 'activos':
@@ -46,8 +55,11 @@ class ConceptsService{
 
             switch($appliesTo){
                 case 'carrera':
-                    if ($career) {
-                        $paymentConcept->careers()->attach($career);
+                    $careerModel = Career::where('career_name', $career)->first();
+                    if ($careerModel) {
+                        $paymentConcept->careers()->attach($careerModel->id);
+                    } else {
+                        throw new \Exception("La carrera '$career' no existe");
                     }
                     break;
 
@@ -61,8 +73,12 @@ class ConceptsService{
 
                 case 'estudiantes':
                     if ($students) {
-                        $ids = is_array($students) ? $students : [$students];
+                    $ids = User::whereIn('curp', $students)->pluck('id');
+                    if ($ids->isNotEmpty()) {
                         $paymentConcept->users()->attach($ids);
+                    } else {
+                        throw new \Exception("Ninguno de los estudiantes existe");
+                    }
                     }
                     break;
 

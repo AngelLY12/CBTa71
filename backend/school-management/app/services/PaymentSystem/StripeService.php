@@ -4,15 +4,15 @@ namespace App\Services\PaymentSystem;
 use App\Models\User;
 use Stripe\Stripe;
 use Stripe\Customer;
-use Stripe\SetupIntent;
 use Stripe\PaymentMethod as StripePaymentMethod;
-use Stripe\PaymentIntent;
 use App\Models\PaymentConcept;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\CardException;
 use Stripe\Exception\RateLimitException;
 use App\Utils\Validators\StripeValidator;
 use App\Utils\Validators\PaymentConceptValidator;
+use Stripe\Checkout\Session;
+use Stripe\SetupIntent;
 
 
 class StripeService{
@@ -45,102 +45,109 @@ class StripeService{
 
     }
 
-    public function createSetupIntent(User $user){
+    public function createSetupSession(User $user){
 
         try{
             $customerId = $this->createStripeUser($user);
 
-            $setupIntent = SetupIntent::create([
-                'customer'=> $customerId,
-                'payment_method_types' => ['card']
-            ]);
+            $session = Session::create([
+            'mode' => 'setup',
+            'payment_method_types' => ['card'],
+            'customer' => $customerId,
+            'success_url' => config('app.frontend_url') . '/setup-success?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => config('app.frontend_url') . '/setup-cancel',
+        ]);
+
+        return $session;
+        }catch(ApiErrorException $e){
+            logger()->error("Stripe error setupSession: " . $e->getMessage());
+            throw $e;
+        }catch (RateLimitException $e) {
+            logger()->error("Rate limit hit: " . $e->getMessage());
+            throw $e;
+        }
+
+    }
+
+    public function getSetupIntentFromSession(string $sessionId)
+    {
+        try {
+            $session = Session::retrieve($sessionId);
+
+            if (empty($session->setup_intent)) {
+                return null;
+            }
+
+            $setupIntent = SetupIntent::retrieve($session->setup_intent);
 
             return $setupIntent;
-        }catch(ApiErrorException $e){
-            logger()->error("Stripe error setupIntent: " . $e->getMessage());
-            throw $e;
-        }catch (RateLimitException $e) {
-            logger()->error("Rate limit hit: " . $e->getMessage());
+        } catch (ApiErrorException $e) {
+            logger()->error("Stripe error retrieving setup_intent from session: " . $e->getMessage());
             throw $e;
         }
-
     }
 
-    public function createStripePaymentMethod(string $paymentMethodId, User $user){
+    public function retrievePaymentMethod(string $paymentMethodId)
+    {
+        return StripePaymentMethod::retrieve($paymentMethodId);
+    }
+
+    public function createCheckoutSession(User $user, PaymentConcept $concept,?string $savedPaymentMethodId = null)
+    {
         try{
-            StripeValidator::ensureValidPaymentMethodId($paymentMethodId);
-            $stripePaymentMethod = StripePaymentMethod::retrieve($paymentMethodId);
-            $stripePaymentMethod->attach(['customer' => $user->stripe_customer_id]);
-            return $stripePaymentMethod;
+            $customerId = $this->createStripeUser($user);
+            StripeValidator::ensureValidConcept($concept);
+            StripeValidator::ensureExistsPaymentMethodId($savedPaymentMethodId,$user);
+            PaymentConceptValidator::ensureConceptIsActiveAndValid($user,$concept);
 
-        }catch (\InvalidArgumentException $e) {
-            throw $e;
-        }catch(ApiErrorException $e){
-            logger()->error("Stripe error attaching PaymentMethod: " . $e->getMessage());
-            throw $e;
+            $sessionData = [
+            'mode' => 'payment',
+            'customer' => $customerId,
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'mxn',
+                    'product_data' => [
+                        'name' => $concept->concept_name,
+                    ],
+                    'unit_amount' => intval($concept->amount * 100),
+                ],
+                'quantity' => 1,
+            ]],
+            'metadata' => [
+                'payment_concept_id' => $concept->id,
+             ],
+            'success_url' => config('app.frontend_url') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => config('app.frontend_url') . '/payment-cancel',
+            'payment_method_types' => ['card', 'oxxo', 'bank_transfer'],
+        ];
+
+        if ($savedPaymentMethodId) {
+            $sessionData['payment_intent_data'] = [
+                'payment_method' => $savedPaymentMethodId,
+            ];
         }
 
-    }
+        $session = Session::create($sessionData);
 
-    public function createPaymentIntent(User $user,PaymentConcept $concept, string $paymentMethodId, string $paymentType = 'card'){
+        return $session;
 
-        try {
-
-            StripeValidator::ensureValidPaymentType($paymentType);
-            StripeValidator::ensureUserHasStripeCustomer($user);
-            StripeValidator::ensureValidPaymentMethodId($paymentMethodId);
-            StripeValidator::ensureValidConcept($concept);
-            StripeValidator::ensureExistsPaymentMethodId($paymentMethodId, $user);
-            PaymentConceptValidator::ensureConceptIsActiveAndValid($user,$concept);
-            StripeValidator::ensureExistsPaymentMethodId($paymentMethodId, $user);
-
-           $data = [
-            'amount' => intval($concept->amount * 100),
-            'currency' => 'mxn',
-            'customer' => $user->stripe_customer_id,
-            'payment_method_types' => [$paymentType],
-            ];
-
-            if ($paymentType === 'card' && $paymentMethodId) {
-                $data['payment_method'] = $paymentMethodId;
-                $data['off_session'] = true;
-                $data['confirm'] = true;
-            }
-
-            if ($paymentType === 'bank_transfer') {
-                $data['payment_method_options'] = [
-                    'bank_transfer' => [
-                        'type' => 'mxn_spei',
-                    ],
-                ];
-            }
-
-            return PaymentIntent::create($data);
-
-        }catch (\InvalidArgumentException $e) {
-            throw $e;
         }catch(ApiErrorException $e){
-            logger()->error("Stripe error creating PaymentIntent: " . $e->getMessage());
+            logger()->error("Stripe error checkout session: " . $e->getMessage());
             throw $e;
-
-        }catch (CardException $e) {
-            logger()->warning("Card declined for user {$user->id}: " . $e->getError()->message);
-            throw $e;
-
         }catch (RateLimitException $e) {
             logger()->error("Rate limit hit: " . $e->getMessage());
             throw $e;
-
         }
+
 
     }
 
     public function showPaymentMethods(User $user){
 
         try{
-            StripeValidator::ensureUserHasStripeCustomer($user);
+            $customerId = $this->createStripeUser($user);
             $paymentMethods= StripePaymentMethod::all([
-                'customer'=>$user->stripe_customer_id,
+                'customer'=>$customerId,
                 'type'=>'card'
             ]);
             return $paymentMethods;

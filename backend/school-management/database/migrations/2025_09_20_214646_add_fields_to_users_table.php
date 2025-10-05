@@ -14,17 +14,17 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('last_name',25)->after('name');
-            $table->integer('n_control')->nullable()->after('email');
-            $table->tinyInteger('semestre')->nullable()->after('n_control');
+            $table->integer('n_control')->nullable()->after('email')->index();
+            $table->tinyInteger('semestre')->nullable()->after('n_control')->index();
             $table->string('phone_number',15)->after('semestre');
             $table->date('birthdate')->after('phone_number');
             $table->enum('gender',array('Hombre','Mujer'))->nullable()->after('birthdate');
-            $table->char('curp',18)->after('gender');
+            $table->char('curp',18)->after('gender')->index();
             $table->string('address',100)->nullable()->after('curp');
             $table->string('state',30)->after('address');
             $table->string('municipality',30)->after('state');
             $table->foreignIdFor(Career::class)->nullable()->constrained('careers')->onDelete('set null')->after('password');
-            $table->string('stripe_customer_id',50)->nullable()->unique();
+            $table->string('stripe_customer_id',50)->nullable()->unique()->index();
             $table->date('registration_date');
             $table->boolean('status')->default(1);
         });

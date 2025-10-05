@@ -5,7 +5,9 @@ use App\Models\User;
 use Stripe\Stripe;
 use App\Models\Payment;
 use App\Models\PaymentConcept;
+use App\Models\PaymentMethod;
 use App\Services\PaymentSystem\StripeService;
+use Illuminate\Cache\NullStore;
 use Illuminate\Support\Facades\DB;
 
 
@@ -38,27 +40,33 @@ class PendingPaymentService{
     }
 
 
-    public function payConcept(User $user, int $conceptId, ?string $paymentMethodId=null,  string $paymentType) {
-       return DB::transaction(function() use ($user, $conceptId, $paymentMethodId, $paymentType) {
+    public function payConcept(User $user, int $conceptId, ?string $savedPaymentMethodId = null) {
+       return DB::transaction(function() use ($user, $conceptId, $savedPaymentMethodId) {
 
             $concept = PaymentConcept::findOrFail($conceptId);
-            $stripeService = new StripeService();
-            $paymentIntent = $stripeService->createPaymentIntent($user, $concept, $paymentMethodId,$paymentType);
+            $savedMethod = PaymentMethod::where('id', $savedPaymentMethodId)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
 
-            $charge = $paymentIntent->charges->data[0] ?? null;
+            $stripePaymentMethodId = $savedMethod->stripe_payment_method_id;
+            $stripeService = new StripeService();
+            $session = $stripeService->createCheckoutSession($user, $concept,$stripePaymentMethodId);
 
             return Payment::create([
                 'user_id' => $user->id,
                 'payment_concept_id' => $concept->id,
-                'payment_intent_id' => $paymentIntent->id,
-                'stripe_payment_method_id' => $paymentMethodId,
-                'last4' => $charge?->payment_method_details?->card?->last4 ?? null,
-                'brand' =>  $charge?->payment_method_details?->card?->brand ?? null,
-                'type_payment_method' => $paymentType,
-                'status' => $paymentIntent->status,
-                'url' => $charge->receipt_url
-                    ?? $paymentIntent->next_action?->display_bank_transfer_instructions?->hosted_instructions_url
-                    ?? null
+                'payment_method_id'=>$savedPaymentMethodId,
+                'payment_intent_id' => null,
+                'stripe_payment_method_id' => null,
+                'last4' => null,
+                'brand' =>  null,
+                'voucher_number'=>null,
+                'spei_reference'=>null,
+                'instructions_url'=>null,
+                'type_payment_method' => null,
+                'status' => 'pending',
+                'url' => $session->url ?? null,
+                'stripe_session_id' => $session->id ?? null
             ]);
 
        });

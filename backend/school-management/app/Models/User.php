@@ -10,13 +10,14 @@ use App\Models\Career;
 use App\Models\PaymentMethod;
 use App\Models\PaymentConcept;
 use App\Models\Payment;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
     use HasRoles;
 
     /**
@@ -55,6 +56,19 @@ class User extends Authenticatable
     public function payments(){
         return $this->hasMany(Payment::class);
     }
+
+    public function pendingPaymentConcepts() {
+    return $this->hasMany(PaymentConcept::class)
+        ->where('status', 'Activo')
+        ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $this->id))
+        ->where(function ($q) {
+            $q->where('is_global', true)
+              ->orWhereHas('users', fn($q) => $q->where('users.id', $this->id))
+              ->orWhereHas('careers', fn($q) => $q->where('careers.id', $this->career_id))
+              ->orWhereHas('paymentConceptSemesters', fn($q) => $q->where('semestre', $this->semestre));
+        });
+}
+
 
 
     /**

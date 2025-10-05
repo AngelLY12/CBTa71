@@ -53,17 +53,6 @@ class StripeValidator{
         }
     }
 
-    public static function ensureValidPaymentType(string $paymentType): void
-    {
-        $allowedTypes = ['card', 'oxxo', 'bank_transfer'];
-
-        if (!in_array($paymentType, $allowedTypes)) {
-            throw new PaymentMethodNotSupportedException(
-                "El tipo de pago '$paymentType' no está permitido."
-            );
-        }
-    }
-
 
 
 }

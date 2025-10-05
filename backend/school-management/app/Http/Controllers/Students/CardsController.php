@@ -35,37 +35,45 @@ class CardsController extends Controller
     {
         $user = Auth::user();
 
-        try {
-         $this->cardsService->savedPaymentMethod(
-                $request->input('payment_method_id'),
-                $user
-            );
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No se pudo guardar el método de pago',
-                'error' => $e->getMessage()
-            ], 400);
-        }
+         $session= $this->cardsService->savedPaymentMethod($user);
 
 
         return response()->json([
             'success'=>true,
-            'message' => 'Método de pago guardado correctamente.',
+            'checkout_url' => $session->url,
         ], 201);
 
     }
 
-   public function setupIntent()
-{
+    public function save(Request $request)
+    {
         $user = Auth::user();
-        $setupIntent = $this->cardsService->setupIntent($user);
+        $sessionId = $request->query('session_id');
+        if (!$sessionId) {
+            return response()->json(['success' => false, 'message' => 'session_id requerido'], 400);
+        }
+
+        $setupIntent = $this->cardsService->finalizeSetupFromSessionId($sessionId);
+
+        if (!$setupIntent || empty($setupIntent->payment_method)) {
+            return response()->json(['success' => false, 'message' => 'No se encontró payment_method en la sesión'], 404);
+        }
+
+        $paymentMethodId = $setupIntent->payment_method;
+        $pm = $this->cardsService->getPaymentMethodDetails($user,$paymentMethodId);
+
         return response()->json([
             'success' => true,
-            'client_secret' => $setupIntent->client_secret
-        ]);
+            'payment_method_id' => $paymentMethodId,
+            'card' => [
+                'brand' => $pm->card->brand ?? null,
+                'last4' => $pm->card->last4 ?? null,
+                'exp_month' => $pm->card->exp_month ?? null,
+                'exp_year' => $pm->card->exp_year ?? null,
+            ]
+        ], 200);
+    }
 
-}
 
 
     /**

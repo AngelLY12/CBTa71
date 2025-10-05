@@ -27,6 +27,12 @@ class PaymentHistoryService{
                     'brand' => $payment->brand,
                     'last4' => $payment->last4,
                 ] : null,
+                'tipo_metodo'=>$payment->type_payment_method,
+                'oxxo' => $payment->voucher_number??null,
+                'transferencia' =>$payment->spei_reference && $payment->instructions_url ? [
+                    'referencia' => $payment->spei_reference,
+                    'instrucciones'=>$payment->instructions_url
+                ]:null
             ]);
 
 }

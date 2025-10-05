@@ -3,92 +3,116 @@
 namespace App\Services\PaymentSystem\Staff;
 
 use App\Models\PaymentConcept;
+use App\Models\PaymentMethod;
 use App\Models\User;
 use Stripe\PaymentIntent;
-use App\Utils\ResponseBuilder;
+use Illuminate\Support\Facades\DB;
 
 class DebtsService{
 
     public function showAllpendingPayments(?string $search=null)
     {
-            $query = PaymentConcept::with('payments.user')
-            ->when($search, function ($q) use ($search) {
-                $q->where('concept_name', 'like', "%$search%")
-                  ->orWhereHas('payments.user', function ($sub) use ($search) {
-                      $sub->where('name', 'like', "%$search%")
-                          ->orWhere('last_name', 'like', "%$search%")
-                          ->orWhere('email', 'like', "%$search%");
-                  });
-            });
+    $studentsQuery = User::role('alumno')->select('id','name','last_name','email');
 
-            $paginated = $query->paginate(15);
+    if ($search) {
+        $studentsQuery->where(function($q) use ($search) {
+            $q->where('name', 'like', "%$search%")
+              ->orWhere('last_name', 'like', "%$search%")
+              ->orWhere('email', 'like', "%$search%");
+        });
+    }
 
-            $paginated->getCollection()->transform(function ($concept) {
-                return $concept->payments->map(function ($payment) use ($concept) {
-                    return [
-                        'concepto'  => $concept->concept_name,
-                        'monto'     => $concept->amount,
-                        'nombre'    => $payment->user->name . ' ' . $payment->user->last_name,
-                    ];
-                });
-            });
+    $students = $studentsQuery->get();
 
-            return $paginated;
+    $pendingList = [];
 
+    foreach ($students as $student) {
+        $pendingConcepts = PaymentConcept::select('id','concept_name','amount')
+            ->where('status','Activo')
+            ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $student->id))
+            ->get();
+
+        foreach ($pendingConcepts as $concept) {
+            $pendingList[] = [
+                'nombre'   => $student->name . ' ' . $student->last_name,
+                'concepto' => $concept->concept_name,
+                'monto'    => $concept->amount,
+            ];
+        }
+    }
+
+    return $pendingList;
     }
 
     public function validatePayment(string $search, string $payment_intent_id)
 {
-    $student = User::where('curp', 'like', "%$search%")
-        ->orWhere('email', 'like', "%$search%")
-        ->orWhere('n_control', 'like', "%$search%")
-        ->first();
+        return DB::transaction(function () use ($search, $payment_intent_id) {
+                $student = User::select('id','name','last_name','email','curp','n_control')
+                ->where('curp', 'like', "%$search%")
+                ->orWhere('email', 'like', "%$search%")
+                ->orWhere('n_control', 'like', "%$search%")
+                ->first();
 
-    if (!$student) {
-        throw new \InvalidArgumentException('Alumno no encontrado');
-
-    }
-
-    $payment = $student->payments()->where('payment_intent_id', $payment_intent_id)->first();
-
-    if (!$payment) {
-            $intent = PaymentIntent::retrieve($payment_intent_id);
-            $charge = $intent->charges->data[0] ?? null;
-
-            if (!$charge) {
-                throw new \InvalidArgumentException('Pago no encontrado en Stripe');
+            if (!$student) {
+                throw new \InvalidArgumentException('Alumno no encontrado');
 
             }
 
-            $payment = $student->payments()->create([
-                'user_id'=>$student->id,
-                'payment_concept_id',
-                'payment_method_id'=> $charge->payment_method ?? null,
-                'payment_intent_id' => $payment_intent_id,
-                'status' => $intent->status,
-                'url'=>$paymentIntent->charges->data[0]->receipt_url ?? null
-            ]);
+            $payment = $student->payments()->select('id','amount','status','payment_intent_id')->where('payment_intent_id', $payment_intent_id)->first();
+
+            if (!$payment) {
+                    $intent = PaymentIntent::retrieve($payment_intent_id);
+                    $charge = $intent->charges->data[0] ?? null;
+                    $paymentConceptId = $intent->metadata->payment_concept_id ?? null;
+                    $pm = $charge->payment_method ? PaymentMethod::where('stripe_payment_method_id', $charge->payment_method)->first() : null;
+                    $pmId = $pm ? $pm->id : null;
+                    $spei=$charge->payment_method_details->bank_transfer->reference_number ?? null;
+                    $instructions=$intent->next_action->display_bank_transfer_instructions->hosted_instructions_url ?? null;
+                    $voucher=$charge->payment_method_details->oxxo->number ?? null;
+
+                    if (!$charge) {
+                        throw new \InvalidArgumentException('Pago no encontrado en Stripe');
+
+                    }
+
+                    $payment = $student->payments()->create([
+                        'user_id'=>$student->id,
+                        'payment_concept_id'=>$paymentConceptId,
+                        'payment_method_id' => $pmId,
+                        'stripe_payment_method_id' => $charge->payment_method ?? null,
+                        'last4' => $charge->payment_method_details->card->last4 ?? null,
+                        'brand' => $charge->payment_method_details->card->brand ?? null,
+                        'voucher_number' =>$voucher,
+                        'spei_reference' => $spei,
+                        'instructions_url' =>$instructions,
+                        'payment_intent_id' => $payment_intent_id,
+                        'type_payment_method' => $charge->payment_method_details->type ?? null,
+                        'status' => $intent->status,
+                        'url' => $intent->charges->data[0]->receipt_url ?? null
+                    ]);
+
+            }
+
+            $data = [
+                'student' => [
+                    'id' => $student->id,
+                    'nombre' => $student->name . ' ' . $student->last_name,
+                    'email' => $student->email,
+                    'curp' => $student->curp,
+                    'n_control' => $student->n_control
+                ],
+                'payment' => [
+                    'id' => $payment->id,
+                    'amount' => $payment->amount,
+                    'status' => $payment->status,
+                    'payment_intent_id' => $payment->payment_intent_id
+                ]
+            ];
+
+            return $data;
+        });
 
 
-    }
-
-    $data = [
-        'student' => [
-            'id' => $student->id,
-            'nombre' => $student->name . ' ' . $student->last_name,
-            'email' => $student->email,
-            'curp' => $student->curp,
-            'n_control' => $student->n_control
-        ],
-        'payment' => [
-            'id' => $payment->id,
-            'amount' => $payment->amount,
-            'status' => $payment->status,
-            'payment_intent_id' => $payment->payment_intent_id
-        ]
-    ];
-
-    return $data;
 }
 
 
