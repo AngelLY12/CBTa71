@@ -24,55 +24,57 @@ Route::get('/test', function() {
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('dashboard')->middleware('role:student')->group(function (){
-        Route::get('/data',[DashboardController::class,'index']);
-        Route::get('/pending',[DashboardController::class,'pending']);
-        Route::get('/paid',[DashboardController::class,'paid']);
-        Route::get('/overdue',[DashboardController::class,'overdue']);
-        Route::get('/history',[DashboardController::class,'history']);
+        Route::middleware('permission:view own financial overview')->get('/data',[DashboardController::class,'index']);
+        Route::middleware('permission:view own pending concepts summary')->get('/pending',[DashboardController::class,'pending']);
+        Route::middleware('permission:view own paid concepts summary')->get('/paid',[DashboardController::class,'paid']);
+        Route::middleware('permission:view own overdue concepts summary')->get('/overdue',[DashboardController::class,'overdue']);
+        Route::middleware('permission:view payments history')->get('/history',[DashboardController::class,'history']);
 
     });
     Route::prefix('cards')->middleware('role:student')->group(function(){
-        Route::get('/',[CardsController::class,'index']);
-        Route::post('/',[CardsController::class,'store']);
-        Route::get('/save', [CardsController::class, 'save']);
-        Route::delete('/{paymentMethodId}',[CardsController::class,'destroy']);
+        Route::middleware('permission:view cards')->get('/',[CardsController::class,'index']);
+        Route::middleware('permission:create setup')->post('/',[CardsController::class,'store']);
+        Route::middleware('permission:create and view card')->get('/save', [CardsController::class, 'save']);
+        Route::middleware('permission:delete card')->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
     Route::prefix('history')->middleware('role:student')->group(function(){
-        Route::get('/',[PaymentHistoryController::class,'index']);
+        Route::middleware('permission:view payment history')->get('/',[PaymentHistoryController::class,'index']);
     });
     Route::prefix('pending-payment')->middleware('role:student')->group(function(){
-        Route::get('/',[PendingPaymentController::class,'index']);
-        Route::post('/',[PendingPaymentController::class,'store']);
+        Route::middleware('permission:view pending concepts')->get('/',[PendingPaymentController::class,'index']);
+        Route::middleware('permission:create payment')->post('/',[PendingPaymentController::class,'store']);
+        Route::middleware('permission:view overdue concepts')->get('/overdue',[PendingPaymentController::class,'overdue']);
+
     });
     Route::post('/stripe/webhook', [WebhookController::class, 'handle']);
 
     Route::prefix('dashboard-staff')->middleware('role:financial staff')->group(function(){
-        Route::get('/data',[StaffDashboardController::class,'getData']);
-        Route::get('/pending',[StaffDashboardController::class,'pendingPayments']);
-        Route::get('/students',[StaffDashboardController::class,'allStudents']);
-        Route::get('/payments',[StaffDashboardController::class,'paymentsMade']);
-        Route::get('/concepts',[StaffDashboardController::class,'allConcepts']);
+        Route::middleware('permission:view all financial overview')->get('/data',[StaffDashboardController::class,'getData']);
+        Route::middleware('permission:view all pending concepts summary')->get('/pending',[StaffDashboardController::class,'pendingPayments']);
+        Route::middleware('permission:view all students summary')->get('/students',[StaffDashboardController::class,'allStudents']);
+        Route::middleware('permission:view all paid concepts summary')->get('/payments',[StaffDashboardController::class,'paymentsMade']);
+        Route::middleware('permission:view concepts history')->get('/concepts',[StaffDashboardController::class,'allConcepts']);
     });
-
-     Route::prefix('concepts')->middleware('role:financial staff')->group(function(){
-        Route::get('/', [ConceptsController::class, 'index']);
-        Route::post('/', [ConceptsController::class, 'store']);
-        Route::put('/{concept}', [ConceptsController::class, 'update']);
-        Route::patch('/{concept}', [ConceptsController::class, 'update']);
-        Route::post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
+    Route::prefix('concepts')->middleware('role:financial staff')->group(function(){
+        Route::middleware('permission:view concepts')->get('/', [ConceptsController::class, 'index']);
+        Route::middleware('permission:create concepts')->post('/', [ConceptsController::class, 'store']);
+        Route::middleware('permission:update concepts')->put('/{concept}', [ConceptsController::class, 'update']);
+        Route::middleware('permission:update concepts')->patch('/{concept}', [ConceptsController::class, 'update']);
+        Route::middleware('permission:finalize concepts')->post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
+        Route::middleware('permission:disable concepts')->post('/{concept}/disable', [ConceptsController::class, 'disable']);
     });
 
     Route::prefix('debts')->middleware('role:financial staff')->group(function(){
-        Route::get('/', [DebtsController::class, 'index']);
-        Route::post('/validate', [DebtsController::class, 'validatePayment']);
+        Route::middleware('permission:view debts')->get('/', [DebtsController::class, 'index']);
+        Route::middleware('permission:validate debt')->post('/validate', [DebtsController::class, 'validatePayment']);
     });
 
     Route::prefix('payments')->middleware('role:financial staff')->group(function(){
-        Route::get('/', [PaymentsController::class, 'index']);
+        Route::middleware('permission:view payments')->get('/', [PaymentsController::class, 'index']);
     });
 
      Route::prefix('students')->middleware('role:financial staff')->group(function(){
-        Route::get('/', [StudentsController::class, 'index']);
+        Route::middleware('permission:view students')->get('/', [StudentsController::class, 'index']);
     });
 
 });
