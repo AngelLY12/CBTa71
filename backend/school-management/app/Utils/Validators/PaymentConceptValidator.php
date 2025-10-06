@@ -26,18 +26,19 @@ class PaymentConceptValidator{
             throw new PaymentAlreadyExistsException();
         }
 
-        if ($concept->status !== 'Activo') {
+        if ($concept->status !== 'activo') {
             throw new ConceptInactiveException();
         }
 
-        if ($concept->start_date >= $today || $concept->end_date <= $today) {
+        if ($concept->start_date >= $today || ($concept->end_date !== null && $concept->end_date <= $today)) {
             throw new ConceptExpiredException();
         }
 
         $allowed = $concept->is_global
             || $concept->users->contains($user->id)
             || $concept->careers->contains($user->career_id)
-            || $concept->paymentConceptSemesters->contains('semestre', $user->semestre);
+            || $concept->paymentConceptSemesters->contains('semestre', $user->semestre)
+            || $user->status==='activo';
 
         if (!$allowed) {
             throw new UserNotAllowedException();
