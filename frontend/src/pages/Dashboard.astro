@@ -1,0 +1,144 @@
+---
+// src/pages/index.astro
+import Layout from '../layouts/Layout.astro';
+import CardInfo from '../components/CardInfo.astro';
+// Asegúrate de que estos componentes existan en src/components/
+import ChartLine from '../components/ChartLine.astro';
+import ChartDonut from '../components/ChartDonut.astro';
+import ConceptsTable from '../components/ConceptsTable.astro';
+
+// ---------------------------------------------------------------------
+// 1. DATOS INICIALES Y CÁLCULOS
+// ---------------------------------------------------------------------
+
+// Los datos de conceptos y montos deben estar en formato numérico para calcular.
+const conceptData = [
+    { id: '2DDB', concept: 'Colegiatura', amount: 1067.00, start: '08/2024', end: '-', status: 'Activa' },
+    { id: '5FD4', concept: 'Colegiatura', amount: 3067.00, start: '02/2024', end: '03/2024', status: 'Finalizado' },
+    { id: '9A1C', concept: 'Inscripción', amount: 1500.00, start: '08/2024', end: '-', status: 'Activa' },
+    { id: 'B2E7', concept: 'Mensualidad', amount: 800.00, start: '09/2024', end: '10/2024', status: 'Finalizado' },
+    { id: 'C3F5', concept: 'Materiales', amount: 200.00, start: '10/2024', end: '10/2024', status: 'Finalizado' },
+    { id: 'D4G6', concept: 'Credencial', amount: 250.00, start: '10/2024', end: '-', status: 'Activa' },
+];
+
+// Cálculo de sumas
+let totalRecaudado = 0;
+let totalPendiente = 0;
+let conceptosPendientesCount = 0;
+
+conceptData.forEach(item => {
+    if (item.status === 'Finalizado') {
+        totalRecaudado += item.amount;
+    } else if (item.status === 'Activa') {
+        totalPendiente += item.amount;
+        conceptosPendientesCount++;
+    }
+});
+
+const totalGeneral = totalRecaudado + totalPendiente;
+const percentageRecaudado = totalGeneral > 0 ? (totalRecaudado / totalGeneral) * 100 : 0;
+
+// Datos de ejemplo para el gráfico de línea (simulación de pagos mensuales)
+const chartData = {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+    ganancias: [3000, 4500, 4000, 5000, 6000, 5500, 6500, 7000], // Montos de pagos
+    estudiantes: [100, 110, 105, 120, 130, 125, 140, 150], // Número de estudiantes con pago
+};
+
+// ---------------------------------------------------------------------
+// 2. FORMATEO DE VALORES PARA LA UI
+// ---------------------------------------------------------------------
+const formatCurrency = (value) => `$${value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+const formattedRecaudado = formatCurrency(totalRecaudado);
+const formattedPendiente = formatCurrency(totalPendiente);
+
+// Se mapea la data de conceptos para que el amount regrese como string formateado a la tabla
+const formattedConceptData = conceptData.map(c => ({
+    ...c,
+    amount: formatCurrency(c.amount)
+}));
+
+---
+<Layout title="Dashboard - CBTA 71">
+    
+    <!-- CONTENEDOR DE ANCHO COMPLETO PARA ASEGURAR ESPACIO -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* --- TÍTULO DE LA SECCIÓN --- */}
+        <div class="flex items-center gap-4 mb-6 md:mb-8"> 
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 4h8v4h-8z"></path>
+                <path d="M4 12h8v8h-8z"></path>
+                <path d="M16 4h4v8h-4z"></path>
+                <path d="M16 16h4v4h-4z"></path>
+            </svg>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Resumen General</h1>
+        </div>
+
+        {/* --- SECCIÓN DE TARJETAS: DATOS DINÁMICOS --- */}
+        <div class="flex flex-row space-x-4 mb-8 overflow-x-auto pb-4">
+            
+            <CardInfo 
+                title="Total Estudiantes" 
+                value="706" 
+                description="Matriculados 2024" 
+                icon="students" 
+                href="/estudiantes" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+            
+            <CardInfo 
+                title="Pagos Pendientes" 
+                value={formattedPendiente} 
+                description={`${conceptosPendientesCount} conceptos`} 
+                icon="pending" 
+                href="/pagos?status=pendientes" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+            
+            <CardInfo 
+                title="Total Recaudado" 
+                value={formattedRecaudado} 
+                description="Ganancia histórica" 
+                icon="recaudado" 
+                href="/reportes/recaudacion" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+        </div>
+
+        {/* --- BOTONES DE FILTRO --- */}
+        <div class="flex gap-4 mb-6 md:mb-8">
+        <button class="px-4 md:px-6 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm md:text-base shadow-md transition hover:bg-[#3b7666] duration-200">Año actual</button>
+        <button class="px-4 md:px-6 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-semibold text-sm md:text-base shadow-md transition duration-200">Todos</button>
+        </div>
+
+        {/* --- SECCIÓN DE GRÁFICOS (LAYOUT 1x2 en desktop) --- */}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
+            
+            {/* Gráfico de Línea - 2/3 de ancho en desktop (lg:col-span-2) */}
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 lg:col-span-2">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Evolución de Pagos y Estudiantes (Mensual)</h2>
+                <ChartLine data={chartData} />
+            </div>
+            
+            {/* Gráfico de Donut/Anillo - 1/3 de ancho en desktop (lg:col-span-1) */}
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 flex flex-col justify-center items-center lg:col-span-1">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Recaudación vs. Pendiente</h2>
+                {/* Datos calculados de forma dinámica */}
+                <ChartDonut 
+                    recaudado={totalRecaudado} 
+                    pendiente={totalPendiente}
+                /> 
+                <p class="text-md md:text-lg font-semibold text-gray-700 mt-4">Meta: {formatCurrency(totalGeneral)}</p>
+            </div>
+        </div>
+
+        {/* --- SECCIÓN DE TABLA DE CONCEPTOS --- */}
+        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 overflow-x-auto"> 
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Conceptos Activos</h2>
+            <ConceptsTable concepts={formattedConceptData} />
+        </div>
+
+    </div>
+</Layout>

@@ -1,144 +1,221 @@
 ---
-// src/pages/index.astro
-import Layout from '../layouts/Layout.astro';
-import CardInfo from '../components/CardInfo.astro';
-// Asegúrate de que estos componentes existan en src/components/
-import ChartLine from '../components/ChartLine.astro';
-import ChartDonut from '../components/ChartDonut.astro';
-import ConceptsTable from '../components/ConceptsTable.astro';
+// 1. ASTRO FRONTMATTER
+// Eliminamos la interfaz Props ya que no se utiliza aquí.
 
-// ---------------------------------------------------------------------
-// 1. DATOS INICIALES Y CÁLCULOS
-// ---------------------------------------------------------------------
+import '../styles/global.css';
+import '../styles/tailwind.css';
 
-// Los datos de conceptos y montos deben estar en formato numérico para calcular.
-const conceptData = [
-    { id: '2DDB', concept: 'Colegiatura', amount: 1067.00, start: '08/2024', end: '-', status: 'Activa' },
-    { id: '5FD4', concept: 'Colegiatura', amount: 3067.00, start: '02/2024', end: '03/2024', status: 'Finalizado' },
-    { id: '9A1C', concept: 'Inscripción', amount: 1500.00, start: '08/2024', end: '-', status: 'Activa' },
-    { id: 'B2E7', concept: 'Mensualidad', amount: 800.00, start: '09/2024', end: '10/2024', status: 'Finalizado' },
-    { id: 'C3F5', concept: 'Materiales', amount: 200.00, start: '10/2024', end: '10/2024', status: 'Finalizado' },
-    { id: 'D4G6', concept: 'Credencial', amount: 250.00, start: '10/2024', end: '-', status: 'Activa' },
-];
-
-// Cálculo de sumas
-let totalRecaudado = 0;
-let totalPendiente = 0;
-let conceptosPendientesCount = 0;
-
-conceptData.forEach(item => {
-    if (item.status === 'Finalizado') {
-        totalRecaudado += item.amount;
-    } else if (item.status === 'Activa') {
-        totalPendiente += item.amount;
-        conceptosPendientesCount++;
-    }
-});
-
-const totalGeneral = totalRecaudado + totalPendiente;
-const percentageRecaudado = totalGeneral > 0 ? (totalRecaudado / totalGeneral) * 100 : 0;
-
-// Datos de ejemplo para el gráfico de línea (simulación de pagos mensuales)
-const chartData = {
-    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
-    ganancias: [3000, 4500, 4000, 5000, 6000, 5500, 6500, 7000], // Montos de pagos
-    estudiantes: [100, 110, 105, 120, 130, 125, 140, 150], // Número de estudiantes con pago
-};
-
-// ---------------------------------------------------------------------
-// 2. FORMATEO DE VALORES PARA LA UI
-// ---------------------------------------------------------------------
-const formatCurrency = (value) => `$${value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-const formattedRecaudado = formatCurrency(totalRecaudado);
-const formattedPendiente = formatCurrency(totalPendiente);
-
-// Se mapea la data de conceptos para que el amount regrese como string formateado a la tabla
-const formattedConceptData = conceptData.map(c => ({
-    ...c,
-    amount: formatCurrency(c.amount)
-}));
-
+const pageTitle = "Acceso al Sistema - Mejorado";
 ---
-<Layout title="Dashboard - CBTA 71">
-    
-    <!-- CONTENEDOR DE ANCHO COMPLETO PARA ASEGURAR ESPACIO -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso al Sistema - SIGE</title>
+    
+    <!-- Carga del CDN de Tailwind CSS (Necesario para apps HTML de un solo archivo) -->
+    <script src="https://cdn.tailwindcss"></script>
+    
+    <!-- Carga de la fuente Inter y Font Awesome para un diseño moderno -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    
+    <style>
+        /* Definiciones de color institucionales */
+        .font-inter { font-family: 'Inter', sans-serif; }
+        :root {
+            --dark-green: #2e594d; /* Verde oscuro primario */
+            --light-green: #4caf50; /* Verde claro/acento (botón) */
+            --bg-light: #f4f7fa; /* Fondo muy claro para el efecto cristalino/neumórfico */
+        }
 
-        {/* --- TÍTULO DE LA SECCIÓN --- */}
-        <div class="flex items-center gap-4 mb-6 md:mb-8"> 
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M4 4h8v4h-8z"></path>
-                <path d="M4 12h8v8h-8z"></path>
-                <path d="M16 4h4v8h-4z"></path>
-                <path d="M16 16h4v4h-4z"></path>
-            </svg>
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Resumen General</h1>
-        </div>
+        .custom-dark-green { background-color: var(--dark-green); } 
+        .custom-light-green { background-color: var(--light-green); }
+        .text-dark-green { color: var(--dark-green); }
+        
+        /* * Efecto Neumorfismo Suave para el Contenedor Principal */
+        .login-card {
+            /* Sombra superior izquierda clara (luz) y sombra inferior derecha oscura (sombra) */
+            box-shadow: 
+                -10px -10px 30px rgba(255, 255, 255, 0.9), 
+                10px 10px 30px rgba(174, 174, 192, 0.4);
+        }
 
-        {/* --- SECCIÓN DE TARJETAS: DATOS DINÁMICOS --- */}
-        <div class="flex flex-row space-x-4 mb-8 overflow-x-auto pb-4">
-            
-            <CardInfo 
-                title="Total Estudiantes" 
-                value="706" 
-                description="Matriculados 2024" 
-                icon="students" 
-                href="/estudiantes" 
-                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
-            />
-            
-            <CardInfo 
-                title="Pagos Pendientes" 
-                value={formattedPendiente} 
-                description={`${conceptosPendientesCount} conceptos`} 
-                icon="pending" 
-                href="/pagos?status=pendientes" 
-                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
-            />
-            
-            <CardInfo 
-                title="Total Recaudado" 
-                value={formattedRecaudado} 
-                description="Ganancia histórica" 
-                icon="recaudado" 
-                href="/reportes/recaudacion" 
-                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
-            />
-        </div>
+        /* Efecto de sombra interior para inputs (hundimiento) */
+        .input-inset-shadow {
+            box-shadow: 
+                inset 2px 2px 5px rgba(0, 0, 0, 0.1), 
+                inset -2px -2px 5px rgba(255, 255, 255, 0.7);
+        }
 
-        {/* --- BOTONES DE FILTRO --- */}
-        <div class="flex gap-4 mb-6 md:mb-8">
-        <button class="px-4 md:px-6 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm md:text-base shadow-md transition hover:bg-[#3b7666] duration-200">Año actual</button>
-        <button class="px-4 md:px-6 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-semibold text-sm md:text-base shadow-md transition duration-200">Todos</button>
-        </div>
+        /* Fondo general */
+        body {
+            background-color: var(--bg-light);
+        }
 
-        {/* --- SECCIÓN DE GRÁFICOS (LAYOUT 1x2 en desktop) --- */}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
-            
-            {/* Gráfico de Línea - 2/3 de ancho en desktop (lg:col-span-2) */}
-            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 lg:col-span-2">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Evolución de Pagos y Estudiantes (Mensual)</h2>
-                <ChartLine data={chartData} />
-            </div>
-            
-            {/* Gráfico de Donut/Anillo - 1/3 de ancho en desktop (lg:col-span-1) */}
-            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 flex flex-col justify-center items-center lg:col-span-1">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Recaudación vs. Pendiente</h2>
-                {/* Datos calculados de forma dinámica */}
-                <ChartDonut 
-                    recaudado={totalRecaudado} 
-                    pendiente={totalPendiente}
-                /> 
-                <p class="text-md md:text-lg font-semibold text-gray-700 mt-4">Meta: {formatCurrency(totalGeneral)}</p>
-            </div>
-        </div>
+        /* Quitar el outline azul por defecto al hacer focus */
+        input:focus {
+            outline: none !important;
+        }
 
-        {/* --- SECCIÓN DE TABLA DE CONCEPTOS --- */}
-        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 overflow-x-auto"> 
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Conceptos Activos</h2>
-            <ConceptsTable concepts={formattedConceptData} />
-        </div>
+    </style>
+</head>
+<body class="min-h-screen antialiased font-inter">
 
-    </div>
-</Layout>
+    <!-- Contenido del Login - Centrado y Estilizado -->
+    <section class="min-h-screen flex items-center justify-center p-4">
+        <div 
+            x-data="{ 
+                email: '', password: '', role: 'Personal', error: '', isLoading: false, redirectTo: '/Dashboard', /* Propiedades compactadas */
+
+                handleSubmit() {
+                    this.error = '';
+                    this.isLoading = true;
+
+                    if (!this.email || !this.password || !this.role) {
+                        this.error = '⚠️ Por favor, rellena todos los campos, incluyendo el Rol.';
+                        this.isLoading = false;
+                        return;
+                    }
+                    
+                    let success = false;
+                    
+                    // Lógica de autenticación simulada
+                    if (this.role === 'Personal' && this.email === 'admin@uni.edu' && this.password === '123456') {
+                        success = true;
+                    } else if (this.role === 'Alumno' && this.email === 'student@uni.edu' && this.password === 'password') {
+                        success = true;
+                    }
+                    
+                    // Manejo del resultado de la autenticación
+                    setTimeout(() => {
+                        this.isLoading = false;
+                        if (success) {
+                            this.error = `✅ ¡Inicio de sesión exitoso! Redirigiendo como ${this.role}...`;
+                            
+                            // Guardar el rol en Local Storage
+                            localStorage.setItem('userRole', this.role); 
+                            
+                            // Redirección con un pequeño retraso
+                            setTimeout(() => {
+                                // Solución al error previo de 'replace'
+                                window.location.href = this.redirectTo; 
+                            }, 500);
+
+                        } else {
+                            this.error = `❌ Credenciales inválidas para el rol de ${this.role}. Inténtalo de nuevo.`;
+                        }
+                    }, 1000); // Simular un tiempo de carga de 1 segundo
+                }
+            }"
+            @submit.prevent="handleSubmit"
+            class="w-full max-w-lg bg-white p-0 login-card rounded-3xl overflow-hidden transition-all duration-500 shadow-xl"
+        >
+            <!-- 1. ENCABEZADO Y PESTAÑAS DE ROL -->
+            <header class="space-y-4 pt-10 pb-6 bg-light border-b border-gray-100">
+                
+                <!-- Icono de Cabecera y Título -->
+                <div class="flex flex-col items-center justify-center">
+                    <i class="fas fa-graduation-cap text-6xl text-dark-green mb-3 opacity-90"></i> 
+                    <h1 class="text-3xl md:text-4xl font-black text-gray-800 uppercase tracking-widest text-center">SIGE</h1>
+                    <p class="text-center text-sm text-gray-500 font-medium mt-1">Sistema Integrado de Gestión Educativa</p>
+                </div>
+
+                <!-- PESTAÑAS DE ROL (Switch de Roles mejorado) -->
+                <div class="flex justify-center mx-auto max-w-sm px-6">
+                    <div class="flex bg-gray-200 p-1 rounded-full w-full transition duration-300 shadow-inner">
+                        <!-- Botón Alumno -->
+                        <button type="button" @click="role = 'Alumno'"
+                            :class="role === 'Alumno' ? 'custom-dark-green text-white shadow-md font-bold' : 'text-gray-600 hover:text-dark-green'"
+                            class="flex-1 py-3 text-sm transition duration-300 ease-in-out uppercase rounded-full tracking-wider"
+                        >
+                            <i class="fas fa-user-graduate mr-2"></i> Alumnos
+                        </button>
+                        <!-- Botón Personal -->
+                        <button type="button" @click="role = 'Personal'"
+                            :class="role === 'Personal' ? 'custom-dark-green text-white shadow-md font-bold' : 'text-gray-600 hover:text-dark-green'"
+                            class="flex-1 py-3 text-sm transition duration-300 ease-in-out uppercase rounded-full tracking-wider"
+                        >
+                            <i class="fas fa-chalkboard-teacher mr-2"></i> Personal
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 2. CUERPO DEL FORMULARIO -->
+            <div class="p-8 space-y-7">
+
+                <!-- Mensaje de Error (feedback al usuario) -->
+                <div x-show="error" 
+                     :class="error.includes('exitoso') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+                     class="p-4 border rounded-xl text-sm font-medium transition duration-300 shadow-inner"
+                >
+                    <span x-text="error"></span>
+                </div>
+
+                <!-- Información de credenciales de prueba -->
+                <div class="bg-blue-50 border border-blue-200 text-blue-700 p-3 rounded-xl text-xs font-mono">
+                    <p class="font-bold mb-1">Cuentas Demo:</p>
+                    <ul class="list-disc list-inside ml-2 space-y-0.5">
+                        <li>**Personal:** admin@uni.edu / 123456</li>
+                        <li>**Alumno:** student@uni.edu / password</li>
+                    </ul>
+                </div>
+                
+                <form class="space-y-6">
+                    <!-- Campo de Email (Usuario) -->
+                    <div class="flex items-center bg-light rounded-xl p-4 transition duration-300 input-inset-shadow focus-within:ring-2 focus-within:ring-dark-green focus-within:ring-opacity-20">
+                        <i class="fas fa-envelope text-xl text-gray-400 mr-4 transition duration-300 text-dark-green"></i> 
+                        <input type="email" id="email" x-model="email" placeholder="Correo Electrónico" required
+                            class="w-full p-0 text-base bg-transparent placeholder-gray-500 border-none focus:outline-none focus:ring-0">
+                    </div>
+
+                    <!-- Campo de Contraseña -->
+                    <div class="flex items-center bg-light rounded-xl p-4 transition duration-300 input-inset-shadow focus-within:ring-2 focus-within:ring-dark-green focus-within:ring-opacity-20">
+                        <i class="fas fa-lock text-xl text-gray-400 mr-4 transition duration-300 text-dark-green"></i> 
+                        <input type="password" id="password" x-model="password" placeholder="Contraseña" required
+                            class="w-full p-0 text-base bg-transparent placeholder-gray-500 border-none focus:outline-none focus:ring-0">
+                    </div>
+                    
+                    <!-- Checkbox y Olvidé Contraseña -->
+                    <div class="flex items-center justify-between text-sm pt-2 px-1">
+                        <div class="flex items-center">
+                            <!-- Utilizamos un color custom para el checkbox en Tailwind 3 -->
+                            <input type="checkbox" id="remember" name="remember" class="h-5 w-5 text-dark-green border-gray-300 rounded-lg focus:ring-dark-green transition duration-200 cursor-pointer"
+                                style="color: var(--dark-green); border-color: #d1d5db;"> 
+                            <label for="remember" class="ml-2 text-gray-600 font-medium select-none cursor-pointer hover:text-gray-800 transition duration-200">Recordar</label>
+                        </div>
+                        <!-- Opción de Olvidé mi Contraseña -->
+                        <a href="#" class="text-dark-green hover:text-dark-green/80 font-semibold transition duration-300 text-sm">¿Olvidaste tu Contraseña?</a>
+                    </div>
+
+                    <!-- Botón de Iniciar Sesión - 3D y Vibrante -->
+                    <button type="submit" :disabled="isLoading"
+                        class="w-full flex justify-center py-4 px-4 mt-8 rounded-full shadow-lg text-lg font-bold text-white custom-light-green focus:outline-none focus:ring-4 focus:ring-green-400 focus:ring-opacity-70 transition duration-300 ease-in-out uppercase tracking-widest transform active:scale-[0.98] disabled:opacity-50"
+                        :class="isLoading ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-[#43a047] hover:scale-[1.01]'"
+                    >
+                        <template x-if="isLoading">
+                            <i class="fas fa-spinner fa-spin mr-3"></i>
+                        </template>
+                        <template x-if="!isLoading">
+                            <i class="fas fa-sign-in-alt mr-3"></i>
+                        </template>
+                        <span x-text="isLoading ? 'Cargando...' : 'INICIAR SESIÓN'"></span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Pie de página con enlaces o información adicional -->
+            <footer class="text-center p-4 bg-gray-100/50 text-xs text-gray-500 border-t border-gray-200/50">
+                <p>2024 &copy; SIGE. Todos los derechos reservados.</p>
+                <a href="#" class="text-dark-green hover:underline mt-1 inline-block">Política de Privacidad</a>
+            </footer>
+        </div>
+    </section>
+
+    <!-- Carga de Alpine.js (Interactividad x-data) -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+</body>
+</html
