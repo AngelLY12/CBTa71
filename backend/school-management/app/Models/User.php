@@ -59,7 +59,8 @@ class User extends Authenticatable
 
     public function pendingPaymentConcepts() {
     return $this->hasMany(PaymentConcept::class)
-        ->where('status', 'Activo')
+        ->select('id','concept_name','amount')
+        ->where('status', 'activo')
         ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $this->id))
         ->where(function ($q) {
             $q->where('is_global', true)
