@@ -24,6 +24,9 @@ const currentPath = Astro.url.pathname;
   
   <!-- Enlace a la fuente Inter desde Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+  <!-- Alpine.js CDN para soporte de x-data, x-model, etc. -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   
   <style>
     /* Estilos base */
@@ -316,5 +319,9 @@ const currentPath = Astro.url.pathname;
         setActiveLink(); 
     });
   </script>
+  <style>
+        /* CSS necesario para Alpine.js. Oculta temporalmente los elementos con x-cloak */
+        [x-cloak] { display: none !important; }
+    </style>
 </body>
 </html>
