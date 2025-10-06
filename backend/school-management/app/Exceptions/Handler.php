@@ -11,6 +11,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Spatie\Permission\Exceptions\UnauthorizedException;
+
 
 class Handler extends ExceptionHandler
 {
@@ -68,6 +70,13 @@ class Handler extends ExceptionHandler
                 'message' => 'No tienes permisos para realizar esta acción',
             ], 403);
         }
+        if ($e instanceof UnauthorizedException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para acceder a este recurso.',
+            ], 403);
+        }
+
         if ($e instanceof ModelNotFoundException) {
         return response()->json([
             'success' => false,
