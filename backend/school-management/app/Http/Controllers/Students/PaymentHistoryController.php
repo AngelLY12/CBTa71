@@ -22,7 +22,7 @@ class PaymentHistoryController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $history,
-                'message' => empty($cards) ? 'No hay historial de pagos para este usuario.':null
+                'message' => $history->isEmpty() ? 'No hay historial de pagos para este usuario.':null
             ]);
 
     }

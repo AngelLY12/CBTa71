@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('concept_name',50)->index();
             $table->string('description',100)->nullable();
-            $table->enum('status',['Activo','Finalizado'])->default('Activo')->index();
+            $table->enum('status',['activo','finalizado','desactivado','eliminado'])->default('activo')->index();
             $table->date('start_date')->index();
             $table->date('end_date')->nullable();
             $table->integer('amount')->index();

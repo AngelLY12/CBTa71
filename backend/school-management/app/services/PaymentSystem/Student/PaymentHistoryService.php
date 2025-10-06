@@ -22,6 +22,7 @@ class PaymentHistoryService{
                 'monto'       => $payment->paymentConcept->amount ?? null,
                 'fecha'       => $payment->created_at,
                 'estatus'     => $payment->status,
+                'referencia'  => $payment->payment_intent_id,
                 'url'         => $payment->url ?? null,
                 'tarjeta'     => $payment->last4 && $payment->brand ? [
                     'brand' => $payment->brand,

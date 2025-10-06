@@ -28,7 +28,7 @@ class DebtsController extends Controller
         return response()->json([
             'success' => true,
             'data' => $pendingPayments,
-            'message' => 'Pagos pendientes obtenidos correctamente.'
+            'message' => $pendingPayments->isEmpty() ? 'No hay pagos pendientes registrados.':null
         ]);
     }
 

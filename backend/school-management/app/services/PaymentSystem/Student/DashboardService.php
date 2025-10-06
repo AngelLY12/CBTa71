@@ -10,7 +10,7 @@ class DashboardService{
 
     public function pendingPaymentAmount(User $user)
     {
-            $conceptosPendientes = PaymentConcept::where('status','Activo')
+            $conceptosPendientes = PaymentConcept::where('status','activo')
             ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $user->id))
             ->where(function($q) use ($user) {
                 $q->where('is_global', true)
@@ -37,7 +37,7 @@ class DashboardService{
 
     public function overduePayments(User $user)
     {
-            return PaymentConcept::where('status','Finalizado')
+            return PaymentConcept::where('status','finalizado')
             ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $user->id))
             ->where(function($q) use ($user) {
                 $q->where('is_global', true)

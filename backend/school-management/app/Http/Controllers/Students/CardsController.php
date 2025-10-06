@@ -24,7 +24,7 @@ class CardsController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $cards,
-                'message' => empty($cards) ? 'No se encontraron métodos de pago.':null
+                'message' => $cards->isEmpty() ? 'No se encontraron métodos de pago.':null
             ]);
     }
 

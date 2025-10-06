@@ -28,7 +28,7 @@ class PaymentsController extends Controller
         return response()->json([
             'success' => true,
             'data' => $payments,
-            'message' => 'Pagos obtenidos correctamente.'
+            'message' => $payments->isEmpty() ? 'No hay pagos registrados.':null
         ]);
     }
 

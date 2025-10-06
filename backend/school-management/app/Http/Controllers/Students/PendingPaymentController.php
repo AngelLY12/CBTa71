@@ -26,7 +26,19 @@ class PendingPaymentController extends Controller
         return response()->json([
             'success' => true,
             'data' => $pending,
-            'message' => empty($pending) ? 'No hay pagos pendientes para el usuario.':null
+            'message' => $pending->isEmpty() ? 'No hay pagos pendientes para el usuario.':null
+        ]);
+
+    }
+
+    public function overdue()
+    {
+        $user = Auth::user();
+        $pending=$this->pendingPaymentService->showOverduePayments($user);
+        return response()->json([
+            'success' => true,
+            'data' => $pending,
+            'message' => $pending->isEmpty() ? 'No hay pagos vencidos para el usuario.':null
         ]);
 
     }
