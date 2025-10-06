@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PaymentConcept;
 
+
 class ConceptsController extends Controller
 {
     protected ConceptsService $conceptsService;
@@ -15,6 +16,8 @@ class ConceptsController extends Controller
     public function __construct(ConceptsService $conceptsService)
     {
         $this->conceptsService= $conceptsService;
+
+
     }
 
     public function index(Request $request)
@@ -74,7 +77,7 @@ class ConceptsController extends Controller
         $concept = new PaymentConcept([
                 'concept_name' => $data['concept_name'],
                 'description'  => $data['description'] ?? null,
-                'status'       => $data['status'],
+                'status'       =>  strtolower($data['status']),
                 'start_date'   => $data['start_date'],
                 'end_date'     => $data['end_date'] ?? null,
                 'amount'       => $data['amount'],
@@ -164,6 +167,16 @@ class ConceptsController extends Controller
             'success' => true,
             'data' => $finalized,
             'message' => 'Concepto de pago finalizado correctamente.'
+        ]);
+    }
+    public function disable(PaymentConcept $concept)
+    {
+        $disable = $this->conceptsService->disablePaymentConcept($concept);
+
+        return response()->json([
+            'success' => true,
+            'data' => $disable,
+            'message' => 'Concepto de pago deshabilitado correctamente.'
         ]);
     }
 }

@@ -27,7 +27,7 @@ class StudentsController extends Controller
         return response()->json([
             'success' => true,
             'data' => $students,
-            'message' => 'Estudiantes obtenidos correctamente.'
+            'message' => $students->isEmpty() ? 'No hay estudiantes registrados.':null
         ]);
     }
 }

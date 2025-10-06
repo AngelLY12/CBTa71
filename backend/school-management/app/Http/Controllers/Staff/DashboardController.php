@@ -13,6 +13,8 @@ class DashboardController extends Controller
     public function __construct(DashboardService $dashboardService)
     {
         $this->dashboardService = $dashboardService;
+
+
     }
     /**
      * Display a listing of the resource.
