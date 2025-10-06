@@ -10,7 +10,8 @@ class StudentsService{
 
 
     public function showAllStudents(?string $search=null){
-            $studentsQuery = User::role('alumno')->select('id','name','last_name','career_id','semestre');
+            $studentsQuery = User::role('student')->select('id','name','last_name','career_id','semestre')
+            ->where('status','activo');
 
 
             if ($search) {

@@ -12,7 +12,8 @@ class DebtsService{
 
     public function showAllpendingPayments(?string $search=null)
     {
-    $studentsQuery = User::role('alumno')->select('id','name','last_name','email');
+    $studentsQuery = User::role('alumno')->select('id','name','last_name','email')
+    ->where('status','activo');
 
     if ($search) {
         $studentsQuery->where(function($q) use ($search) {
@@ -22,26 +23,28 @@ class DebtsService{
         });
     }
 
-    $students = $studentsQuery->get();
+    $studentsQuery->with(['pendingPaymentConcepts:id,concept_name,amount,user_id']);
 
-    $pendingList = [];
+    $students=$studentsQuery->paginate(15);
 
-    foreach ($students as $student) {
-        $pendingConcepts = PaymentConcept::select('id','concept_name','amount')
-            ->where('status','Activo')
-            ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $student->id))
-            ->get();
-
-        foreach ($pendingConcepts as $concept) {
-            $pendingList[] = [
+   $students->getCollection()->transform(function ($student) {
+        $adeudos = $student->pendingPaymentConcepts->map(function ($concept) use ($student) {
+            return [
+                'id'       => $student->id,
                 'nombre'   => $student->name . ' ' . $student->last_name,
                 'concepto' => $concept->concept_name,
                 'monto'    => $concept->amount,
             ];
-        }
-    }
+        });
 
-    return $pendingList;
+        return $adeudos;
+    });
+
+    $flattened = $students->getCollection()->flatten(1);
+
+    $students->setCollection($flattened);
+
+    return $students;
     }
 
     public function validatePayment(string $search, string $payment_intent_id)

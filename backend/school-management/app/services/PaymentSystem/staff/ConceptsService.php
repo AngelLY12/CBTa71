@@ -24,10 +24,13 @@ class ConceptsService{
 
         switch($status){
             case 'activos':
-                $paymentConcepts->where('status','Activo');
+                $paymentConcepts->where('status','activo');
                 break;
             case 'finalizados':
-                $paymentConcepts->where('status','Finalizado');
+                $paymentConcepts->where('status','finalizado');
+                break;
+            case 'Desactivados':
+                $paymentConcepts->where('status','desactivado');
                 break;
             case 'todos':
             default:
@@ -73,11 +76,11 @@ class ConceptsService{
 
                 case 'estudiantes':
                     if ($students) {
-                    $ids = User::whereIn('curp', $students)->pluck('id');
+                    $ids = User::whereIn('curp', $students)->where('status','activo')->pluck('id');
                     if ($ids->isNotEmpty()) {
                         $paymentConcept->users()->attach($ids);
                     } else {
-                        throw new \Exception("Ninguno de los estudiantes existe");
+                        throw new \Exception("Ninguno de los estudiantes existe o estan dados de baja");
                     }
                     }
                     break;
@@ -147,7 +150,16 @@ class ConceptsService{
     {
             $concept->update([
                 'end_date' => now(),
-                'status'   => 'Finalizado',
+                'status'   => 'finalizado',
+            ]);
+
+            return $concept;
+    }
+
+    public function disablePaymentConcept(PaymentConcept $concept)
+    {
+            $concept->update([
+                'status'   => 'desactivado',
             ]);
 
             return $concept;

@@ -10,7 +10,7 @@ class DashboardService{
 
     public function pendingPaymentAmount(bool $onlyThisYear = false)
     {
-            $query = PaymentConcept::where('status','Activo')
+            $query = PaymentConcept::where('status','activo')
             ->whereDoesntHave('payments');
 
             if($onlyThisYear){
@@ -27,7 +27,7 @@ class DashboardService{
 
 
     public function getAllStudents(bool $onlyThisYear = false){
-            $students = User::role('alumno');
+            $students = User::role('student')->where('status','activo');
             if($onlyThisYear){
                 $students->whereYear('created_at',now()->year);
             }

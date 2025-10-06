@@ -7,7 +7,6 @@ use App\Models\Payment;
 use App\Models\PaymentConcept;
 use App\Models\PaymentMethod;
 use App\Services\PaymentSystem\StripeService;
-use Illuminate\Cache\NullStore;
 use Illuminate\Support\Facades\DB;
 
 
@@ -15,11 +14,17 @@ class PendingPaymentService{
 
 
     public function showPendingPayments(User $user) {
+            if($user->status==='baja'){
+                throw new \Exception('No puedes ver conceptos de pago si estas dado de baja');
+            }
 
-            return PaymentConcept::where('status', 'Activo')
+            return PaymentConcept::where('status', 'activo')
                 ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $user->id))
                 ->whereDate('start_date', '<=', now())
-                ->whereDate('end_date', '>=', now())
+                ->where(function ($q) {
+                    $q->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', now());
+                })
                 ->where(function($q) use ($user) {
                     $q->where('is_global', true)
                       ->orWhereHas('users', fn($q) => $q->where('users.id', $user->id))
@@ -37,6 +42,27 @@ class PendingPaymentService{
                 ]);
 
 
+    }
+
+     public function showOverduePayments(User $user)
+    {
+            return PaymentConcept::where('status','finalizado')
+            ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $user->id))
+            ->where(function($q) use ($user) {
+                $q->where('is_global', true)
+                  ->orWhereHas('users', fn($q) => $q->where('users.id', $user->id))
+                  ->orWhereHas('careers', fn($q) => $q->where('careers.id', $user->career_id))
+                  ->orWhereHas('paymentConceptSemesters', fn($q) => $q->where('semestre', $user->semestre));
+            })
+            ->get()
+                ->map(fn($concept) => [
+                    'id'           => $concept->id,
+                    'concepto'     => $concept->concept_name,
+                    'descripcion'  => $concept->description,
+                    'monto'        => $concept->amount,
+                    'fecha_inicio' => $concept->start_date,
+                    'fecha_fin'    => $concept->end_date,
+                ]);
     }
 
 
