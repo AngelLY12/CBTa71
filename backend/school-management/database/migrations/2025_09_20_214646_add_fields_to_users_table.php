@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreignIdFor(Career::class)->nullable()->constrained('careers')->onDelete('set null')->after('password');
             $table->string('stripe_customer_id',50)->nullable()->unique()->index();
             $table->date('registration_date');
-            $table->boolean('status')->default(1);
+            $table->enum('status',['activo','baja','eliminado']);
         });
 
     }
