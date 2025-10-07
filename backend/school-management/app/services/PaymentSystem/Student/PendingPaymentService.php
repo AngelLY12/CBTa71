@@ -8,6 +8,7 @@ use App\Models\PaymentConcept;
 use App\Models\PaymentMethod;
 use App\Services\PaymentSystem\StripeService;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\PaymentCreatedNotification;
 
 
 class PendingPaymentService{
@@ -67,7 +68,7 @@ class PendingPaymentService{
 
 
     public function payConcept(User $user, int $conceptId, ?string $savedPaymentMethodId = null) {
-       return DB::transaction(function() use ($user, $conceptId, $savedPaymentMethodId) {
+       $payment= DB::transaction(function() use ($user, $conceptId, $savedPaymentMethodId) {
 
             $concept = PaymentConcept::findOrFail($conceptId);
             $savedMethod = PaymentMethod::where('id', $savedPaymentMethodId)
@@ -96,6 +97,9 @@ class PendingPaymentService{
             ]);
 
        });
+     $payment->user->notify(new PaymentCreatedNotification($payment));
+     return $payment;
+
     }
 
 }

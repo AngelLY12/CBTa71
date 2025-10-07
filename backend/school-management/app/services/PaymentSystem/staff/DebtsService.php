@@ -5,6 +5,7 @@ namespace App\Services\PaymentSystem\Staff;
 use App\Models\PaymentConcept;
 use App\Models\PaymentMethod;
 use App\Models\User;
+use App\Notifications\PaymentCreatedNotification;
 use Stripe\PaymentIntent;
 use Illuminate\Support\Facades\DB;
 
@@ -61,7 +62,10 @@ class DebtsService{
 
             }
 
-            $payment = $student->payments()->select('id','amount','status','payment_intent_id')->where('payment_intent_id', $payment_intent_id)->first();
+            $payment = $student->payments()->select('id','amount','status','payment_intent_id')
+            ->where('payment_intent_id', $payment_intent_id)
+            ->orWhere('stripe_session_id', $payment_intent_id)
+            ->first();
 
             if (!$payment) {
                     $intent = PaymentIntent::retrieve($payment_intent_id);
@@ -111,6 +115,7 @@ class DebtsService{
                     'payment_intent_id' => $payment->payment_intent_id
                 ]
             ];
+            $payment->user->notify((new PaymentCreatedNotification($payment))->delay(now()->addSeconds(5)));
 
             return $data;
         });
