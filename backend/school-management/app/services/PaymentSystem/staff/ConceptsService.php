@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Utils\ResponseBuilder;
 use App\Utils\Validators\PaymentConceptValidator;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\NewConceptNotification;
 
 class ConceptsService{
 
@@ -44,7 +45,7 @@ class ConceptsService{
 
     public function createPaymentConcept(PaymentConcept $pc, string $appliesTo='todos', ?int $semestre=null, ?string $career=null, array|string|null $students = null)
     {
-        return DB::transaction(function() use ($pc, $appliesTo, $semestre, $career, $students){
+        $paymentConcept= DB::transaction(function() use ($pc, $appliesTo, $semestre, $career, $students){
         PaymentConceptValidator::ensureConceptHasRequiredFields($pc);
             $paymentConcept = PaymentConcept::create([
                 'concept_name' => $pc->concept_name,
@@ -89,12 +90,21 @@ class ConceptsService{
                 default:
                     break;
             }
+
             return $paymentConcept;
 
          });
+         $recipients = match($appliesTo){
+                'carrera' => $paymentConcept->careers()->with('users')->get()->pluck('users')->flatten(),
+                'semestre' => $paymentConcept->paymentConceptSemesters()->with('users')->get()->pluck('users')->flatten(),
+                'estudiantes' => $paymentConcept->users,
+                'todos' => User::where('status','activo')->get(),
+            };
 
-
-
+            foreach ($recipients as $user) {
+            $user->notify(new NewConceptNotification($paymentConcept));
+            }
+        return $paymentConcept;
     }
 
     public function updatePaymentConcept(PaymentConcept $pc, array $data, ?int $semestre = null, ?string $career = null, array|string|null $students = null)

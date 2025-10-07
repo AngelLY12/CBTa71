@@ -6,7 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Payment;
 use Stripe\Webhook;
 use App\Http\Controllers\Controller;
-
+use App\Notifications\PaymentValidatedNotification;
+use App\Notifications\PaymentFailedNotification;
 
 class WebhookController extends Controller
 {
@@ -31,11 +32,15 @@ class WebhookController extends Controller
                 if(!empty($obj->mode) && $obj->mode === 'payment'){
                     $session = $obj;
                     $payment = Payment::where('stripe_session_id', $session->id)->first();
+                    if (!$payment) {
+                        logger()->warning("No se encontró el pago con session_id={$session->id}");
+                        return response()->json(['success' => false], 404);
+                    }
                     $paymentIntent = \Stripe\PaymentIntent::retrieve($session->payment_intent);
-                    $charge = $paymentIntent->charges->data[0];
+                    $charge = $paymentIntent->charges->data[0]?? null;
                     if(!$charge){
                         logger()->warning("PaymentIntent {$paymentIntent->id} no tiene charge.");
-                        return;
+                        return response()->json(['success' => false], 404);
                     }
 
                     $type = $charge->payment_method_details->type ?? null;
@@ -73,6 +78,13 @@ class WebhookController extends Controller
                         'status' => $paymentIntent->status,
                         'url' => $charge->receipt_url ?? $payment->url
                     ]);
+
+                   try {
+                        $payment->user->notify((new PaymentValidatedNotification($payment))->delay(now()->addSeconds(5)));
+                    } catch (\Exception $e) {
+                        logger()->error("Error al notificar al usuario: " . $e->getMessage());
+                    }
+
                 }
             }
 
@@ -82,6 +94,12 @@ class WebhookController extends Controller
                 if ($payment) {
                     $payment->status = 'failed';
                     $payment->save();
+                    try{
+                    $payment->user->notify((new PaymentFailedNotification($payment))->delay(now()->addSeconds(5)));
+                    } catch (\Exception $e) {
+                        logger()->error("Error al notificar al usuario: " . $e->getMessage());
+                    }
+
                 }
             }
             return response()->json(['success' => true]);

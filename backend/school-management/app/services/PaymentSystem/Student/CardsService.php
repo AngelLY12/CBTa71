@@ -44,7 +44,6 @@ protected StripeService $stripeService;
             ->get()
             ->makeHidden(['created_at', 'updated_at'])
             ->toArray();
-
     }
 
     public function deletePaymentMethod($stripePaymentMethodId){
