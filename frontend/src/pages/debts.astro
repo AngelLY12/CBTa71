@@ -1,0 +1,284 @@
+---
+import Layout from '../layouts/Layout.astro';
+// RECUERDA: Debes incluir el script de Alpine.js en tu Layout.astro para que el modal funcione.
+// Ejemplo: <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+---
+
+<Layout title="Adeudos">
+    <div class="bg-white p-6 rounded-2xl shadow-xl space-y-6" x-data="arrearsData()" x-cloak>
+        
+        <div class="flex items-center space-x-3 text-[#2e594d] border-b pb-4 border-[#e5e7eb]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-users" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
+                <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+                <path d="M16 3.161a3 3 0 1 0 3.839 3.839"></path>
+                <path d="M16 14v-1a4 4 0 0 1 4 -4h1"></path>
+            </svg>
+            <h1 class="text-2xl font-bold">Adeudos</h1>
+        </div>
+
+        <div class="space-y-6">
+            <div class="flex items-center space-x-3 text-lg font-semibold text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-table" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M4 14m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
+                    <path d="M4 6m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
+                    <path d="M4 14h16"></path>
+                </svg>
+                <span>Todos los adeudos</span>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                
+                <div class="relative flex-1">
+                    <input 
+                        type="text" 
+                        x-model="searchTerm" 
+                        placeholder="Nombre o concepto" 
+                        class="w-full h-10 pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:border-[#3b7666] focus:ring-1 focus:ring-[#3b7666] transition duration-200"
+                        @input.debounce.300ms="filterData"
+                    >
+                    <button @click="filterData" class="absolute inset-y-0 left-0 px-3 flex items-center text-gray-500 hover:text-[#2e594d]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
+                            <path d="M21 21l-6 -6"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <button 
+                    @click="showModal = true"
+                    class="h-10 flex items-center justify-center space-x-2 px-6 py-2 bg-white text-[#2e594d] border border-[#2e594d] rounded-xl font-semibold shadow-md hover:bg-[#2e594d] hover:text-white transition duration-200 whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-pencil" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"></path>
+                        <path d="M13.5 6.5l4 4"></path>
+                    </svg>
+                    <span>Validar</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto rounded-xl border-t border-gray-300">
+            <table class="min-w-full">
+                <thead class="bg-white text-left">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            NOMBRE
+                        </th>
+                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            CONCEPTO
+                        </th>
+                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer select-none" @click="sortBy = 'Monto', sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">
+                            <div class="flex items-center justify-end">
+                                MONTO
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-selector ml-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                    <path d="M8 9l4 -4l4 4"></path>
+                                    <path d="M16 15l-4 4l-4 -4"></path>
+                                </svg>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    <template x-for="(item, index) in paginatedData" :key="item.Nombre">
+                        <tr :class="index % 2 === 0 ? 'bg-white' : 'bg-[#f0fff4]'">
+                            <td x-text="item.Nombre" class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-b border-gray-200"></td>
+                            <td x-text="item.Concepto" class="px-6 py-3 whitespace-nowrap text-sm text-gray-700 border-b border-gray-200"></td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm font-semibold text-gray-800 border-b border-gray-200 text-right">
+                                <span x-text="formatCurrency(item.Monto)"></span>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="paginatedData.length === 0">
+                        <td colspan="3" class="text-center py-6 text-gray-500">No se encontraron adeudos.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <nav class="flex items-center justify-center pt-4" aria-label="Pagination">
+            <div class="flex-1 flex justify-between sm:justify-center items-center space-x-2 text-sm">
+                <button @click="currentPage > 1 && currentPage--" :disabled="currentPage === 1" class="text-gray-500 disabled:opacity-50 hover:text-[#2e594d] transition-colors flex items-center">
+                    &larr; Previous
+                </button>
+                
+                <div class="flex space-x-1 items-center">
+                    <template x-for="page in totalPages" :key="page">
+                        <button 
+                            x-show="shouldShowPage(page)"
+                            @click="currentPage = page" 
+                            x-text="page" 
+                            :class="{'bg-gray-800 text-white': currentPage === page, 'text-gray-700 hover:bg-gray-100': currentPage !== page, 'px-3 py-1 rounded-full text-sm font-medium transition-colors': true}"
+                        ></button>
+                    </template>
+                    <span x-show="totalPages > 5 && currentPage < totalPages - 2" class="px-1 py-1 text-gray-500">...</span>
+                </div>
+                
+                <button @click="currentPage < totalPages && currentPage++" :disabled="currentPage === totalPages" class="text-gray-500 disabled:opacity-50 hover:text-[#2e594d] transition-colors flex items-center">
+                    Next &rarr;
+                </button>
+            </div>
+        </nav>
+
+        
+        <div class="fixed inset-0 z-50 overflow-y-auto" x-show="showModal" @click.away="showModal = false" x-cloak>
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div 
+                    class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" 
+                    @click="showModal = false"
+                ></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div 
+                    class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+                    role="dialog" 
+                    aria-modal="true" 
+                    aria-labelledby="modal-headline"
+                >
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 space-y-4">
+                        <div class="flex items-center space-x-2 text-[#2e594d]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-check" width="28" height="28" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                                <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                                <path d="M9 15l2 2l4 -4"></path>
+                            </svg>
+                            <h3 class="text-xl font-bold" id="modal-headline">Validar adeudo</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-gray-600 font-medium block">Alumno</label>
+                                <input type="text" placeholder="N.Control o CURP de alumno" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3b7666] focus:border-[#3b7666]">
+                                <p class="flex items-center text-sm text-green-600 space-x-1" x-show="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M5 12l5 5l10 -10"></path>
+                                    </svg>
+                                    <span>Alumno encontrado: Juan Perez</span>
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-gray-600 font-medium block">Código</label>
+                                <input type="text" placeholder="Escribe el código generado" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3b7666] focus:border-[#3b7666]">
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-col sm:space-y-2">
+                        <button type="button" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-[#5cb85c] text-base font-medium text-white hover:bg-[#4cae4c] sm:text-sm">
+                            Validar pago
+                        </button>
+                        <button type="button" @click="showModal = false" class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:text-sm">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+    <script>
+        function arrearsData() {
+            const baseItems = [
+                { Nombre: 'Dwight', Concepto: 'Colegiatura Enero', Monto: 492.00 },
+                { Nombre: 'Courtney', Concepto: 'Colegiatura Febrero', Monto: 922.00 },
+                { Nombre: 'Kristin', Concepto: 'Colegiatura Marzo', Monto: 357.00 },
+                { Nombre: 'Cody', Concepto: 'Colegiatura Abril', Monto: 447.00 },
+                { Nombre: 'Ronald', Concepto: 'Cuota Admin 2024', Monto: 196.00 },
+                { Nombre: 'Eduardo', Concepto: 'Colegiatura Sep', Monto: 429.00 },
+                { Nombre: 'Arlene', Concepto: 'Colegiatura Dic', Monto: 492.00 },
+                { Nombre: 'Aubrey', Concepto: 'Materiales Ago', Monto: 703.00 },
+                { Nombre: 'Shawn', Concepto: 'Colegiatura Nov', Monto: 154.00 },
+                { Nombre: 'Laura', Concepto: 'Colegiatura Oct', Monto: 380.00 },
+                { Nombre: 'Miguel', Concepto: 'Cuota Admin 2025', Monto: 250.00 },
+                { Nombre: 'Sophia', Concepto: 'Colegiatura Mar', Monto: 480.00 },
+                { Nombre: 'Liam', Concepto: 'Materiales Ene', Monto: 650.00 },
+                { Nombre: 'Olivia', Concepto: 'Colegiatura Abr', Monto: 500.00 },
+                { Nombre: 'Noah', Concepto: 'Cuota Deportes', Monto: 120.00 },
+                { Nombre: 'Emma', Concepto: 'Colegiatura Mayo', Monto: 470.00 },
+                ...Array.from({ length: 150 }, (_, i) => ({
+                    Nombre: `Estudiante ${i + 16}`, 
+                    Concepto: `Colegiatura ${i % 12 + 1}`, 
+                    Monto: (Math.random() * 800 + 100).toFixed(2)
+                })),
+            ];
+
+            return {
+                showModal: false, 
+                items: baseItems,
+                filteredItems: [],
+                searchTerm: '',
+                sortBy: 'Monto',
+                sortDirection: 'desc',
+                itemsPerPage: 9, 
+                currentPage: 1,
+
+                init() {
+                    this.filteredItems = this.items;
+                    this.sortData();
+                },
+
+                formatCurrency(amount) {
+                    return `$${parseFloat(amount).toFixed(2)}`;
+                },
+                
+                filterData() {
+                    this.filteredItems = this.items.filter(item => {
+                        const searchLower = this.searchTerm.toLowerCase();
+                        return item.Nombre.toLowerCase().includes(searchLower) ||
+                            item.Concepto.toLowerCase().includes(searchLower);
+                    });
+                    this.currentPage = 1;
+                    this.sortData();
+                },
+
+                sortData() {
+                    this.filteredItems.sort((a, b) => {
+                        let aVal = a[this.sortBy];
+                        let bVal = b[this.sortBy];
+
+                        if (this.sortBy === 'Monto') {
+                            aVal = parseFloat(aVal);
+                            bVal = parseFloat(bVal);
+                        } else if (typeof aVal === 'string') {
+                            aVal = aVal.toLowerCase();
+                            bVal = bVal.toLowerCase();
+                        }
+
+                        if (aVal < bVal) {
+                            return this.sortDirection === 'asc' ? -1 : 1;
+                        }
+                        if (aVal > bVal) {
+                            return this.sortDirection === 'asc' ? 1 : -1;
+                        }
+                        return 0;
+                    });
+                },
+
+                get totalPages() {
+                    return Math.ceil(this.filteredItems.length / this.itemsPerPage);
+                },
+                get paginatedData() {
+                    this.sortData();
+                    const start = (this.currentPage - 1) * this.itemsPerPage;
+                    const end = start + this.itemsPerPage;
+                    return this.filteredItems.slice(start, end);
+                },
+                
+                shouldShowPage(page) {
+                    if (this.totalPages <= 5) return true;
+                    if (page === 1 || page === this.totalPages) return true;
+                    if (page >= this.currentPage - 1 && page <= this.currentPage + 1) return true;
+                    
+                    return false;
+                }
+            }
+        }
+    </script>
+</Layout>
