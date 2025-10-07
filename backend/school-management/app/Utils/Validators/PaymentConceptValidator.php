@@ -30,7 +30,7 @@ class PaymentConceptValidator{
             throw new ConceptInactiveException();
         }
 
-        if ($concept->start_date >= $today || ($concept->end_date !== null && $concept->end_date <= $today)) {
+        if ($concept->start_date > $today || ($concept->end_date !== null && $concept->end_date < $today)) {
             throw new ConceptExpiredException();
         }
 
