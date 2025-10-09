@@ -5,7 +5,7 @@ namespace App\Services\PaymentSystem\Staff;
 use App\Models\Career;
 use App\Models\PaymentConcept;
 use App\Models\User;
-use App\Utils\ResponseBuilder;
+use Illuminate\Validation\ValidationException;
 use App\Utils\Validators\PaymentConceptValidator;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\NewConceptNotification;
@@ -63,7 +63,7 @@ class ConceptsService{
                     if ($careerModel) {
                         $paymentConcept->careers()->attach($careerModel->id);
                     } else {
-                        throw new \Exception("La carrera '$career' no existe");
+                        throw ValidationException::withMessages(['career'=>"La carrera '$career' no existe"]);
                     }
                     break;
 
@@ -81,8 +81,9 @@ class ConceptsService{
                     if ($ids->isNotEmpty()) {
                         $paymentConcept->users()->attach($ids);
                     } else {
-                        throw new \Exception("Ninguno de los estudiantes existe o estan dados de baja");
-                    }
+                        throw ValidationException::withMessages([
+                            'students' => ['Ninguno de los estudiantes existe o está dado de baja.']
+                        ]);                    }
                     }
                     break;
 
@@ -124,9 +125,12 @@ class ConceptsService{
         if (isset($data['applies_to'])) {
             switch($data['applies_to']){
                 case 'carrera':
-                    if ($career) {
-                        $pc->careers()->sync([$career]);
-                    }
+                    $careerModel = Career::where('career_name', $career)->first();
+                if ($careerModel) {
+                    $pc->careers()->sync([$careerModel->id]);
+                } else {
+                        throw ValidationException::withMessages(['career'=>"La carrera '$career' no existe"]);
+                }
                     break;
 
                 case 'semestre':
@@ -140,8 +144,13 @@ class ConceptsService{
 
                 case 'estudiantes':
                     if ($students) {
-                        $ids = is_array($students) ? $students : [$students];
-                        $pc->users()->sync($ids);
+                    $ids = User::whereIn('curp', $students)->where('status','activo')->pluck('id');
+                    if ($ids->isNotEmpty()) {
+                        $pc->users()->attach($ids);
+                    } else {
+                        throw ValidationException::withMessages([
+                            'students' => ['Ninguno de los estudiantes existe o está dado de baja.']
+                        ]);                    }
                     }
                     break;
 

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\PaymentMethod;
 use App\Services\PaymentSystem\StripeService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CardsService{
 protected StripeService $stripeService;
@@ -27,6 +28,12 @@ protected StripeService $stripeService;
      public function getPaymentMethodDetails(User $user,string $paymentMethodId)
     {
         $paymentMethod = $this->stripeService->retrievePaymentMethod($paymentMethodId);
+        if (!$paymentMethod || !$paymentMethod->card) {
+            throw ValidationException::withMessages([
+                'payment_method' => 'No se pudo obtener la información del método de pago.',
+            ]);
+        }
+
         PaymentMethod::create([
         'user_id' => $user->id,
         'stripe_payment_method_id' => $paymentMethod->id,
@@ -40,18 +47,25 @@ protected StripeService $stripeService;
     }
 
     public function showPaymentMethods(User $user){
-         return PaymentMethod::where('user_id', $user->id)
-            ->get()
-            ->makeHidden(['created_at', 'updated_at'])
-            ->toArray();
+         return $user->paymentMethods()
+            ->makeHidden(['created_at', 'updated_at']);
     }
 
     public function deletePaymentMethod($stripePaymentMethodId){
         return DB::transaction(function() use ($stripePaymentMethodId){
+            $localMethod = PaymentMethod::where('stripe_payment_method_id', $stripePaymentMethodId)->first();
+
+            if (!$localMethod) {
+                throw ValidationException::withMessages([
+                    'payment_method' => 'El método de pago no existe en el sistema.',
+                ]);
+            }
+
             $this->stripeService->deletePaymentMethod($stripePaymentMethodId);
-            PaymentMethod::where('stripe_payment_method_id', $stripePaymentMethodId)->delete();
+            $localMethod->delete();
+
             return true;
-        });
+                });
     }
 
 }

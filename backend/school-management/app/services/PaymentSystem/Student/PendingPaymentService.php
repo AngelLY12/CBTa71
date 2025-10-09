@@ -9,6 +9,7 @@ use App\Models\PaymentMethod;
 use App\Services\PaymentSystem\StripeService;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\PaymentCreatedNotification;
+use Illuminate\Validation\ValidationException;
 
 
 class PendingPaymentService{
@@ -16,22 +17,11 @@ class PendingPaymentService{
 
     public function showPendingPayments(User $user) {
             if($user->status==='baja'){
-                throw new \Exception('No puedes ver conceptos de pago si estas dado de baja');
+                throw ValidationException::withMessages(['student'=>"El usuario esta dado de baja"]);
             }
 
-            return PaymentConcept::where('status', 'activo')
-                ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $user->id))
-                ->whereDate('start_date', '<=', now())
-                ->where(function ($q) {
-                    $q->whereNull('end_date')
-                    ->orWhereDate('end_date', '>=', now());
-                })
-                ->where(function($q) use ($user) {
-                    $q->where('is_global', true)
-                      ->orWhereHas('users', fn($q) => $q->where('users.id', $user->id))
-                      ->orWhereHas('careers', fn($q) => $q->where('careers.id', $user->career_id))
-                      ->orWhereHas('paymentConceptSemesters', fn($q) => $q->where('semestre', $user->semestre));
-                })
+            return PaymentConcept::pendingPaymentConcept($user)
+            ->select('id','concept_name','description','amount','start_date','end_date')
                 ->get()
                 ->map(fn($concept) => [
                     'id'           => $concept->id,
@@ -69,13 +59,16 @@ class PendingPaymentService{
 
     public function payConcept(User $user, int $conceptId, ?string $savedPaymentMethodId = null) {
        $payment= DB::transaction(function() use ($user, $conceptId, $savedPaymentMethodId) {
-
+        $savedMethod= null;
+            if($savedPaymentMethodId){
+                $savedMethod = PaymentMethod::where('id', $savedPaymentMethodId)
+                ->where('user_id', $user->id)
+                ->firstOrFail();
+            }
             $concept = PaymentConcept::findOrFail($conceptId);
-            $savedMethod = PaymentMethod::where('id', $savedPaymentMethodId)
-            ->where('user_id', $user->id)
-            ->firstOrFail();
 
-            $stripePaymentMethodId = $savedMethod->stripe_payment_method_id;
+
+            $stripePaymentMethodId = $savedMethod->stripe_payment_method_id ?? null;
             $stripeService = new StripeService();
             $session = $stripeService->createCheckoutSession($user, $concept,$stripePaymentMethodId);
 
