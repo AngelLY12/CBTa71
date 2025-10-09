@@ -57,18 +57,12 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class);
     }
 
-    public function pendingPaymentConcepts() {
-    return $this->hasMany(PaymentConcept::class)
-        ->select('id','concept_name','amount')
-        ->where('status', 'activo')
-        ->whereDoesntHave('payments', fn($q) => $q->where('user_id', $this->id))
-        ->where(function ($q) {
-            $q->where('is_global', true)
-              ->orWhereHas('users', fn($q) => $q->where('users.id', $this->id))
-              ->orWhereHas('careers', fn($q) => $q->where('careers.id', $this->career_id))
-              ->orWhereHas('paymentConceptSemesters', fn($q) => $q->where('semestre', $this->semestre));
-        });
-}
+    public function paymentMethods(){
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+
+
 
 
 
