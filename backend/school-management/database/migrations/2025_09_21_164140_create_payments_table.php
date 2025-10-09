@@ -18,7 +18,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
             $table->foreignIdFor(PaymentConcept::class)->nullable()->constrained('payment_concepts')->onDelete('set null');
-            $table->foreignId(PaymentMethod::class)->nullable()->constrained('payment_methods')->onDelete('set null');
+            $table->foreignIdFor(PaymentMethod::class)->nullable()->constrained('payment_methods')->onDelete('set null');
             $table->string('stripe_payment_method_id',50)->nullable()->index();
             $table->string('last4',4)->nullable();
             $table->string('brand',20)->nullable();
