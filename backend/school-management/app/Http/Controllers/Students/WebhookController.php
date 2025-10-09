@@ -8,15 +8,22 @@ use Stripe\Webhook;
 use App\Http\Controllers\Controller;
 use App\Notifications\PaymentValidatedNotification;
 use App\Notifications\PaymentFailedNotification;
+use Stripe\Stripe;
 
 class WebhookController extends Controller
+
 {
+
+    public function __construct(){
+        Stripe::setApiKey(config('services.stripe.secret'));
+    }
     public function handle(Request $request)
     {
         $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
         $endpointSecret = config('services.stripe.webhook');
-
+        logger()->info("Payload: ".$payload);
+        logger()->info("Signature: ".$sigHeader);
         try {
             $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
             $obj = $event->data->object;
