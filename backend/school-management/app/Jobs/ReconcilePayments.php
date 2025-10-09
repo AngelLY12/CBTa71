@@ -31,7 +31,9 @@ class ReconcilePayments implements ShouldQueue
      */
     public function handle(): void
     {
-        $pendingPayments = Payment::where('status', 'pending')->get();
+        $pendingPayments = Payment::where('status', 'pending')
+        ->where('created_at', '>=', now()->subMonths(6))
+        ->get();
 
         foreach ($pendingPayments as $payment) {
             try {
