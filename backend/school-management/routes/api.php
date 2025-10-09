@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Staff\ConceptsController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\DebtsController;
@@ -18,9 +19,11 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/test', function() {
-    return PaymentConcept::all();
+Route::prefix('v1')->middleware('throttle:10,1')->group(function () {
+    Route::post('/login', [LoginController::class, 'login']);
 });
+Route::post('/stripe/webhook', [WebhookController::class, 'handle']);
+
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('dashboard')->middleware('role:student')->group(function (){
@@ -42,11 +45,10 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
     Route::prefix('pending-payment')->middleware('role:student')->group(function(){
         Route::middleware('permission:view pending concepts')->get('/',[PendingPaymentController::class,'index']);
-        Route::middleware('permission:create payment')->post('/',[PendingPaymentController::class,'store']);
+        Route::middleware('permission:create payment','throttle:5,1')->post('/',[PendingPaymentController::class,'store']);
         Route::middleware('permission:view overdue concepts')->get('/overdue',[PendingPaymentController::class,'overdue']);
 
     });
-    Route::post('/stripe/webhook', [WebhookController::class, 'handle']);
 
     Route::prefix('dashboard-staff')->middleware('role:financial staff')->group(function(){
         Route::middleware('permission:view all financial overview')->get('/data',[StaffDashboardController::class,'getData']);
@@ -55,7 +57,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:view all paid concepts summary')->get('/payments',[StaffDashboardController::class,'paymentsMade']);
         Route::middleware('permission:view concepts history')->get('/concepts',[StaffDashboardController::class,'allConcepts']);
     });
-    Route::prefix('concepts')->middleware('role:financial staff')->group(function(){
+    Route::prefix('concepts')->middleware('role:financial staff','throttle:60,1')->group(function(){
         Route::middleware('permission:view concepts')->get('/', [ConceptsController::class, 'index']);
         Route::middleware('permission:create concepts')->post('/', [ConceptsController::class, 'store']);
         Route::middleware('permission:update concepts')->put('/{concept}', [ConceptsController::class, 'update']);
@@ -64,7 +66,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:disable concepts')->post('/{concept}/disable', [ConceptsController::class, 'disable']);
     });
 
-    Route::prefix('debts')->middleware('role:financial staff')->group(function(){
+    Route::prefix('debts')->middleware('role:financial staff','throttle:60,1')->group(function(){
         Route::middleware('permission:view debts')->get('/', [DebtsController::class, 'index']);
         Route::middleware('permission:validate debt')->post('/validate', [DebtsController::class, 'validatePayment']);
     });
