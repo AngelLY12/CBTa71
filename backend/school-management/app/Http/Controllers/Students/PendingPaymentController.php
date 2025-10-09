@@ -48,7 +48,7 @@ class PendingPaymentController extends Controller
         $user = Auth::user();
         $payment= $this->pendingPaymentService->payConcept(
                 $user,
-                $request->input->integer('concept_id')
+                $request->integer('concept_id')
             );
 
 

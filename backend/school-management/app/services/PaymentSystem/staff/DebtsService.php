@@ -13,39 +13,36 @@ class DebtsService{
 
     public function showAllpendingPayments(?string $search=null)
     {
-    $studentsQuery = User::role('alumno')->select('id','name','last_name','email')
-    ->where('status','activo');
+        $studentsQuery = User::role('student')->select('id','name','last_name','email')
+        ->where('status','activo');
 
-    if ($search) {
-        $studentsQuery->where(function($q) use ($search) {
-            $q->where('name', 'like', "%$search%")
-              ->orWhere('last_name', 'like', "%$search%")
-              ->orWhere('email', 'like', "%$search%");
-        });
-    }
+        if ($search) {
+            $studentsQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                ->orWhere('last_name', 'like', "%$search%")
+                ->orWhere('email', 'like', "%$search%");
+            });
+        }
 
-    $studentsQuery->with(['pendingPaymentConcepts:id,concept_name,amount,user_id']);
+        $studentsQuery->with(['paymentConcepts' => function($q) {
+        $q->pendingPaymentConcept()
+         ->select('id', 'concept_name', 'amount', 'user_id');
+        }]);
 
-    $students=$studentsQuery->paginate(15);
+        $students=$studentsQuery->paginate(15);
 
-   $students->getCollection()->transform(function ($student) {
-        $adeudos = $student->pendingPaymentConcepts->map(function ($concept) use ($student) {
-            return [
+    $students->getCollection()->transform(function ($student) {
+        return $student->paymentConcepts->map(fn($concept) => [
                 'id'       => $student->id,
                 'nombre'   => $student->name . ' ' . $student->last_name,
                 'concepto' => $concept->concept_name,
                 'monto'    => $concept->amount,
-            ];
+            ]);
         });
 
-        return $adeudos;
-    });
+        $students->setCollection($students->getCollection()->flatten(1));
 
-    $flattened = $students->getCollection()->flatten(1);
-
-    $students->setCollection($flattened);
-
-    return $students;
+        return $students;
     }
 
     public function validatePayment(string $search, string $payment_intent_id)

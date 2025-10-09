@@ -22,8 +22,10 @@ class StudentsService{
                 });
             }
 
-            $studentsQuery->withCount(['pendingPaymentConcepts as pendientes'])
-                      ->withSum(['pendingPaymentConcepts as monto']);
+             $studentsQuery->with(['paymentConcepts' => function($q) {
+                $q->pendingPaymentConcept()
+                ->select('id', 'amount', 'user_id');;
+            }]);
 
             $students=$studentsQuery->paginate(15);
 
@@ -33,8 +35,8 @@ class StudentsService{
                     'id'        => $student->id,
                     'nombre'    => $student->name . ' ' . $student->last_name,
                     'semestre'  => $student->semestre,
-                    'pendientes'=> $student->pendientes,
-                    'monto'     => $student->monto,
+                    'pendientes'=> $$student->paymentConcepts->count(),
+                    'monto'     => $student->paymentConcepts->sum('amount'),
                 ];
             });
 

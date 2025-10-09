@@ -1,6 +1,6 @@
 <?php
 
-namespace App\services\PaymentSystem\staff;
+namespace App\Services\PaymentSystem\Staff;
 use App\Models\PaymentConcept;
 use App\Models\Payment;
 use App\Models\User;
@@ -10,8 +10,7 @@ class DashboardService{
 
     public function pendingPaymentAmount(bool $onlyThisYear = false)
     {
-            $query = PaymentConcept::where('status','activo')
-            ->whereDoesntHave('payments');
+            $query = PaymentConcept::pendingPaymentConcept();
 
             if($onlyThisYear){
                 $query->whereYear('created_at',now()->year);

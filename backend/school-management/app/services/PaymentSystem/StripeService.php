@@ -97,7 +97,9 @@ class StripeService{
         try{
             $customerId = $this->createStripeUser($user);
             StripeValidator::ensureValidConcept($concept);
+            if($savedPaymentMethodId){
             StripeValidator::ensureExistsPaymentMethodId($savedPaymentMethodId,$user);
+            }
             PaymentConceptValidator::ensureConceptIsActiveAndValid($user,$concept);
 
             $sessionData = [
@@ -118,7 +120,7 @@ class StripeService{
              ],
             'success_url' => config('app.frontend_url') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => config('app.frontend_url') . '/payment-cancel',
-            'payment_method_types' => ['card', 'oxxo', 'bank_transfer'],
+            'payment_method_types' => ['card', 'oxxo'],
         ];
 
         if ($savedPaymentMethodId) {
