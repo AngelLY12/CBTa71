@@ -2,26 +2,24 @@
 
 namespace App\Notifications;
 
-use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PaymentFailedNotification extends Notification implements ShouldQueue
+class RequiresActionNotification extends Notification
 {
     use Queueable;
 
-    protected Payment $payment;
-    protected string $error;
+    protected array $oxxo;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(Payment $payment,string $error)
+    public function __construct(array $oxxo)
     {
-        $this->payment=$payment;
-        $this->error=$error;
+        $this->oxxo=$oxxo;
     }
 
     /**
@@ -40,12 +38,14 @@ class PaymentFailedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Pago no procesado')
+            ->subject('Instrucciones para completar tu pago en OXXO')
             ->greeting('Hola ' . $notifiable->name)
-            ->line($this->error)
-            ->line('Tu pago para el concepto: ' . $this->payment->paymentConcept->concept_name . ' no pudo procesarse.')
-            ->line('Monto: $' . number_format($this->payment->paymentConcept->amount, 2))
-            ->line('Por favor intenta de nuevo o contacta a soporte.');
+            ->line('Para completar tu pago, acude a cualquier tienda OXXO y presenta el código de referencia en el voucher:')
+            ->line('Monto: $' . number_format($this->oxxo['amount'] / 100, 2))
+            ->line('Número de referencia: ' . $this->oxxo['reference_number'])
+            ->action('Ver voucher', $this->oxxo['voucher'])
+            ->line('Tu pago será actualizado automáticamente una vez que completes la operación en OXXO.');
+
     }
 
     /**

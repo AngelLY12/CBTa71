@@ -46,8 +46,7 @@ class PaymentValidatedNotification extends Notification implements ShouldQueue
             ->line('Código de referencia: ' . $this->payment->payment_intent_id)
             ->line('Voucher de oxxo: ' . optional($this->payment->voucher_number ?? 'No aplica'))
             ->line('Referencia SPEI: ' . optional($this->payment->spei_reference ?? 'No aplica'))
-            ->line('Código de referencia: ' . $this->payment->payment_intent_id)
-            ->line('Instrucciones del pago: ' . $this->payment->instructions_url)
+            ->line('Instrucciones del pago: ' . optional($this->payment->instructions_url ?? 'No aplica'))
             ->line('URL de comprobante: ' . $this->payment->url)
             ->line('Gracias por tu puntualidad.');
     }

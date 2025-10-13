@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PaymentCreatedNotification extends Notification implements ShouldQueue
+class PaymentCreatedNotification extends Notification
 {
     use Queueable;
 
@@ -45,6 +45,7 @@ class PaymentCreatedNotification extends Notification implements ShouldQueue
             ->line('Fecha: ' . $this->payment->created_at->format('d/m/Y H:i'))
             ->line('URL: ' . $this->payment->url ?? 'No disponible')
             ->line('Sesión del pago: ' . $this->payment->stripe_session_id ?? 'No disponible')
+            ->line('Te avisaremos cuando hayamos validado los demas datos de tu pago y puedas ver el recibo del mismo.')
             ->line('Gracias por realizar tu pago a tiempo.');
     }
 
