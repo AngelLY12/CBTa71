@@ -15,7 +15,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-               // Limpiar cache de permisos
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // ------------------------
@@ -55,6 +54,7 @@ class DatabaseSeeder extends Seeder
             'update concepts',
             'finalize concepts',
             'disable concepts',
+            'eliminate concepts',
             'view debts',
             'validate debt',
             'view payments',
