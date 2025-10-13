@@ -64,6 +64,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:update concepts')->patch('/{concept}', [ConceptsController::class, 'update']);
         Route::middleware('permission:finalize concepts')->post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
         Route::middleware('permission:disable concepts')->post('/{concept}/disable', [ConceptsController::class, 'disable']);
+        Route::middleware('permission:eliminate concepts')->post('/{concept}/eliminate', [ConceptsController::class, 'eliminate']);
+
     });
 
     Route::prefix('debts')->middleware('role:financial staff','throttle:60,1')->group(function(){
