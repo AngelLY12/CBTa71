@@ -41,10 +41,9 @@ class NewConceptNotification extends Notification implements ShouldQueue
             ->subject('Nuevo concepto de pago disponible')
             ->greeting('Hola ' . $notifiable->name)
             ->line('Se ha creado un nuevo concepto de pago para ti:')
-            ->line('📘 Concepto: ' . $this->paymentConcept->concept_name)
-            ->line('💲 Monto: $' . number_format($this->paymentConcept->amount, 2))
-            ->line('🗓️ Fecha límite: ' . optional($this->paymentConcept->end_date)->format('d/m/Y'))
-            ->line('The introduction to the notification.')
+            ->line('Concepto: ' . $this->paymentConcept->concept_name)
+            ->line('Monto: $' . number_format($this->paymentConcept->amount, 2))
+            ->line('Fecha límite: ' . optional($this->paymentConcept->end_date)->format('d/m/Y'))
             #->action('Notification Action', url('/'))
             ->line('Por favor realiza tu pago antes de la fecha límite.');
     }
