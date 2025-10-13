@@ -25,25 +25,39 @@ class StripeService{
         try{
             StripeValidator::ensureUserHasEmailAndName($user);
 
-            if(!$user->stripe_customer_id){
-                $customer = Customer::create([
-                        'email'=>$user->email,
-                        'name'=>$user->name . ' ' . $user->last_name
-                    ]);
-
-                $user->stripe_customer_id = $customer->id;
-                $user->save();
+            if($user->stripe_customer_id){
+                return $user->stripe_customer_id;
             }
 
+            $existingCustomers = Customer::all([
+                'email' => $user->email,
+                'limit' => 1,
+            ]);
+
+            if(count($existingCustomers->data) > 0){
+                $user->stripe_customer_id = $existingCustomers->data[0]->id;
+                $user->save();
+                return $user->stripe_customer_id;
+            }
+
+            $customer = Customer::create([
+                'email' => $user->email,
+                'name' => $user->name . ' ' . $user->last_name
+            ]);
+
+            $user->stripe_customer_id = $customer->id;
+            $user->save();
+
             return $user->stripe_customer_id;
+
         }catch (\InvalidArgumentException $e) {
             throw $e;
         }catch(ApiErrorException $e){
             logger()->error("Stripe error creating customer: " . $e->getMessage());
             throw $e;
         }
-
     }
+
 
     public function createSetupSession(User $user){
 
@@ -92,19 +106,20 @@ class StripeService{
         return StripePaymentMethod::retrieve($paymentMethodId);
     }
 
-    public function createCheckoutSession(User $user, PaymentConcept $concept,?string $savedPaymentMethodId = null)
+    public function createCheckoutSession(User $user, PaymentConcept $concept)
     {
         try{
             $customerId = $this->createStripeUser($user);
             StripeValidator::ensureValidConcept($concept);
-            if($savedPaymentMethodId){
-            StripeValidator::ensureExistsPaymentMethodId($savedPaymentMethodId,$user);
-            }
+
             PaymentConceptValidator::ensureConceptIsActiveAndValid($user,$concept);
 
             $sessionData = [
             'mode' => 'payment',
             'customer' => $customerId,
+            'customer_update' => [
+                'address' => 'auto',
+            ],
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'mxn',
@@ -115,19 +130,24 @@ class StripeService{
                 ],
                 'quantity' => 1,
             ]],
+
             'metadata' => [
                 'payment_concept_id' => $concept->id,
              ],
+             'payment_method_options' => [
+                'card' => [
+                    'setup_future_usage' => 'off_session',
+                ],
+            ],
+            'saved_payment_method_options' => [
+                'payment_method_save' => 'enabled',
+            ],
+
             'success_url' => config('app.frontend_url') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => config('app.frontend_url') . '/payment-cancel',
             'payment_method_types' => ['card', 'oxxo'],
         ];
 
-        if ($savedPaymentMethodId) {
-            $sessionData['payment_intent_data'] = [
-                'payment_method' => $savedPaymentMethodId,
-            ];
-        }
 
         $session = Session::create($sessionData);
 
@@ -164,23 +184,21 @@ class StripeService{
 
         }
 
-
-
     }
 
     public function deletePaymentMethod(string $stripePaymentMethodId)
     {
-    try {
-        StripeValidator::ensureValidPaymentMethodId($stripePaymentMethodId);
-        $stripePM = StripePaymentMethod::retrieve($stripePaymentMethodId);
-        $stripePM->detach();
-        return true;
-    }catch (\InvalidArgumentException $e) {
-        throw $e;
-    }catch (\Stripe\Exception\ApiErrorException $e) {
-        logger()->error("Stripe error detaching PaymentMethod: " . $e->getMessage());
-        throw $e;
-    }
+        try {
+            StripeValidator::ensureValidPaymentMethodId($stripePaymentMethodId);
+            $stripePM = StripePaymentMethod::retrieve($stripePaymentMethodId);
+            $stripePM->detach();
+            return true;
+        }catch (\InvalidArgumentException $e) {
+            throw $e;
+        }catch (\Stripe\Exception\ApiErrorException $e) {
+            logger()->error("Stripe error detaching PaymentMethod: " . $e->getMessage());
+            throw $e;
+        }
     }
 
 

@@ -6,6 +6,7 @@ use App\Models\PaymentConcept;
 use App\Models\PaymentMethod;
 use App\Models\User;
 use App\Notifications\PaymentCreatedNotification;
+use App\Notifications\PaymentValidatedNotification;
 use Stripe\PaymentIntent;
 use Illuminate\Support\Facades\DB;
 
@@ -31,14 +32,14 @@ class DebtsService{
 
         $students=$studentsQuery->paginate(15);
 
-    $students->getCollection()->transform(function ($student) {
-        return $student->paymentConcepts->map(fn($concept) => [
-                'id'       => $student->id,
-                'nombre'   => $student->name . ' ' . $student->last_name,
-                'concepto' => $concept->concept_name,
-                'monto'    => $concept->amount,
-            ]);
-        });
+        $students->getCollection()->transform(function ($student) {
+            return $student->paymentConcepts->map(fn($concept) => [
+                    'id'       => $student->id,
+                    'nombre'   => $student->name . ' ' . $student->last_name,
+                    'concepto' => $concept->concept_name,
+                    'monto'    => $concept->amount,
+                ]);
+            });
 
         $students->setCollection($students->getCollection()->flatten(1));
 
@@ -112,7 +113,7 @@ class DebtsService{
                     'payment_intent_id' => $payment->payment_intent_id
                 ]
             ];
-            $payment->user->notify((new PaymentCreatedNotification($payment))->delay(now()->addSeconds(5)));
+            $payment->user->notify((new PaymentValidatedNotification($payment))->delay(now()->addSeconds(5)));
 
             return $data;
         });

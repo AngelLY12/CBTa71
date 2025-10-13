@@ -57,25 +57,18 @@ class PendingPaymentService{
     }
 
 
-    public function payConcept(User $user, int $conceptId, ?string $savedPaymentMethodId = null) {
-       $payment= DB::transaction(function() use ($user, $conceptId, $savedPaymentMethodId) {
-        $savedMethod= null;
-            if($savedPaymentMethodId){
-                $savedMethod = PaymentMethod::where('id', $savedPaymentMethodId)
-                ->where('user_id', $user->id)
-                ->firstOrFail();
-            }
+    public function payConcept(User $user, int $conceptId) {
+       $payment= DB::transaction(function() use ($user, $conceptId) {
+
             $concept = PaymentConcept::findOrFail($conceptId);
 
-
-            $stripePaymentMethodId = $savedMethod->stripe_payment_method_id ?? null;
             $stripeService = new StripeService();
-            $session = $stripeService->createCheckoutSession($user, $concept,$stripePaymentMethodId);
+            $session = $stripeService->createCheckoutSession($user, $concept);
 
             return Payment::create([
                 'user_id' => $user->id,
                 'payment_concept_id' => $concept->id,
-                'payment_method_id'=>$savedPaymentMethodId,
+                'payment_method_id'=>null,
                 'payment_intent_id' => null,
                 'stripe_payment_method_id' => null,
                 'last4' => null,
@@ -84,13 +77,12 @@ class PendingPaymentService{
                 'spei_reference'=>null,
                 'instructions_url'=>null,
                 'type_payment_method' => null,
-                'status' => 'pending',
+                'status' => $session->payment_status,
                 'url' => $session->url ?? null,
                 'stripe_session_id' => $session->id ?? null
             ]);
 
        });
-     $payment->user->notify(new PaymentCreatedNotification($payment));
      return $payment;
 
     }

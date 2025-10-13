@@ -65,7 +65,7 @@ protected StripeService $stripeService;
             $localMethod->delete();
 
             return true;
-                });
+        });
     }
 
 }

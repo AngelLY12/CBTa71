@@ -126,13 +126,12 @@ class ConceptsService{
             switch($data['applies_to']){
                 case 'carrera':
                     $careerModel = Career::where('career_name', $career)->first();
-                if ($careerModel) {
-                    $pc->careers()->sync([$careerModel->id]);
-                } else {
-                        throw ValidationException::withMessages(['career'=>"La carrera '$career' no existe"]);
-                }
-                    break;
-
+                    if ($careerModel) {
+                        $pc->careers()->sync([$careerModel->id]);
+                    } else {
+                            throw ValidationException::withMessages(['career'=>"La carrera '$career' no existe"]);
+                    }
+                        break;
                 case 'semestre':
                     if ($semestre) {
                         $pc->paymentConceptSemesters()->updateOrCreate(
@@ -144,7 +143,7 @@ class ConceptsService{
 
                 case 'estudiantes':
                     if ($students) {
-                    $ids = User::whereIn('curp', $students)->where('status','activo')->pluck('id');
+                        $ids = User::whereIn('curp', $students)->where('status','activo')->pluck('id');
                     if ($ids->isNotEmpty()) {
                         $pc->users()->attach($ids);
                     } else {
@@ -182,6 +181,13 @@ class ConceptsService{
             ]);
 
             return $concept;
+    }
+
+    public function eliminatePaymentConcept(PaymentConcept $concept){
+        $concept->update([
+            'status' => 'eliminado'
+        ]);
+        return $concept;
     }
 
 
