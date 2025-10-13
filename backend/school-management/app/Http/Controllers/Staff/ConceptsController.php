@@ -179,4 +179,15 @@ class ConceptsController extends Controller
             'message' => 'Concepto de pago deshabilitado correctamente.'
         ]);
     }
+
+    public function eliminate(PaymentConcept $concept)
+    {
+        $eliminate = $this->conceptsService->eliminatePaymentConcept($concept);
+
+        return response()->json([
+            'success' => true,
+            'data' => $eliminate,
+            'message' => 'Concepto de pago eliminado correctamente.'
+        ]);
+    }
 }
