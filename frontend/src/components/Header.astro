@@ -1,14 +1,14 @@
 ---
+import { routes } from "../data/routes";
 import NavigationSideBar from "./NavigationSideBar.astro";
 
-const currentPath = Astro.url.pathname;
-const urlLogin = currentPath == "/"
+const isLogin = Astro.url.pathname == routes.login.url;
 ---
 
 <header
-    class="flex fixed inset-x-0 z-20 justify-between items-center bg-green-500 pb-1 px-4 h-20"
+    class="flex fixed translate-y-0 inset-x-0 z-50 justify-between items-center bg-green-500 pb-1 px-4 h-20"
 >
-    <a href={urlLogin ? "/" : "home"}>
+    <a href={isLogin ? "/" : "home"}>
         <img
             class="w-16 lg:w-20 lg:h-full object-fill"
             src="../logos/logo1.png"
@@ -16,31 +16,35 @@ const urlLogin = currentPath == "/"
         />
     </a>
 
-    <h2 class="text-center lg:text-4xl md:text-xl text-sm text-white font-bold">
+    <h2
+        class="w-full text-center lg:text-4xl md:text-xl text-sm text-white font-bold"
+    >
         CBTA 71 TLALNEPANTLA, MOR
     </h2>
 
-    <div class="hidden lg:visible lg:block">
-        <img src="" alt="" />
-    </div>
-    <button
-        id="showNavbar"
-        class="flex items-center justify-center cursor-pointen visible text-white cursor-pointer lg:hidden"
-    >
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="size-8"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path>
-        </svg>
-    </button>
+    {
+        !isLogin && (
+            <button
+                id="showNavbar"
+                class="ml-1.5 flex items-center justify-center cursor-pointen visible text-white cursor-pointer lg:hidden"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="size-8"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                    />
+                </svg>
+            </button>
+        )
+    }
 
     <NavigationSideBar isMovil={true} />
 </header>

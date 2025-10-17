@@ -1,67 +1,13 @@
 ---
 // La ruta correcta para importar Layout.astro desde la carpeta 'pages'
-import Layout from '../layouts/Layout.astro';
-import CardInfo from '../components/CardInfo.astro';
-import ChartLine from '../components/ChartLine.astro';
-import ChartDonut from '../components/ChartDonut.astro';
-import ConceptsTable from '../components/ConceptsTable.astro';
-import Login from './login.astro';
+import Layout from "../layouts/Layout.astro";
+import CardInfo from "../components/CardInfo.astro";
+import ChartLine from "../components/ChartLine.astro";
+import ChartDonut from "../components/ChartDonut.astro";
+import ConceptsTable from "../components/ConceptsTable.astro";
+import Login from "./login.astro";
 ---
 
 <Layout title="Dashboard - CBTA 71">
-<!--   <div class="flex items-center gap-4 mb-8">
-    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-        <path d="M4 4h8v4h-8z"></path>
-        <path d="M4 12h8v8h-8z"></path>
-        <path d="M16 4h4v8h-4z"></path>
-        <path d="M16 16h4v4h-4z"></path>
-    </svg>
-    <h1 class="text-3xl font-bold text-gray-800">Resumen General</h1>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <CardInfo title="Total Estudiantes" value="706" description="Matriculados 2024" icon="students" />
-    <CardInfo title="Pagos pendientes" value="$4460" description="2 conceptos" icon="pending" />
-    <CardInfo title="Total Recaudado" value="$10560.00" description="Ganancia estimada" icon="recaudado" />
-  </div>
-
-  <div class="flex gap-4 mb-8">
-    <button class="px-6 py-2 rounded-lg bg-[#2e594d] text-white font-semibold">Año actual</button>
-    <button class="px-6 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-semibold">Todos</button>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-lg shadow-sm">
-      <ChartLine
-        data={{
-          labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
-          ganancias: [30, 45, 40, 50, 60, 55, 65, 70],
-          pendientes: [20, 25, 22, 28, 30, 28, 32, 35],
-          estudiantes: [100, 110, 105, 120, 130, 125, 140, 150],
-        }}
-      />
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col justify-center items-center">
-      <h2 class="text-xl font-bold text-gray-800 mb-4">Anual</h2>
-      <ChartDonut total={10560.00} percentage={70.30} />
-      <p class="text-lg font-semibold text-gray-700 mt-4">$10,560.00</p>
-    </div>
-  </div>
-
-  <div class="bg-white p-6 rounded-lg shadow-sm">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Conceptos</h2>
-    <ConceptsTable
-      concepts={[
-        { id: '2DDB', concept: 'Colegiatura', amount: '$1067.00', start: '08/2024', end: '-', status: 'Activa' },
-        { id: '5FD4', concept: 'Colegiatura', amount: '$3067.00', start: '02/2024', end: '03/2024', status: 'Finalizado' },
-        { id: '9A1C', concept: 'Inscripción', amount: '$1500.00', start: '08/2024', end: '-', status: 'Activa' },
-        { id: 'B2E7', concept: 'Mensualidad', amount: '$800.00', start: '09/2024', end: '10/2024', status: 'Finalizado' },
-      ]}
-    />
-  </div> -->
-
-<Login>
-
-</Login>
+    <Login />
 </Layout>

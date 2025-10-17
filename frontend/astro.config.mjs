@@ -8,5 +8,9 @@ export default defineConfig({
   integrations: [react()], // Agrega la integración aquí
   vite: {
     plugins: [tailwindcss()]
+  },
+  server: {
+    host: true, // Esto equivale a '0.0.0.0'
+    port: 4321  // Puedes cambiar el puerto si lo deseas
   }
 });

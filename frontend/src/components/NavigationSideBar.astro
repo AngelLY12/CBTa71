@@ -36,25 +36,27 @@ const { isMovil = false } = Astro.props;
                     </svg>
                 </button>
             ) : (
-                <button
-                    id="closeNavbar"
-                    class="w-full flex items-center justify-end cursor-pointer"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="size-8"
+                <div class="w-full flex justify-end items-center">
+                    <button
+                        id="closeNavbar"
+                        class="flex items-center justify-center cursor-pointer hover:bg-white/35 active:bg-white/35 rounded-full"
                     >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M6 18 18 6M6 6l12 12"
-                        />
-                    </svg>
-                </button>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="size-8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M6 18 18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
             )
         }
 
@@ -139,7 +141,6 @@ const { isMovil = false } = Astro.props;
             divNavbar.classList.toggle("w-20");
 
             const isNowCollapsed = divNavbar.classList.contains("w-20");
-            console.log(divNavbar.classList);
             localStorage.setItem("navbarCollapsed", String(isNowCollapsed));
         });
 

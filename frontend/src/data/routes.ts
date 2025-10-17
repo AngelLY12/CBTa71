@@ -104,6 +104,10 @@ export const routesNavbar = [
 ];
 
 export const routes = {
+  login: {
+    url: "/",
+    title: "Login"
+  },
   home: {
     url: routesNavbar[0].url,
     title: "Inicio"
