@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Payment;
 use Stripe\Webhook;
 use App\Http\Controllers\Controller;
+use App\Jobs\ReconcilePayments;
 use App\Notifications\PaymentFailedNotification;
 use App\Services\PaymentSystem\WebhookService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -41,6 +42,9 @@ class WebhookController extends Controller
 
                 case 'checkout.session.completed':
                     $this->webhookService->sessionCompleted($obj);
+                    if($obj->payment_status==='paid'){
+                        ReconcilePayments::dispatch();
+                    }
                     return response()->json(['success' => true,'message'=>'Se completo la sesión']);
                     break;
                 case 'payment_intent.payment_failed':
@@ -58,6 +62,7 @@ class WebhookController extends Controller
                     break;
                 case 'checkout.session.async_payment_succeeded':
                     $this->webhookService->sessionAsync($obj);
+                    ReconcilePayments::dispatch();
                     return response()->json(['success' => true,'message'=>'Se actualizo el estado del pago']);
                     break;
                 case 'payment_intent.requires_action':
