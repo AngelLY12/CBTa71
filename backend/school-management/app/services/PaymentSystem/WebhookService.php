@@ -1,6 +1,11 @@
 <?php
 
 namespace App\Services\PaymentSystem;
+
+use App\Jobs\SendMailJob;
+use App\Mail\PaymentCreatedMail;
+use App\Mail\PaymentFailedMail;
+use App\Mail\RequiresActionMail;
 use Stripe\Stripe;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
@@ -8,6 +13,7 @@ use App\Models\User;
 use App\Notifications\PaymentCreatedNotification;
 use App\Notifications\PaymentFailedNotification;
 use App\Notifications\RequiresActionNotification;
+use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 
@@ -45,14 +51,21 @@ class WebhookService{
             logger()->warning("No se encontró el pago con session_id={$session->id}");
             throw $e;
         }
+        $user = $this->getUserByStripeCustomer($session->customer);
+
         $payment->update($fields);
         if($payment->status==='paid'){
-            try {
-                $payment->user->notify(new PaymentCreatedNotification($payment));
+            $data=[
+                'concept_name'=>$payment->paymentConcept->concept_name,
+                'amount'=>$payment->paymentConcept->amount,
+                'created_at'=>$payment->created_at->format('d/m/Y H:i'),
+                'url'=>$payment->url,
+                'stripe_session_id'=>$payment->stripe_session_id
+            ];
+                $mail = new PaymentCreatedMail($data, $user->name, $user->email);
+                SendMailJob::dispatch($mail, $user->email);
 
-            } catch (\Exception $e) {
-                logger()->error("Error al notificar al usuario: " . $e->getMessage());
-            }
+
         }
 
         return $payment;
@@ -70,7 +83,7 @@ class WebhookService{
             logger()->info("El método de pago {$paymentMethodId} ya existe");
             return false;
         }
-        $user = User::where('stripe_customer_id', $obj->customer)->firstOrFail();
+        $user = $this->getUserByStripeCustomer($obj->customer);
 
         PaymentMethod::create([
             'user_id' => $user->id,
@@ -86,11 +99,7 @@ class WebhookService{
     }
 
     public function requiresAction($obj){
-        $user = User::where('stripe_customer_id', $obj->customer)->first();
-        if (!$user) {
-             logger()->error("Usuario no encontrado: {$obj->customer}");
-            throw new ModelNotFoundException('Usuario no encontrado para requiresAction');
-        }
+        $user = $this->getUserByStripeCustomer($obj->customer);
         if (in_array('oxxo', $obj->payment_method_types ?? [])) {
             $oxxo=[
                 'amount'=>$obj->amount,
@@ -98,13 +107,29 @@ class WebhookService{
                 'reference_number'=>$obj->next_action->oxxo_display_details->number
             ];
 
-            try {
-                $user->notify((new RequiresActionNotification($oxxo))->delay(now()->addSeconds(5)));
-            } catch (\Exception $e) {
-                logger()->error("Error al notificar al usuario: " . $e->getMessage());
-            }
+                $mail = new RequiresActionMail($oxxo, $user->name, $user->email,'oxxo');
+                SendMailJob::dispatch($mail, $user->email);
+
             return true;
         }
+
+        if (in_array('customer_balance', $obj->payment_method_types ?? [])) {
+        $bankTransfer = $obj->next_action->display_bank_transfer_instructions ?? null;
+
+        if ($bankTransfer) {
+            $transferData = [
+                'amount' => $obj->amount,
+                'reference_number' => $bankTransfer->reference_number,
+                'bank_name' => $bankTransfer->financial_addresses[0]->sort_code ?? null,
+                'clabe' => $bankTransfer->financial_addresses[0]->clabe ?? null,
+                'hosted_instructions_url' => $bankTransfer->hosted_instructions_url ?? null,
+            ];
+            $mail = new RequiresActionMail($transferData, $user->name, $user->email,'bank_transfer');
+            SendMailJob::dispatch($mail, $user->email);
+            return true;
+            }
+        }
+
         return false;
     }
 
@@ -121,19 +146,35 @@ class WebhookService{
             $error = "La sesión de pago expiró";
         }
 
+        $user = $this->getUserByStripeCustomer($obj->customer);
+
+
         if ($payment && $payment->status !== 'succeeded') {
             logger()->info("Pago fallido eliminado: payment_id={$obj->id}");
             logger()->info("Motivo: {$error}");
 
-            try {
-                $payment->user->notify(new PaymentFailedNotification($payment, $error));
-            } catch (\Exception $e) {
-                logger()->error("Error al notificar al usuario: " . $e->getMessage());
-            }
+                $data=[
+                    'concept_name'=>$payment->paymentConcept->concept_name,
+                    'amount'=>$payment->paymentConcept->amount
+                ];
+            $mail = new PaymentFailedMail($data, $user->name, $user->email,$error);
+            SendMailJob::dispatch($mail, $user->email);
 
             $payment->delete();
             return true;
         }
         return false;
     }
+
+    private function getUserByStripeCustomer(string $customerId): User
+    {
+        $user = User::select('email','name','last_name')
+        ->where('stripe_customer_id', $customerId)->first();
+        if (!$user) {
+            logger()->error("Usuario no encontrado: {$customerId}");
+            throw new ModelNotFoundException('Usuario no encontrado');
+        }
+        return $user;
+    }
+
 }

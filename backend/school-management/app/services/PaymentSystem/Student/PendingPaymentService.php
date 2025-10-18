@@ -58,14 +58,14 @@ class PendingPaymentService{
 
 
     public function payConcept(User $user, int $conceptId) {
-       $payment= DB::transaction(function() use ($user, $conceptId) {
+       $session= DB::transaction(function() use ($user, $conceptId) {
 
             $concept = PaymentConcept::findOrFail($conceptId);
 
             $stripeService = new StripeService();
             $session = $stripeService->createCheckoutSession($user, $concept);
 
-            return Payment::create([
+            Payment::create([
                 'user_id' => $user->id,
                 'payment_concept_id' => $concept->id,
                 'payment_method_id'=>null,
@@ -81,9 +81,10 @@ class PendingPaymentService{
                 'url' => $session->url ?? null,
                 'stripe_session_id' => $session->id ?? null
             ]);
+            return $session->url;
 
        });
-     return $payment;
+     return $session;
 
     }
 

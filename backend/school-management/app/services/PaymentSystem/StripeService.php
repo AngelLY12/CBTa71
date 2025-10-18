@@ -130,6 +130,8 @@ class StripeService{
                 ],
                 'quantity' => 1,
             ]],
+            'payment_method_types' => ['card', 'oxxo', 'customer_balance'],
+
 
             'metadata' => [
                 'payment_concept_id' => $concept->id,
@@ -138,6 +140,10 @@ class StripeService{
                 'card' => [
                     'setup_future_usage' => 'off_session',
                 ],
+                'customer_balance'=>[
+                    'funding_type' => 'bank_transfer',
+                    'bank_transfer' => ['type' => 'mx_bank_transfer']
+                ],
             ],
             'saved_payment_method_options' => [
                 'payment_method_save' => 'enabled',
@@ -145,7 +151,7 @@ class StripeService{
 
             'success_url' => config('app.frontend_url') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
             'cancel_url' => config('app.frontend_url') . '/payment-cancel',
-            'payment_method_types' => ['card', 'oxxo'],
+
         ];
 
 
