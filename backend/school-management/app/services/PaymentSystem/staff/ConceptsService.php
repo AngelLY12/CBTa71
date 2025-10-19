@@ -2,6 +2,8 @@
 
 namespace App\Services\PaymentSystem\Staff;
 
+use App\Jobs\SendMailJob;
+use App\Mail\NewConceptMail;
 use App\Models\Career;
 use App\Models\PaymentConcept;
 use App\Models\User;
@@ -9,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 use App\Utils\Validators\PaymentConceptValidator;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\NewConceptNotification;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 
 class ConceptsService{
 
@@ -77,7 +81,7 @@ class ConceptsService{
 
                 case 'estudiantes':
                     if ($students) {
-                    $ids = User::whereIn('curp', $students)->where('status','activo')->pluck('id');
+                    $ids = User::whereIn('n_control', $students)->where('status','activo')->pluck('id');
                     if ($ids->isNotEmpty()) {
                         $paymentConcept->users()->attach($ids);
                     } else {
@@ -102,15 +106,23 @@ class ConceptsService{
                 'todos' => User::where('status','activo')->get(),
             };
 
-            foreach ($recipients as $user) {
-            $user->notify(new NewConceptNotification($paymentConcept));
+            foreach($recipients as $user) {
+                $data = [
+                    'concept_name' => $paymentConcept->concept_name,
+                    'amount' => $paymentConcept->amount,
+                    'end_date' => $paymentConcept->end_date ? $paymentConcept->end_date->format('d/m/Y') : null,
+                ];
+                $mail = new NewConceptMail($data, $user->name, $user->email);
+                SendMailJob::dispatch($mail, $user->email);
+
             }
+
         return $paymentConcept;
     }
 
     public function updatePaymentConcept(PaymentConcept $pc, array $data, ?int $semestre = null, ?string $career = null, array|string|null $students = null)
     {
-         return DB::transaction(function() use ($pc, $data, $semestre, $career, $students){
+         $pc= DB::transaction(function() use ($pc, $data, $semestre, $career, $students){
 
             $pc->update([
             'concept_name' => $data['concept_name'] ?? $pc->concept_name,
@@ -143,7 +155,7 @@ class ConceptsService{
 
                 case 'estudiantes':
                     if ($students) {
-                        $ids = User::whereIn('curp', $students)->where('status','activo')->pluck('id');
+                        $ids = User::whereIn('n_control', $students)->where('status','activo')->pluck('id');
                     if ($ids->isNotEmpty()) {
                         $pc->users()->attach($ids);
                     } else {
@@ -160,7 +172,26 @@ class ConceptsService{
         }
 
         return $pc;
-         });
+    });
+    $recipients = match($data['applies_to']){
+                'carrera' => $pc->careers()->with('users')->get()->pluck('users')->flatten(),
+                'semestre' => $pc->paymentConceptSemesters()->with('users')->get()->pluck('users')->flatten(),
+                'estudiantes' => $pc->users,
+                'todos' => User::where('status','activo')->get(),
+            };
+
+                foreach($recipients as $user) {
+                $data = [
+                    'concept_name' => $pc->concept_name,
+                    'amount' => $pc->amount,
+                    'end_date' => $pc->end_date ? $pc->end_date->format('d/m/Y') : null,
+                ];
+                $mail = new NewConceptMail($data, $user->name, $user->email);
+                SendMailJob::dispatch($mail, $user->email);
+
+            }
+
+    return $pc;
 
 }
 

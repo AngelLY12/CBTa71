@@ -19,12 +19,22 @@ services:
         working_dir: /var/www
         volumes:
 #            - .:/var/www
-            - ./vendor:/var/www/vendor
             - ./storage:/var/www/storage
         ports:
         - "9000:9000"
         depends_on:
         - db
+    laravel-worker:
+        build:
+            context: .
+        container_name: laravel-worker
+        command: php artisan queue:work --sleep=3 --tries=3 --timeout=90 --verbose
+        restart: unless-stopped
+        volumes:
+#            - ./:/var/www
+            - ./storage:/var/www/storage
+        depends_on:
+            - app
     db:
         image: mysql:8
         container_name: db-laravel

@@ -19,7 +19,6 @@ return new class extends Migration
         $table->string('stripe_payment_method_id',50)->unique();
         $table->string('brand',20)->nullable();
         $table->string('last4', 4)->nullable();
-        $table->string('bank_name',15)->nullable();
         $table->unsignedTinyInteger('exp_month')->nullable();
         $table->unsignedSmallInteger('exp_year')->nullable();
         $table->timestamps();
