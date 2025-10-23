@@ -1,0 +1,269 @@
+---
+// 1. ASTRO FRONTMATTER
+// Eliminamos la interfaz Props ya que no se utiliza aquí.
+
+import '../styles/global.css';
+import '../styles/tailwind.css';
+
+const pageTitle = "Acceso al Sistema - Mejorado";
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso al Sistema - SIGE</title>
+    
+    <!-- Carga del CDN de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Carga de la fuente Inter y Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    
+    <style>
+        /* Definiciones de color institucionales */
+        .font-inter { font-family: 'Inter', sans-serif; }
+        :root {
+            --dark-green: #2e594d; /* Verde oscuro primario */
+            --light-green: #4caf50; /* Verde claro/acento (botón) */
+            --bg-light: #f4f7fa; /* Fondo muy claro para el efecto cristalino/neumórfico */
+        }
+
+        .custom-dark-green { background-color: var(--dark-green); } 
+        .custom-light-green { background-color: var(--light-green); }
+        .text-dark-green { color: var(--dark-green); }
+        
+        /* * Efecto Neumorfismo Suave para el Contenedor Principal */
+        .login-card {
+            /* Sombra superior izquierda clara (luz) y sombra inferior derecha oscura (sombra) */
+            box-shadow: 
+                -10px -10px 30px rgba(255, 255, 255, 0.9), 
+                10px 10px 30px rgba(174, 174, 192, 0.4);
+        }
+
+        /* Efecto de sombra interior para inputs (hundimiento) */
+        .input-inset-shadow {
+            box-shadow: 
+                inset 2px 2px 5px rgba(0, 0, 0, 0.1), 
+                inset -2px -2px 5px rgba(255, 255, 255, 0.7);
+        }
+
+        /* Ocultamos el fondo del body ya que el carrusel lo cubrirá */
+        body {
+            /* background-color: var(--bg-light); */
+        }
+
+        /* Quitar el outline azul por defecto al hacer focus */
+        input:focus {
+            outline: none !important;
+        }
+
+        /* Estilo para el checkbox, aplicando el color custom */
+        input[type="checkbox"] {
+            accent-color: var(--dark-green); 
+        }
+
+    </style>
+</head>
+<body class="min-h-screen antialiased font-inter relative">
+
+    <!-- ============================================== -->
+    <!-- CÓDIGO DEL CARRUSEL DE FONDO (ABSOLUTO) -->
+    <!-- ============================================== -->
+    <div x-data="{ 
+        slides: [
+            { src: 'https://placehold.co/1920x1080/4A786B/FFFFFF/png?text=Campus+Moderno', alt: 'Campus Moderno' },
+            { src: 'https://placehold.co/1920x1080/2E594D/FFFFFF/png?text=Innovacion+Educativa', alt: 'Innovación Educativa' },
+            { src: 'https://placehold.co/1920x1080/6E9385/FFFFFF/png?text=Bienestar+Estudiantil', alt: 'Bienestar Estudiantil' }
+        ],
+        currentSlide: 0,
+        intervalId: null,
+
+        init() {
+            this.intervalId = setInterval(() => {
+                this.nextSlide();
+            }, 6000); // Cambia cada 6 segundos (6000ms)
+        },
+        
+        nextSlide() {
+            this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+        },
+    }" 
+    x-init="init"
+    class="absolute inset-0 overflow-hidden -z-10">
+
+        <!-- Imágenes del Carrousel -->
+        <template x-for="(slide, index) in slides" :key="index">
+            <img :src="slide.src" :alt="slide.alt"
+                :class="{ 'opacity-100': currentSlide === index, 'opacity-0': currentSlide !== index }"
+                class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out"
+                onerror="this.onerror=null; this.src='https://placehold.co/1920x1080/2E594D/FFFFFF/png?text=Placeholder+Error';" 
+            />
+        </template>
+        
+        <!-- Capa de Oscurecimiento (Overlay) para contraste -->
+        <div class="absolute inset-0 bg-gray-900 opacity-60"></div>
+    </div>
+    <!-- ============================================== -->
+
+
+    <!-- Contenido del Login - Centrado y Estilizado (REQUIERE z-index alto) -->
+    <section class="min-h-screen flex items-center justify-center p-4 relative z-20">
+        <div 
+            x-data="{ 
+                email: '', password: '', role: 'Personal', error: '', isLoading: false, redirectTo: '/Dashboard', /* Propiedades compactadas */
+
+                handleSubmit() {
+                    this.error = '';
+                    this.isLoading = true;
+
+                    if (!this.email || !this.password || !this.role) {
+                        this.error = '⚠️ Por favor, rellena todos los campos, incluyendo el Rol.';
+                        this.isLoading = false;
+                        return;
+                    }
+                    
+                    let success = false;
+                    
+                    // Lógica de autenticación simulada
+                    if (this.role === 'Personal' && this.email === 'admin@uni.edu' && this.password === '123456') {
+                        success = true;
+                    } else if (this.role === 'Alumno' && this.email === 'student@uni.edu' && this.password === 'password') {
+                        success = true;
+                    }
+                    
+                    // Manejo del resultado de la autenticación
+                    setTimeout(() => {
+                        this.isLoading = false;
+                        if (success) {
+                            this.error = `✅ ¡Inicio de sesión exitoso! Redirigiendo como ${this.role}...`;
+                            
+                            // Guardar el rol en Local Storage
+                            localStorage.setItem('userRole', this.role); 
+                            
+                            // Redirección con un pequeño retraso
+                            setTimeout(() => {
+                                // Redirección simple a un path simulado
+                                window.location.href = this.redirectTo + '?role=' + this.role; 
+                            }, 500);
+
+                        } else {
+                            this.error = `❌ Credenciales inválidas para el rol de ${this.role}. Inténtalo de nuevo.`;
+                        }
+                    }, 1000); // Simular un tiempo de carga de 1 segundo
+                }
+            }"
+            @submit.prevent="handleSubmit"
+            class="w-full max-w-lg bg-white p-0 login-card rounded-3xl overflow-hidden transition-all duration-500 shadow-xl relative z-10"
+        >
+            <!-- 1. ENCABEZADO Y PESTAÑAS DE ROL -->
+            <header class="space-y-4 pt-10 pb-6 bg-light border-b border-gray-100" style="background-color: var(--bg-light);">
+                
+                <!-- Icono de Cabecera y Título -->
+                <div class="flex flex-col items-center justify-center">
+                    <i class="fas fa-graduation-cap text-6xl text-dark-green mb-3 opacity-90" style="color: var(--dark-green);"></i> 
+                    <h1 class="text-3xl md:text-4xl font-black text-gray-800 uppercase tracking-widest text-center">SIGE</h1>
+                    <p class="text-center text-sm text-gray-500 font-medium mt-1">Sistema Integrado de Gestión Educativa</p>
+                </div>
+
+                <!-- PESTAÑAS DE ROL (Switch de Roles mejorado) -->
+                <div class="flex justify-center mx-auto max-w-sm px-6">
+                    <div class="flex bg-gray-200 p-1 rounded-full w-full transition duration-300 shadow-inner">
+                        <!-- Botón Alumno -->
+                        <button type="button" @click="role = 'Alumno'"
+                            :class="role === 'Alumno' ? 'custom-dark-green text-white shadow-md font-bold' : 'text-gray-600 hover:text-dark-green'"
+                            class="flex-1 py-3 text-sm transition duration-300 ease-in-out uppercase rounded-full tracking-wider"
+                            style="--dark-green: #2e594d;"
+                        >
+                            <i class="fas fa-user-graduate mr-2"></i> Alumnos
+                        </button>
+                        <!-- Botón Personal -->
+                        <button type="button" @click="role = 'Personal'"
+                            :class="role === 'Personal' ? 'custom-dark-green text-white shadow-md font-bold' : 'text-gray-600 hover:text-dark-green'"
+                            class="flex-1 py-3 text-sm transition duration-300 ease-in-out uppercase rounded-full tracking-wider"
+                            style="--dark-green: #2e594d;"
+                        >
+                            <i class="fas fa-chalkboard-teacher mr-2"></i> Personal
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 2. CUERPO DEL FORMULARIO -->
+            <div class="p-8 space-y-7">
+
+                <!-- Mensaje de Error (feedback al usuario) -->
+                <div x-show="error" 
+                    :class="error.includes('exitoso') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+                    class="p-4 border rounded-xl text-sm font-medium transition duration-300 shadow-inner"
+                >
+                    <span x-text="error"></span>
+                </div>
+
+                <!-- Información de credenciales de prueba -->
+                <div class="bg-blue-50 border border-blue-200 text-blue-700 p-3 rounded-xl text-xs font-mono">
+                    <p class="font-bold mb-1">Cuentas Demo:</p>
+                    <ul class="list-disc list-inside ml-2 space-y-0.5">
+                        <li>**Personal:** admin@uni.edu / 123456</li>
+                        <li>**Alumno:** student@uni.edu / password</li>
+                    </ul>
+                </div>
+                
+                <form class="space-y-6">
+                    <!-- Campo de Email (Usuario) -->
+                    <div class="flex items-center bg-light rounded-xl p-4 transition duration-300 input-inset-shadow focus-within:ring-2 focus-within:ring-dark-green focus-within:ring-opacity-20" style="background-color: var(--bg-light);">
+                        <i class="fas fa-envelope text-xl text-gray-400 mr-4 transition duration-300 text-dark-green" style="color: var(--dark-green);"></i> 
+                        <input type="email" id="email" x-model="email" placeholder="Correo Electrónico" required
+                            class="w-full p-0 text-base bg-transparent placeholder-gray-500 border-none focus:outline-none focus:ring-0">
+                    </div>
+
+                    <!-- Campo de Contraseña -->
+                    <div class="flex items-center bg-light rounded-xl p-4 transition duration-300 input-inset-shadow focus-within:ring-2 focus-within:ring-dark-green focus-within:ring-opacity-20" style="background-color: var(--bg-light);">
+                        <i class="fas fa-lock text-xl text-gray-400 mr-4 transition duration-300 text-dark-green" style="color: var(--dark-green);"></i> 
+                        <input type="password" id="password" x-model="password" placeholder="Contraseña" required
+                            class="w-full p-0 text-base bg-transparent placeholder-gray-500 border-none focus:outline-none focus:ring-0">
+                    </div>
+                    
+                    <!-- Checkbox y Olvidé Contraseña -->
+                    <div class="flex items-center justify-between text-sm pt-2 px-1">
+                        <div class="flex items-center">
+                            <!-- Utilizamos un color custom para el checkbox en Tailwind 3 -->
+                            <input type="checkbox" id="remember" name="remember" class="h-5 w-5 border-gray-300 rounded-lg focus:ring-dark-green transition duration-200 cursor-pointer"
+                                style="color: var(--dark-green); border-color: #d1d5db;"> 
+                            <label for="remember" class="ml-2 text-gray-600 font-medium select-none cursor-pointer hover:text-gray-800 transition duration-200">Recordar</label>
+                        </div>
+                        <!-- Opción de Olvidé mi Contraseña -->
+                        <a href="#" class="text-dark-green hover:text-dark-green/80 font-semibold transition duration-300 text-sm" style="color: var(--dark-green);">¿Olvidaste tu Contraseña?</a>
+                    </div>
+
+                    <!-- Botón de Iniciar Sesión - 3D y Vibrante -->
+                    <button type="submit" :disabled="isLoading"
+                        class="w-full flex justify-center py-4 px-4 mt-8 rounded-full shadow-lg text-lg font-bold text-white custom-light-green focus:outline-none focus:ring-4 focus:ring-green-400 focus:ring-opacity-70 transition duration-300 ease-in-out uppercase tracking-widest transform active:scale-[0.98] disabled:opacity-50"
+                        :class="isLoading ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-[#43a047] hover:scale-[1.01]'"
+                        style="--light-green: #4caf50;"
+                    >
+                        <template x-if="isLoading">
+                            <i class="fas fa-spinner fa-spin mr-3"></i>
+                        </template>
+                        <template x-if="!isLoading">
+                            <i class="fas fa-sign-in-alt mr-3"></i>
+                        </template>
+                        <span x-text="isLoading ? 'Cargando...' : 'INICIAR SESIÓN'"></span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Pie de página con enlaces o información adicional -->
+            <footer class="text-center p-4 bg-gray-100/50 text-xs text-gray-500 border-t border-gray-200/50">
+                <p>2024 &copy; SIGE. Todos los derechos reservados.</p>
+                <a href="#" class="text-dark-green hover:underline mt-1 inline-block" style="color: var(--dark-green);">Política de Privacidad</a>
+            </footer>
+        </div>
+    </section>
+
+    <!-- Carga de Alpine.js (Interactividad x-data) -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+</body>
+</html>

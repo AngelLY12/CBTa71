@@ -1,0 +1,115 @@
+---
+// src/components/ChartLine.astro
+// Componente de Gráfico de Línea que utiliza Chart.js
+import { Fragment } from 'astro/jsx-runtime';
+
+interface ChartData {
+  labels: string[];
+  ganancias: number[];
+  estudiantes: number[];
+}
+
+interface Props {
+  data: ChartData;
+}
+
+const { data } = Astro.props;
+
+// Serializar los datos para pasarlos al script de forma segura
+const chartDataJSON = JSON.stringify(data);
+---
+
+<Fragment>
+  <canvas id="chartLine"></canvas>
+   
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <script is:inline>
+    function initializeChartLine(dataJSON) {
+      const data = JSON.parse(dataJSON);
+      const ctx = document.getElementById('chartLine');
+
+      // Comprobación crucial: Si los datos no están definidos, salimos.
+      // Esta es la línea que fallaba en tu stack trace.
+      if (!ctx || !data || !data.labels || !data.ganancias || !data.estudiantes) {
+        console.error("ChartLine: Datos incompletos o inválidos.");
+        return;
+      }
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Recaudación (Miles de $)',
+              data: data.ganancias.map(g => g / 1000),
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: 'rgba(75, 192, 192, 0.5)',
+              yAxisID: 'y1',
+              tension: 0.4,
+              fill: true,
+            },
+            {
+              label: 'Estudiantes',
+              data: data.estudiantes,
+              borderColor: 'rgb(46, 89, 77)',
+              backgroundColor: 'rgb(46, 89, 77, 0.8)',
+              yAxisID: 'y2',
+              tension: 0.4,
+              pointRadius: 5,
+              type: 'bar',
+            },
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          scales: {
+            x: {
+              grid: { display: false }
+            },
+            y1: {
+              type: 'linear',
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Monto Recaudado (Miles de $)'
+              },
+              beginAtZero: true,
+            },
+            y2: {
+              type: 'linear',
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Estudiantes'
+              },
+              grid: {
+                drawOnChartArea: false,
+              },
+              beginAtZero: true,
+              // max: Math.max(...data.estudiantes) * 1.1, // Comentado para evitar error si el array está vacío
+            }
+          },
+          plugins: {
+            legend: {
+              display: true
+            }
+          }
+        }
+      });
+
+      // Aseguramos que el contenedor tenga una altura definida para que el gráfico se muestre
+      ctx.closest('div').style.height = '400px'; 
+    }
+
+    // Ejecutar la función cuando el script se cargue
+    initializeChartLine('{chartDataJSON}');
+
+  </script>
+</Fragment>

@@ -1,0 +1,330 @@
+---
+// 1. ASTRO FRONTMATTER
+import Layout from "../layouts/Layout.astro"; 
+
+const pageTitle = "Lista de Estudiantes";
+---
+
+<Layout title={pageTitle}>
+    <!-- incluir SheetJS CDN (client-only) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" type="text/javascript" defer></script>
+
+    <!-- Función que devuelve el objeto para Alpine -->
+    <script type="text/javascript">
+        function studentsData(){
+            return {
+                // inicializa desde localStorage si existe, si no usa la lista por defecto
+                allStudents: (function(){
+                    try {
+                        const stored = JSON.parse(localStorage.getItem('studentsList'));
+                        if (Array.isArray(stored) && stored.length) return stored;
+                    } catch(e){}
+                    return [
+                        { id: '22739', name: 'Dwight', semester: 3, status: 'Pendiente', due: 492.00 },
+                        { id: '39635', name: 'Arlene', semester: 2, status: 'Pagado', due: 0.00 },
+                        { id: '39635', name: 'Courtney', semester: 8, status: 'Pendiente', due: 922.00 },
+                        { id: '70668', name: 'Kristin', semester: 9, status: 'En proceso', due: 357.00 },
+                        { id: '22739', name: 'Cody', semester: 9, status: 'Pendiente', due: 447.00 },
+                        { id: '39635', name: 'Ronald', semester: 2, status: 'Pendiente', due: 196.00 },
+                        { id: '39635', name: 'Eduardo', semester: 6, status: 'Pendiente', due: 429.00 },
+                        { id: '39635', name: 'Arlene', semester: 9, status: 'Pendiente', due: 492.00 },
+                        { id: '97174', name: 'Aubrey', semester: 3, status: 'Pendiente', due: 703.00 },
+                        { id: '22739', name: 'Shawn', semester: 8, status: 'En proceso', due: 154.00 },
+                        { id: '11111', name: 'Alice', semester: 1, status: 'Pagado', due: 0.00 },
+                        { id: '22222', name: 'Bob', semester: 3, status: 'Pendiente', due: 250.50 },
+                        { id: '33333', name: 'Charlie', semester: 5, status: 'En proceso', due: 100.00 },
+                        { id: '44444', name: 'Diana', semester: 7, status: 'Pendiente', due: 800.00 },
+                        { id: '55555', name: 'Eve', semester: 1, status: 'Pagado', due: 0.00 },
+                        { id: '66666', name: 'Frank', semester: 3, status: 'Pendiente', due: 300.00 },
+                        { id: '77777', name: 'Grace', semester: 5, status: 'En proceso', due: 50.00 },
+                    ];
+                })(),
+
+                // ui state
+                searchTerm: '',
+                sortBy: 'id',
+                sortDir: 'asc',
+                currentPage: 1,
+                studentsPerPage: 10,
+
+                // helpers de tabla (mismo código que ya tienes)
+                sort(column) {
+                    if (this.sortBy === column) {
+                        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.sortBy = column;
+                        this.sortDir = 'asc';
+                    }
+                },
+
+                get filteredAndSortedStudents() {
+                    const searchLower = this.searchTerm.toLowerCase();
+                    let results = this.allStudents.filter(student =>
+                        (student.name || '').toString().toLowerCase().includes(searchLower) ||
+                        (student.id || '').toString().includes(searchLower)
+                    );
+
+                    results.sort((a, b) => {
+                        const aVal = a[this.sortBy];
+                        const bVal = b[this.sortBy];
+                        let comparison = 0;
+                        if (typeof aVal === 'string') comparison = aVal.localeCompare(bVal);
+                        else {
+                            if (aVal > bVal) comparison = 1;
+                            else if (aVal < bVal) comparison = -1;
+                        }
+                        return this.sortDir === 'asc' ? comparison : comparison * -1;
+                    });
+                    return results;
+                },
+
+                get paginatedStudents() {
+                    const start = (this.currentPage - 1) * this.studentsPerPage;
+                    const end = start + this.studentsPerPage;
+                    return this.filteredAndSortedStudents.slice(start, end);
+                },
+
+                get totalPages() {
+                    return Math.ceil(this.filteredAndSortedStudents.length / this.studentsPerPage);
+                },
+
+                get paginationRange() {
+                    const total = this.totalPages;
+                    const current = this.currentPage;
+                    const delta = 2;
+                    const range = [];
+                    for (let i = 1; i <= total; i++) {
+                        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) range.push(i);
+                    }
+                    const finalRange = [];
+                    let last = 0;
+                    for (let i of range) {
+                        if (last) {
+                            if (i - last === 2) finalRange.push(last + 1);
+                            else if (i - last !== 1) finalRange.push('...');
+                        }
+                        finalRange.push(i);
+                        last = i;
+                    }
+                    return finalRange;
+                },
+
+                // ---- IMPORTAR desde Excel ----
+                importExcel(e) {
+                    const file = e.target.files && e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        try {
+                            const data = evt.target.result;
+                            // usar XLSX (de CDN cargado)
+                            const workbook = XLSX.read(data, { type: 'binary' });
+                            const firstSheetName = workbook.SheetNames[0];
+                            const sheet = workbook.Sheets[firstSheetName];
+                            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                            // filas esperadas: id, name, semester, status, due
+                            let added = 0;
+                            rows.forEach(r => {
+                                const id = (r.id || r.ID || r.Id || r['Identificación'] || '').toString().trim();
+                                const name = (r.name || r.Name || r.NOMBRE || '').toString().trim();
+                                const semester = Number(r.semester || r.Semester || r.sem || r['Semestre']) || 0;
+                                const status = (r.status || r.Status || r.Estado || '').toString().trim() || 'Pendiente';
+                                const due = parseFloat(r.due || r.Due || r.Adeudo) || 0.00;
+                                if (id && name) {
+                                    this.allStudents.push({ id, name, semester, status, due });
+                                    added++;
+                                }
+                            });
+                            if (added > 0) {
+                                this.save();
+                                alert(`Importados ${added} estudiantes.`);
+                            } else {
+                                alert('No se encontraron filas válidas (esperadas columnas: id, name, semester, status, due).');
+                            }
+                        } catch(err){
+                            console.error(err);
+                            alert('Error procesando el archivo. Asegúrate que sea un Excel válido.');
+                        } finally {
+                            // reset file input
+                            e.target.value = '';
+                        }
+                    };
+                    reader.readAsBinaryString(file);
+                },
+
+                // guarda local y opcionalmente intenta persistir al backend
+                save() {
+                    try {
+                        localStorage.setItem('studentsList', JSON.stringify(this.allStudents));
+                    } catch(e){}
+                    // intentar enviar al backend (si existe)
+                    try {
+                        fetch('/api/students', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.allStudents)
+                        }).catch(()=>{ /* no interrumpir si falla */ });
+                    } catch(e){}
+                },
+
+                // permite exportar la lista actual como Excel (opcional)
+                exportExcel(){
+                    try {
+                        const ws = XLSX.utils.json_to_sheet(this.allStudents);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, 'students');
+                        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+                        function s2ab(s) {
+                            const buf = new ArrayBuffer(s.length);
+                            const view = new Uint8Array(buf);
+                            for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                            return buf;
+                        }
+                        const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = 'students.xlsx'; a.click();
+                        URL.revokeObjectURL(url);
+                    } catch(e){
+                        console.error(e);
+                        alert('Error al exportar.');
+                    }
+                }
+            };
+        }
+    </script>
+
+    <!-- CONTENEDOR PRINCIPAL: ahora usa studentsData() -->
+    <div 
+        x-data="studentsData()" 
+        class="space-y-8 max-w-5xl mx-auto bg-white p-6 md:p-10 shadow-xl rounded-xl" 
+    > 
+
+        <header class="pb-4 border-b border-gray-100 flex items-center space-x-4"> 
+            <i class="fas fa-users text-4xl text-[#2e594d]"></i>
+            <div>
+                <h1 class="text-3xl font-extrabold text-[#2e594d]">Estudiantes</h1> 
+                <p class="text-gray-500 mt-1">Gestión y visualización de la lista completa de alumnos.</p>
+            </div>
+        </header> 
+        
+        <!-- Sección de Filtro y Botones (Import/Export) -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-700 flex items-center space-x-2">
+                    <i class="fas fa-th-list text-[#2e594d]"></i>
+                    <span>Todos los estudiantes</span>
+                </h2>
+
+                <div class="flex items-center gap-2">
+                    <input x-ref="file" type="file" accept=".xlsx,.xls,.csv" @change="importExcel" class="hidden" />
+                    <button @click="$refs.file.click()" class="px-3 py-2 rounded bg-[#2e594d] text-white font-semibold">Importar desde Excel</button>
+                    <button @click="exportExcel" class="px-3 py-2 rounded border border-gray-200 bg-white text-gray-700">Exportar Excel</button>
+                    <button @click="save" class="px-3 py-2 rounded bg-green-600 text-white">Guardar</button>
+                </div>
+            </div>
+
+            <!-- Campo de Búsqueda -->
+            <div class="relative max-w-sm">
+                <input type="text" x-model="searchTerm" placeholder="Nombre o ID de estudiante"
+                    class="w-full p-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:ring-[#2e594d] focus:border-[#2e594d] transition duration-150">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+        </div>
+
+        <!-- Tabla de Estudiantes -->
+        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-[#2e594d]/10">
+                    <tr>
+                        <!-- Encabezados con función de ordenamiento -->
+                        <th class="px-4 py-3 text-left text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('id')">
+                            ID 
+                            <span x-show="sortBy === 'id'">
+                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
+                            </span>
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('name')">
+                            Nombre
+                            <span x-show="sortBy === 'name'">
+                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
+                            </span>
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('semester')">
+                            Semestre
+                            <span x-show="sortBy === 'semester'">
+                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
+                            </span>
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('status')">
+                            St. Pagos
+                            <span x-show="sortBy === 'status'">
+                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
+                            </span>
+                        </th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('due')">
+                            Adeudo
+                            <span x-show="sortBy === 'due'">
+                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
+                            </span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <template x-for="student in paginatedStudents" :key="student.id">
+                        <tr class="text-sm text-gray-700 odd:bg-white even:bg-[#f0fff4] hover:bg-[#e0f2f1] transition duration-200 cursor-pointer">
+                            <td x-text="student.id" class="px-4 py-2 whitespace-nowrap font-mono"></td>
+                            <td x-text="student.name" class="px-4 py-2 whitespace-nowrap"></td>
+                            <td x-text="student.semester" class="px-4 py-2 whitespace-nowrap"></td>
+                            <td class="px-4 py-2 whitespace-nowrap">
+                                <span x-text="student.status"
+                                      :class="{
+                                          'text-green-800 bg-green-100': student.status === 'Pagado',
+                                          'text-yellow-800 bg-yellow-100': student.status === 'Pendiente',
+                                          'text-blue-800 bg-blue-100': student.status === 'En proceso',
+                                      }"
+                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                                </span>
+                            </td>
+                            <td x-text="'$' + student.due.toFixed(2)" class="px-4 py-2 whitespace-nowrap text-right font-semibold"></td>
+                        </tr>
+                    </template>
+                    <tr x-show="paginatedStudents.length === 0">
+                        <td colspan="5" class="text-center py-4 text-gray-500">No se encontraron estudiantes que coincidan con la búsqueda.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        <div class="flex flex-col sm:flex-row justify-between items-center pt-4">
+            <p class="text-sm text-gray-600 mb-2 sm:mb-0">
+                Mostrando <span x-text="paginatedStudents.length"></span> de <span x-text="filteredAndSortedStudents.length"></span> estudiantes
+            </p>
+            
+            <nav class="flex items-center space-x-1" aria-label="Pagination">
+                <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
+                        :class="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-[#2e594d] hover:bg-gray-100'"
+                        class="px-3 py-1 rounded-lg text-sm font-medium transition duration-150">
+                    <i class="fas fa-arrow-left mr-1"></i> Previous
+                </button>
+
+                <template x-for="page in paginationRange" :key="page">
+                    <span x-if="page === '...'" class="px-3 py-1 text-gray-500">...</span>
+                    <button x-else @click="currentPage = page"
+                            :class="page === currentPage ? 'bg-[#2e594d] text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'"
+                            class="px-3 py-1 rounded-lg text-sm font-medium transition duration-150">
+                        <span x-text="page"></span>
+                    </button>
+                </template>
+
+                <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage === totalPages"
+                        :class="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-[#2e594d] hover:bg-gray-100'"
+                        class="px-3 py-1 rounded-lg text-sm font-medium transition duration-150">
+                    Next <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </nav>
+        </div>
+
+    </div> 
+</Layout>

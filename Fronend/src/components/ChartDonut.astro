@@ -1,0 +1,90 @@
+---
+// src/components/ChartDonut.astro
+// Componente de Gráfico de Anillo (Doughnut) que utiliza Chart.js
+import { Fragment } from 'astro/jsx-runtime';
+// 1. Definir la estructura de las propiedades (Props) esperadas
+interface Props {
+  recaudado: number;
+  pendiente: number;
+}
+
+const { recaudado, pendiente } = Astro.props;
+
+// 2. Cálculo del porcentaje
+const total = recaudado + pendiente;
+const percentageRecaudado = total > 0 ? (recaudado / total) * 100 : 0;
+const formattedPercentage = percentageRecaudado.toFixed(1);
+
+// 3. Preparar los datos para Chart.js
+const chartData = {
+  data: [recaudado, pendiente],
+  labels: ['Recaudado', 'Pendiente'],
+  total: total,
+  percentage: formattedPercentage
+};
+
+const chartDataJSON = JSON.stringify(chartData);
+---
+
+<Fragment>
+  <div class="relative w-full max-w-xs aspect-square">
+    <canvas id="chartDonut"></canvas>
+    {/* Texto central que muestra el porcentaje */}
+    <div class="absolute inset-0 flex flex-col justify-center items-center pointer-events-none">
+      <span class="text-4xl font-extrabold text-[#2e594d]">{formattedPercentage}%</span>
+      <span class="text-sm font-medium text-gray-500">Recaudado</span>
+    </div>
+  </div>
+   
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <script is:inline>
+    // Utilizamos una función para inicializar Chart.js
+    function initializeChartDonut(dataJSON) {
+      const data = JSON.parse(dataJSON);
+      const ctx = document.getElementById('chartDonut');
+
+      if (!ctx || !data) return;
+
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              data: data.data,
+              backgroundColor: [
+                'rgb(46, 89, 77)', // Color para Recaudado (tu color corporativo)
+                'rgb(203, 213, 225)', // Color para Pendiente (gris claro)
+              ],
+              hoverOffset: 4,
+              borderWidth: 0,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          cutout: '80%', // Crea el efecto de anillo/donut
+          plugins: {
+            legend: {
+              position: 'bottom',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  // Formatea el valor con comas y signo de dólar
+                  const value = context.parsed.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                  return `${label}: $${value}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Ejecutar la función cuando el script se cargue
+    initializeChartDonut('{chartDataJSON}');
+  </script>
+</Fragment>
