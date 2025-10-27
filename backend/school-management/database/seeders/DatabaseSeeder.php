@@ -28,7 +28,6 @@ class DatabaseSeeder extends Seeder
             'view payments history',
             'view cards',
             'create setup',
-            'create and view card',
             'delete card',
             'view payment history',
             'view pending concepts',
@@ -55,10 +54,13 @@ class DatabaseSeeder extends Seeder
             'finalize concepts',
             'disable concepts',
             'eliminate concepts',
+            'activate concept',
+            'eliminate logical concept',
             'view debts',
             'validate debt',
             'view payments',
             'view students',
+            'view stripe-payments'
         ];
 
         foreach ($staffPermissions as $perm) {
