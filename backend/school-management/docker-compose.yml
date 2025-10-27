@@ -10,6 +10,8 @@ services:
             - ./storage:/var/www/storage
         depends_on:
             - app
+        networks:
+            - laravel
     app:
         build:
             context: .
@@ -18,23 +20,30 @@ services:
         restart: unless-stopped
         working_dir: /var/www
         volumes:
-#            - .:/var/www
-            - ./storage:/var/www/storage
+            - .:/var/www
+#            - ./storage:/var/www/storage
         ports:
-        - "9000:9000"
+            - "9000:9000"
         depends_on:
-        - db
+            - db
+            - redis
+        networks:
+            - laravel
+
     laravel-worker:
         build:
             context: .
         container_name: laravel-worker
-        command: php artisan queue:work --sleep=3 --tries=3 --timeout=90 --verbose
+        command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --backoff=5 --verbose
         restart: unless-stopped
         volumes:
 #            - ./:/var/www
             - ./storage:/var/www/storage
         depends_on:
             - app
+            - redis
+        networks:
+            - laravel
     db:
         image: mysql:8
         container_name: db-laravel
@@ -48,6 +57,8 @@ services:
           - "3306:3306"
         volumes:
           - db_data:/var/lib/mysql
+        networks:
+            - laravel
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
         container_name: phpmyadmin-laravel
@@ -58,5 +69,19 @@ services:
             MYSQL_ROOT_PASSWORD: root
         ports:
           - "8080:80"
+        networks:
+            - laravel
+    redis:
+        image: redis:alpine
+        container_name: redis-laravel
+        restart: unless-stopped
+        ports:
+        - "6379:6379"
+        networks:
+        - laravel
 volumes:
   db_data:
+
+networks:
+  laravel:
+    driver: bridge
