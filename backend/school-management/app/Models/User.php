@@ -29,25 +29,18 @@ class User extends Authenticatable
         'name',
         'last_name',
         'email',
-        'n_control',
-        'semestre',
         'phone_number',
         'birthdate',
         'gender',
         'curp',
         'address',
-        'state',
-        'municipality',
         'password',
-        'career_id',
         'stripe_customer_id',
+        'blood_type',
         'registration_date',
         'status'
     ];
 
-    public function career(){
-        return $this->belongsTo(Career::class);
-    }
 
     public function paymentConcepts(){
         return $this->belongsToMany(PaymentConcept::class);
@@ -61,6 +54,9 @@ class User extends Authenticatable
         return $this->hasMany(PaymentMethod::class);
     }
 
+    public function studentDetail(){
+        return $this->hasOne(StudentDetail::class);
+    }
 
 
 
@@ -85,15 +81,14 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'birthdate' => 'date',
+            'registration_date' => 'date',
+            'address' => 'array',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
-    protected $casts = [
-        'birthdate' => 'date',
-        'registration_date' => 'date',
-        'status' => 'boolean',
-    ];
+
 
 }

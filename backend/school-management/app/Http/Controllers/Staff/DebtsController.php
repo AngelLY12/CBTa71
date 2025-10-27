@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Core\Application\Services\Payments\Staff\DebtsServiceFacades;
 use App\Http\Controllers\Controller;
-use App\Services\PaymentSystem\Staff\DebtsService;
 use Illuminate\Http\Request;
 
 class DebtsController extends Controller
 {
 
-    protected DebtsService $debtsService;
+    protected DebtsServiceFacades $debtsService;
 
-    public function __construct(DebtsService $debtsService)
+    public function __construct(DebtsServiceFacades $debtsService)
     {
         $this->debtsService=$debtsService;
 
@@ -27,8 +27,8 @@ class DebtsController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $pendingPayments,
-            'message' => $pendingPayments->isEmpty() ? 'No hay pagos pendientes registrados.':null
+            'data' => ['pending_payments'=>$pendingPayments],
+            'message' => empty($pendingPayments) ? 'No hay pagos pendientes registrados.':null
         ]);
     }
 
@@ -49,9 +49,27 @@ class DebtsController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $data,
+            'data' => ['validated_payment'=>$data],
             'message' => 'Pago validado correctamente.'
         ]);
-
     }
+    public function getStripePayments(Request $request)
+    {
+        $request->validate([
+            'search' => 'required|string',
+            'year' => 'nullable|integer',
+        ]);
+
+        $payments = $this->debtsService->getPaymentsFromStripe(
+            $request->input('search'),
+            $request->integer('year')
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => ['payments'=>$payments],
+            'message' => 'Pagos obtenidos correctamente.'
+        ]);
+    }
+
 }

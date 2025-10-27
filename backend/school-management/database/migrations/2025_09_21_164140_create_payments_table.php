@@ -20,12 +20,9 @@ return new class extends Migration
             $table->foreignIdFor(PaymentConcept::class)->nullable()->constrained('payment_concepts')->onDelete('set null');
             $table->foreignIdFor(PaymentMethod::class)->nullable()->constrained('payment_methods')->onDelete('set null');
             $table->string('stripe_payment_method_id',50)->nullable()->index();
-            $table->string('last4',4)->nullable();
-            $table->string('brand',20)->nullable();
-            $table->string('voucher_number')->nullable()->unique();
-            $table->string('spei_reference')->nullable()->unique();
-            $table->text('instructions_url')->nullable();
-            $table->string('type_payment_method',20)->nullable();
+            $table->string('concept_name')->index();
+            $table->integer('amount')->index();
+            $table->json('payment_method_details');
             $table->string('status',20);
             $table->string('payment_intent_id',50)->unique()->nullable()->index();
             $table->text('url')->nullable();

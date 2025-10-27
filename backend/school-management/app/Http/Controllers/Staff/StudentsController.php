@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Core\Application\Services\Payments\Staff\StudentsService;
 use App\Http\Controllers\Controller;
-use App\Services\PaymentSystem\Staff\StudentsService;
 use Illuminate\Http\Request;
 
 class StudentsController extends Controller
@@ -26,8 +26,8 @@ class StudentsController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $students,
-            'message' => $students->isEmpty() ? 'No hay estudiantes registrados.':null
+            'data' => ['students'=>$students],
+            'message' => empty($students) ? 'No hay estudiantes registrados.':null
         ]);
     }
 }

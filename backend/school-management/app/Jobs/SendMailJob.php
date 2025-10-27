@@ -6,9 +6,11 @@ use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Redis;
 
 class SendMailJob implements ShouldQueue
 {
@@ -35,6 +37,11 @@ class SendMailJob implements ShouldQueue
             Mail::to($this->recipientEmail)->send($this->mailable);
         } catch (\Throwable $e) {
             logger()->error('Fallo al enviar correo: ' . $e->getMessage());
-        }
+        //}catch (ConnectionException $e) {
+        //    // reconectar automáticamente
+        //    Redis::disconnect();
+        //    Redis::connect(config('database.redis.default'));
+        //    throw $e;
+    }
     }
 }

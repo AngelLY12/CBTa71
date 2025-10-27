@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Core\Application\Services\Payments\Staff\DashboardServiceFacades;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Services\PaymentSystem\Staff\DashboardService;
 
 class DashboardController extends Controller
 {
-    protected DashboardService $dashboardService;
+    protected DashboardServiceFacades $dashboardService;
 
-    public function __construct(DashboardService $dashboardService)
+    public function __construct(DashboardServiceFacades $dashboardService)
     {
         $this->dashboardService = $dashboardService;
 
@@ -27,7 +27,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $data
+            'data' => ['statistics'=>$data]
         ]);
     }
 
@@ -42,7 +42,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $data
+            'data' => ['total_pending'=>$data]
         ]);
     }
 
@@ -57,7 +57,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'total_students' => $count
+            'data' => ['total_students'=>$count]
         ]);
     }
 
@@ -72,7 +72,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'total_payments' => $total
+            'data' => ['total_earning'=>$total]
         ]);
     }
 
@@ -87,7 +87,7 @@ class DashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'concepts' => $concepts
+            'data' => ['concepts'=>$concepts]
         ]);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Core\Application\Services\Payments\Staff\PaymentsService;
 use App\Http\Controllers\Controller;
-use App\Services\PaymentSystem\Staff\PaymentsService;
 use Illuminate\Http\Request;
 
 class PaymentsController extends Controller
@@ -27,8 +27,8 @@ class PaymentsController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $payments,
-            'message' => $payments->isEmpty() ? 'No hay pagos registrados.':null
+            'data' => ['payments'=>$payments],
+            'message' => empty($payments) ? 'No hay pagos registrados.':null
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Core\Application\DTO\Request\Mail\PaymentValidatedEmailDTO;
 use Illuminate\Bus\Queueable;
 use MailerSend\Helpers\Builder\Personalization;
 use Illuminate\Mail\Mailable;
@@ -12,47 +13,41 @@ class PaymentValidatedMail extends Mailable
 {
     use Queueable, SerializesModels, MailerSendTrait;
 
-    protected array $data;
-    protected string $recipientName;
-    protected string $recipientEmail;
+    protected PaymentValidatedEmailDTO $data;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(array $data, string $recipientName, string $recipientEmail)
+    public function __construct(PaymentValidatedEmailDTO $data)
     {
         $this->data = $data;
-        $this->recipientName = $recipientName;
-        $this->recipientEmail = $recipientEmail;
     }
 
     public function build()
     {
        try {
 
-        $voucherNumber = $this->data['voucher_number'] ?? 'No aplica';
-        $speiReference = $this->data['spei_reference'] ?? 'No aplica';
-        $instructionsUrl = $this->data['instructions_url'] ?? 'No aplica';
+        $voucherNumber = $this->data->payment_method_detail['oxxo']['number'] ?? 'No aplica';
+        $speiReference = $this->data->payment_method_detail['spei']['reference'] ?? 'No aplica';
+        $type_payment_method = $this->data->payment_method_detail['type'] ?? 'Desconocido';
 
         $messageDetails = "
-            <p><strong>Concepto:</strong> {$this->data['concept_name']}</p>
-            <p><strong>Monto:</strong> $".number_format($this->data['amount'], 2)."</p>
+            <p><strong>Concepto:</strong> {$this->data->concept_name}</p>
+            <p><strong>Monto:</strong> $".number_format($this->data->amount, 2)."</p>
             <p><strong>Método de pago:</strong> {$this->data['type_payment_method']}</p>
-            <p><strong>Código de referencia:</strong> {$this->data['payment_intent_id']}</p>
+            <p><strong>Código de referencia:</strong> {$this->data->payment_intent_id}</p>
             <p><strong>Voucher OXXO:</strong> {$voucherNumber}</p>
             <p><strong>Referencia SPEI:</strong> {$speiReference}</p>
-            <p><strong>Instrucciones:</strong> <a href='{$instructionsUrl}' target='_blank'>{$instructionsUrl}</a></p>
-            <p><strong>URL comprobante:</strong> <a href='{$this->data['url']}' target='_blank'>{$this->data['url']}</a></p>
+            <p><strong>URL comprobante:</strong> <a href='{$this->data->url}' target='_blank'>{$this->data['url']}</a></p>
         ";
 
         $personalization = [
-                new Personalization($this->recipientEmail, [
-                    'greeting' => "Hola {$this->recipientName}",
+                new Personalization($this->data->recipientEmail, [
+                    'greeting' => "Hola {$this->data->recipientName}",
                     'header_title' => 'Pago Validado',
                     'message_intro' => 'Tu pago ha sido validado exitosamente.',
                     'message_details' => $messageDetails,
                     'message_footer' => 'Gracias por realizar tu pago a tiempo.',
-                    'logo_url' => $this->data['logo_url'] ?? null,
                 ])
             ];
 

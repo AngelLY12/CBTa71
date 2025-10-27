@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Core\Application\DTO\Request\Mail\PaymentCreatedEmailDTO;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use MailerSend\Helpers\Builder\Personalization;
@@ -12,38 +13,34 @@ class PaymentCreatedMail extends Mailable
 {
     use Queueable, SerializesModels, MailerSendTrait;
 
-    protected array $data;
-    protected string $recipientName;
-    protected string $recipientEmail;
+    protected PaymentCreatedEmailDTO $data;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(array $data, string $recipientName, string $recipientEmail)
+    public function __construct(PaymentCreatedEmailDTO $data)
     {
         $this->data = $data;
-        $this->recipientName = $recipientName;
-        $this->recipientEmail = $recipientEmail;
     }
 
     public function build()
     {
        try {
         $messageDetails = "
-                <p><strong>Concepto:</strong> {$this->data['concept_name']}</p>
-                <p><strong>Monto:</strong> $".number_format($this->data['amount'], 2)."</p>
-                <p><strong>Fecha de pago:</strong> {$this->data['created_at']}</p>
-                <p><strong>Sesión de pago:</strong> {$this->data['stripe_session_id']}</p>
-                <p><strong>URL de la sesión:</strong> <a href='{$this->data['url']}' target='_blank'>{$this->data['url']}</a></p>
+                <p><strong>Concepto:</strong> {$this->data->concept_name}</p>
+                <p><strong>Monto:</strong> $".number_format($this->data->amount, 2)."</p>
+                <p><strong>Fecha de pago:</strong> {$this->data->created_at}</p>
+                <p><strong>Sesión de pago:</strong> {$this->data->stripe_session_id}</p>
+                <p><strong>URL de la sesión:</strong> <a href='{$this->data->url}' target='_blank'>{$this->data['url']}</a></p>
             ";
+
         $personalization = [
-            new Personalization($this->recipientEmail, [
-                'greeting' => "Hola {$this->recipientName}",
+            new Personalization($this->data->recipientEmail, [
+                'greeting' => "Hola {$this->data->recipientName}",
                 'header_title' => 'Confirmación de pago',
                 'message_intro' => 'Hemos recibido tu pago correctamente.',
                 'message_details' => $messageDetails,
                 'message_footer' => 'Gracias por tu puntualidad. Te avisaremos cuando haya sido validado tu pago.',
-                'logo_url' => $this->data['logo_url'] ?? null,
             ])
         ];
 

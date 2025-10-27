@@ -1,13 +1,12 @@
 <?php
 namespace App\Jobs;
 
-use App\Models\PaymentConcept;
+use App\Core\Application\UseCases\Jobs\FinalizePaymentConceptsUseCase;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Carbon\Carbon;
 
 class FinalizeExpiredConceptsJob implements ShouldQueue
 {
@@ -16,20 +15,14 @@ class FinalizeExpiredConceptsJob implements ShouldQueue
     public function __construct()
     {
     }
-
-    public function handle()
+    public function retryUntil()
     {
-        $today = Carbon::today();
+        return now()->addMinutes(5);
+    }
 
-        $concepts = PaymentConcept::where('status', 'activo')
-            ->whereDate('end_date', '<', $today)
-            ->get();
-
-        foreach ($concepts as $concept) {
-            $concept->status = 'finalizado';
-            $concept->save();
-        }
-
+    public function handle(FinalizePaymentConceptsUseCase $finalize)
+    {
+        $finalize->execute();
         #\Log::info('FinalizeExpiredConceptsJob: '.$concepts->count().' conceptos finalizados.');
     }
 }
