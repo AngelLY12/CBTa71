@@ -20,8 +20,17 @@ class PaymentConcept extends Model
         'start_date',
         'end_date',
         'amount',
+        'applies_to',
         'is_global'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' =>  'date'
+        ];
+    }
 
     public function careers(){
         return $this->belongsToMany(Career::class);
@@ -37,31 +46,6 @@ class PaymentConcept extends Model
 
     public function paymentConceptSemesters(){
         return $this->hasMany(PaymentConceptSemester::class);
-    }
-
-    public function scopePendingPaymentConcept($query, User $user=null){
-        $query->where('status', 'activo')
-        ->whereDate('start_date', '<=', now())
-              ->where(function ($q) {
-                  $q->whereNull('end_date')
-                    ->orWhereDate('end_date', '>=', now());
-              });
-        if ($user) {
-        $query ->whereDoesntHave('payments',fn($q) => $q->where('user_id', $user->id))
-              ->where(function ($q) use ($user) {
-                  $q->where('is_global', true)
-                    ->orWhereHas('users', fn($q) => $q->where('users.id', $user->id))
-                    ->orWhereHas('careers', fn($q) => $q->where('careers.id', $user->career_id))
-                    ->orWhereHas('paymentConceptSemesters', fn($q) => $q->where('semestre', $user->semestre));
-              });
-        }else{
-            $query ->whereDoesntHave('payments');
-            $query->where(function($q){
-            $q->where('is_global', true)
-              ->orWhereHas('users', fn($q) => $q->role('student')->where('status','activo'))
-              ->orWhereHas('careers', fn($q) => $q->whereHas('users', fn($q2) => $q2->role('student')->where('status','activo')));
-            });
-        }
     }
 
 }

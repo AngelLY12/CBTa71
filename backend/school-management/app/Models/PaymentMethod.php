@@ -11,12 +11,11 @@ class PaymentMethod extends Model
         'stripe_payment_method_id',
         'brand',
         'last4',
-        'bank_name',
         'exp_month',
         'exp_year'
     ];
 
-    protected $hidden = ['created_at', 'updated_at'];
+    protected $hidden = ['user_id,created_at', 'updated_at'];
 
 
      public function user(){

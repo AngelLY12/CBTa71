@@ -15,12 +15,9 @@ class Payment extends Model
         'payment_concept_id',
         'payment_method_id',
         'stripe_payment_method_id',
-        'last4',
-        'brand',
-        'voucher_number',
-        'spei_reference',
-        'instructions_url',
-        'type_payment_method',
+        'concept_name',
+        'amount',
+        'payment_method_details',
         'status',
         'payment_intent_id',
         'url',
@@ -35,6 +32,12 @@ class Payment extends Model
     }
     public function paymentMethod(){
         return $this->belongsTo(PaymentMethod::class);
+    }
+
+    protected function casts(): array
+    {   return [
+            'payment_method_details' => 'array',
+        ];
     }
 
 

@@ -20,5 +20,13 @@ class Career extends Model
     public function paymentConcepts(){
         return $this->belongsToMany(PaymentConcept::class);
     }
+    public function studentDetails(){
+        return $this->hasMany(StudentDetail::class);
+    }
+
+    public function students()
+    {
+        return $this->hasManyThrough(User::class, StudentDetail::class, 'career_id', 'id', 'id', 'user_id');
+    }
 
 }
