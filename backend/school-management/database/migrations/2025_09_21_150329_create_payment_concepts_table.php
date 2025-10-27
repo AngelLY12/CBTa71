@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('start_date')->index();
             $table->date('end_date')->nullable();
             $table->integer('amount')->index();
+            $table->string('applies_to',25)->default('todos');
             $table->boolean('is_global')->default(false);
             $table->timestamps();
         });
