@@ -13,7 +13,6 @@ use App\Http\Controllers\Students\PendingPaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Students\WebhookController;
-use App\Models\PaymentConcept;
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
@@ -37,7 +36,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('cards')->middleware('role:student')->group(function(){
         Route::middleware('permission:view cards')->get('/',[CardsController::class,'index']);
         Route::middleware('permission:create setup')->post('/',[CardsController::class,'store']);
-        Route::middleware('permission:create and view card')->get('/save', [CardsController::class, 'save']);
         Route::middleware('permission:delete card')->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
     Route::prefix('history')->middleware('role:student')->group(function(){
@@ -64,13 +62,15 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:update concepts')->patch('/{concept}', [ConceptsController::class, 'update']);
         Route::middleware('permission:finalize concepts')->post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
         Route::middleware('permission:disable concepts')->post('/{concept}/disable', [ConceptsController::class, 'disable']);
-        Route::middleware('permission:eliminate concepts')->post('/{concept}/eliminate', [ConceptsController::class, 'eliminate']);
-
+        Route::middleware('permission:eliminate concepts')->delete('/{concept}/eliminate', [ConceptsController::class, 'eliminate']);
+        Route::middleware('permission:eliminate logical concept')->post('/{concept}/eliminateLogical',[ConceptsController::class,'eliminateLogical']);
+        Route::middleware('permission:activate concept')->post('/{concept}/activate',[ConceptsController::class,'activate']);
     });
 
     Route::prefix('debts')->middleware('role:financial staff','throttle:60,1')->group(function(){
         Route::middleware('permission:view debts')->get('/', [DebtsController::class, 'index']);
         Route::middleware('permission:validate debt')->post('/validate', [DebtsController::class, 'validatePayment']);
+        Route::middleware('permission:view stripe-payments')->get('/stripe-payments', [DebtsController::class, 'getStripePayments']);
     });
 
     Route::prefix('payments')->middleware('role:financial staff')->group(function(){
