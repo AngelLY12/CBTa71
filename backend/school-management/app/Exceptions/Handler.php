@@ -25,37 +25,11 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
 
-        if ($e instanceof PaymentAlreadyExistsException) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-        ], $e->getCode());
-        }
-
-        if ($e instanceof ConceptExpiredException) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-        ], $e->getCode());
-        }
-        if ($e instanceof ConceptInactiveException) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-        ], $e->getCode());
-        }
-        if ($e instanceof PaymentMethodNotSupportedException) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-        ], $e->getCode());
-        }
-
-        if ($e instanceof UserNotAllowedException) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage(),
-        ], $e->getCode());
+        if ($e instanceof DomainException) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getStatusCode());
         }
 
         if ($e instanceof AuthenticationException) {
@@ -64,25 +38,27 @@ class Handler extends ExceptionHandler
                 'message' => 'No estás autenticado',
             ], 401);
         }
-        if ($e instanceof AuthorizationException) {
+        if ($e instanceof AuthorizationException || $e instanceof UnauthorizedException) {
             return response()->json([
                 'success' => false,
-                'message' => 'No tienes permisos para realizar esta acción',
-            ], 403);
-        }
-        if ($e instanceof UnauthorizedException) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No tienes permisos para acceder a este recurso.',
+                'message' => 'No tienes permisos para realizar esta acción.',
             ], 403);
         }
 
+        if ($e instanceof QueryException) {
+            logger()->error('Database error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno al procesar la base de datos.',
+            ], 500);
+        }
+
         if ($e instanceof ModelNotFoundException) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Recurso no encontrado',
-        ], 404);
-    }
+            return response()->json([
+                'success' => false,
+                'message' => 'Recurso no encontrado',
+            ], 404);
+        }
 
         if ($e instanceof \InvalidArgumentException) {
             return response()->json([
@@ -109,14 +85,6 @@ class Handler extends ExceptionHandler
                 'success' => false,
                 'message' => 'Error al comunicarse con Stripe, intenta más tarde.',
             ], 502);
-        }
-
-        if ($e instanceof QueryException) {
-            logger()->error('Database error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error interno al procesar la base de datos',
-            ], 500);
         }
 
         return response()->json([
