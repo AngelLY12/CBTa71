@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Core\Application\Mappers\PaymentConceptMapper;
+use App\Core\Infraestructure\Mappers\PaymentConceptMapper as InfraPaymentConceptMapper;
+use App\Core\Application\Services\Payments\Staff\ConceptsServiceFacades;
 use App\Http\Controllers\Controller;
-use App\Services\PaymentSystem\Staff\ConceptsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PaymentConcept;
@@ -11,9 +13,9 @@ use App\Models\PaymentConcept;
 
 class ConceptsController extends Controller
 {
-    protected ConceptsService $conceptsService;
+    protected ConceptsServiceFacades $conceptsService;
 
-    public function __construct(ConceptsService $conceptsService)
+    public function __construct(ConceptsServiceFacades $conceptsService)
     {
         $this->conceptsService= $conceptsService;
 
@@ -26,8 +28,8 @@ class ConceptsController extends Controller
         $data = $this->conceptsService->showConcepts($status);
         return response()->json([
                 'success' => true,
-                'data' => $data,
-                'message'=>$data->isEmpty() ? 'No hay conceptos de pago creados' : null
+                'data' => ['concepts'=>$data],
+                'message'=>empty($data) ? 'No hay conceptos de pago creados' : null
             ]);
 
     }
@@ -46,8 +48,8 @@ class ConceptsController extends Controller
             'amount',
             'is_global',
             'applies_to',
-            'semestre',
-            'career',
+            'semestres',
+            'careers',
             'students'
         ]);
         $rules = [
@@ -59,8 +61,8 @@ class ConceptsController extends Controller
             'amount'        =>'required|numeric',
             'is_global'     =>'required|boolean',
             'applies_to'            =>'required|string',
-            'semestre'              =>'nullable|numeric',
-            'career'                =>'nullable|string',
+            'semestres'              =>'nullable|array',
+            'careers'                =>'nullable|array',
             'students'              =>'nullable|array'
 
         ];
@@ -74,30 +76,15 @@ class ConceptsController extends Controller
         ], 422);
 
         }
-        $concept = new PaymentConcept([
-                'concept_name' => $data['concept_name'],
-                'description'  => $data['description'] ?? null,
-                'status'       =>  strtolower($data['status']),
-                'start_date'   => $data['start_date'],
-                'end_date'     => $data['end_date'] ?? null,
-                'amount'       => $data['amount'],
-                'is_global'    => $data['is_global'],
-            ]);
-        $createdConcept=$this->conceptsService->createPaymentConcept(
-            $concept,
-            strtolower($data['applies_to'] ?? 'todos'),
-            $data['semestre'] ?? null,
-            $data['career'] ?? null,
-            $data['students'] ?? []
-        );
+        $dto = PaymentConceptMapper::toCreateConceptDTO($data);
+
+        $createdConcept=$this->conceptsService->createPaymentConcept($dto);
 
         return response()->json([
-        'success' => true,
-        'data' => $createdConcept,
-        'message' => 'Concepto de pago creado con éxito.',
+            'success' => true,
+            'data' => ['concept' => $createdConcept],
+            'message' => 'Concepto de pago creado con éxito.',
         ], 201);
-
-
 
     }
 
@@ -112,9 +99,10 @@ class ConceptsController extends Controller
             'amount',
             'is_global',
             'applies_to',
-            'semestre',
-            'career',
-            'students'
+            'semestres',
+            'careers',
+            'students',
+            'replaceRelations'
         ]);
 
         $rules = [
@@ -126,9 +114,10 @@ class ConceptsController extends Controller
             'amount'        => 'sometimes|required|numeric',
             'is_global'     => 'sometimes|required|boolean',
             'applies_to'    => 'nullable|string|in:carrera,semestre,estudiantes,todos',
-            'semestre'      => 'nullable|numeric',
-            'career'        => 'nullable|string',
+            'semestres'      => 'nullable|array',
+            'careers'        => 'nullable|array',
             'students'      => 'nullable|array',
+            'replaceRelations' => 'sometimes|required|boolean'
         ];
 
         $validator = Validator::make($data, $rules);
@@ -140,18 +129,14 @@ class ConceptsController extends Controller
                 'message' => 'Error en la validación de datos.'
             ], 422);
         }
+        $data['id'] = $concept->id;
+        $dto = PaymentConceptMapper::toUpdateConceptDTO($data);
 
-        $updatedConcept = $this->conceptsService->updatePaymentConcept(
-            $concept,
-            $data,
-            $data['semestre'] ?? null,
-            $data['career'] ?? null,
-            $data['students'] ?? null
-        );
+        $updatedConcept = $this->conceptsService->updatePaymentConcept($dto);
 
         return response()->json([
             'success' => true,
-            'data' => $updatedConcept,
+            'data' => ['concept'=>$updatedConcept],
             'message' => 'Concepto de pago actualizado correctamente.'
         ]);
     }
@@ -161,32 +146,58 @@ class ConceptsController extends Controller
      */
     public function finalize(PaymentConcept $concept)
     {
-        $finalized = $this->conceptsService->finalizePaymentConcept($concept);
+        $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
+        $finalized = $this->conceptsService->finalizePaymentConcept($domainConcept);
 
         return response()->json([
             'success' => true,
-            'data' => $finalized,
+            'data' => ['concept'=>$finalized],
             'message' => 'Concepto de pago finalizado correctamente.'
         ]);
     }
     public function disable(PaymentConcept $concept)
     {
-        $disable = $this->conceptsService->disablePaymentConcept($concept);
+        $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
+        $disable = $this->conceptsService->disablePaymentConcept($domainConcept);
 
         return response()->json([
             'success' => true,
-            'data' => $disable,
+            'data' => ['concept'=>$disable],
             'message' => 'Concepto de pago deshabilitado correctamente.'
+        ]);
+    }
+
+    public function activate(PaymentConcept $concept)
+    {
+        $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
+        $activate = $this->conceptsService->activatePaymentConcept($domainConcept);
+
+        return response()->json([
+            'success' => true,
+            'data' => ['concept'=>$activate],
+            'message' => 'Concepto de pago habilitado correctamente.'
         ]);
     }
 
     public function eliminate(PaymentConcept $concept)
     {
-        $eliminate = $this->conceptsService->eliminatePaymentConcept($concept);
+        $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
+        $this->conceptsService->eliminatePaymentConcept($domainConcept);
 
         return response()->json([
             'success' => true,
-            'data' => $eliminate,
+            'message' => 'Concepto de pago eliminado correctamente.'
+        ]);
+    }
+
+    public function eliminateLogical(PaymentConcept $concept)
+    {
+        $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
+        $eliminate = $this->conceptsService->elminateLogicalPaymentConcept($domainConcept);
+
+        return response()->json([
+            'success' => true,
+            'data' => ['concept'=>$eliminate],
             'message' => 'Concepto de pago eliminado correctamente.'
         ]);
     }

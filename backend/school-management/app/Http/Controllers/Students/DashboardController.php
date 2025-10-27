@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers\Students;
 
-use App\Services\PaymentSystem\Student\DashboardService;
+use App\Core\Application\Services\Payments\Student\DashboardService;
+use App\Core\Application\Services\Payments\Student\DashboardServiceFacades;
+use App\Core\Infraestructure\Mappers\UserMapper;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 
 class DashboardController extends Controller
 {
 
-    protected DashboardService $dashboardService;
+    protected DashboardServiceFacades $dashboardService;
 
-    public function __construct(DashboardService $dashboardService)
+    public function __construct(DashboardServiceFacades $dashboardService)
     {
         $this->dashboardService = $dashboardService;
     }
@@ -22,56 +24,57 @@ class DashboardController extends Controller
     public function index()
     {
          $user = Auth::user();
-            $data = $this->dashboardService->getDashboardData($user);
+
+            $data = $this->dashboardService->getDashboardData(UserMapper::toDomain($user));
 
             return response()->json([
                 'success' => true,
-                'data' => $data
+                'data' => ['statistics'=>$data]
             ]);
     }
 
     public function pending()
     {
          $user = Auth::user();
-            $data = $this->dashboardService->pendingPaymentAmount($user);
+            $data = $this->dashboardService->pendingPaymentAmount(UserMapper::toDomain($user));
 
             return response()->json([
                 'success' => true,
-                'data' => $data
+                'data' => ['total_pending'=>$data]
             ]);
     }
 
     public function paid()
     {
         $user = Auth::user();
-            $data = $this->dashboardService->paymentsMade($user);
+            $data = $this->dashboardService->paymentsMade(UserMapper::toDomain($user));
 
             return response()->json([
                 'success' => true,
-                'data' => $data
+                'paid' => ['total_paid'=>$data]
             ]);
     }
 
     public function overdue()
     {
         $user = Auth::user();
-            $data = $this->dashboardService->overduePayments($user);
+            $data = $this->dashboardService->overduePayments(UserMapper::toDomain($user));
 
             return response()->json([
                 'success' => true,
-                'data' => $data
+                'overdue' => ['total_overdue'=>$data]
             ]);
     }
 
     public function history()
     {
          $user = Auth::user();
-            $data = $this->dashboardService->paymentHistory($user);
+            $data = $this->dashboardService->paymentHistory(UserMapper::toDomain($user));
 
             return response()->json([
                 'success' => true,
-                'data' => $data,
-                'message' => $data->isEmpty()?'No hay pagos registrados en el historial':null
+                'data' => ['payment_history'=>$data],
+                'message' => empty($data)?'No hay pagos registrados en el historial':null
 
             ]);
     }

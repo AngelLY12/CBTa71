@@ -2,22 +2,20 @@
 
 namespace App\Http\Controllers\Students;
 
+use App\Core\Application\Services\Payments\Stripe\WebhookServiceFacades;
 use Illuminate\Http\Request;
-use App\Models\Payment;
 use Stripe\Webhook;
 use App\Http\Controllers\Controller;
 use App\Jobs\ReconcilePayments;
-use App\Notifications\PaymentFailedNotification;
-use App\Services\PaymentSystem\WebhookService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Stripe\Stripe;
 
 class WebhookController extends Controller
 
 {
-    protected WebhookService $webhookService;
+    protected WebhookServiceFacades $webhookService;
 
-    public function __construct(WebhookService $webhookService){
+    public function __construct(WebhookServiceFacades $webhookService){
         $this->webhookService=$webhookService;
         Stripe::setApiKey(config('services.stripe.secret'));
     }
@@ -82,5 +80,4 @@ class WebhookController extends Controller
             return response()->json(['success' => false, 'message' => 'Error interno'], 500);
         }
     }
-
 }

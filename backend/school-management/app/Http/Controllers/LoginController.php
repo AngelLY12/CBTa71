@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\LoginService;
+use App\Core\Application\Mappers\GeneralMapper;
+use App\Core\Application\Services\LoginService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -21,41 +22,34 @@ class LoginController extends Controller
      */
    public function login(Request $request){
 
-    $data = $request->only([
-        'email',
-        'password'
-    ]);
-    $rules = [
-        'email'=>'required|email',
-        'password'=>'required'
+        $data = $request->only([
+            'email',
+            'password'
+        ]);
+        $rules = [
+            'email'=>'required|email',
+            'password'=>'required'
 
-    ];
+        ];
 
-    $validator = Validator::make($data,$rules);
-    if($validator->fails()){
-        return response()->json([
-            'success' => false,
-            'errors'  => $validator->errors(),
-            'message' => 'Error en la validación de datos.'
-        ], 422);
-
-    }
-
-        try {
-            $tokenUser = $this->loginService->login($data['email'], $data['password']);
-
-            return response()->json([
-                'success' => true,
-                'data' => $tokenUser,
-                'message' => 'Inicio de sesión exitoso.',
-            ]);
-        } catch (ValidationException $e) {
+        $validator = Validator::make($data,$rules);
+        if($validator->fails()){
             return response()->json([
                 'success' => false,
-                'message' => 'Hubo un error en el inicio de sesión, intentalo nuevamente',
-                'errors' => $e->errors(),
-            ], 401);
+                'errors'  => $validator->errors(),
+                'message' => 'Error en la validación de datos.'
+            ], 422);
+
         }
+        $loginRequest = GeneralMapper::toLoginDTO($data);
+
+        $userToken = $this->loginService->login($loginRequest);
+
+        return response()->json([
+            'success' => true,
+            'data' => ['user_token'=>$userToken],
+            'message' => 'Inicio de sesión exitoso.',
+        ]);
 
    }
 }
