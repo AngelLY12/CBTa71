@@ -108,7 +108,7 @@ RUN chown -R www-data:www-data /var/www
 USER www-data
 
 # Change the default command to run the entrypoint script
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
