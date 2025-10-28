@@ -27,7 +27,6 @@ COPY . .
 RUN composer install
 
 # Exponer puerto de PHP-FPM
-EXPOSE 9000
 
 # Comando por defecto
-CMD ["php-fpm"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${PORT}"]
