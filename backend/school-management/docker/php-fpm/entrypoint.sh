@@ -5,11 +5,6 @@ echo "Ajustando permisos de Laravel..."
 chmod -R 775 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
-echo "Ajustando permisos de Supervisor..."
-mkdir -p /var/www/logs/supervisor
-chown -R www-data:www-data /var/www/logs/supervisor
-chmod -R 775 /var/www/logs/supervisor
-
 echo "Probando conexión a la base de datos..."
 php -r "
 \$host = getenv('DB_HOST');
@@ -61,5 +56,6 @@ php artisan db:seed --force || { echo "Error al ejecutar seeders"; exit 1; }
 echo "Últimas líneas del log de Laravel:"
 tail -n 40 storage/logs/laravel.log || echo "No hay log aún."
 
-echo "Todo listo, iniciando Supervisor (PHP-FPM + Nginx)..."
-exec /usr/bin/supervisord -n
+echo "Todo listo, iniciando aplicación laravel..."
+exec php-fpm
+
