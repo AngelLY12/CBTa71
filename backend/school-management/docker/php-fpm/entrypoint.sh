@@ -6,9 +6,9 @@ chmod -R 775 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
 echo "Ajustando permisos de Supervisor..."
-mkdir -p /var/log/supervisor
-chmod -R 775 /var/log/supervisor
-chown -R www-data:www-data /var/log/supervisor
+mkdir -p /var/www/logs/supervisor
+chown -R www-data:www-data /var/www/logs/supervisor
+chmod -R 775 /var/www/logs/supervisor
 
 echo "Probando conexión a la base de datos..."
 php -r "
