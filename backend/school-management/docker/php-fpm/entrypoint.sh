@@ -44,6 +44,6 @@ php artisan migrate --force || { echo "Error al migrar"; exit 1; }
 echo "Ejecutando seeders..."
 php artisan db:seed --force || { echo "Error al ejecutar seeders"; exit 1; }
 
-echo "Todo listo, iniciando PHP-FPM..."
-exec php-fpm
+echo "Todo listo, iniciando aplicación laravel..."
+exec "$@"
 
