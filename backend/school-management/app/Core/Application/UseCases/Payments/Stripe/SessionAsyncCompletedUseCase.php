@@ -2,19 +2,15 @@
 
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
+use App\Core\Application\Traits\HasPaymentSession;
 use Stripe\Stripe;
 
 class SessionAsyncCompletedUseCase
 {
-    public function __construct(
-        private HandlePaymentSessionUseCase $handle
-    ) {
-        Stripe::setApiKey(config('services.stripe.secret'));
-
-    }
+   use HasPaymentSession;
 
     public function execute($obj) {
-        return $this->handle->execute($obj, [
+        return $this->handlePaymentSession($obj, [
         'status' => $obj->payment_status,
         ]);
 

@@ -10,7 +10,7 @@ class PaymentsMadeUseCase{
     )
     {
     }
-    public function execute(bool $onlyThisYear = false):int
+    public function execute(bool $onlyThisYear):int
     {
         return $this->pqRepo->getAllPaymentsMade($onlyThisYear);
 

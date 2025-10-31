@@ -6,9 +6,8 @@ use App\Core\Application\Mappers\PaymentMethodMapper;
 use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
-use App\Core\Domain\Repositories\Command\Payments\StripeGatewayInterface;
+use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use Illuminate\Support\Facades\DB;
-use Stripe\Stripe;
 
 class FinalizeSetupSessionUseCase
 {

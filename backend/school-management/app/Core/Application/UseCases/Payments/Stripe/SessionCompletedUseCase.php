@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
+use App\Core\Application\Traits\HasPaymentSession;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use Stripe\Stripe;
 
@@ -9,12 +10,12 @@ class SessionCompletedUseCase
 {
     public function __construct(
         private UserRepInterface $userRepo,
-        private HandlePaymentSessionUseCase $handle,
         private FinalizeSetupSessionUseCase $finalize
     ) {
-        Stripe::setApiKey(config('services.stripe.secret'));
 
     }
+    use HasPaymentSession;
+
     public function execute($obj)
     {
         if (!isset($obj->mode)) {
@@ -22,7 +23,7 @@ class SessionCompletedUseCase
             return true;
         }
         if($obj->mode==='payment'){
-            return $this->handle->execute($obj, [
+            return $this->handlePaymentSession($obj, [
                 'payment_intent_id' => $obj->payment_intent,
                 'status' => $obj->payment_status,
             ]);

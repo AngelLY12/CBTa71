@@ -12,7 +12,7 @@ class PendingPaymentAmountUseCase{
     )
     {
     }
-    public function execute(bool $onlyThisYear=false): PendingSummaryResponse
+    public function execute(bool $onlyThisYear): PendingSummaryResponse
     {
         return $this->pcqRepo->getAllPendingPaymentAmount($onlyThisYear);
     }

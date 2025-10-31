@@ -18,9 +18,9 @@ class ShowAllPendingPaymentsUseCase
     )
     {
     }
-    public function execute(?string $search=null, int $perPage = 15): PaginatedResponse
+    public function execute(?string $search, int $perPage, $page): PaginatedResponse
     {
-        $paginatedStudents = $this->uqRepo->findActiveStudents($search, $perPage);
+        $paginatedStudents = $this->uqRepo->findActiveStudents($search, $perPage, $page);
         $studentIds = $paginatedStudents->getCollection()->pluck('id')->toArray();
         $items = $this->pcqRepo->getPendingWithDetailsForStudents($studentIds);
         return GeneralMapper::toPaginatedResponse($items, $paginatedStudents);

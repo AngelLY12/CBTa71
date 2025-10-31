@@ -14,18 +14,15 @@ class ShowAllStudentsUseCase
 
     public function __construct(
         private UserQueryRepInterface $uqRepo,
-        private PaymentConceptQueryRepInterface $pcqRepo
     )
     {
 
     }
-    public function execute(?string $search = null, int $perPage = 15): PaginatedResponse
+    public function execute(?string $search, int $perPage, $page): PaginatedResponse
     {
-        $paginatedStudents = $this->uqRepo->findActiveStudents($search, $perPage);
+        $paginatedStudents = $this->uqRepo->findActiveStudents($search, $perPage, $page);
         $studentIds = $paginatedStudents->getCollection()->pluck('id')->toArray();
-        $items = $this->pcqRepo->getStudentsWithPendingSummary($studentIds);
+        $items = $this->uqRepo->getStudentsWithPendingSummary($studentIds);
         return GeneralMapper::toPaginatedResponse($items, $paginatedStudents);
     }
-
-
 }
