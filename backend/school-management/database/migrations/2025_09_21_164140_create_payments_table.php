@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
             $table->foreignIdFor(PaymentConcept::class)->nullable()->constrained('payment_concepts')->onDelete('set null');
             $table->foreignIdFor(PaymentMethod::class)->nullable()->constrained('payment_methods')->onDelete('set null');
-            $table->string('stripe_payment_method_id',50)->nullable();
+            $table->string('stripe_payment_method_id',50)->nullable()->index();
             $table->string('concept_name');
             $table->integer('amount')->index();
             $table->json('payment_method_details');
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->text('url')->nullable();
             $table->string('stripe_session_id')->nullable()->unique();
             $table->timestamps();
-            $table->index(['status', 'created_at','stripe_payment_method_id']);
+            $table->index(['status', 'created_at']);
         });
 
 
