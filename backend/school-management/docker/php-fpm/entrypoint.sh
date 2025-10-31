@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+echo "Ajustando permisos de Laravel..."
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache
+
 echo "Probando conexión a la base de datos..."
 php -r "
 \$host = getenv('DB_HOST');
@@ -37,6 +41,11 @@ try {
     exit(1);
 }
 "
+
+echo "Limpiando cachés de Laravel..."
+php artisan config:clear || echo "No se pudo limpiar config"
+php artisan cache:clear || echo "No se pudo limpiar cache"
+php artisan route:clear || echo "No se pudo limpiar rutas"
 
 echo "Ejecutando migraciones..."
 php artisan migrate --force || { echo "Error al migrar"; exit 1; }
