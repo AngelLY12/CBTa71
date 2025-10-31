@@ -22,8 +22,9 @@ class DashboardController extends Controller
     public function getData(Request $request)
     {
         $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
 
-        $data = $this->dashboardService->getData($onlyThisYear);
+        $data = $this->dashboardService->getData($onlyThisYear, $forceRefresh);
 
         return response()->json([
             'success' => true,
@@ -37,8 +38,9 @@ class DashboardController extends Controller
     public function pendingPayments(Request $request)
     {
         $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
 
-        $data = $this->dashboardService->pendingPaymentAmount($onlyThisYear);
+        $data = $this->dashboardService->pendingPaymentAmount($onlyThisYear, $forceRefresh);
 
         return response()->json([
             'success' => true,
@@ -52,8 +54,9 @@ class DashboardController extends Controller
     public function allStudents(Request $request)
     {
         $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
 
-        $count = $this->dashboardService->getAllStudents($onlyThisYear);
+        $count = $this->dashboardService->getAllStudents($onlyThisYear, $forceRefresh);
 
         return response()->json([
             'success' => true,
@@ -67,8 +70,9 @@ class DashboardController extends Controller
     public function paymentsMade(Request $request)
     {
         $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
 
-        $total = $this->dashboardService->paymentsMade($onlyThisYear);
+        $total = $this->dashboardService->paymentsMade($onlyThisYear, $forceRefresh);
 
         return response()->json([
             'success' => true,
@@ -82,12 +86,25 @@ class DashboardController extends Controller
     public function allConcepts(Request $request)
     {
         $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
-
-        $concepts = $this->dashboardService->getAllConcepts($onlyThisYear);
+        $perPage = $request->query('perPage', 15);
+        $page    = $request->query('page', 1);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $concepts = $this->dashboardService->getAllConcepts($onlyThisYear, $perPage, $page, $forceRefresh);
 
         return response()->json([
             'success' => true,
             'data' => ['concepts'=>$concepts]
         ]);
     }
+
+    public function refreshDashboard()
+    {
+        $this->dashboardService->refreshAll();
+        return response()->json([
+            'success' => true,
+            'message' => 'Dashboard cache limpiado con éxito'
+        ]);
+    }
+
+
 }

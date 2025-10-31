@@ -22,8 +22,10 @@ class DebtsController extends Controller
     public function index(Request $request)
     {
         $search = $request->query('search', null);
-
-        $pendingPayments = $this->debtsService->showAllpendingPayments($search);
+        $perPage = $request->query('perPage', 15);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $page = $request->query('page', 1);
+        $pendingPayments = $this->debtsService->showAllpendingPayments($search, $perPage, $page, $forceRefresh);
 
         return response()->json([
             'success' => true,
@@ -59,11 +61,11 @@ class DebtsController extends Controller
             'search' => 'required|string',
             'year' => 'nullable|integer',
         ]);
+        $search=$request->input('search');
+        $year=$request->integer('year',null);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
 
-        $payments = $this->debtsService->getPaymentsFromStripe(
-            $request->input('search'),
-            $request->integer('year')
-        );
+        $payments = $this->debtsService->getPaymentsFromStripe($search, $year, $forceRefresh);
 
         return response()->json([
             'success' => true,

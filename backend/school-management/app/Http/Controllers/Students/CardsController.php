@@ -18,11 +18,11 @@ class CardsController extends Controller
         $this->cardsService=$cardsService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
        $user = Auth::user();
-
-        $cards = $this->cardsService->getUserPaymentMethods(UserMapper::toDomain($user));
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $cards = $this->cardsService->getUserPaymentMethods(UserMapper::toDomain($user), $forceRefresh);
         return response()->json([
             'success' => true,
             'data' => ['cards'=>$cards],
@@ -52,7 +52,8 @@ class CardsController extends Controller
      */
     public function destroy(string $paymentMethodId)
     {
-        $this->cardsService->deletePaymentMethod($paymentMethodId);
+        $user = Auth::user();
+        $this->cardsService->deletePaymentMethod(UserMapper::toDomain($user),$paymentMethodId);
 
             return response()->json([
                 'success' => true,

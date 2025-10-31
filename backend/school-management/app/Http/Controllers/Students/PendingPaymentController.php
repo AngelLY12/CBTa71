@@ -23,10 +23,11 @@ class PendingPaymentController extends Controller
 
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $pending=$this->pendingPaymentService->showPendingPayments(UserMapper::toDomain($user));
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $pending=$this->pendingPaymentService->showPendingPayments(UserMapper::toDomain($user), $forceRefresh);
         return response()->json([
             'success' => true,
             'data' => ['pending_payments'=>$pending],
@@ -35,10 +36,11 @@ class PendingPaymentController extends Controller
 
     }
 
-    public function overdue()
+    public function overdue(Request $request)
     {
         $user = Auth::user();
-        $pending=$this->pendingPaymentService->showOverduePayments(UserMapper::toDomain($user));
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $pending=$this->pendingPaymentService->showOverduePayments(UserMapper::toDomain($user), $forceRefresh);
         return response()->json([
             'success' => true,
             'data' => ['overdue_payments'=>$pending],

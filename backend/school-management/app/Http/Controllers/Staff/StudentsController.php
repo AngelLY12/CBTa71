@@ -20,9 +20,11 @@ class StudentsController extends Controller
      */
     public function index(Request $request)
     {
-        $search = $request->query('search');
-
-        $students = $this->studentsService->showAllStudents($search);
+        $search = $request->query('search', null);
+        $perPage = $request->query('perPage', 15);
+        $page    = $request->query('page', 1);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $students = $this->studentsService->showAllStudents($search, $perPage, $page, $forceRefresh);
 
         return response()->json([
             'success' => true,

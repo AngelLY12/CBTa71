@@ -25,11 +25,15 @@ class ConceptsController extends Controller
     public function index(Request $request)
     {
         $status = strtolower($request->input('status','todos'));
-        $data = $this->conceptsService->showConcepts($status);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $perPage = $request->query('perPage', 15);
+        $page    = $request->query('page', 1);
+
+        $paginatedData = $this->conceptsService->showConcepts($status, $perPage, $page, $forceRefresh);
         return response()->json([
                 'success' => true,
-                'data' => ['concepts'=>$data],
-                'message'=>empty($data) ? 'No hay conceptos de pago creados' : null
+                'data' => ['concepts'=>$paginatedData],
+                'message'=>empty($paginatedData) ? 'No hay conceptos de pago creados' : null
             ]);
 
     }
@@ -193,7 +197,7 @@ class ConceptsController extends Controller
     public function eliminateLogical(PaymentConcept $concept)
     {
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
-        $eliminate = $this->conceptsService->elminateLogicalPaymentConcept($domainConcept);
+        $eliminate = $this->conceptsService->eliminateLogicalPaymentConcept($domainConcept);
 
         return response()->json([
             'success' => true,
