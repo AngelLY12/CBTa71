@@ -56,6 +56,5 @@ php artisan db:seed --force || { echo "Error al ejecutar seeders"; exit 1; }
 echo "Últimas líneas del log de Laravel:"
 tail -n 40 storage/logs/laravel.log || echo "No hay log aún."
 
-echo "Todo listo, iniciando aplicación laravel..."
-exec php artisan serve --host=0.0.0.0 --port=${PORT}
-
+echo "Todo listo, iniciando Supervisor (PHP-FPM + Nginx)..."
+exec /usr/bin/supervisord -n
