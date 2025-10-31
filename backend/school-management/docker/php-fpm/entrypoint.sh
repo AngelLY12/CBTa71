@@ -5,6 +5,11 @@ echo "Ajustando permisos de Laravel..."
 chmod -R 775 storage bootstrap/cache
 chown -R www-data:www-data storage bootstrap/cache
 
+echo "Ajustando permisos de Supervisor..."
+mkdir -p /var/log/supervisor
+chmod -R 775 /var/log/supervisor
+chown -R www-data:www-data /var/log/supervisor
+
 echo "Probando conexión a la base de datos..."
 php -r "
 \$host = getenv('DB_HOST');
