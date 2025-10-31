@@ -38,6 +38,7 @@ class LoginUseCase
             });
         }
         $token = $this->userRepo->createToken($user,'api-token');
-        return GeneralMapper::toLoginResponse($token,'Bearer');
+        $refreshToken = $this->userRepo->createRefreshToken($user, 'refresh-token');
+        return GeneralMapper::toLoginResponse($token,$refreshToken,'Bearer');
    }
 }

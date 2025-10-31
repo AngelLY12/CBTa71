@@ -20,6 +20,8 @@ class GeneralMapper{
             lastPage: $paginated->lastPage() ?? null,
             perPage: $paginated->perPage() ?? null,
             total: $paginated->total() ?? null,
+            hasMorePages: $paginated->hasMorePages(),
+            nextPage: $paginated->currentPage() < $paginated->lastPage() ? $paginated->currentPage() + 1 : null
         );
     }
 
@@ -31,10 +33,11 @@ class GeneralMapper{
         );
     }
 
-    public static function toLoginResponse(string $token, $token_type):LoginResponse
+    public static function toLoginResponse(string $token, string $refresh,$token_type):LoginResponse
     {
         return new LoginResponse(
             access_token:$token ?? null,
+            refresh_token: $refresh ?? null,
             token_type:$token_type ?? null
         );
     }

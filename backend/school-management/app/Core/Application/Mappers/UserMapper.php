@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\Mappers;
 
+use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\DTO\Response\User\UserRecipientDTO;
@@ -13,6 +14,45 @@ use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
 
 class UserMapper{
+
+    public static function toDomain(CreateUserDTO $user): DomainUser
+    {
+        return new DomainUser(
+            name: $user->name,
+            last_name: $user->last_name,
+            email: $user->email,
+            password: $user->password,
+            phone_number: $user->phone_number,
+            birthdate: $user->birthdate ?? null,
+            gender: $user->gender ?? null,
+            curp: $user->curp ?? null,
+            address: $user->address ?? [],
+            stripe_customer_id: null,
+            blood_type: $user->blood_type ?? null,
+            registration_date: $user->registration_date ?? null,
+            status: $user->status
+        );
+
+    }
+
+    public static function toCreateUserDTO(array $data): CreateUserDTO
+    {
+        return new CreateUserDTO(
+            name: $data['name'],
+            last_name: $data['last_name'],
+            email: $data['email'],
+            password: $data['password'],
+            phone_number: $data['phone_number'],
+            birthdate: $data['birthdate'] ?? null,
+            gender: $data['gender'] ?? null,
+            curp:$data['curp'],
+            address: $data['address'] ?? [],
+            blood_type: $data['blood_type'] ?? null,
+            registration_date: $data['registration_date'] ?? null,
+            status: $data['status']
+        );
+
+    }
 
     public static function toDataResponse(DomainUser $user): UserDataResponse{
         return new UserDataResponse(

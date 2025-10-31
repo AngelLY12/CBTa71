@@ -10,5 +10,7 @@ class PaginatedResponse{
         public readonly ?int $lastPage,
         public readonly ?int $perPage,
         public readonly ?int $total,
+        public readonly ?bool $hasMorePages,
+        public readonly ?int $nextPage
     ) {}
 }
