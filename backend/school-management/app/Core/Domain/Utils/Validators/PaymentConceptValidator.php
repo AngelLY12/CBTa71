@@ -61,7 +61,7 @@ class PaymentConceptValidator{
 
     public static function ensureValidStatus(string $status)
     {
-        $arrayStatus = ['activo','finalizado','desactivado','eliminado'];
+        $arrayStatus = ['todos','activos','finalizados','desactivados','eliminados'];
         if(!in_array($status,$arrayStatus,true)){
             throw new ValidationException("Estado inválido: {$status}");
         }
