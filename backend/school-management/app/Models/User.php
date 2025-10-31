@@ -50,6 +50,12 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class);
     }
 
+    public function refreshTokens()
+    {
+        return $this->hasMany(RefreshToken::class);
+
+    }
+
     public function paymentMethods(){
         return $this->hasMany(PaymentMethod::class);
     }
