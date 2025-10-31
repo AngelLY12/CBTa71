@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             'view pending concepts',
             'create payment',
             'view overdue concepts',
+            'refresh all dashboard'
         ];
 
         foreach ($studentPermissions as $perm) {
@@ -60,11 +61,21 @@ class DatabaseSeeder extends Seeder
             'validate debt',
             'view payments',
             'view students',
-            'view stripe-payments'
+            'view stripe-payments',
+            'refresh all dashboard'
         ];
 
         foreach ($staffPermissions as $perm) {
             Permission::firstOrCreate(['name' => $perm]);
+        }
+
+        $adminPermissions =[
+            'attach student'
+        ];
+
+        foreach($adminPermissions as $perm)
+        {
+            Permission::firstOrCreate(['name'=>$perm]);
         }
 
         // ------------------------
@@ -75,6 +86,9 @@ class DatabaseSeeder extends Seeder
 
         $staffRole = Role::firstOrCreate(['name' => 'financial staff']);
         $staffRole->syncPermissions($staffPermissions);
+
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole->syncPermissions($adminPermissions);
     }
 
 }
