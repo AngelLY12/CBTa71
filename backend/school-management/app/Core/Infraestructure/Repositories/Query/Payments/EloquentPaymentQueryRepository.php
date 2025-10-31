@@ -12,7 +12,6 @@ use App\Models\Payment as EloquentPayment;
 use Generator;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-
 class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
 {
     public function sumPaymentsByUserYear(User $user): int {
@@ -29,26 +28,26 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     }
 
 
-    public function getPaymentHistory(User $user): array {
-        return EloquentPayment::where('user_id', $user->id)
+    public function getPaymentHistory(User $user, int $perPage, int $page): LengthAwarePaginator
+    {
+         return EloquentPayment::where('user_id', $user->id)
         ->select('id', 'concept_name', 'amount', 'created_at')
         ->orderBy('created_at','desc')
-        ->get()
-        ->map(fn($p) => MappersPaymentMapper::toHistoryResponse($p->toArray()))
-        ->toArray();
-
+        ->paginate($perPage, ['*'], 'page', $page)
+        ->through(fn($p) => MappersPaymentMapper::toHistoryResponse($p));
     }
 
-    public function getPaymentHistoryWithDetails(User $user): array {
+    public function getPaymentHistoryWithDetails(User $user, int $perPage, int $page): LengthAwarePaginator
+    {
         return EloquentPayment::where('user_id', $user->id)
-        ->select('id', 'concept_name', 'amount', 'status','payment_intent_id','url','payment_method_details', 'created_at')
-        ->orderBy('created_at', 'desc')
-        ->get()
-        ->map(fn($p) => MappersPaymentMapper::toDetailResponse($p))
-        ->toArray();
+            ->select('id', 'concept_name', 'amount', 'status','payment_intent_id','url','payment_method_details', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(fn($p) => MappersPaymentMapper::toDetailResponse($p));
     }
 
-    public function getAllPaymentsMade(bool $onlyThisYear = false): int
+
+    public function getAllPaymentsMade(bool $onlyThisYear): int
     {
        $query = EloquentPayment::query();
         if ($onlyThisYear) {
@@ -69,7 +68,7 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         return $payment ? PaymentMapper::toDomain($payment):null;
     }
 
-    public function getAllWithSearchEager(?string $search = null, int $perPage = 15): LengthAwarePaginator
+    public function getAllWithSearchEager(?string $search, int $perPage, int $page): LengthAwarePaginator
     {
         return EloquentPayment::with([
             'user:id,name,last_name',
@@ -84,7 +83,8 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
                 $sub->where('concept_name', 'like', "%$search%")
             );
         })
-        ->paginate($perPage);
+        ->paginate($perPage, ['*'], 'page', $page)
+        ->through(fn($p) => MappersPaymentMapper::toListItemResponse($p));
     }
 
 
@@ -107,10 +107,6 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
 
         $eloquent= EloquentPayment::findOrFail($payment->id);
 
-        if (!$eloquent) {
-            logger()->warning("No se encontró el pago con ID {$payment->id}");
-            return;
-        }
         $paymentMethodDetails = $this->formatPaymentMethodDetails($charge->payment_method_details);
         $eloquent->update([
             'payment_method_id' => $savedPaymentMethod?->id,
@@ -135,5 +131,4 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
 
         return (array) $details;
     }
-
 }

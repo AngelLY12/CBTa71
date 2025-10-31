@@ -8,7 +8,11 @@ use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class EloquentUserRepository implements UserRepInterface{
 
@@ -57,6 +61,27 @@ class EloquentUserRepository implements UserRepInterface{
         return $eloquentUser->createToken($name)->plainTextToken;
     }
 
+    public function createRefreshToken(User $user, string $name): string
+    {
+        $eloquentUser = $this->findOrFail($user->id);
+        $refreshToken = bin2hex(random_bytes(64));
+        $eloquentUser->refreshTokens()->create([
+            'token' => hash('sha256', $refreshToken),
+            'expires_at' => now()->addDays(7),
+            'revoked' => false
+        ]);
+        return $refreshToken;
+    }
+
+    public function revokeToken(string $tokenId): void
+    {
+        $token = PersonalAccessToken::find($tokenId);
+
+        if ($token) {
+            $token->delete();
+        }
+    }
+
     public function attachStudentDetail(CreateStudentDetailDTO $detail): User
     {
         $eloquentUser =  $this->findOrFail($detail->user_id);
@@ -84,7 +109,65 @@ class EloquentUserRepository implements UserRepInterface{
 
     private function findOrFail(int $id):EloquentUser
     {
-        return $eloquentUser = EloquentUser::findOrFail($id);
+        return EloquentUser::findOrFail($id);
+    }
+
+    public function bulkInsertWithStudentDetails(array $rows): void
+    {
+        DB::transaction(function () use ($rows) {
+            $users = [];
+            $studentDetails = [];
+            foreach ($rows as $row) {
+                $users[] = [
+                    'name' => $row[0],
+                    'last_name' => $row[1],
+                    'email' => $row[2],
+                    'password' => Hash::make($row[3] ?? 'default123'),
+                    'phone_number' => $row[4],
+                    'birthdate' => !empty($row[5]) ? Carbon::parse($row[5]) : null,
+                    'gender' => $row[6],
+                    'curp' => $row[7],
+                    'address' => [
+                        'street' => $row[8] ?? null,
+                        'city' => $row[9] ?? null,
+                        'state' => $row[10] ?? null,
+                        'zip_code' => $row[11] ?? null,
+                    ],
+                    'stripe_customer_id' => $row[12] ?? null,
+                    'blood_type' => $row[13] ?? null,
+                    'registration_date' => !empty($row[14]) ? Carbon::parse($row[14]) : now(),
+                    'status' => $row[15] ?? 'activo',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            EloquentUser::insert($users);
+
+            $insertedUsers = EloquentUser::whereIn('email', collect($users)->pluck('email'))->get();
+
+            foreach ($insertedUsers as $index => $user) {
+                $row = $rows[$index];
+                $studentDetails[] = [
+                    'user_id' => $user->id,
+                    'career_id' => $row[16],
+                    'n_control' => $row[17],
+                    'semestre'  => $row[18],
+                    'group'     => $row[19],
+                    'workshop'  => $row[20],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            DB::table('student_details')->insert($studentDetails);
+
+            foreach ($insertedUsers as $user) {
+                $user->assignRole('student');
+            }
+        });
+
+
     }
 
 }

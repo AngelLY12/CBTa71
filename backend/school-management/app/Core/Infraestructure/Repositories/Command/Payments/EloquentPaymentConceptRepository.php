@@ -66,10 +66,18 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     public function attachToUsers(PaymentConcept $concept, UserIdListDTO $userIds, bool $replaceRelations=false): PaymentConcept
     {
         $pc = $this->findOrFail($concept->id);
+        $chunkSize = 50;
+
         if($replaceRelations){
-            $pc->users()->sync($userIds->userIds);
+           $pc->users()->detach();
+
+            foreach (array_chunk($userIds->userIds, $chunkSize) as $chunk) {
+                $pc->users()->attach($chunk);
+            }
         }else{
-            $pc->users()->syncWithoutDetaching($userIds->userIds);
+            foreach (array_chunk($userIds->userIds, $chunkSize) as $chunk) {
+                $pc->users()->syncWithoutDetaching($chunk);
+            }
         }
         return PaymentConceptMapper::toDomain($pc);
 

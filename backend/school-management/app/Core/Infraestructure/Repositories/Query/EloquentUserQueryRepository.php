@@ -10,15 +10,18 @@ use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
+use App\Core\Infraestructure\Repositories\Traits\HasPendingQuery;
+use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class EloquentUserQueryRepository implements UserQueryRepInterface
 {
+    use HasPendingQuery;
+
     public function getUserIdsByControlNumbers(array $controlNumbers): UserIdListDTO
     {
-        $ids = EloquentUser::whereHas('studentDetail', function ($q) use ($controlNumbers) {
-            $q->whereIn('n_control', $controlNumbers);
-        })
+        $ids = EloquentUser::whereHas('studentDetail', fn($q) => $q->whereIn('n_control', $controlNumbers))
         ->where('status', 'activo')
         ->pluck('id')
         ->toArray();
@@ -26,7 +29,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return MappersUserMapper::toUserIdListDTO($ids);
     }
 
-    public function countStudents(bool $onlyThisYear = false): int
+    public function countStudents(bool $onlyThisYear): int
     {
         $students = EloquentUser::role('student')->where('status','activo');
         if($onlyThisYear){
@@ -50,7 +53,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return $user ? UserMapper::toDomain($user) : null;
     }
 
-    public function findActiveStudents(?string $search, int $perPage = 15): LengthAwarePaginator
+    public function findActiveStudents(?string $search, int $perPage, int $page): LengthAwarePaginator
     {
        $studentsQuery = EloquentUser::role('student')->select('id','name','last_name','email')
         ->where('status','activo')
@@ -65,7 +68,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
               });
             });
         }
-        return $studentsQuery->paginate($perPage);
+        return $studentsQuery->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function getRecipients(PaymentConcept $concept, string $appliesTo): array
@@ -83,13 +86,46 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             'todos' => $usersQuery,
         };
 
-        $users = $usersQuery->get();
-        return $users->map(fn($u) => MappersUserMapper::toRecipientDTO($u->toArray()))->toArray();
+        $recipients = [];
+        $usersQuery->chunk(100, function($users) use (&$recipients) {
+            foreach ($users as $user) {
+                $recipients[] = MappersUserMapper::toRecipientDTO($user->toArray());
+            }
+        });
+        return $recipients;
     }
 
     public function hasRole(User $user, string $role): bool
     {
         $eloquentUser = EloquentUser::find($user->id);
         return $eloquentUser ? $eloquentUser->hasRole($role) : false;
+    }
+
+    public function getStudentsWithPendingSummary(array $userIds): array
+    {
+        if (empty($userIds)) return [];
+
+        $rows = $this->basePendingQuery($userIds)
+            ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
+            ->leftJoin('careers', 'careers.id', '=', 'student_details.career_id')
+            ->selectRaw("
+                users.id AS user_id,
+                CONCAT(users.name, ' ', users.last_name) AS full_name,
+                student_details.semestre AS semestre,
+                careers.career_name AS career,
+                COUNT(payment_concepts.id) AS total_count,
+                COALESCE(SUM(payment_concepts.amount), 0) AS total_amount
+            ")
+            ->groupBy('users.id', 'users.name', 'users.last_name', 'student_details.semestre', 'careers.career_name')
+            ->get();
+
+        return $rows->map(fn($r) => MappersUserMapper::toUserWithPendingSummaryResponse([
+            'user_id' => (int)$r->user_id,
+            'name' => $r->full_name,
+            'semestre' => $r->semestre,
+            'career' => $r->career ?? null,
+            'total_count' => (int)$r->total_count,
+            'total_amount' => (float)$r->total_amount,
+        ]))->toArray();
     }
 }

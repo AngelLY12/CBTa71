@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Infraestructure\Command\Repositories;
+namespace App\Core\Infraestructure\Repositories\Command;
 
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Entities\StudentDetail;
