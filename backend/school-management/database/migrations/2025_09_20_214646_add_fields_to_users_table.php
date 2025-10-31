@@ -20,10 +20,12 @@ return new class extends Migration
             $table->enum('gender',array('Hombre','Mujer'))->nullable()->after('birthdate');
             $table->char('curp',18)->after('gender')->unique();
             $table->json('address')->nullable()->after('curp');
-            $table->string('stripe_customer_id',50)->nullable()->unique()->index();
+            $table->string('stripe_customer_id',50)->nullable()->unique();
             $table->enum('blood_type',['O+','O-','A+','A-','B+','B-','AB+','AB-'])->nullable();
             $table->date('registration_date');
             $table->enum('status',['activo','baja','eliminado'])->default('activo');
+            $table->index(['last_name', 'created_at','status']);
+
         });
         Schema::create('student_details', function (Blueprint $table) {
             $table->id();

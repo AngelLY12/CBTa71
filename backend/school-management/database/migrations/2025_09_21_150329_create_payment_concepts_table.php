@@ -13,15 +13,16 @@ return new class extends Migration
     {
         Schema::create('payment_concepts', function (Blueprint $table) {
             $table->id();
-            $table->string('concept_name')->index();
+            $table->string('concept_name');
             $table->text('description')->nullable();
-            $table->enum('status',['activo','finalizado','desactivado','eliminado'])->default('activo')->index();
-            $table->date('start_date')->index();
+            $table->enum('status',['activo','finalizado','desactivado','eliminado'])->default('activo');
+            $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->integer('amount')->index();
+            $table->integer('amount');
             $table->string('applies_to',25)->default('todos');
             $table->boolean('is_global')->default(false);
             $table->timestamps();
+            $table->index(['status', 'created_at','is_global','applies_to', 'start_date', 'end_date', 'concept_name']);
         });
     }
 
