@@ -45,5 +45,5 @@ echo "Ejecutando seeders..."
 php artisan db:seed --force || { echo "Error al ejecutar seeders"; exit 1; }
 
 echo "Todo listo, iniciando aplicación laravel..."
-exec "$@"
+exec php artisan serve --host=0.0.0.0 --port=${PORT}
 
