@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-echo "Ajustando permisos de Laravel..."
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
 
 echo "Probando conexión a la base de datos..."
 php -r "
