@@ -12,6 +12,9 @@ interface UserRepInterface{
     public function findById(int $userId):User;
     public function update(User $user, array $fields):User;
     public function createToken(User $user, string $name): string;
+    public function createRefreshToken(User $user, string $name): string;
+    public function revokeToken(string $tokenId): void;
     public function attachStudentDetail(CreateStudentDetailDTO $details): User;
     public function getUserWithStudentDetail(User $user):User;
+    public function bulkInsertWithStudentDetails(array $users): void;
 }
