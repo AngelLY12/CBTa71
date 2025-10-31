@@ -58,10 +58,6 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 # Stage 2: Production environment
 FROM php:8.4-fpm
-
-# Instala Nginx y librerías necesarias
-RUN apt-get update && apt-get install -y nginx supervisor
-
 # Install only runtime libraries needed in production
 # libfcgi-bin and procps are required for the php-fpm-healthcheck script
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -114,10 +110,10 @@ RUN chown -R www-data:www-data /var/www
 
 # Switch to the non-privileged user to run the application
 USER www-data
-COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY ./docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Change the default command to run the entrypoint script
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Expose port 9000 and start php-fpm server
-EXPOSE 8080
+EXPOSE 9000
+CMD ["php-fpm"]
