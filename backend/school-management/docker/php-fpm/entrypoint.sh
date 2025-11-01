@@ -13,6 +13,6 @@ php artisan db:seed --force || { echo "Error al ejecutar seeders"; exit 1; }
 
 echo "Puerto de laravel: ${PORT}"
 
-echo "Todo listo, iniciando aplicación laravel..."
-exec php-fpm
+echo "Iniciando supervisord..."
+exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
 
