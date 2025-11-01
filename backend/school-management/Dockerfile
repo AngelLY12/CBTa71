@@ -106,12 +106,7 @@ COPY --from=builder /var/www /var/www
 WORKDIR /var/www
 
 # Ensure correct permissions
-RUN chown -R www-data:www-data /var/www \
-    && find /var/www -type f -exec chmod 644 {} \; \
-    && find /var/www -type d -exec chmod 755 {} \; \
-    && mkdir -p /var/www/storage /var/www/bootstrap/cache \
-    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/www
 
 # Switch to the non-privileged user to run the application
 USER www-data
