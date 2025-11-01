@@ -18,8 +18,6 @@ echo "Puerto de Laravel: ${PORT:-80}"
 
 echo "Laravel preparado. Iniciando servicios..."
 
-# Iniciar PHP-FPM en background
-php-fpm -D
 
 # Iniciar Nginx en foreground (Railway necesita un proceso principal)
-exec nginx -g "daemon off;"
+exec php-fpm
