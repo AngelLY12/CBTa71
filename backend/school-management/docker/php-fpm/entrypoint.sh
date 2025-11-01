@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Crear carpetas necesarias si no existen
+mkdir -p /var/www/storage /var/www/bootstrap/cache
+
+# Ajustar permisos para el usuario www-data
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 echo "Probando conexión a la base de datos..."
 php -r "
