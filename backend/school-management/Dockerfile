@@ -106,11 +106,16 @@ COPY --from=builder /var/www /var/www
 WORKDIR /var/www
 
 # Ensure correct permissions
-RUN chown -R www-data:www-data /var/www
+RUN chown -R www-data:www-data /var/www \
+    && find /var/www -type f -exec chmod 644 {} \; \
+    && find /var/www -type d -exec chmod 755 {} \;
+
+# Dar permisos de escritura solo a las carpetas necesarias
+RUN mkdir -p /var/www/storage /var/www/bootstrap/cache /var/www/logs/supervisor \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/logs/supervisor
 
 # Switch to the non-privileged user to run the application
 USER www-data
-
 # Change the default command to run the entrypoint script
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
