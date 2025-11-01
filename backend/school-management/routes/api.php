@@ -103,3 +103,8 @@ Route::fallback(function () {
     return response()->json(['message' => 'Endpoint no encontrado'], 404);
 });
 
+Route::get('/test-error', function () {
+    throw new \InvalidArgumentException('Error de prueba');
+});
+
+

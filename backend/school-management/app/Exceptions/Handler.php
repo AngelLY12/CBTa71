@@ -12,7 +12,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
-
+use App\Exceptions\DomainException;
 
 class Handler extends ExceptionHandler
 {
