@@ -62,8 +62,12 @@ FROM php:8.4-fpm
 # Install only runtime libraries needed in production
 # libfcgi-bin and procps are required for the php-fpm-healthcheck script
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx supervisor libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libicu-dev libpq-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    libpq-dev \
+    libicu-dev \
+    libzip-dev \
+    libfcgi-bin \
+    procps \
+    && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Download and install php-fpm health check script
 RUN curl -o /usr/local/bin/php-fpm-healthcheck \
@@ -72,7 +76,6 @@ RUN curl -o /usr/local/bin/php-fpm-healthcheck \
 
 # Copy the initialization script
 COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
-COPY ./docker/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY ./docker/php-fpm/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
@@ -104,16 +107,7 @@ COPY --from=builder /var/www /var/www
 # Set working directory
 WORKDIR /var/www
 
-# Ensure correct permissions
-RUN chown -R www-data:www-data /var/www
-RUN mkdir -p /var/lib/nginx/body \
-    && chown -R www-data:www-data /var/lib/nginx /var/www
-RUN mkdir -p /var/run && chown www-data:www-data /var/run
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-
-# Switch to the non-privileged user to run the application
-USER www-data
-
-# Expose port 80 and start php-fpm server
-EXPOSE 80
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# Expose port 9000 and start php-fpm server
+EXPOSE 9000
+CMD ["php-fpm"]
