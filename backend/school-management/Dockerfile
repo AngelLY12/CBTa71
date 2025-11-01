@@ -106,6 +106,8 @@ WORKDIR /var/www
 
 # Ensure correct permissions
 RUN chown -R www-data:www-data /var/www
+RUN mkdir -p /var/lib/nginx/body \
+    && chown -R www-data:www-data /var/lib/nginx /var/www
 RUN mkdir -p /var/run && chown www-data:www-data /var/run
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
