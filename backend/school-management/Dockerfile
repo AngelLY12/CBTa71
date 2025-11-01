@@ -108,10 +108,9 @@ WORKDIR /var/www
 # Ensure correct permissions
 RUN chown -R www-data:www-data /var/www \
     && find /var/www -type f -exec chmod 644 {} \; \
-    && find /var/www -type d -exec chmod 755 {} \;
-
-# Dar permisos de escritura solo a las carpetas necesarias
-RUN mkdir -p /var/www/storage /var/www/bootstrap/cache \
+    && find /var/www -type d -exec chmod 755 {} \; \
+    && mkdir -p /var/www/storage /var/www/bootstrap/cache \
+    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
     && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 # Switch to the non-privileged user to run the application
