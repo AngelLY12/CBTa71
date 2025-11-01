@@ -106,6 +106,8 @@ WORKDIR /var/www
 
 # Ensure correct permissions
 RUN chown -R www-data:www-data /var/www
+RUN mkdir -p /var/run && chown www-data:www-data /var/run
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # Switch to the non-privileged user to run the application
 USER www-data
