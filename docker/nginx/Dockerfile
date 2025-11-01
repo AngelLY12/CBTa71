@@ -1,7 +1,7 @@
 FROM nginx:stable-alpine
 
 COPY default.conf /etc/nginx/conf.d/default.conf
-COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh
 RUN mkdir -p /var/www
