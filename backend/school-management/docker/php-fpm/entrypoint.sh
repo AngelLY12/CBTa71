@@ -1,13 +1,6 @@
 #!/bin/bash
 set -e
 
-# Crear carpetas necesarias si no existen
-mkdir -p /var/www/storage /var/www/bootstrap/cache
-
-# Ajustar permisos para el usuario www-data
-chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-chmod -R 775 /var/www/storage /var/www/bootstrap/cache
-
 echo "Probando conexión a la base de datos..."
 php -r "
 \$host = getenv('DB_HOST');
@@ -56,8 +49,7 @@ php artisan migrate --force || { echo "Error al migrar"; exit 1; }
 echo "Ejecutando seeders..."
 php artisan db:seed --force || { echo "Error al ejecutar seeders"; exit 1; }
 
-echo "Últimas líneas del log de Laravel:"
-tail -n 40 storage/logs/laravel.log || echo "No hay log aún."
+echo "Puerto de laravel: ${PORT}"
 
 echo "Todo listo, iniciando aplicación laravel..."
 exec php-fpm

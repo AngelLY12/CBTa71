@@ -58,6 +58,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 # Stage 2: Production environment
 FROM php:8.4-fpm
+
 # Install only runtime libraries needed in production
 # libfcgi-bin and procps are required for the php-fpm-healthcheck script
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -110,6 +111,7 @@ RUN chown -R www-data:www-data /var/www
 
 # Switch to the non-privileged user to run the application
 USER www-data
+
 # Change the default command to run the entrypoint script
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
