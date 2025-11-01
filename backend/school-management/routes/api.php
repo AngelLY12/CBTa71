@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\TestDomainException;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RefreshTokenController;
@@ -103,8 +104,8 @@ Route::fallback(function () {
     return response()->json(['message' => 'Endpoint no encontrado'], 404);
 });
 
-Route::get('/test', function () {
-    echo "Prueba de endpoint";
+Route::get('/test-error', function () {
+    throw new TestDomainException();
 });
 
 

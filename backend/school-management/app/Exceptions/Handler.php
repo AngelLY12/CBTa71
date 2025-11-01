@@ -24,6 +24,7 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $e)
     {
+        logger('Handler ejecutado con: ' . get_class($e));
 
         if ($e instanceof DomainException) {
             return response()->json([
