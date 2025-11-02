@@ -9,6 +9,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @OA\Tag(
+ *     name="Cards",
+ *     description="Gestión de métodos de pago (tarjetas) asociados a los usuarios"
+ * )
+ */
 class CardsController extends Controller
 {
     protected CardsServiceFacades $cardsService;
@@ -18,6 +24,46 @@ class CardsController extends Controller
         $this->cardsService=$cardsService;
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v1/cards",
+     *     tags={"Cards"},
+     *     summary="Listar métodos de pago del usuario autenticado",
+     *     description="Obtiene la lista de tarjetas o métodos de pago asociados al usuario autenticado. Permite forzar actualización del caché.",
+     *     operationId="getUserCards",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="forceRefresh",
+     *         in="query",
+     *         description="Forzar actualización de caché (true o false)",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de métodos de pago obtenida correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="cards", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="string", example="pm_1P7E89AjcPzVqRkV"),
+     *                         @OA\Property(property="brand", type="string", example="visa"),
+     *                         @OA\Property(property="last4", type="string", example="4242"),
+     *                         @OA\Property(property="exp_month", type="integer", example=12),
+     *                         @OA\Property(property="exp_year", type="integer", example=2030)
+     *                     )
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", nullable=true, example="No se encontraron métodos de pago.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autorizado - Token inválido o ausente"
+     *     )
+     * )
+     */
     public function index(Request $request)
     {
        $user = Auth::user();
@@ -31,7 +77,25 @@ class CardsController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * @OA\Post(
+     *     path="/api/v1/cards",
+     *     tags={"Cards"},
+     *     summary="Registrar un nuevo método de pago",
+     *     description="Crea una sesión de Stripe Checkout para registrar una nueva tarjeta del usuario autenticado.",
+     *     operationId="addUserCard",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=201,
+     *         description="Sesión de registro de método de pago creada exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="url_checkout", type="string", example="https://checkout.stripe.com/pay/cs_test_a1b2c3...")
+     *             )
+     *         )
+     *     ),
+     *
+     * )
      */
     public function store(Request $request)
     {
@@ -48,7 +112,34 @@ class CardsController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     *     path="/api/v1/cards/{paymentMethodId}",
+     *     tags={"Cards"},
+     *     summary="Eliminar un método de pago",
+     *     description="Elimina un método de pago específico asociado al usuario autenticado.",
+     *     operationId="deleteUserCard",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="paymentMethodId",
+     *         in="path",
+     *         description="ID del método de pago a eliminar (por ejemplo, 'pm_1P7E89AjcPzVqRkV')",
+     *         required=true,
+     *         @OA\Schema(type="string", example="pm_1P7E89AjcPzVqRkV")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Método de pago eliminado correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Método de pago eliminado correctamente")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Método de pago no encontrado"
+     *     ),
+     *
+     * )
      */
     public function destroy(string $paymentMethodId)
     {

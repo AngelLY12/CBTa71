@@ -10,7 +10,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PaymentConcept;
 
-
+/**
+ * @OA\Tag(
+ *     name="Payment Concepts",
+ *     description="Gestión de conceptos de pago en el sistema (creación, actualización, activación, eliminación, etc.)"
+ * )
+ */
 class ConceptsController extends Controller
 {
     protected ConceptsServiceFacades $conceptsService;
@@ -22,6 +27,60 @@ class ConceptsController extends Controller
 
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/v1/concepts",
+     *     summary="Listar conceptos de pago",
+     *     description="Obtiene una lista paginada de conceptos de pago, con filtros opcionales por estado y control de caché.",
+     *     tags={"Payment Concepts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filtra por estado (ej. 'activo', 'todos', etc)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="activo")
+     *     ),
+     *     @OA\Parameter(
+     *         name="perPage",
+     *         in="query",
+     *         description="Cantidad de registros por página",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de página a obtener",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="forceRefresh",
+     *         in="query",
+     *         description="Si es true, fuerza actualización de caché",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Listado de conceptos de pago obtenido exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="concepts", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="concept_name", type="string", example="Pago de inscripción"),
+     *                         @OA\Property(property="amount", type="number", format="float", example=1500.00),
+     *                         @OA\Property(property="status", type="string", example="activo")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function index(Request $request)
     {
         $status = strtolower($request->input('status','todos'));
@@ -39,7 +98,48 @@ class ConceptsController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * @OA\Post(
+     *     path="/api/v1/concepts",
+     *     summary="Crear un nuevo concepto de pago",
+     *     description="Crea un nuevo concepto de pago y lo asocia con las entidades correspondientes (carreras, semestres, estudiantes).",
+     *     tags={"Payment Concepts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"concept_name", "status", "start_date", "amount", "is_global", "applies_to"},
+     *             @OA\Property(property="concept_name", type="string", example="Pago de reinscripción"),
+     *             @OA\Property(property="description", type="string", example="Pago correspondiente al semestre agosto-diciembre."),
+     *             @OA\Property(property="status", type="string", example="activo"),
+     *             @OA\Property(property="start_date", type="string", format="date", example="2025-08-01"),
+     *             @OA\Property(property="end_date", type="string", format="date", example="2025-09-01"),
+     *             @OA\Property(property="amount", type="number", example=1500.00),
+     *             @OA\Property(property="is_global", type="boolean", example=true),
+     *             @OA\Property(property="applies_to", type="string", example="todos"),
+     *             @OA\Property(property="semestres", type="array", @OA\Items(type="integer", example=5)),
+     *             @OA\Property(property="careers", type="array", @OA\Items(type="integer", example=3)),
+     *             @OA\Property(property="students", type="array", @OA\Items(type="integer", example=12))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Concepto de pago creado exitosamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="concept", type="object",
+     *                     @OA\Property(property="id", type="integer", example=5),
+     *                     @OA\Property(property="concept_name", type="string", example="Pago de reinscripción"),
+     *                     @OA\Property(property="status", type="string", example="activo")
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Concepto de pago creado con éxito.")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Error en la validación de datos"),
+     *     @OA\Response(response=409, description="Conflicto en los datos"),
+     *     @OA\Response(response=404, description="Recurso no encontrado")
+     * )
      */
     public function store(Request $request)
     {
@@ -92,6 +192,73 @@ class ConceptsController extends Controller
 
     }
 
+   /**
+     * @OA\Put(
+     *     path="/api/v1/concepts/{id}",
+     *     summary="Actualizar un concepto de pago",
+     *     description="Actualiza los datos de un concepto de pago existente. Todos los campos son opcionales (usar 'sometimes'), excepto el id en la ruta.",
+     *     tags={"Payment Concepts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID del concepto de pago",
+     *         @OA\Schema(type="integer", example=5)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="concept_name", type="string", example="Pago actualizado"),
+     *             @OA\Property(property="description", type="string", example="Descripción actualizada del concepto"),
+     *             @OA\Property(property="status", type="string", example="activo"),
+     *             @OA\Property(property="start_date", type="string", format="date", example="2025-08-01"),
+     *             @OA\Property(property="end_date", type="string", format="date", example="2025-09-01"),
+     *             @OA\Property(property="amount", type="number", format="float", example=1200.50),
+     *             @OA\Property(property="is_global", type="boolean", example=false),
+     *             @OA\Property(property="applies_to", type="string", example="carrera"),
+     *             @OA\Property(
+     *                 property="semestres",
+     *                 type="array",
+     *                 @OA\Items(type="integer", example=5),
+     *                 description="Array de ids/valores de semestres (opcional)"
+     *             ),
+     *             @OA\Property(
+     *                 property="careers",
+     *                 type="array",
+     *                 @OA\Items(type="integer", example=3),
+     *                 description="Array de ids de carreras (opcional)"
+     *             ),
+     *             @OA\Property(
+     *                 property="students",
+     *                 type="array",
+     *                 @OA\Items(type="integer", example=12),
+     *                 description="Array de ids de estudiantes (opcional)"
+     *             ),
+     *             @OA\Property(property="replaceRelations", type="boolean", example=true, description="Si true, reemplaza relaciones en vez de anexar")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Concepto actualizado correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="concept", type="object",
+     *                     @OA\Property(property="id", type="integer", example=5),
+     *                     @OA\Property(property="concept_name", type="string", example="Pago actualizado"),
+     *                     @OA\Property(property="amount", type="number", example=1200.50),
+     *                     @OA\Property(property="status", type="string", example="activo")
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Concepto de pago actualizado correctamente.")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Error en la validación de datos"),
+     *     @OA\Response(response=409, description="Conflicto en los datos"),
+     *     @OA\Response(response=404, description="Recurso no encontrado")
+     * )
+     */
       public function update(Request $request, PaymentConcept $concept)
     {
         $data = $request->only([
@@ -145,8 +312,17 @@ class ConceptsController extends Controller
         ]);
     }
 
+
     /**
-     * Finalizar un concepto de pago.
+     * @OA\Post(
+     *     path="/api/v1/concepts/{id}/finalize",
+     *     summary="Finalizar concepto de pago",
+     *     tags={"Payment Concepts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Concepto de pago finalizado correctamente"),
+     *     @OA\Response(response=409, description="Conflicto en los datos")
+     * )
      */
     public function finalize(PaymentConcept $concept)
     {
@@ -159,6 +335,18 @@ class ConceptsController extends Controller
             'message' => 'Concepto de pago finalizado correctamente.'
         ]);
     }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/concepts/{id}/disable",
+     *     summary="Deshabilitar un concepto de pago",
+     *     tags={"Payment Concepts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Concepto de pago deshabilitado correctamente"),
+     *     @OA\Response(response=409, description="Conflicto en los datos")
+     * )
+     */
     public function disable(PaymentConcept $concept)
     {
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
@@ -171,6 +359,17 @@ class ConceptsController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/v1/concepts/{id}/activate",
+     *     summary="Habilitar un concepto de pago",
+     *     tags={"Payment Concepts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Concepto de pago habilitado correctamente"),
+     *     @OA\Response(response=409, description="Conflicto en los datos")
+     * )
+     */
     public function activate(PaymentConcept $concept)
     {
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
@@ -183,6 +382,16 @@ class ConceptsController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/v1/concepts/{id}",
+     *     summary="Eliminar concepto de pago (físicamente)",
+     *     tags={"Payment Concepts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Concepto de pago eliminado correctamente")
+     * )
+     */
     public function eliminate(PaymentConcept $concept)
     {
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
@@ -194,6 +403,16 @@ class ConceptsController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/v1/concepts/{id}/logical",
+     *     summary="Eliminar concepto de pago (lógicamente)",
+     *     tags={"Payment Concepts"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Concepto eliminado lógicamente correctamente"),
+     *     @OA\Response(response=409, description="Conflicto en los datos")
+     * )
+     */
     public function eliminateLogical(PaymentConcept $concept)
     {
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);

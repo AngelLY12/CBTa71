@@ -10,6 +10,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 
+
+/**
+ * @OA\Tag(
+ *     name="Admin",
+ *     description="Endpoints para gestión administrativa (asignación e importación de usuarios)"
+ * )
+ */
 class AdminController extends Controller
 {
     private AdminService $service;
@@ -19,6 +26,58 @@ class AdminController extends Controller
         $this->service= $service;
     }
 
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/admin-actions/attach-student",
+     *     summary="Asociar detalles de estudiante a un usuario existente",
+     *     description="Permite asignar información académica a un usuario, incluyendo carrera, semestre, grupo y taller.",
+     *     tags={"Admin"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"user_id", "career_id", "n_control", "semestre", "group", "workshop"},
+     *             @OA\Property(property="user_id", type="integer", example=12),
+     *             @OA\Property(property="career_id", type="integer", example=3),
+     *             @OA\Property(property="n_control", type="string", example="2020456789"),
+     *             @OA\Property(property="semestre", type="integer", example=5),
+     *             @OA\Property(property="group", type="string", example="B"),
+     *             @OA\Property(property="workshop", type="string", example="Taller de Robótica")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Usuario asociado correctamente a un detalle de estudiante.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="user", type="object",
+     *                     @OA\Property(property="id", type="integer", example=12),
+     *                     @OA\Property(property="name", type="string", example="Carlos Pérez"),
+     *                     @OA\Property(property="career", type="string", example="Ingeniería en Sistemas"),
+     *                     @OA\Property(property="n_control", type="string", example="2020456789"),
+     *                     @OA\Property(property="semestre", type="integer", example=5),
+     *                     @OA\Property(property="group", type="string", example="B"),
+     *                     @OA\Property(property="workshop", type="string", example="Taller de Robótica")
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Se asociarón correctamente los datos al estudiante.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error en la validación de datos",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Error en la validación de datos."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(property="user_id", type="array", @OA\Items(type="string", example="El campo user_id es obligatorio."))
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function attachStudent(Request $request)
     {
         $data= $request->only([
@@ -55,7 +114,7 @@ class AdminController extends Controller
         return response()->json([
             'success' => true,
             'data' => ['user'=>$user],
-            'message' => 'El usuario ha sido creado con éxito.',
+            'message' => 'Se asociarón correctamente los datos al estudiante.',
         ]);
 
     }
