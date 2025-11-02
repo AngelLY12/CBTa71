@@ -30,8 +30,5 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-        app()->singleton(
-            Illuminate\Contracts\Debug\ExceptionHandler::class,
-            App\Exceptions\Handler::class
-        );
+        $exceptions->use(App\Exceptions\Handler::class);
     })->create();

@@ -104,8 +104,15 @@ Route::fallback(function () {
     return response()->json(['message' => 'Endpoint no encontrado'], 404);
 });
 
+Route::get('/up', fn() => response()->json(['ok' => true]));
+
 Route::get('/test-error', function () {
     throw new TestDomainException();
 });
+
+Route::get('/test', function () {
+    echo "Hola test";
+});
+
 
 
