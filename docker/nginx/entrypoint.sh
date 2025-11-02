@@ -1,11 +1,10 @@
 #!/bin/sh
 set -e
 
-NGINX_CMD="nginx -g 'daemon off;'"
 LARAVEL_URL="http://localhost/health"
 CHECK_INTERVAL=10
 
-$NGINX_CMD &
+nginx -g "daemon off;" &
 NGINX_PID=$!
 
 while true; do
