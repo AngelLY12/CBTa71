@@ -1,6 +1,6 @@
 <?php
 
-use App\Exceptions\TestDomainException;
+use App\Exceptions\Test\TestDomainException;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RefreshTokenController;
