@@ -9,6 +9,8 @@ php artisan cache:clear || echo "No se pudo limpiar cache"
 php artisan route:clear || echo "No se pudo limpiar rutas"
 php artisan optimize:clear || echo "No se pudo limpiar"
 
+php artisan l5-swagger:generate || echo "No se pudo generar la documentación"
+
 echo "Ejecutando migraciones..."
 php artisan migrate --force || { echo "Error al migrar"; exit 1; }
 
