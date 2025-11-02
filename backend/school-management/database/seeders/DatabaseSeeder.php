@@ -89,6 +89,9 @@ class DatabaseSeeder extends Seeder
 
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $adminRole->syncPermissions($adminPermissions);
+
+        $this->call(AdminUserSeeder::class);
+
     }
 
 }
