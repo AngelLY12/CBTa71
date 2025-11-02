@@ -2,7 +2,7 @@
 set -e
 
 MAX_ATTEMPTS=20
-SLEEP_TIME=5
+SLEEP_TIME=10
 
 echo "Esperando a que PHP-FPM esté listo..."
 
@@ -19,6 +19,8 @@ for i in $(seq 1 $MAX_ATTEMPTS); do
     echo "Laravel no respondió después de $((MAX_ATTEMPTS*SLEEP_TIME)) segundos. Iniciando Nginx de todos modos..."
   fi
 done
+
+sleep $SLEEP_TIME
 
 echo "Iniciando Nginx..."
 exec nginx -g "daemon off;"
