@@ -9,7 +9,7 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
-use App\Exceptions\ConceptNotFoundException;
+use App\Exceptions\NotFound\ConceptNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 class PayConceptUseCase

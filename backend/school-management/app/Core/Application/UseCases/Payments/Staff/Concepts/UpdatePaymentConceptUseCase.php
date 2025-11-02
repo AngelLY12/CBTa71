@@ -4,24 +4,21 @@ namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\Mappers\MailMapper;
-use App\Core\Application\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
-use App\Exceptions\CareerSemesterInvalidException;
-use App\Exceptions\CareersNotFoundException;
-use App\Exceptions\ConceptAppliesToConflictException;
-use App\Exceptions\ConceptNotFoundException;
-use App\Exceptions\RecipientsNotFoundException;
-use App\Exceptions\SemestersNotFoundException;
-use App\Exceptions\StudentsNotFoundException;
+use App\Exceptions\Conflict\ConceptAppliesToConflictException;
+use App\Exceptions\NotFound\CareersNotFoundException;
+use App\Exceptions\NotFound\ConceptNotFoundException;
+use App\Exceptions\NotFound\RecipientsNotFoundException;
+use App\Exceptions\NotFound\StudentsNotFoundException;
+use App\Exceptions\Validation\CareerSemesterInvalidException;
+use App\Exceptions\Validation\SemestersNotFoundException;
 use App\Jobs\SendMailJob;
 use App\Mail\NewConceptMail;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
 
 class UpdatePaymentConceptUseCase
 {

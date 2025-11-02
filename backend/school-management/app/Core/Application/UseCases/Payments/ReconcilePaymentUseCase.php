@@ -9,9 +9,9 @@ use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Exceptions\DomainException;
-use App\Exceptions\PaymentMethodNotFoundException;
-use App\Exceptions\PaymentNotificationException;
-use App\Exceptions\PaymentReconciliationException;
+use App\Exceptions\NotFound\PaymentMethodNotFoundException;
+use App\Exceptions\ServerError\PaymentNotificationException;
+use App\Exceptions\ServerError\PaymentReconciliationException;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentValidatedMail;
 

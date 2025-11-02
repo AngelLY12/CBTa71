@@ -14,9 +14,9 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use Illuminate\Support\Facades\DB;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
-use App\Exceptions\ConceptNotFoundException;
-use App\Exceptions\PaymentMethodNotFoundException;
-use App\Exceptions\UserNotFoundException;
+use App\Exceptions\NotFound\ConceptNotFoundException;
+use App\Exceptions\NotFound\PaymentMethodNotFoundException;
+use App\Exceptions\NotFound\UserNotFoundException;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentValidatedMail;
 
