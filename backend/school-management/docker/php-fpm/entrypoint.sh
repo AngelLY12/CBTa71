@@ -9,6 +9,8 @@ php artisan cache:clear || echo "No se pudo limpiar cache"
 php artisan route:clear || echo "No se pudo limpiar rutas"
 php artisan optimize:clear || echo "No se pudo limpiar"
 
+php artisan route:list | findstr documentation
+php artisan vendor:publish --provider "L5Swagger\L5SwaggerServiceProvider"
 php artisan l5-swagger:generate || echo "No se pudo generar la documentación"
 
 echo "Ejecutando migraciones..."
