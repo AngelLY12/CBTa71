@@ -4,25 +4,22 @@ set -e
 LARAVEL_HOST="cbta71.railway.internal"
 LARAVEL_PORT=9000
 HEALTH_URL="https://$LARAVEL_HOST/api/up"
+MAX_ATTEMPTS=20
+SLEEP_TIME=10
 
-echo "Esperando a Laravel antes de iniciar Nginx..."
+echo "Esperando a que Laravel esté listo..."
 
-for i in $(seq 1 10); do
-  if curl -fs "$HEALTH_URL" >/dev/null; then
-    echo "Laravel HTTP está listo"
+for i in $(seq 1 $MAX_ATTEMPTS); do
+  if curl -fs "$HEALTH_URL" >/dev/null 2>&1; then
+    echo "Laravel HTTP está listo (intento $i/$MAX_ATTEMPTS)"
     break
   fi
 
-  if nc -z "$LARAVEL_HOST" "$LARAVEL_PORT"; then
-    echo "Laravel (PHP-FPM) está listo en $LARAVEL_HOST:$LARAVEL_PORT"
-    break
-  fi
+  echo "Esperando a Laravel... (intento $i/$MAX_ATTEMPTS)"
+  sleep $SLEEP_TIME
 
-  echo "Esperando a Laravel... ($i/20)"
-  sleep 18
-
-  if [ "$i" -eq 20 ]; then
-    echo "Laravel no respondió después de 180 segundos. Iniciando Nginx de todos modos..."
+  if [ "$i" -eq $MAX_ATTEMPTS ]; then
+    echo "Laravel no respondió después de $((MAX_ATTEMPTS*SLEEP_TIME)) segundos. Iniciando Nginx de todos modos..."
   fi
 done
 
