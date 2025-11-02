@@ -1,4 +1,5 @@
 <?php
+namespace App\Swagger;
 
 /**
  * @OA\Info(
@@ -25,3 +26,4 @@
  *     description="Servidor de producción"
  * )
  */
+class SwaggerInfo{}
