@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 LARAVEL_HOST="cbta71.railway.internal"
