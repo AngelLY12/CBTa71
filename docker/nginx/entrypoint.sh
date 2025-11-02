@@ -1,3 +1,4 @@
+#!/bin/bash
 set -e
 
 LARAVEL_HOST="cbta71.railway.internal"
@@ -25,6 +26,5 @@ for i in $(seq 1 10); do
   fi
 done
 
-echo "🚦 Iniciando Nginx..."
+echo "Iniciando Nginx..."
 exec nginx -g "daemon off;"
-
