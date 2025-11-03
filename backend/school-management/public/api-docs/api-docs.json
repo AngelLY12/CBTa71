@@ -175,6 +175,154 @@
                 ]
             }
         },
+        "/api/v1/admin-actions/import": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Importar usuarios desde un archivo Excel",
+                "description": "Permite subir un archivo Excel con los datos de los usuarios para registrarlos masivamente.",
+                "operationId": "681466b5379337f44a10ff79de6c51fe",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "Archivo Excel (.xlsx) con la información de los usuarios a importar",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuarios importados correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuarios importados correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/update-permissions": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Actualizar permisos a múltiples usuarios",
+                "description": "Permite al administrador agregar o eliminar permisos a varios usuarios al mismo tiempo.\n     *     Se puede especificar una lista de correos electrónicos y los permisos que se añadirán o eliminarán.",
+                "operationId": "updateManyUserPermissions",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "emails"
+                                ],
+                                "properties": {
+                                    "emails": {
+                                        "description": "Lista de correos electrónicos de los usuarios a los que se aplicarán los cambios",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "juan@escuela.edu"
+                                        }
+                                    },
+                                    "permissionsToAdd": {
+                                        "description": "Permisos que se agregarán a los usuarios",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "view payments"
+                                        }
+                                    },
+                                    "permissionsToRemove": {
+                                        "description": "Permisos que se eliminarán de los usuarios",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "delete card"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permisos actualizados correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Permisos actualizados correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación en los datos enviados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El campo emails es obligatorio."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado: el usuario autenticado no tiene permiso para ejecutar esta acción"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/register": {
             "post": {
                 "tags": [
