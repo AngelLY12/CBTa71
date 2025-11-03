@@ -20,7 +20,7 @@ class RegisterUseCase
     {
         UserValidator::ensureUserDataIsValid($create);
         return DB::transaction(function () use ($create) {
-            return $this->userRepo->create(UserMapper::toDomain($create));
+            return $this->userRepo->create($create);
         });
     }
 }

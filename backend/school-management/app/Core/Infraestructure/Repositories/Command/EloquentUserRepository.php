@@ -4,6 +4,8 @@ namespace App\Core\Infraestructure\Repositories\Command;
 
 use App\Core\Application\DTO\CreateStudentDetail;
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
+use App\Core\Application\DTO\Request\User\CreateUserDTO;
+use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Models\User as EloquentUser;
@@ -13,15 +15,16 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
+use Spatie\Permission\Models\Permission;
 
 class EloquentUserRepository implements UserRepInterface{
 
-    public function create(User $user): User
+    public function create(CreateUserDTO $user): User
     {
          $eloquentUser = EloquentUser::create(
             UserMapper::toPersistence($user)
         );
-
+        $eloquentUser->refresh();
         return UserMapper::toDomain($eloquentUser);
     }
 
@@ -167,6 +170,57 @@ class EloquentUserRepository implements UserRepInterface{
             }
         });
 
+
+    }
+
+    public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): void
+    {
+        if (empty($dto->emails)) {
+            return;
+        }
+        $users = EloquentUser::whereIn('email', $dto->emails)->pluck('id')->toArray();
+        if (empty($users)) {
+            return;
+        }
+        $permissionsToAddIds=[];
+        $permissionsToRemoveIds=[];
+        if(!empty($dto->permissionsToAdd)){
+            $permissionsToAddIds = Permission::whereIn('name', $dto->permissionsToAdd)->pluck('id')->toArray();
+        }
+        if(!empty($dto->permissionsToRemove))
+        {
+            $permissionsToRemoveIds = Permission::whereIn('name', $dto->permissionsToRemove)->pluck('id')->toArray();
+        }
+        if (empty($permissionsToAddIds) && empty($permissionsToRemoveIds)) {
+            return;
+        }
+
+        DB::transaction(function () use ($users, $permissionsToAddIds, $permissionsToRemoveIds) {
+        if (!empty($permissionsToRemoveIds)) {
+            DB::table('model_has_permissions')
+                ->whereIn('model_id', $users)
+                ->whereIn('permission_id', $permissionsToRemoveIds)
+                ->where('model_type', EloquentUser::class)
+                ->delete();
+        }
+
+        if (!empty($permissionsToAddIds)) {
+            $rows = [];
+            foreach ($users as $userId) {
+                foreach ($permissionsToAddIds as $permissionId) {
+                    $rows[] = [
+                        'permission_id' => $permissionId,
+                        'model_type' => EloquentUser::class,
+                        'model_id' => $userId,
+                    ];
+                }
+            }
+
+            DB::table('model_has_permissions')->insertOrIgnore($rows);
+        }
+
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+    });
 
     }
 

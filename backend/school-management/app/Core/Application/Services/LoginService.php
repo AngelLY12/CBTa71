@@ -23,6 +23,6 @@ class LoginService{
 
    public function register(CreateUserDTO $user): User
    {
-        return $this->register($user);
+        return $this->register->execute($user);
    }
 }

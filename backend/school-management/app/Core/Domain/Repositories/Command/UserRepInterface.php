@@ -3,10 +3,12 @@
 namespace App\Core\Domain\Repositories\Command;
 
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
+use App\Core\Application\DTO\Request\User\CreateUserDTO;
+use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Domain\Entities\User;
 
 interface UserRepInterface{
-    public function create(User $user):User;
+    public function create(CreateUserDTO $user):User;
     public function getUserByStripeCustomer(string $customerId): User;
     public function findUserByEmail(string $email):?User;
     public function findById(int $userId):User;
@@ -17,4 +19,5 @@ interface UserRepInterface{
     public function attachStudentDetail(CreateStudentDetailDTO $details): User;
     public function getUserWithStudentDetail(User $user):User;
     public function bulkInsertWithStudentDetails(array $users): void;
+    public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): void;
 }

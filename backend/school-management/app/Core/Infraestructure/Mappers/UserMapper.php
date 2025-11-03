@@ -2,6 +2,7 @@
 
 namespace App\Core\Infraestructure\Mappers;
 
+use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\User\UserDataDTO;
 use App\Core\Application\DTO\User\UserPaymentDTO;
 use App\Core\Application\DTO\User\UserRecipientDTO;
@@ -16,7 +17,7 @@ class UserMapper{
     {
 
         $domainUser = new DomainUser(
-            id: $user->id,
+            id: $user->id ,
             name: $user->name,
             last_name: $user->last_name,
             email: $user->email,
@@ -37,7 +38,7 @@ class UserMapper{
         return $domainUser;
 
     }
-    public static function toPersistence(DomainUser $user): array
+    public static function toPersistence(CreateUserDTO $user): array
     {
         return [
             'name' => $user->name,
