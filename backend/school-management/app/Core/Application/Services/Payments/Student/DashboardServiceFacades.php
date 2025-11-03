@@ -29,7 +29,7 @@ class DashboardServiceFacades {
         return $this->cache($key,$forceRefresh ,fn() => $this->pending->execute($user));
     }
 
-    public function paymentsMade(User $user, bool $forceRefresh): int {
+    public function paymentsMade(User $user, bool $forceRefresh): string {
         $key = "$this->prefix:payments:$user->id";
         return $this->cache($key,$forceRefresh ,fn() => $this->payments->execute($user));
     }

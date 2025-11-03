@@ -40,7 +40,7 @@ class DashboardServiceFacades{
     }
 
 
-    public function paymentsMade(bool $onlyThisYear, bool $forceRefresh):int
+    public function paymentsMade(bool $onlyThisYear, bool $forceRefresh):string
     {
         $key = "$this->prefix:payments:$onlyThisYear";
         return $this->cache($key,$forceRefresh ,fn() => $this->payments->execute($onlyThisYear));
