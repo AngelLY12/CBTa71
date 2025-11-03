@@ -95,6 +95,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('admin-actions')->middleware('role:admin', 'throttle:global')->group(function(){
         Route::middleware('permission:attach student')->post('/attach-student',[AdminController::class,'attachStudent']);
         Route::middleware('permission:import users')->post('/import-users', [AdminController::class, 'import']);
+        Route::middleware('permission:sync permissions')->post('update-permissions',[AdminController::class,'updatePermissions']);
     });
 
 
