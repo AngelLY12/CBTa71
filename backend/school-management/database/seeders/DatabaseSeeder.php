@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
         // ------------------------
         // PERMISOS DE STUDENT
         // ------------------------
-        $studentPermissions = [
+        $permissions = [
+            //permisos de alumnos
             'view own financial overview',
             'view own pending concepts summary',
             'view own paid concepts summary',
@@ -33,17 +34,8 @@ class DatabaseSeeder extends Seeder
             'view pending concepts',
             'create payment',
             'view overdue concepts',
-            'refresh all dashboard'
-        ];
-
-        foreach ($studentPermissions as $perm) {
-            Permission::firstOrCreate(['name' => $perm]);
-        }
-
-        // ------------------------
-        // PERMISOS DE FINANCIAL STAFF
-        // ------------------------
-        $staffPermissions = [
+            'refresh all dashboard',
+            //permisos de staff
             'view all financial overview',
             'view all pending concepts summary',
             'view all students summary',
@@ -62,18 +54,14 @@ class DatabaseSeeder extends Seeder
             'view payments',
             'view students',
             'view stripe-payments',
-            'refresh all dashboard'
+            'refresh all dashboard',
+            //permisos de admin
+            'attach student',
+            'import users',
+            'sync permissions'
         ];
 
-        foreach ($staffPermissions as $perm) {
-            Permission::firstOrCreate(['name' => $perm]);
-        }
-
-        $adminPermissions =[
-            'attach student'
-        ];
-
-        foreach($adminPermissions as $perm)
+        foreach($permissions as $perm)
         {
             Permission::firstOrCreate(['name'=>$perm]);
         }
@@ -81,16 +69,11 @@ class DatabaseSeeder extends Seeder
         // ------------------------
         // CREAR ROLES Y ASIGNAR PERMISOS
         // ------------------------
-        $studentRole = Role::firstOrCreate(['name' => 'student']);
-        $studentRole->syncPermissions($studentPermissions);
+        Role::firstOrCreate(['name' => 'student']);
+        Role::firstOrCreate(['name' => 'financial staff']);
+        Role::firstOrCreate(['name' => 'admin']);
 
-        $staffRole = Role::firstOrCreate(['name' => 'financial staff']);
-        $staffRole->syncPermissions($staffPermissions);
-
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $adminRole->syncPermissions($adminPermissions);
-
-        $this->call(AdminUserSeeder::class);
+        $admin = $this->call(AdminUserSeeder::class);
 
     }
 

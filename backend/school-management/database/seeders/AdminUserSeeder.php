@@ -38,5 +38,7 @@ class AdminUserSeeder extends Seeder
             ]
         );
         $admin->assignRole('admin');
+        $admin->givePermissionTo('attach student');
+        $admin->givePermissionTo('import users');
     }
 }
