@@ -13,15 +13,6 @@ echo "Generando documentación Swagger..."
 php artisan l5-swagger:generate || echo "No se pudo generar la documentación"
 php artisan route:list | grep documentation || echo "No se encontró la ruta de documentación"
 
-echo "Verificando existencia del archivo Swagger..."
-if [ -f /var/www/public/api-docs/api-docs.json ]; then
-    echo "✅ Archivo encontrado en public/api-docs/api-docs.json"
-elif [ -f /var/www/storage/api-docs/api-docs.json ]; then
-    echo "⚠️ Archivo encontrado en storage/api-docs/api-docs.json (no está en public)"
-else
-    echo "❌ No se encontró api-docs.json en ninguna ruta esperada"
-fi
-
 echo "Ejecutando migraciones..."
 php artisan migrate --force || { echo "Error al migrar"; exit 1; }
 
