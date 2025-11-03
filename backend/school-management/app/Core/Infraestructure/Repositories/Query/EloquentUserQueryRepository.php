@@ -11,9 +11,7 @@ use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
 use App\Core\Infraestructure\Repositories\Traits\HasPendingQuery;
-use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
 class EloquentUserQueryRepository implements UserQueryRepInterface
 {
@@ -125,7 +123,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             'semestre' => $r->semestre,
             'career' => $r->career ?? null,
             'total_count' => (int)$r->total_count,
-            'total_amount' => (float)$r->total_amount,
+            'total_amount' => $r->total_amount,
         ]))->toArray();
     }
 }

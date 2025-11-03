@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignIdFor(PaymentMethod::class)->nullable()->constrained('payment_methods')->onDelete('set null');
             $table->string('stripe_payment_method_id',50)->nullable()->index();
             $table->string('concept_name');
-            $table->integer('amount')->index();
+            $table->decimal('amount', 7,2)->index();
             $table->json('payment_method_details');
             $table->string('status',20);
             $table->string('payment_intent_id',50)->unique()->nullable();

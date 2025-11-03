@@ -37,6 +37,7 @@ class Payment extends Model
     protected function casts(): array
     {   return [
             'payment_method_details' => 'array',
+            'amount' => 'decimal:2',
         ];
     }
 

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('status',['activo','finalizado','desactivado','eliminado'])->default('activo')->index();
             $table->date('start_date')->index();
             $table->date('end_date')->nullable()->index();
-            $table->integer('amount');
+            $table->decimal('amount', 7,2);
             $table->string('applies_to',25)->default('todos')->index();
             $table->boolean('is_global')->default(false)->index();
             $table->timestamps();

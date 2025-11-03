@@ -105,7 +105,7 @@ class StripeGateway implements StripeGatewayInterface
                 'price_data' => [
                     'currency' => 'mxn',
                     'product_data' => ['name' => $concept->concept_name],
-                    'unit_amount' => intval($concept->amount * 100),
+                    'unit_amount' =>(int) round($concept->amount * 100),
                 ],
                 'quantity' => 1,
             ]],

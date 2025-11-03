@@ -11,7 +11,7 @@ class Payment
         public ?int $payment_method_id=null,
         public ?string $stripe_payment_method_id=null,
         public ?string $concept_name,
-        public ?int $amount,
+        public ?string $amount,
         public ?array $payment_method_details = [],
         public string $status,
         public ?string $payment_intent_id=null,

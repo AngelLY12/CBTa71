@@ -15,7 +15,7 @@ class PaymentConcept
         public string $status,
         public Carbon $start_date,
         public ?Carbon $end_date=null,
-        public int $amount,
+        public string $amount,
         public string $applies_to,
         public bool $is_global,
         private array $userIds = [],

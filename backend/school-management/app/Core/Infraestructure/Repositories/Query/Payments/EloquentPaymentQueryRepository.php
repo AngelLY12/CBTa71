@@ -14,10 +14,12 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
 {
-    public function sumPaymentsByUserYear(User $user): int {
-        return EloquentPayment::where('user_id', $user->id)
+    public function sumPaymentsByUserYear(User $user): string {
+        $total = EloquentPayment::where('user_id', $user->id)
         ->whereYear('created_at', now()->year)
         ->sum('amount');
+
+        return number_format($total, 2, '.', '');
     }
 
     public function getConceptNameFromPayment(string $paymentIntentId): ?string
@@ -47,13 +49,13 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     }
 
 
-    public function getAllPaymentsMade(bool $onlyThisYear): int
+    public function getAllPaymentsMade(bool $onlyThisYear): string
     {
        $query = EloquentPayment::query();
         if ($onlyThisYear) {
             $query->whereYear('created_at', now()->year);
         }
-        return $query->sum('amount');
+        return number_format($query->sum('amount'), 2, '.', '');
     }
 
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment
