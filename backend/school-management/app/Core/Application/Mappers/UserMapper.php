@@ -3,6 +3,7 @@
 namespace App\Core\Application\Mappers;
 
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
+use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\DTO\Response\User\UserRecipientDTO;
@@ -12,6 +13,7 @@ use App\Core\Application\DTO\Response\User\UserWithStudentDetailResponse;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
+use Carbon\Carbon;
 
 class UserMapper{
 
@@ -43,12 +45,12 @@ class UserMapper{
             email: $data['email'],
             password: $data['password'],
             phone_number: $data['phone_number'],
-            birthdate: $data['birthdate'] ?? null,
+            birthdate: $data['birthdate'] ? new Carbon($data['birthdate']) : null,
             gender: $data['gender'] ?? null,
             curp:$data['curp'],
             address: $data['address'] ?? [],
             blood_type: $data['blood_type'] ?? null,
-            registration_date: $data['registration_date'] ?? null,
+            registration_date: $data['registration_date'] ? new Carbon($data['registration_date']) : null,
             status: $data['status']
         );
 
@@ -123,6 +125,16 @@ class UserMapper{
             career_name: $studentSummary['career'] ?? null,
             num_pending: $studentSummary['total_count'] ?? null,
             total_amount_pending: $studentSummary['total_amount'] ?? null
+        );
+    }
+
+    public static function toUpdateUserPermissionsDTO(array $data): UpdateUserPermissionsDTO
+    {
+        return new UpdateUserPermissionsDTO(
+            emails: $data['emails'] ?? [],
+            permissionsToAdd: $data['permissionsToAdd'] ?? [],
+            permissionsToRemove: $data['permissionsToRemove'] ?? []
+
         );
     }
 }

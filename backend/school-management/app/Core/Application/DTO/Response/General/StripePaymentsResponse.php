@@ -9,7 +9,7 @@ class StripePaymentsResponse
         public readonly ?string $payment_intent_id,
         public readonly ?string $concept_name,
         public readonly ?string $status,
-        public readonly ?int $amount_total,
+        public readonly ?string $amount_total,
         public readonly ?string $created,
     )
     {}

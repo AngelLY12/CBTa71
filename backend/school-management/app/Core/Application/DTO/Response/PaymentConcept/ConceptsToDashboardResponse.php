@@ -10,7 +10,7 @@ class ConceptsToDashboardResponse{
         public readonly ?int $id,
         public readonly ?string $concept_name,
         public readonly ?string $status,
-        public readonly ?int $amount,
+        public readonly ?string $amount,
         public readonly ?string $applies_to,
         public readonly ?string $start_date,
         public readonly ?string $end_date

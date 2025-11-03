@@ -8,7 +8,7 @@ class PaymentCreatedEmailDTO{
         public readonly string $recipientName,
         public readonly string $recipientEmail,
         public readonly string $concept_name,
-        public readonly int $amount,
+        public readonly string $amount,
         public readonly string $created_at,
         public readonly ?string $url,
         public readonly?string $stripe_session_id

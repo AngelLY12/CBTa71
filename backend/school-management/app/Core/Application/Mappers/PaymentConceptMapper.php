@@ -17,7 +17,7 @@ class PaymentConceptMapper{
         return new CreatePaymentConceptDTO(
             concept_name: $data['concept_name'],
             description: $data['description'] ?? null,
-            amount: (int) $data['amount'],
+            amount: $data['amount'],
             status: strtolower($data['status']),
             start_date: isset($data['start_date']) ? new Carbon($data['start_date']) : null,
             end_date: isset($data['end_date']) ? new Carbon($data['end_date']) : null,

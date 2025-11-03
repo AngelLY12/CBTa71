@@ -7,6 +7,6 @@ class UserWithPaymentResponse{
         public readonly ?int $id,
         public readonly ?string $fullName,
         public readonly ?string $concept,
-        public readonly ?int $amount
+        public readonly ?string $amount
     ) {}
 }

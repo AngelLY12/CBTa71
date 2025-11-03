@@ -7,7 +7,7 @@ class ConceptNameAndAmountResponse
     public function __construct(
         public readonly ?string $user_name,
         public readonly ?string $concept_name,
-        public readonly ?int $amount,
+        public readonly ?string $amount,
     )
     {
 

@@ -9,7 +9,7 @@ class PendingPaymentConceptsResponse {
         public readonly ?int $id,
         public readonly ?string $concept_name,
         public readonly ?string $description,
-        public readonly ?int $amount,
+        public readonly ?string $amount,
         public readonly ?string $start_date,
         public readonly ?string $end_date
     ) {}

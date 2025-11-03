@@ -9,7 +9,7 @@ class PaymentListItemResponse{
      public function __construct(
         public readonly ?string $date,
         public readonly ?string $concept,
-        public readonly ?int $amount,
+        public readonly ?string $amount,
         public readonly ?string $method,
         public readonly ?string $fullName
 

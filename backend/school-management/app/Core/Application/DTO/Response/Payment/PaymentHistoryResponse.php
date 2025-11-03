@@ -9,7 +9,7 @@ class PaymentHistoryResponse{
     public function __construct(
         public readonly ?int $id,
         public readonly ?string $concept,
-        public readonly ?int $amount,
+        public readonly ?string $amount,
         public readonly ?string $date
     ) {}
 }

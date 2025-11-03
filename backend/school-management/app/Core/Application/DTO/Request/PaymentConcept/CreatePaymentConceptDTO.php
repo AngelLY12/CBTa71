@@ -8,7 +8,7 @@ class CreatePaymentConceptDTO {
     public function __construct(
         public string $concept_name,
         public ?string $description,
-        public int $amount,
+        public string $amount,
         public string $status,
         public ?Carbon $start_date,
         public ?Carbon $end_date,

@@ -8,7 +8,7 @@ class PaymentDetailResponse{
      public function __construct(
         public readonly ?int $id,
         public readonly ?string $concept,
-        public readonly ?int $amount,
+        public readonly ?string $amount,
         public readonly ?string $date,
         public readonly ?string $status,
         public readonly ?string $reference,
