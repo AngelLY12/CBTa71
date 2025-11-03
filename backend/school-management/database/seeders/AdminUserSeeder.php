@@ -40,5 +40,6 @@ class AdminUserSeeder extends Seeder
         $admin->assignRole('admin');
         $admin->givePermissionTo('attach student');
         $admin->givePermissionTo('import users');
+        $admin->givePermissionTo('sync permissions');
     }
 }
