@@ -47,6 +47,7 @@ return [
                     base_path('app'),
                 ],
             ],
+            'schemes' => ['https'],
         ],
     ],
     'defaults' => [
