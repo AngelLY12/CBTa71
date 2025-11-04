@@ -58,7 +58,8 @@ class DatabaseSeeder extends Seeder
             //permisos de admin
             'attach student',
             'import users',
-            'sync permissions'
+            'sync permissions',
+            'view users'
         ];
 
         foreach($permissions as $perm)
