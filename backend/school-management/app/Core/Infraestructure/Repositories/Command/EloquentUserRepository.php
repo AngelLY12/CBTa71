@@ -176,10 +176,10 @@ class EloquentUserRepository implements UserRepInterface{
 
     public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): array
     {
-        if (empty($dto->emails)) {
+        if (empty($dto->curps)) {
             return [];
         }
-        $users = EloquentUser::whereIn('curp', $dto->curps)->get(['id', 'name', 'curp']);
+        $users = EloquentUser::whereIn('curp', $dto->curps)->get(['id', 'name','last_name' ,'curp']);
         if ($users->isEmpty()) {
             return [];
         }
