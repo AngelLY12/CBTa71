@@ -13,6 +13,7 @@ interface UserRepInterface{
     public function findUserByEmail(string $email):?User;
     public function findById(int $userId):User;
     public function update(User $user, array $fields):User;
+    public function delete(User $user): User;
     public function createToken(User $user, string $name): string;
     public function createRefreshToken(User $user, string $name): string;
     public function revokeToken(string $tokenId): void;
@@ -20,4 +21,6 @@ interface UserRepInterface{
     public function getUserWithStudentDetail(User $user):User;
     public function bulkInsertWithStudentDetails(array $users): void;
     public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): array;
+    public function deletionInvalidTokens(): int;
+    public function deletionEliminateUsers(): int;
 }

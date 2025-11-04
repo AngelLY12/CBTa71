@@ -6,6 +6,8 @@ use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper;
 use App\Models\PaymentConcept as EloquentPaymentConcept;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
 
@@ -131,5 +133,14 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
      private function findOrFail(int $id): EloquentPaymentConcept
     {
         return EloquentPaymentConcept::findOrFail($id);
+    }
+
+    public function cleanDeletedConcepts(): int
+    {
+        $thresholdDate = Carbon::now()->subDays(30);
+        return DB::table('payment_concepts')
+            ->where('status', 'eliminado')
+            ->where('updated_at', '<', $thresholdDate)
+            ->delete();
     }
 }

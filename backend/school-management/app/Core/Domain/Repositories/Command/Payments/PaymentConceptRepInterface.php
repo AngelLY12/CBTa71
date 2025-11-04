@@ -23,4 +23,5 @@ interface PaymentConceptRepInterface {
     public function finalize(PaymentConcept $concept): PaymentConcept;
     public function disable(PaymentConcept $concept): PaymentConcept;
     public function activate(PaymentConcept $concept): PaymentConcept;
+    public function cleanDeletedConcepts():int;
 }

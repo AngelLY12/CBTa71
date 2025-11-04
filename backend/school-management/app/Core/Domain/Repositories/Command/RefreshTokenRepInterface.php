@@ -12,4 +12,5 @@ interface RefreshTokenRepInterface
     public function create(User $user, string $token, int $days = 7): RefreshToken;
     public function update(RefreshToken $token,  array $fields): RefreshToken;
     public function delete(RefreshToken $token): void;
+    public function deletionInvalidTokens(): int;
 }

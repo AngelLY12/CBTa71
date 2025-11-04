@@ -232,4 +232,29 @@ class EloquentUserRepository implements UserRepInterface{
 
     }
 
+    public function deletionInvalidTokens(): int
+    {
+        $now = Carbon::now();
+        $deleted = DB::table('personal_access_tokens')
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<', $now)
+            ->delete();
+        return $deleted;
+    }
+
+    public function delete(User $user): User
+    {
+        return $this->update($user, ['status'=>'eliminado']);
+    }
+
+    public function deletionEliminateUsers(): int
+    {
+        $thresholdDate = Carbon::now()->subDays(30);
+
+        return DB::table('users')
+            ->where('status', '=', 'eliminado')
+            ->where('updated_at', '<', $thresholdDate)
+            ->delete();
+    }
+
 }

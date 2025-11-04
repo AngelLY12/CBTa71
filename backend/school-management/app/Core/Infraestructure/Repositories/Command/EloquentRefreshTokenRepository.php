@@ -8,6 +8,7 @@ use App\Core\Domain\Repositories\Command\RefreshToken;
 use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
 use App\Core\Infraestructure\Mappers\RefreshTokenMapper;
 use App\Models\RefreshToken as ModelsRefreshToken;
+use Illuminate\Support\Facades\DB;
 
 class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
 {
@@ -36,8 +37,7 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
         $refresh = $this->findByToken($tokenValue);
 
         if ($refresh) {
-            //$refresh=$this->update($refresh,['revoked' => true]);
-            $this->delete($refresh);
+            $refresh=$this->update($refresh,['revoked' => true]);
         }
     }
 
@@ -52,6 +52,25 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
     public function delete(EntitiesRefreshToken $token):void
     {
         ModelsRefreshToken::where('id',$token->id)->delete();
+    }
+
+    public function deletionInvalidTokens(): int
+    {
+        $now = now();
+
+        DB::table('refresh_tokens')
+            ->where('expires_at', '<', $now)
+            ->where('revoked', false)
+            ->update(['revoked' => true]);
+
+        $deleted = DB::table('refresh_tokens')
+            ->where(function ($query) use ($now) {
+                $query->where('revoked', true)
+                    ->orWhere('expires_at', '<', $now);
+            })
+            ->delete();
+
+        return $deleted;
     }
 
 
