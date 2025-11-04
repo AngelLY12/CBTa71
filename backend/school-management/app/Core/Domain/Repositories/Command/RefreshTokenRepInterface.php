@@ -11,4 +11,5 @@ interface RefreshTokenRepInterface
     public function revokeRefreshToken(string $refreshTokenValue): void;
     public function create(User $user, string $token, int $days = 7): RefreshToken;
     public function update(RefreshToken $token,  array $fields): RefreshToken;
+    public function delete(RefreshToken $token): void;
 }
