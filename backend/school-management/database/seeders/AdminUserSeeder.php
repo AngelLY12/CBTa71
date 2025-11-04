@@ -41,5 +41,6 @@ class AdminUserSeeder extends Seeder
         $admin->givePermissionTo('attach student');
         $admin->givePermissionTo('import users');
         $admin->givePermissionTo('sync permissions');
+        $admin->givePermissionTo('view users');
     }
 }

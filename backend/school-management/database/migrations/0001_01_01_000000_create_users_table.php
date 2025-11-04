@@ -44,7 +44,7 @@ return new class extends Migration
         $table->timestamp('expires_at');
         $table->boolean('revoked');
         $table->timestamps();
-});
+        });
 
     }
 
