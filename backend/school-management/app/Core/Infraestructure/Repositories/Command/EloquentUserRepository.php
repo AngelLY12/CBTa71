@@ -179,8 +179,8 @@ class EloquentUserRepository implements UserRepInterface{
         if (empty($dto->emails)) {
             return [];
         }
-        $users = EloquentUser::whereIn('email', $dto->emails)->pluck('id')->toArray();
-        if (empty($users)) {
+        $users = EloquentUser::whereIn('email', $dto->emails)->get(['id', 'name', 'email']);
+        if ($users->isEmpty()) {
             return [];
         }
         $permissionsToAddIds=[];
@@ -197,25 +197,26 @@ class EloquentUserRepository implements UserRepInterface{
         }
 
         DB::transaction(function () use ($users, $permissionsToAddIds, $permissionsToRemoveIds) {
-        if (!empty($permissionsToRemoveIds)) {
-            DB::table('model_has_permissions')
-                ->whereIn('model_id', $users)
-                ->whereIn('permission_id', $permissionsToRemoveIds)
-                ->where('model_type', EloquentUser::class)
-                ->delete();
-        }
-
-        if (!empty($permissionsToAddIds)) {
-            $rows = [];
-            foreach ($users as $userId) {
-                foreach ($permissionsToAddIds as $permissionId) {
-                    $rows[] = [
-                        'permission_id' => $permissionId,
-                        'model_type' => EloquentUser::class,
-                        'model_id' => $userId,
-                    ];
-                }
+            $userIds = $users->pluck('id')->toArray();
+            if (!empty($permissionsToRemoveIds)) {
+                DB::table('model_has_permissions')
+                    ->whereIn('model_id', $userIds)
+                    ->whereIn('permission_id', $permissionsToRemoveIds)
+                    ->where('model_type', EloquentUser::class)
+                    ->delete();
             }
+
+            if (!empty($permissionsToAddIds)) {
+                $rows = [];
+                foreach ($userIds as $userId) {
+                    foreach ($permissionsToAddIds as $permissionId) {
+                        $rows[] = [
+                            'permission_id' => $permissionId,
+                            'model_type' => EloquentUser::class,
+                            'model_id' => $userId,
+                        ];
+                    }
+                }
 
             DB::table('model_has_permissions')->insertOrIgnore($rows);
         }
