@@ -14,6 +14,9 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
     public function findByToken(string $token): ?EntitiesRefreshToken
     {
         $eloquent= ModelsRefreshToken::where('token', $token)->first();
+        if (!$eloquent) {
+            return null;
+        }
         return RefreshTokenMapper::toDomain($eloquent);
     }
     public function create(User $user, string $token, int $days = 7): EntitiesRefreshToken
