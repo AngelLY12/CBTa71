@@ -179,12 +179,12 @@ class AdminController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"emails"},
+     *             required={"curps"},
      *             @OA\Property(
-     *                 property="emails",
+     *                 property="curps",
      *                 type="array",
-     *                 @OA\Items(type="string", example="juan@escuela.edu"),
-     *                 description="Lista de correos electrónicos de los usuarios a los que se aplicarán los cambios"
+     *                 @OA\Items(type="string", example="TROY090304HMRPTA09"),
+     *                 description="Lista de CURP de los usuarios a los que se aplicarán los cambios"
      *             ),
      *             @OA\Property(
      *                 property="permissionsToAdd",
@@ -224,8 +224,8 @@ class AdminController extends Controller
     public function updatePermissions(Request $request)
     {
         $validated = $request->validate([
-            'emails' => ['required', 'array', 'min:1'],
-            'emails.*' => ['email', 'exists:users,email'],
+            'curps' => ['required', 'array', 'min:1'],
+            'curps.*' => ['string', 'exists:users,curp'],
             'permissionsToAdd' => ['array'],
             'permissionsToAdd.*' => ['string', 'exists:permissions,name'],
             'permissionsToRemove' => ['array'],
@@ -240,4 +240,86 @@ class AdminController extends Controller
             'message' => 'Permisos actualizados correctamente.',
         ], 200);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/admin-actions/users",
+     *     summary="Mostrar usuarios existentes",
+     *     description="Permite al administrador ver a todos los usuarios existentes en el sistema, sus roles y permisos.",
+     *     operationId="showAllUsers",
+     *     tags={"Admin"},
+     *     security={{"bearerAuth": {}}},
+     *
+     *     @OA\Parameter(
+     *         name="perPage",
+     *         in="query",
+     *         description="Número de usuarios por página",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de página a mostrar",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de usuarios paginada con roles y permisos",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="users",
+     *                     type="object",
+     *                     @OA\Property(property="current_page", type="integer", example=1),
+     *                     @OA\Property(
+     *                         property="data",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="Juan"),
+     *                             @OA\Property(property="last_name", type="string", example="Perez"),
+     *                             @OA\Property(property="email", type="string", example="juan@example.com"),
+     *                             @OA\Property(property="curp", type="string", example="XXXXXX"),
+     *                             @OA\Property(
+     *                                 property="roles",
+     *                                 type="array",
+     *                                 @OA\Items(type="string", example="student")
+     *                             ),
+     *                             @OA\Property(
+     *                                 property="permissions",
+     *                                 type="array",
+     *                                 @OA\Items(type="string", example="create payment")
+     *                             )
+     *                         )
+     *                     ),
+     *                     @OA\Property(property="per_page", type="integer", example=15),
+     *                     @OA\Property(property="last_page", type="integer", example=3),
+     *                     @OA\Property(property="total", type="integer", example=25)
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Usuarios encontrados.")
+     *         )
+     *     )
+     * )
+     */
+    public function index(Request $request)
+    {
+        $perPage = $request->query('perPage', 15);
+        $page    = $request->query('page', 1);
+        $users=$this->service->showAllUsers($perPage, $page);
+        return response()->json([
+            'success' => true,
+            'data' =>['users'=> $users],
+            'message' => 'Usuarios encontrados.',
+        ], 200);
+    }
+
 }
