@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
 use Spatie\Permission\Models\Permission;
+use App\Core\Application\Mappers\UserMapper as AppUserMapper;
 
 class EloquentUserRepository implements UserRepInterface{
 
@@ -173,14 +174,14 @@ class EloquentUserRepository implements UserRepInterface{
 
     }
 
-    public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): void
+    public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): array
     {
         if (empty($dto->emails)) {
-            return;
+            return [];
         }
         $users = EloquentUser::whereIn('email', $dto->emails)->pluck('id')->toArray();
         if (empty($users)) {
-            return;
+            return [];
         }
         $permissionsToAddIds=[];
         $permissionsToRemoveIds=[];
@@ -192,7 +193,7 @@ class EloquentUserRepository implements UserRepInterface{
             $permissionsToRemoveIds = Permission::whereIn('name', $dto->permissionsToRemove)->pluck('id')->toArray();
         }
         if (empty($permissionsToAddIds) && empty($permissionsToRemoveIds)) {
-            return;
+            return [];
         }
 
         DB::transaction(function () use ($users, $permissionsToAddIds, $permissionsToRemoveIds) {
@@ -220,7 +221,13 @@ class EloquentUserRepository implements UserRepInterface{
         }
 
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
     });
+    $permissions =[
+        'added' => $dto->permissionsToAdd ?? [],
+        'removed' => $dto->permissionsToRemove ?? [],
+    ];
+    return $users->map(fn($user) =>AppUserMapper::toUserUpdatedPermissionsResponse($user, $permissions))->toArray();
 
     }
 

@@ -10,6 +10,7 @@ use App\Core\Application\DTO\Response\User\UserRecipientDTO;
 use App\Core\Application\DTO\Response\User\UserWithPaymentResponse;
 use App\Core\Application\DTO\Response\User\UserWithPendingSumamaryResponse;
 use App\Core\Application\DTO\Response\User\UserWithStudentDetailResponse;
+use App\Core\Application\DTO\Response\User\UserWithUpdatedPermissionsResponse;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
@@ -135,6 +136,15 @@ class UserMapper{
             permissionsToAdd: $data['permissionsToAdd'] ?? [],
             permissionsToRemove: $data['permissionsToRemove'] ?? []
 
+        );
+    }
+
+    public static function toUserUpdatedPermissionsResponse(EloquentUser $user, array $permissions): UserWithUpdatedPermissionsResponse
+    {
+        return new UserWithUpdatedPermissionsResponse(
+            fullName:$user->name . ' ' .$user->last_name,
+            email:$user->email,
+            updatedPermissions: $permissions
         );
     }
 }

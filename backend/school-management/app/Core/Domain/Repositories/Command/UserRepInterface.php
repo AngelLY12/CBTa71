@@ -19,5 +19,5 @@ interface UserRepInterface{
     public function attachStudentDetail(CreateStudentDetailDTO $details): User;
     public function getUserWithStudentDetail(User $user):User;
     public function bulkInsertWithStudentDetails(array $users): void;
-    public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): void;
+    public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): array;
 }
