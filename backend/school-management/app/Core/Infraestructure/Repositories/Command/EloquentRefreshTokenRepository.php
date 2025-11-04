@@ -36,7 +36,8 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
         $refresh = $this->findByToken($tokenValue);
 
         if ($refresh) {
-            $refresh=$this->update($refresh,['revoked' => true]);
+            //$refresh=$this->update($refresh,['revoked' => true]);
+            $this->delete($refresh);
         }
     }
 
@@ -48,7 +49,7 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
 
     }
 
-    private function delete(EntitiesRefreshToken $token):void
+    public function delete(EntitiesRefreshToken $token):void
     {
         ModelsRefreshToken::where('id',$token->id)->delete();
     }

@@ -179,7 +179,7 @@ class EloquentUserRepository implements UserRepInterface{
         if (empty($dto->emails)) {
             return [];
         }
-        $users = EloquentUser::whereIn('email', $dto->emails)->get(['id', 'name', 'email']);
+        $users = EloquentUser::whereIn('curp', $dto->curps)->get(['id', 'name', 'curp']);
         if ($users->isEmpty()) {
             return [];
         }

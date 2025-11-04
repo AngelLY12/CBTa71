@@ -126,4 +126,25 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             'total_amount' => $r->total_amount,
         ]))->toArray();
     }
+
+    public function findAllUsers(int $perPage, int $page): LengthAwarePaginator
+    {
+        $paginator = EloquentUser::with([
+            'roles:id,name',
+            'permissions:id,name'
+        ])
+        ->whereDoesntHave('roles', function($query) {
+            $query->where('name', 'admin');
+        })
+        ->select('id','name','last_name','email','curp')
+        ->paginate($perPage, ['*'], 'page', $page);
+
+        $paginator->getCollection()->transform(function ($user) {
+            $user->roles = $user->roles->pluck('name')->toArray();
+            $user->permissions = $user->permissions->pluck('name')->toArray();
+            return $user;
+        });
+
+        return $paginator;
+    }
 }

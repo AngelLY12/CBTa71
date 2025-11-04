@@ -17,7 +17,7 @@ class UserMapper{
     {
 
         $domainUser = new DomainUser(
-            id: $user->id ,
+            id: $user->id,
             name: $user->name,
             last_name: $user->last_name,
             email: $user->email,
