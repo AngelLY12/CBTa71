@@ -95,7 +95,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('admin-actions')->middleware('role:admin', 'throttle:global')->group(function(){
         Route::middleware('permission:attach student')->post('/attach-student',[AdminController::class,'attachStudent']);
         Route::middleware('permission:import users')->post('/import-users', [AdminController::class, 'import']);
-        Route::middleware('permission:sync permissions')->post('update-permissions',[AdminController::class,'updatePermissions']);
+        Route::middleware('permission:sync permissions')->post('/update-permissions',[AdminController::class,'updatePermissions']);
+        Route::middleware('permission:view users')->get('/showUsers',[AdminController::class,'index']);
     });
 
 
@@ -105,15 +106,6 @@ Route::fallback(function () {
     return response()->json(['message' => 'Endpoint no encontrado'], 404);
 });
 
-Route::get('/up', fn() => response()->json(['ok' => true]));
-
-Route::get('/test-error', function () {
-    throw new TestDomainException();
-});
-
-Route::get('/test', function () {
-    echo "Hola test";
-});
 
 
 
