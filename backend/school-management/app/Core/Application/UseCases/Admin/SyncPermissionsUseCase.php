@@ -15,8 +15,8 @@ class SyncPermissionsUseCase
 
     }
 
-    public function execute(UpdateUserPermissionsDTO $dto): void
+    public function execute(UpdateUserPermissionsDTO $dto): array
     {
-        $this->uqRepo->updatePermissionToMany($dto);
+        return $this->uqRepo->updatePermissionToMany($dto);
     }
 }

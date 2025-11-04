@@ -34,9 +34,9 @@ class AdminService
     {
         $this->import->execute($rows);
     }
-    public function syncPermissions(UpdateUserPermissionsDTO $dto):void
+    public function syncPermissions(UpdateUserPermissionsDTO $dto):array
     {
-        $this->sync->execute($dto);
+        return $this->sync->execute($dto);
     }
 
 }

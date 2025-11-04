@@ -232,9 +232,11 @@ class AdminController extends Controller
             'permissionsToRemove.*' => ['string', 'exists:permissions,name'],
         ]);
         $dto = UserMapper::toUpdateUserPermissionsDTO($validated);
-        $this->service->syncPermissions($dto);
+        $updated=$this->service->syncPermissions($dto);
 
         return response()->json([
+            'success' => true,
+            'data' =>['users_permissions'=> $updated],
             'message' => 'Permisos actualizados correctamente.',
         ], 200);
     }
