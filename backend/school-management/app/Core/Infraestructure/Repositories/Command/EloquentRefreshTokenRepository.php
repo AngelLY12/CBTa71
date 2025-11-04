@@ -13,10 +13,14 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
 {
     public function findByToken(string $token): ?EntitiesRefreshToken
     {
-        $eloquent= ModelsRefreshToken::where('token', $token)->first();
+       $hashedToken = hash('sha256', $token);
+
+        $eloquent = ModelsRefreshToken::where('token', $hashedToken)->first();
+
         if (!$eloquent) {
             return null;
         }
+
         return RefreshTokenMapper::toDomain($eloquent);
     }
     public function create(User $user, string $token, int $days = 7): EntitiesRefreshToken
@@ -42,6 +46,11 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
         $eloquentToken->update($fields);
         return RefreshTokenMapper::toDomain($eloquentToken);
 
+    }
+
+    private function delete(EntitiesRefreshToken $token):void
+    {
+        ModelsRefreshToken::where('id',$token->id)->delete();
     }
 
 
