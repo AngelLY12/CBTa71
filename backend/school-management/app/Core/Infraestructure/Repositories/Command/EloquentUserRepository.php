@@ -62,7 +62,7 @@ class EloquentUserRepository implements UserRepInterface{
     public function createToken(User $user, string $name): string
     {
         $eloquentUser = $this->findOrFail($user->id);
-        return $eloquentUser->createToken($name)->plainTextToken;
+        return $eloquentUser->createToken($name, expiresAt:now()->addMinutes(15))->plainTextToken;
     }
 
     public function createRefreshToken(User $user, string $name): string
