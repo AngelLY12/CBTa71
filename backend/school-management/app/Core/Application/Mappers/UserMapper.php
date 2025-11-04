@@ -132,7 +132,7 @@ class UserMapper{
     public static function toUpdateUserPermissionsDTO(array $data): UpdateUserPermissionsDTO
     {
         return new UpdateUserPermissionsDTO(
-            emails: $data['emails'] ?? [],
+            curps: $data['curps'] ?? [],
             permissionsToAdd: $data['permissionsToAdd'] ?? [],
             permissionsToRemove: $data['permissionsToRemove'] ?? []
 
@@ -143,7 +143,7 @@ class UserMapper{
     {
         return new UserWithUpdatedPermissionsResponse(
             fullName:$user->name . ' ' .$user->last_name,
-            email:$user->email,
+            curp:$user->curp,
             updatedPermissions: $permissions
         );
     }

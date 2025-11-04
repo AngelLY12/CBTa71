@@ -5,8 +5,10 @@ namespace App\Core\Application\Services\Admin;
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
+use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\UseCases\Admin\AttachStudentDetailUserCase;
 use App\Core\Application\UseCases\Admin\BulkImportUsersUseCase;
+use App\Core\Application\UseCases\Admin\ShowAllUsersUseCase;
 use App\Core\Application\UseCases\Admin\SyncPermissionsUseCase;
 use App\Core\Application\UseCases\RegisterUseCase;
 use App\Core\Domain\Entities\User;
@@ -17,7 +19,8 @@ class AdminService
         private AttachStudentDetailUserCase $attach,
         private RegisterUseCase $register,
         private BulkImportUsersUseCase $import,
-        private SyncPermissionsUseCase $sync
+        private SyncPermissionsUseCase $sync,
+        private ShowAllUsersUseCase $show
     )
     {}
     public function attachStudentDetail(CreateStudentDetailDTO $create): User
@@ -33,6 +36,10 @@ class AdminService
     public function importUsers(array $rows):void
     {
         $this->import->execute($rows);
+    }
+    public function showAllUsers(int $perPage, int $page): PaginatedResponse
+    {
+        return $this->show->execute($perPage,$page);
     }
     public function syncPermissions(UpdateUserPermissionsDTO $dto):array
     {

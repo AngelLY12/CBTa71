@@ -1,0 +1,22 @@
+<?php
+
+namespace App\Core\Application\UseCases\Admin;
+
+use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\Mappers\GeneralMapper;
+use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+
+class ShowAllUsersUseCase
+{
+    public function __construct(
+        private UserQueryRepInterface $uqRepo
+    )
+    {
+    }
+
+    public function execute(int $perPage, int $page): PaginatedResponse
+    {
+        $users= $this->uqRepo->findAllUsers($perPage, $page);
+        return GeneralMapper::toPaginatedResponse($users->items(), $users);
+    }
+}
