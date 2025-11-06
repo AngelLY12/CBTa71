@@ -127,7 +127,7 @@
                     "Admin"
                 ],
                 "summary": "Importar usuarios desde un archivo Excel",
-                "description": "Permite subir un archivo Excel con los datos de los usuarios para registrarlos masivamente.",
+                "description": "Permite subir un archivo Excel (.xlsx) con los datos de los usuarios y sus detalles estudiantiles.\n     *     El archivo debe contener las columnas en el siguiente orden:\n     *     1. name (Nombre)\n     *     2. last_name (Apellidos)\n     *     3. email (Correo electrónico)\n     *     4. password (Contraseña, si se deja vacío se asignará 'default123')\n     *     5. phone_number (Teléfono)\n     *     6. birthdate (Fecha de nacimiento, formato YYYY-MM-DD)\n     *     7. gender (Género)\n     *     8. curp (CURP)\n     *     9. street (Calle)\n     *     10. city (Ciudad)\n     *     11. state (Estado)\n     *     12. zip_code (Código postal)\n     *     13. stripe_customer_id (Opcional)\n     *     14. blood_type (Tipo de sangre)\n     *     15. registration_date (Fecha de registro, si no se especifica se usa la actual)\n     *     16. status (Estado del usuario, por defecto 'activo')\n     *     17. career_id (ID de la carrera)\n     *     18. n_control (Número de control)\n     *     19. semestre (Semestre)\n     *     20. group (Grupo)\n     *     21. workshop (Taller)\n     *     ",
                 "operationId": "681466b5379337f44a10ff79de6c51fe",
                 "requestBody": {
                     "required": true,
@@ -139,7 +139,7 @@
                                 ],
                                 "properties": {
                                     "file": {
-                                        "description": "Archivo Excel (.xlsx) con la información de los usuarios a importar",
+                                        "description": "Archivo Excel (.xlsx) con las columnas en el orden especificado",
                                         "type": "string",
                                         "format": "binary"
                                     }
@@ -163,6 +163,26 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Usuarios importados correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación o formato del archivo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Archivo Excel inválido o columnas incorrectas."
                                         }
                                     },
                                     "type": "object"

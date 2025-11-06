@@ -136,11 +136,34 @@ class AdminController extends Controller
 
     }
 
-        /**
+    /**
      * @OA\Post(
      *     path="/api/v1/admin-actions/import",
      *     summary="Importar usuarios desde un archivo Excel",
-     *     description="Permite subir un archivo Excel con los datos de los usuarios para registrarlos masivamente.",
+     *     description="Permite subir un archivo Excel (.xlsx) con los datos de los usuarios y sus detalles estudiantiles.
+     *     El archivo debe contener las columnas en el siguiente orden:
+     *     1. name (Nombre)
+     *     2. last_name (Apellidos)
+     *     3. email (Correo electrónico)
+     *     4. password (Contraseña, si se deja vacío se asignará 'default123')
+     *     5. phone_number (Teléfono)
+     *     6. birthdate (Fecha de nacimiento, formato YYYY-MM-DD)
+     *     7. gender (Género)
+     *     8. curp (CURP)
+     *     9. street (Calle)
+     *     10. city (Ciudad)
+     *     11. state (Estado)
+     *     12. zip_code (Código postal)
+     *     13. stripe_customer_id (Opcional)
+     *     14. blood_type (Tipo de sangre)
+     *     15. registration_date (Fecha de registro, si no se especifica se usa la actual)
+     *     16. status (Estado del usuario, por defecto 'activo')
+     *     17. career_id (ID de la carrera)
+     *     18. n_control (Número de control)
+     *     19. semestre (Semestre)
+     *     20. group (Grupo)
+     *     21. workshop (Taller)
+     *     ",
      *     tags={"Admin"},
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
@@ -153,7 +176,7 @@ class AdminController extends Controller
      *                     property="file",
      *                     type="string",
      *                     format="binary",
-     *                     description="Archivo Excel (.xlsx) con la información de los usuarios a importar"
+     *                     description="Archivo Excel (.xlsx) con las columnas en el orden especificado"
      *                 )
      *             )
      *         )
@@ -166,7 +189,14 @@ class AdminController extends Controller
      *             @OA\Property(property="message", type="string", example="Usuarios importados correctamente.")
      *         )
      *     ),
-     *
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error en la validación o formato del archivo.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Archivo Excel inválido o columnas incorrectas.")
+     *         )
+     *     )
      * )
      */
     public function import(ImportUsersRequest $request)

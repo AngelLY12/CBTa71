@@ -18,6 +18,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 use Spatie\Permission\Models\Permission;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
 class EloquentUserRepository implements UserRepInterface{
 
@@ -168,12 +169,21 @@ class EloquentUserRepository implements UserRepInterface{
 
             DB::table('student_details')->insert($studentDetails);
 
+            $roleId = Role::where('name', 'student')->value('id');
+
+            $roleRows = [];
             foreach ($insertedUsers as $user) {
-                $user->assignRole('student');
+                $roleRows[] = [
+                    'role_id' => $roleId,
+                    'model_type' => EloquentUser::class,
+                    'model_id' => $user->id,
+                ];
             }
+
+            DB::table('model_has_roles')->insertOrIgnore($roleRows);
+
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
         });
-
-
     }
 
     public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): array
