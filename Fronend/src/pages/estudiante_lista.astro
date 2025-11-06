@@ -1,0 +1,669 @@
+---
+// src/pages/estudiante_lista.astro
+import Layout from '../layouts/Layout.astro';
+
+// Lógica de carga de datos (sin cambios)
+let students = [];
+try {
+  const res = await fetch('/api/students');
+  if (res.ok) {
+    const json = await res.json();
+    students = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
+  }
+} catch (e) {
+  // ignorar
+}
+if (!students || !students.length) {
+  try {
+    const mod = await import('../data/students.js');
+    students = mod.default || mod.students || [];
+  } catch (e) {
+    students = [];
+  }
+}
+students = students.map((s, i) => ({
+  id: s.id ?? String(Date.now() + i),
+  numControl: s.numControl ?? s.id ?? '',
+  nombre: s.nombre ?? s.name ?? '',
+  apellidoP: s.apellidoP ?? s.apellidoPaterno ?? s.apellido_paterno ?? '',
+  apellidoM: s.apellidoM ?? s.apellidoMaterno ?? s.apellido_materno ?? '',
+  semestre: s.semestre ?? s.sem ?? 0,
+  carrera: s.carrera ?? s.career ?? '',
+  correo: s.correo ?? s.email ?? '',
+  password: s.password ?? s.contrasena ?? '',
+}));
+const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
+---
+<Layout title="Gestión de Estudiantes">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" type="text/javascript" defer></script>
+
+    <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 py-10 bg-gray-50 min-h-screen">
+    <header class="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
+      <div>
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.656-.126-1.283-.356-1.857M9 20l-2.003-.594A4 4 0 003 15.25V7a4 4 0 014-4h10a4 4 0 014 4v8.25c0 .59-.234 1.157-.659 1.571L17 20m-2 1a2 2 0 100-4 2 2 0 000 4zM8 10h.01M12 10h.01M16 10h.01M9 16h.01M13 16h.01" />
+            </svg>
+            Gestión de Estudiantes
+        </h1>
+        <p class="text-sm text-gray-500 mt-1 ml-10">Agrega, edita y exporta la lista de alumnos.</p>
+      </div>
+      <div>
+        <a href="/Dashboard" class="text-sm font-medium text-teal-600 hover:text-teal-800 transition duration-150 ease-in-out flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Volver
+        </a>
+      </div>
+    </header>
+
+        <div class="mb-6">
+        <button id="show-form-btn" class="px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 transition duration-150 ease-in-out transform hover:scale-[1.01]">
+          + Agregar Nuevo Estudiante
+        </button>
+    </div>
+
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+                <div id="form-container" class="bg-white p-6 rounded-xl shadow-xl col-span-1 hidden relative border border-gray-100 h-fit sticky top-10">
+          <h2 id="form-title" class="font-bold text-xl mb-4 text-gray-800">Agregar Estudiante</h2>
+          <form id="add-student-form" class="space-y-4">
+            <button id="close-form-btn" type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
+            <input type="hidden" name="id" id="student-id-input" value="" />
+            
+            <input name="numControl" id="numControl-input" placeholder="Número de control" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm" />
+            <div class="grid grid-cols-2 gap-4">
+                <input name="nombre" id="nombre-input" placeholder="Nombre(s)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm" />
+                <input name="apellidoP" id="apellidoP-input" placeholder="Apellido paterno" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm" />
+            </div>
+            <input name="apellidoM" id="apellidoM-input" placeholder="Apellido materno (Opcional)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm" />
+            
+            <div class="grid grid-cols-2 gap-4">
+                <select name="semestre" id="semestre-input" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-teal-500 focus:border-teal-500 text-sm">
+                  <option value="0">Semestre</option>
+                  <option value="1">1ro</option>
+                  <option value="2">2do</option>
+                  <option value="3">3ro</option>
+                  <option value="4">4to</option>
+                  <option value="5">5to</option>
+                  <option value="6">6to</option>
+                </select>
+                
+                <select name="carrera" id="carrera-input" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-teal-500 focus:border-teal-500 text-sm">
+                  <option value="">Carrera</option>
+                  <option value="AGR">Agronomía</option>
+                  <option value="INF">Informática</option>
+                  <option value="ADM">Administración</option>
+                  <option value="TEC">Ofimática</option>
+                </select>
+            </div>
+
+            <input name="correo" id="correo-input" type="email" placeholder="Correo electrónico" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm" />
+            <input name="password" id="password-input" type="password" placeholder="Contraseña (obligatoria al agregar)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 text-sm" />
+            
+            <div class="flex gap-3 pt-2">
+              <button type="submit" id="submit-btn" class="flex-1 px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition duration-150 text-sm">Agregar</button>
+              <button id="reset-btn" type="button" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition duration-150 text-sm">Limpiar</button>
+            </div>
+            <p id="form-msg" class="text-sm text-center pt-2 hidden"></p>
+          </form>
+
+          <hr class="my-6 border-gray-200" />
+
+          <div class="bg-gray-50 p-4 rounded-lg border border-dashed border-gray-200">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Importar desde Excel</label>
+            <input id="import-file" type="file" accept=".xlsx,.xls,.csv" class="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-600 hover:file:bg-teal-100"/>
+            <p class="text-xs text-gray-500 mt-2">Formato: numControl,nombre,apellidoP,apellidoM,semestre,carrera,correo,password</p>
+          </div>
+        </div>
+
+        			
+            <div id="table-container" class="bg-white p-6 rounded-xl shadow-xl col-span-1 lg:col-span-3 flex flex-col border border-gray-100 relative"> 
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h2 class="font-bold text-xl text-gray-800">Lista de Estudiantes <span id="students-total" class="text-sm font-medium text-teal-600">({students.length})</span></h2>
+            
+            <div class="flex gap-2 relative">
+                
+                                <button id="toggle-filters-btn" class="flex items-center px-3 py-2 rounded-lg bg-teal-50 border border-teal-200 text-teal-700 text-xs font-medium hover:bg-teal-100 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v3.414l-4 4v-4.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    <span id="filters-status">Filtros</span>
+                </button>
+                
+                                <div id="filters-popover" class="absolute z-20 top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-2xl p-4 border border-gray-200 hidden transform origin-top-right transition duration-200 ease-out scale-95 opacity-0">
+                    <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">Aplicar Filtros</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="filter-carrera" class="block text-xs font-medium text-gray-500 mb-1">Carrera:</label>
+                            <select id="filter-carrera" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-800 shadow-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition text-sm">
+                                <option value="">Todas</option>
+                                <option value="AGR">Agronomía</option>
+                                <option value="INF">Informática</option>
+                                <option value="ADM">Administración</option>
+                                <option value="TEC">Ofimática</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="filter-semestre" class="block text-xs font-medium text-gray-500 mb-1">Semestre:</label>
+                            <select id="filter-semestre" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-800 shadow-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition text-sm">
+                                <option value="">Todos</option>
+                                <option value="1">1ro</option>
+                                <option value="2">2do</option>
+                                <option value="3">3ro</option>
+                                <option value="4">4to</option>
+                                <option value="5">5to</option>
+                                <option value="6">6to</option>
+                                <option value="0">N/A</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="clear-filters-btn" class="w-full mt-4 px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg shadow-sm hover:bg-red-100 transition flex items-center justify-center text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Limpiar Filtros
+                    </button>
+                </div>
+                
+                                <button id="export-xlsx" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border text-gray-700 text-xs hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>XLSX</button>
+                <button id="export-csv" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border text-gray-700 text-xs hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>CSV</button>
+                <button id="clear-storage" class="px-3 py-2 rounded-lg bg-red-100 text-red-700 text-xs font-medium hover:bg-red-200 transition">Borrar Local</button>
+            </div>
+          </div>
+          
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="min-w-full text-xs divide-y divide-gray-200">
+              <thead class="bg-gray-50 text-left sticky top-0 z-10">
+                <tr>
+                  <th class="px-2 py-2 font-semibold text-gray-600">#</th> 
+                  <th class="px-2 py-2 font-semibold text-gray-600">N. Control</th>
+                  <th class="px-2 py-2 font-semibold text-gray-600">Nombre</th>
+                  <th class="px-2 py-2 font-semibold text-gray-600">Apellido P.</th>
+                  <th class="px-2 py-2 font-semibold text-gray-600">Apellido M.</th>
+                  <th class="px-2 py-2 font-semibold text-gray-600">Semestre</th>
+                  <th class="px-2 py-2 font-semibold text-gray-600">Carrera</th>
+                  <th class="px-2 py-2 font-semibold text-gray-600">Correo</th>
+                  <th class="px-2 py-2 font-semibold text-gray-600">Contraseña</th>
+                  <th class="px-2 py-2 font-semibold text-gray-600">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="students-tbody" class="bg-white divide-y divide-gray-100">
+                </tbody>
+            </table>
+          </div>
+        </div>
+    </section>
+  </div>
+
+  <script>
+    window.__INITIAL_STUDENTS = JSON.parse('${initialJSON}');
+  </script>
+
+  <script type="module" client:load>
+  (function () {
+    const STORAGE_KEY = 'studentsList';
+    const initial = Array.isArray(window.__INITIAL_STUDENTS) ? window.__INITIAL_STUDENTS : [];
+    
+    // Diccionario para mapear códigos de carrera a nombres legibles
+    const CARRERA_MAP = {
+        'AGR': 'Agronomía',
+        'INF': 'Informática',
+        'ADM': 'Administración',
+        'TEC': 'Ofimática',
+        '': 'Sin Carrera',
+        '0': 'Sin Carrera',
+    };
+    
+    // Estado de los filtros
+    const currentFilters = {
+        semestre: '',
+        carrera: ''
+    };
+
+
+    // Funciones de utilidad (lectura/escritura local)
+    const readLocal = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return initial.slice();
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : initial.slice();
+      } catch (e) {
+        return initial.slice();
+      }
+    };
+    const writeLocal = (arr) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+      } catch (e) {}
+    };
+
+    // Elementos del DOM
+    const tbody = document.getElementById('students-tbody');
+    const totalEl = document.getElementById('students-total');
+    const form = document.getElementById('add-student-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const formTitle = document.getElementById('form-title');
+    const resetBtn = document.getElementById('reset-btn');
+    const msg = document.getElementById('form-msg');
+    const importFile = document.getElementById('import-file');
+    const exportXlsx = document.getElementById('export-xlsx');
+    const exportCsv = document.getElementById('export-csv');
+    const clearBtn = document.getElementById('clear-storage');
+    const formContainer = document.getElementById('form-container');
+    const tableContainer = document.getElementById('table-container');
+    const showFormBtn = document.getElementById('show-form-btn');
+    const closeFormBtn = document.getElementById('close-form-btn');
+    const idInput = document.getElementById('student-id-input');
+    const numControlInput = document.getElementById('numControl-input');
+    const nombreInput = document.getElementById('nombre-input');
+    const apellidoPInput = document.getElementById('apellidoP-input');
+    const apellidoMInput = document.getElementById('apellidoM-input');
+    const semestreInput = document.getElementById('semestre-input');
+    const carreraInput = document.getElementById('carrera-input');
+    const correoInput = document.getElementById('correo-input');
+    const passwordInput = document.getElementById('password-input');
+    
+    // Elementos de Filtro (Nuevos/Actualizados)
+    const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
+    const filtersPopover = document.getElementById('filters-popover');
+    const filtersStatusEl = document.getElementById('filters-status');
+    const filterSemestreEl = document.getElementById('filter-semestre');
+    const filterCarreraEl = document.getElementById('filter-carrera');
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+
+    // Función de escape HTML
+    function escapeHtml(s) {
+      if (!s) return '';
+      return String(s).replace(/[&<>"']/g, function (m) {
+        return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m];
+      });
+    }
+
+    // Función de filtrado
+    const applyFilters = (list) => {
+        return list.filter(s => {
+            const matchesSemestre = currentFilters.semestre === '' || String(s.semestre) === currentFilters.semestre;
+            const matchesCarrera = currentFilters.carrera === '' || s.carrera === currentFilters.carrera;
+            return matchesSemestre && matchesCarrera;
+        });
+    }
+    
+    // Función para actualizar el estado visual del botón de filtros
+    const updateFiltersStatus = (filteredCount, totalCount) => {
+        const isActive = currentFilters.semestre !== '' || currentFilters.carrera !== '';
+        
+        if (isActive) {
+            filtersStatusEl.textContent = `Filtros: ${filteredCount}/${totalCount}`;
+            toggleFiltersBtn.classList.add('bg-teal-600', 'text-white');
+            toggleFiltersBtn.classList.remove('bg-teal-50', 'text-teal-700');
+        } else {
+            filtersStatusEl.textContent = 'Filtros';
+            toggleFiltersBtn.classList.remove('bg-teal-600', 'text-white');
+            toggleFiltersBtn.classList.add('bg-teal-50', 'text-teal-700');
+        }
+    }
+
+
+    // --- LÓGICA DE VISIBILIDAD DEL FORMULARIO ---
+    function setFormVisibility(isVisible) {
+      if (isVisible) {
+        filtersPopover.classList.add('hidden'); // Ocultar filtros si se abre el form
+        formContainer.classList.remove('hidden');
+        tableContainer.classList.remove('lg:col-span-3'); 
+        tableContainer.classList.add('lg:col-span-2');
+        showFormBtn.classList.add('hidden');
+        if (window.innerWidth >= 1024) { 
+            formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+        }
+      } else {
+        formContainer.classList.add('hidden');
+        tableContainer.classList.remove('lg:col-span-2');
+        tableContainer.classList.add('lg:col-span-3');
+        showFormBtn.classList.remove('hidden');
+        resetForm();
+      }
+    }
+
+    // Función para limpiar formulario y volver a modo "Agregar"
+    function resetForm() {
+      form.reset();
+      idInput.value = '';
+      formTitle.textContent = 'Agregar Estudiante';
+      submitBtn.textContent = 'Agregar';
+      passwordInput.placeholder = 'Contraseña (obligatoria al agregar)';
+      msg.classList.add('hidden');
+      msg.classList.remove('text-red-600', 'text-green-600');
+    }
+
+    // Función para precargar el formulario con datos de edición
+    function handleEdit(e) {
+      e.preventDefault();
+      const studentId = e.currentTarget.getAttribute('data-id');
+      const list = readLocal();
+      const student = list.find(s => s.id === studentId);
+      
+      if (!student) {
+        showMsg('Estudiante no encontrado para editar.', true);
+        return;
+      }
+      
+      setFormVisibility(true); 
+
+      // Llenar el formulario con los datos del estudiante
+      idInput.value = student.id;
+      numControlInput.value = student.numControl;
+      nombreInput.value = student.nombre;
+      apellidoPInput.value = student.apellidoP;
+      apellidoMInput.value = student.apellidoM;
+      semestreInput.value = String(student.semestre || '0');
+      carreraInput.value = student.carrera;
+      correoInput.value = student.correo;
+      passwordInput.value = ''; 
+      passwordInput.placeholder = 'Dejar vacío para NO cambiar';
+
+      // Cambiar el título y el botón
+      formTitle.textContent = `Editar Estudiante: ${student.nombre}`;
+      submitBtn.textContent = 'Guardar Cambios';
+    }
+
+    // Función para manejar la eliminación
+    function handleDelete(e) {
+        e.preventDefault();
+        const studentId = e.currentTarget.getAttribute('data-id');
+        const list = readLocal();
+        const student = list.find(s => s.id === studentId);
+        
+        if (!student) {
+            showMsg('Error: Estudiante no encontrado.', true);
+            return;
+        }
+
+        if (!confirm(`¿Estás seguro de que quieres eliminar al estudiante: ${student.nombre} ${student.apellidoP}?`)) {
+            return;
+        }
+
+        const newList = list.filter(s => s.id !== studentId);
+        writeLocal(newList);
+        render();
+        showMsg('Estudiante eliminado con éxito.');
+        setFormVisibility(false); 
+    }
+
+    // Función de renderizado de la tabla - Compacta y con Filtro
+    const render = () => {
+      // 1. Leer y Filtrar
+      const rawList = readLocal();
+      const filteredList = applyFilters(rawList);
+      
+      tbody.innerHTML = '';
+      
+      if (filteredList.length === 0) {
+        // Colspan ajustado a 10 (número total de columnas)
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="px-4 py-8 text-center text-gray-500 italic">
+                    No se encontraron estudiantes con los filtros seleccionados.
+                </td>
+            </tr>
+        `;
+      } else {
+        // 2. Renderizar la lista filtrada
+        filteredList.forEach((s, i) => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-gray-50';
+          // Se usa px-2 py-2 para celdas más pequeñas
+          tr.innerHTML = `
+            <td class="px-2 py-2 text-gray-500">${i + 1}</td>
+            <td class="px-2 py-2 font-medium text-gray-900">${escapeHtml(s.numControl)}</td>
+            <td class="px-2 py-2">${escapeHtml(s.nombre)}</td>
+            <td class="px-2 py-2">${escapeHtml(s.apellidoP)}</td>
+            <td class="px-2 py-2">${escapeHtml(s.apellidoM)}</td>
+            <td class="px-2 py-2">${s.semestre === 0 ? 'N/A' : s.semestre}</td>
+            <td class="px-2 py-2 text-teal-600 font-medium">${CARRERA_MAP[s.carrera] || s.carrera}</td>
+            <td class="px-2 py-2 text-xs">${escapeHtml(s.correo)}</td>
+            <td class="px-2 py-2 text-xs text-gray-400">${s.password ? '••••••' : 'N/A'}</td>
+            <td class="px-2 py-2 flex space-x-1 min-w-[100px]">
+              <button data-id="${s.id}" class="edit-btn text-blue-600 hover:text-blue-800 text-xs font-medium p-1 rounded-md hover:bg-blue-50 transition">Editar</button>
+              <button data-id="${s.id}" class="delete-btn text-red-600 hover:text-red-800 text-xs font-medium p-1 rounded-md hover:bg-red-50 transition">Eliminar</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      totalEl.textContent = `(${rawList.length}) / Filtrados: ${filteredList.length}`;
+      
+      updateFiltersStatus(filteredList.length, rawList.length);
+
+      // Actualizar eventos de edición/eliminación
+      document.querySelectorAll('.edit-btn').forEach(button => {
+        button.removeEventListener('click', handleEdit); 
+        button.addEventListener('click', handleEdit);
+      });
+
+      document.querySelectorAll('.delete-btn').forEach(button => {
+        button.removeEventListener('click', handleDelete); 
+        button.addEventListener('click', handleDelete);
+      });
+    };
+    
+    // --- MANEJO DE EVENTOS ---
+    
+    form.addEventListener('submit', (e) => {
+      // ... (Lógica de guardar/editar sin cambios)
+      e.preventDefault();
+      
+      const fd = new FormData(form);
+      const isEdit = !!idInput.value;
+      
+      let list = readLocal();
+      
+      const newS = {
+        id: isEdit ? idInput.value : Date.now().toString(),
+        numControl: (fd.get('numControl') || '').toString().trim(),
+        nombre: (fd.get('nombre') || '').toString().trim(),
+        apellidoP: (fd.get('apellidoP') || '').toString().trim(),
+        apellidoM: (fd.get('apellidoM') || '').toString().trim(),
+        semestre: Number(fd.get('semestre') || 0),
+        carrera: (fd.get('carrera') || '').toString().trim(),
+        correo: (fd.get('correo') || '').toString().trim(),
+        password: (fd.get('password') || '').toString().trim()
+      };
+
+      if (!newS.numControl || !newS.nombre || !newS.apellidoP || !newS.correo || (!isEdit && !newS.password)) {
+        showMsg('Rellena los campos obligatorios (*).', true);
+        return;
+      }
+
+      if (isEdit) {
+        const index = list.findIndex(s => s.id === newS.id);
+        if (index !== -1) {
+            newS.password = newS.password || list[index].password; 
+            list[index] = newS;
+            showMsg('Estudiante editado.');
+        }
+      } else {
+        list.unshift(newS);
+        window.dispatchEvent(new CustomEvent('students:added', { detail: newS }));
+        showMsg('Estudiante agregado.');
+      }
+      
+      writeLocal(list);
+      render();
+      setFormVisibility(false);
+    });
+
+    // Visibilidad del formulario
+    showFormBtn.addEventListener('click', () => setFormVisibility(true));
+    closeFormBtn.addEventListener('click', () => setFormVisibility(false));
+    resetBtn.addEventListener('click', resetForm);
+
+    // --- LÓGICA DE VISIBILIDAD DEL POP-OVER DE FILTROS ---
+    toggleFiltersBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = filtersPopover.classList.contains('hidden');
+        if (isHidden) {
+            filtersPopover.classList.remove('hidden');
+            setTimeout(() => {
+                filtersPopover.classList.add('scale-100', 'opacity-100');
+                filtersPopover.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        } else {
+            filtersPopover.classList.remove('scale-100', 'opacity-100');
+            filtersPopover.classList.add('scale-95', 'opacity-0');
+            filtersPopover.addEventListener('transitionend', function handler() {
+                filtersPopover.classList.add('hidden');
+                filtersPopover.removeEventListener('transitionend', handler);
+            }, { once: true });
+        }
+    });
+
+    // Ocultar el pop-over si se hace clic fuera de él
+    document.addEventListener('click', (e) => {
+        if (!filtersPopover.contains(e.target) && !toggleFiltersBtn.contains(e.target)) {
+            filtersPopover.classList.remove('scale-100', 'opacity-100');
+            filtersPopover.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                filtersPopover.classList.add('hidden');
+            }, 200); // 200ms para que la transición termine
+        }
+    });
+
+
+    // --- MANEJO DE EVENTOS DE FILTRADO ---
+    const updateFilters = () => {
+        currentFilters.semestre = filterSemestreEl.value;
+        currentFilters.carrera = filterCarreraEl.value;
+        render(); // Vuelve a renderizar la tabla con los nuevos filtros
+    }
+
+    filterSemestreEl.addEventListener('change', updateFilters);
+    filterCarreraEl.addEventListener('change', updateFilters);
+    
+    // Función para limpiar ambos filtros y actualizar
+    clearFiltersBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        filterSemestreEl.value = '';
+        filterCarreraEl.value = '';
+        updateFilters();
+        filtersPopover.classList.remove('scale-100', 'opacity-100');
+        filtersPopover.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            filtersPopover.classList.add('hidden');
+        }, 200);
+    });
+    // --- FIN MANEJO DE EVENTOS DE FILTRADO ---
+
+    // Limpiar localStorage
+    clearBtn.addEventListener('click', () => {
+      if (!confirm('¿Estás seguro de que quieres borrar TODOS los datos locales de estudiantes? Esta acción es irreversible en este navegador.')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+      setFormVisibility(false);
+      showMsg('Datos locales borrados.', false);
+    });
+    
+    // Mostrar mensaje breve
+    function showMsg(text, isError) {
+      msg.textContent = text;
+      msg.classList.remove('text-red-600', 'text-green-600');
+      msg.classList.toggle('text-red-600', !!isError);
+      msg.classList.toggle('text-green-600', !isError);
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 3000);
+    }
+    
+    // Importación y Exportación (Se mantiene la lógica original)
+
+    // exportar XLSX
+    exportXlsx.addEventListener('click', () => {
+      try {
+        // Se exporta la lista completa, no la filtrada
+        const list = readLocal().map((s, i) => ({
+          '#': i + 1, numControl: s.numControl, nombre: s.nombre, apellidoP: s.apellidoP, apellidoM: s.apellidoM,
+          semestre: s.semestre, carrera: s.carrera, correo: s.correo, password: s.password
+        }));
+        const ws = XLSX.utils.json_to_sheet(list);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'students');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+        function s2ab(s) {
+          const buf = new ArrayBuffer(s.length);
+          const view = new Uint8Array(buf);
+          for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+          return buf;
+        }
+        const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'students.xlsx'; a.click(); URL.revokeObjectURL(url);
+      } catch (err) { console.error(err); showMsg('Error al exportar.', true); }
+    });
+
+    // exportar CSV simple
+    exportCsv.addEventListener('click', () => {
+      try {
+        // Se exporta la lista completa, no la filtrada
+        const list = readLocal();
+        const headers = ['numControl','nombre','apellidoP','apellidoM','semestre','carrera','correo','password'];
+        const rows = [headers.join(',')].concat(list.map(s => headers.map(h => `"${String(s[h] ?? '').replace(/"/g,'""')}"`).join(',')));
+        const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'students.csv'; a.click(); URL.revokeObjectURL(url);
+      } catch (err) { console.error(err); showMsg('Error al exportar CSV.', true); }
+    });
+
+    // importar Excel/CSV
+    importFile.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = ev.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const first = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[first];
+          const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+          let added = 0;
+          const list = readLocal();
+          rows.forEach(r => {
+            const s = {
+              id: Date.now().toString() + Math.random().toString(36).slice(2,7),
+              numControl: (r.numControl || r['Número de control'] || r['numControl'] || r.id || '').toString().trim(),
+              nombre: (r.nombre || r.name || '').toString().trim(),
+              apellidoP: (r.apellidoP || r.apellidoPaterno || '').toString().trim(),
+              apellidoM: (r.apellidoM || r.apellidoMaterno || '').toString().trim(),
+              semestre: Number(r.semestre || r.sem || 0),
+              carrera: (r.carrera || r.Carrera || '').toString().trim(),
+              correo: (r.correo || r.email || '').toString().trim(),
+              password: (r.password || r.pass || '').toString().trim()
+            };
+            if (s.numControl && s.nombre) { list.unshift(s); added++; }
+          });
+          if (added > 0) {
+            writeLocal(list); render(); showMsg(`Importados ${added} estudiantes.`);
+            window.dispatchEvent(new CustomEvent('students:imported', { detail: { added } }));
+          } else { showMsg('No se importaron filas válidas.', true); }
+        } catch (err) {
+          console.error(err); showMsg('Error procesando archivo.', true);
+        } finally { e.target.value = ''; }
+      };
+      reader.readAsBinaryString(file);
+    });
+
+    // Inicialización
+    render();
+    setFormVisibility(false);
+  })();
+  </script>
+</Layout>
