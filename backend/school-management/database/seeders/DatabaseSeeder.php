@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Career;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -18,7 +19,7 @@ class DatabaseSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // ------------------------
-        // PERMISOS DE STUDENT
+        // PERMISOS
         // ------------------------
         $permissions = [
             //permisos de alumnos
@@ -70,8 +71,20 @@ class DatabaseSeeder extends Seeder
             Permission::firstOrCreate(['name'=>$perm]);
         }
 
+        $careers=
+        [
+            'Técnico Agropecuario',
+            'Técnico en Informática',
+            'Técnico en Administración para el Emprendimiento'
+        ];
+
+        foreach($careers as $career)
+        {
+            Career::firstOrCreate(['career_name'=>$career]);
+        }
+
         // ------------------------
-        // CREAR ROLES Y ASIGNAR PERMISOS
+        // CREAR ROLES
         // ------------------------
         Role::firstOrCreate(['name' => 'student']);
         Role::firstOrCreate(['name' => 'financial staff']);
