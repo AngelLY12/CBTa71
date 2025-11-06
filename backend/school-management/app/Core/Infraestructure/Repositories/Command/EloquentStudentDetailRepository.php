@@ -13,6 +13,6 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
     public function findStudentDetails(User $user): StudentDetail
     {
         $eloquentStudentDetails = EloquentStudentDetail::where('user_id',$user->id);
-        return StudentDetailMapper::toDomain($eloquentStudentDetails);
+        return $eloquentStudentDetails ? StudentDetailMapper::toDomain($eloquentStudentDetails): null;
     }
 }

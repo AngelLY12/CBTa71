@@ -16,6 +16,7 @@ interface UserQueryRepInterface{
     public function hasRole(User $user, string $role):bool;
     public function getStudentsWithPendingSummary(array $userIds): array;
     public function findAllUsers(int $perPage, int $page): LengthAwarePaginator;
+    public function findAuthUser(): ?User;
 
 
 }

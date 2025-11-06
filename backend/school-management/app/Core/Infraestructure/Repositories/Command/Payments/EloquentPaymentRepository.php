@@ -17,6 +17,11 @@ class EloquentPaymentRepository implements PaymentRepInterface {
 
     }
 
+    public function findById(int $id): ?Payment
+    {
+        return optional(EloquentPayment::find($id), fn($pc) => PaymentMapper::toDomain($pc));
+    }
+
     public function findBySessionId(string $sessionId): ?Payment
     {
         $payment= EloquentPayment::where('stripe_session_id', $sessionId)->first();

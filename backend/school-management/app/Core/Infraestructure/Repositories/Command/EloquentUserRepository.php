@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
 use Spatie\Permission\Models\Permission;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
+use Illuminate\Support\Facades\Auth;
 
 class EloquentUserRepository implements UserRepInterface{
 
@@ -34,6 +35,7 @@ class EloquentUserRepository implements UserRepInterface{
         $eloquent= $this->findOrFail($userId);
         return UserMapper::toDomain($eloquent);
     }
+
 
     public function getUserByStripeCustomer(string $customerId): User
     {

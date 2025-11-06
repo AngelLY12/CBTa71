@@ -12,6 +12,7 @@ use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
 use App\Core\Infraestructure\Repositories\Traits\HasPendingQuery;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class EloquentUserQueryRepository implements UserQueryRepInterface
 {
@@ -145,6 +146,38 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             return $user;
         });
 
+        $students = $paginator->getCollection()->filter(function ($user) {
+        return in_array('student', $user->roles);
+        });
+
+        if ($students->isNotEmpty()) {
+            $students->load([
+                'studentDetail' => function ($query) {
+                    $query->select('id', 'user_id', 'career_id', 'n_control', 'semestre', 'group')
+                        ->with(['career:id,name']);
+                }
+            ]);
+
+             $students->transform(function ($user) {
+                if ($user->relationLoaded('studentDetail') && $user->studentDetail) {
+                    $user->studentDetail->career = optional($user->studentDetail->career)->name;
+                    unset($user->studentDetail->career_id);
+                }
+                return $user;
+            });
+        }
+
         return $paginator;
+    }
+    public function findAuthUser(): ?User
+    {
+        /** @var \App\Models\User $user */
+        $user=Auth::user();
+        $isStudent=$this->hasRole(UserMapper::toDomain($user),'student');
+        if($isStudent){
+            $user->load('studentDetail');
+        }
+        return optional($user, fn($user) => UserMapper::toDomain($user));
+
     }
 }

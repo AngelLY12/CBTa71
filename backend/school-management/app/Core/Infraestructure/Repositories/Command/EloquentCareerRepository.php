@@ -22,4 +22,10 @@ class EloquentCareerRepository implements CareerRepInterface{
         ->toArray();
     }
 
+    public function findById(int $id): ?Career
+    {
+        return optional(EloquentCareer::find($id), fn($career) => CareerMapper::toDomain($career));
+
+    }
+
 }

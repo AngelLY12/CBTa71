@@ -6,5 +6,5 @@ use App\Core\Domain\Entities\User;
 
 interface StudentDetailReInterface
 {
-    public function findStudentDetails(User $user): StudentDetail;
+    public function findStudentDetails(User $user): ?StudentDetail;
 }
