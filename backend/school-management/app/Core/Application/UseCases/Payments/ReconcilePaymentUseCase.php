@@ -69,7 +69,7 @@ class ReconcilePaymentUseCase
             ];
 
             $mail = new PaymentValidatedMail(MailMapper::toPaymentValidatedEmailDTO($data));
-            SendMailJob::dispatch($mail, $user->email);
+            SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
 
         }catch (DomainException $e) {
             logger()->warning("[ReconcilePayment] {$e->getMessage()} (code: {$e->getCode()})");
