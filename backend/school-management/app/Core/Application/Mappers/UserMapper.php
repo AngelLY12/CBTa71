@@ -46,12 +46,12 @@ class UserMapper{
             email: $data['email'],
             password: $data['password'],
             phone_number: $data['phone_number'],
-            birthdate: $data['birthdate'] ? new Carbon($data['birthdate']) : null,
+            birthdate: new Carbon($data['birthdate']) ?? null,
             gender: $data['gender'] ?? null,
             curp:$data['curp'],
             address: $data['address'] ?? [],
             blood_type: $data['blood_type'] ?? null,
-            registration_date: $data['registration_date'] ? new Carbon($data['registration_date']) : null,
+            registration_date: new Carbon($data['registration_date'] ?? Carbon::now()),
             status: $data['status']
         );
 
