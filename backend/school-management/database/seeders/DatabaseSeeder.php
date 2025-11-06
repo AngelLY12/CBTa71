@@ -35,6 +35,9 @@ class DatabaseSeeder extends Seeder
             'create payment',
             'view overdue concepts',
             'refresh all dashboard',
+            'view concept',
+            'view payment',
+            'view profile',
             //permisos de staff
             'view all financial overview',
             'view all pending concepts summary',
