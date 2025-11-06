@@ -4,6 +4,20 @@ namespace App\Core\Domain\Entities;
 
 use DateTime;
 
+/**
+ * @OA\Schema(
+ *     schema="DomainPaymentMethod",
+ *     type="object",
+ *     description="Método de pago de un usuario",
+ *     @OA\Property(property="id", type="integer", nullable=true, example=1),
+ *     @OA\Property(property="user_id", type="integer", example=123),
+ *     @OA\Property(property="stripe_payment_method_id", type="string", example="pm_1Hh1Xx2eZvKYlo2Cj1234567"),
+ *     @OA\Property(property="brand", type="string", nullable=true, example="Visa"),
+ *     @OA\Property(property="last4", type="string", nullable=true, example="4242"),
+ *     @OA\Property(property="exp_month", type="string", nullable=true, example="12"),
+ *     @OA\Property(property="exp_year", type="string", nullable=true, example="2027")
+ * )
+ */
 class PaymentMethod{
 
     public function __construct(
