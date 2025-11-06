@@ -52,7 +52,7 @@ class UserMapper{
             'address' => $user->address,
             'stripe_customer_id' => $user->stripe_customer_id ?? null,
             'blood_type' => $user->blood_type,
-            'registration_date' => $user->registration_date,
+            'registration_date' => $user->registration_date ?? Carbon::now() ,
             'status' => $user->status,
         ];
     }
