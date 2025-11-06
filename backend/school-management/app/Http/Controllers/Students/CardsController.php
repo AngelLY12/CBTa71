@@ -102,7 +102,7 @@ class CardsController extends Controller
      *                 @OA\Property(
      *                     property="cards",
      *                     type="array",
-     *                     description="Lista de métodos de pago del usuario",
+     *                     description="Url del checkout para agregar tarjeta",
      *                     @OA\Items(ref="#/components/schemas/SetupCardResponse")
      *                 )
      *             )

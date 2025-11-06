@@ -184,57 +184,46 @@
                     "Admin"
                 ],
                 "summary": "Actualizar permisos a múltiples usuarios",
-                "description": "Permite al administrador agregar o eliminar permisos a varios usuarios al mismo tiempo.\n     *     Se puede especificar una lista de correos electrónicos y los permisos que se añadirán o eliminarán.",
+                "description": "Permite al administrador agregar o eliminar permisos a varios usuarios al mismo tiempo.\n     *     Se puede especificar una lista de CURP o role (solo uno de los dos) y los permisos que se añadirán o eliminarán.",
                 "operationId": "updateManyUserPermissions",
                 "requestBody": {
+                    "description": "Datos necesarios para actualizar permisos de usuario.",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "curps"
-                                ],
-                                "properties": {
-                                    "curps": {
-                                        "description": "Lista de CURP de los usuarios a los que se aplicarán los cambios",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "example": "TROY090304HMRPTA09"
-                                        }
-                                    },
-                                    "permissionsToAdd": {
-                                        "description": "Permisos que se agregarán a los usuarios",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "example": "view payments"
-                                        }
-                                    },
-                                    "permissionsToRemove": {
-                                        "description": "Permisos que se eliminarán de los usuarios",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "example": "delete card"
-                                        }
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/UpdateUserPermissionsDTO"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Permisos actualizados correctamente",
+                        "description": "Respuesta de usuarios actualizados.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "users_permissions": {
+                                                    "description": "Usuarios con permisos actualizados",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/UserWithUpdatedPermissionsResponse"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Permisos actualizados correctamente."
+                                            "example": "Permisos actualizados correctamente.",
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -2706,7 +2695,7 @@
                                         "data": {
                                             "properties": {
                                                 "cards": {
-                                                    "description": "Lista de métodos de pago del usuario",
+                                                    "description": "Url del checkout para agregar tarjeta",
                                                     "type": "array",
                                                     "items": {
                                                         "$ref": "#/components/schemas/SetupCardResponse"
@@ -3855,6 +3844,13 @@
                             "XEXX010101HNEXXXB"
                         ]
                     },
+                    "role": {
+                        "description": "Cadena de texto que representa el role a quienes se aplicaran los cambios",
+                        "type": "string",
+                        "example": [
+                            "student"
+                        ]
+                    },
                     "permissionsToAdd": {
                         "description": "Lista de permisos a agregar a los usuarios",
                         "type": "array",
@@ -4542,6 +4538,11 @@
                         "description": "CURP del usuario",
                         "type": "string",
                         "example": "PEPJ800101HDFRRN09"
+                    },
+                    "role": {
+                        "description": "Role de usuarios",
+                        "type": "string",
+                        "example": "student"
                     },
                     "updatedPermissions": {
                         "description": "Lista de permisos actualizados para el usuario",

@@ -133,17 +133,19 @@ class UserMapper{
     {
         return new UpdateUserPermissionsDTO(
             curps: $data['curps'] ?? [],
+            role: $data['role'] ?? null,
             permissionsToAdd: $data['permissionsToAdd'] ?? [],
             permissionsToRemove: $data['permissionsToRemove'] ?? []
 
         );
     }
 
-    public static function toUserUpdatedPermissionsResponse(EloquentUser $user, array $permissions): UserWithUpdatedPermissionsResponse
+    public static function toUserUpdatedPermissionsResponse(?EloquentUser $user=null, array $permissions, ?string $role=null): UserWithUpdatedPermissionsResponse
     {
         return new UserWithUpdatedPermissionsResponse(
-            fullName:$user->name . ' ' .$user->last_name,
-            curp:$user->curp,
+            fullName: $user?->name && $user?->last_name ? "{$user->name} {$user->last_name}" : null,
+            curp: $user?->curp ?? null,
+            role: $role,
             updatedPermissions: $permissions
         );
     }

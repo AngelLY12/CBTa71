@@ -187,41 +187,39 @@ class AdminController extends Controller
      *     path="/api/v1/admin-actions/update-permissions",
      *     summary="Actualizar permisos a múltiples usuarios",
      *     description="Permite al administrador agregar o eliminar permisos a varios usuarios al mismo tiempo.
-     *     Se puede especificar una lista de correos electrónicos y los permisos que se añadirán o eliminarán.",
+     *     Se puede especificar una lista de CURP o role (solo uno de los dos) y los permisos que se añadirán o eliminarán.",
      *     operationId="updateManyUserPermissions",
      *     tags={"Admin"},
      *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"curps"},
-     *             @OA\Property(
-     *                 property="curps",
-     *                 type="array",
-     *                 @OA\Items(type="string", example="TROY090304HMRPTA09"),
-     *                 description="Lista de CURP de los usuarios a los que se aplicarán los cambios"
-     *             ),
-     *             @OA\Property(
-     *                 property="permissionsToAdd",
-     *                 type="array",
-     *                 @OA\Items(type="string", example="view payments"),
-     *                 description="Permisos que se agregarán a los usuarios"
-     *             ),
-     *             @OA\Property(
-     *                 property="permissionsToRemove",
-     *                 type="array",
-     *                 @OA\Items(type="string", example="delete card"),
-     *                 description="Permisos que se eliminarán de los usuarios"
-     *             )
-     *         )
+     *         description="Datos necesarios para actualizar permisos de usuario.",
+     *         @OA\JsonContent(ref="#/components/schemas/UpdateUserPermissionsDTO")
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Permisos actualizados correctamente",
+     *         description="Respuesta de usuarios actualizados.",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Permisos actualizados correctamente.")
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="users_permissions",
+     *                     type="array",
+     *                     description="Usuarios con permisos actualizados",
+     *                     @OA\Items(ref="#/components/schemas/UserWithUpdatedPermissionsResponse")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example="Permisos actualizados correctamente."
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -240,13 +238,31 @@ class AdminController extends Controller
     public function updatePermissions(Request $request)
     {
         $validated = $request->validate([
-            'curps' => ['required', 'array', 'min:1'],
+            'curps' => ['array'],
             'curps.*' => ['string', 'exists:users,curp'],
+            'role' => ['nullable', 'string', 'exists:roles,name'],
             'permissionsToAdd' => ['array'],
             'permissionsToAdd.*' => ['string', 'exists:permissions,name'],
             'permissionsToRemove' => ['array'],
             'permissionsToRemove.*' => ['string', 'exists:permissions,name'],
         ]);
+
+        $hasCurps = !empty($validated['curps'] ?? []);
+        $hasRole = !empty($validated['role'] ?? null);
+
+        if ($hasCurps && $hasRole) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No puedes especificar CURPs y rol al mismo tiempo.',
+            ], 422);
+        }
+
+        if (!$hasCurps && !$hasRole) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debes proporcionar al menos un array de CURPs o un rol.',
+            ], 422);
+        }
         $dto = UserMapper::toUpdateUserPermissionsDTO($validated);
         $updated=$this->service->syncPermissions($dto);
 

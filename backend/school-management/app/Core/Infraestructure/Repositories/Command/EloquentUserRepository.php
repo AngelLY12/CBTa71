@@ -178,10 +178,13 @@ class EloquentUserRepository implements UserRepInterface{
 
     public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): array
     {
-        if (empty($dto->curps)) {
+        if (!empty($dto->role)) {
+            $users = EloquentUser::role($dto->role)->get(['id', 'name', 'last_name', 'curp']);
+        } elseif (!empty($dto->curps)) {
+            $users = EloquentUser::whereIn('curp', $dto->curps)->get(['id', 'name', 'last_name', 'curp']);
+        } else {
             return [];
         }
-        $users = EloquentUser::whereIn('curp', $dto->curps)->get(['id', 'name','last_name' ,'curp']);
         if ($users->isEmpty()) {
             return [];
         }
@@ -226,12 +229,15 @@ class EloquentUserRepository implements UserRepInterface{
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
     });
-    $permissions =[
-        'added' => $dto->permissionsToAdd ?? [],
-        'removed' => $dto->permissionsToRemove ?? [],
-    ];
-    return $users->map(fn($user) =>AppUserMapper::toUserUpdatedPermissionsResponse($user, $permissions))->toArray();
+        $permissions =[
+            'added' => $dto->permissionsToAdd ?? [],
+            'removed' => $dto->permissionsToRemove ?? [],
+        ];
+        if (!empty($dto->role)) {
+            return [AppUserMapper::toUserUpdatedPermissionsResponse(permissions:$permissions, role:$dto->role)];
+        }
 
+        return $users->map(fn($user) =>AppUserMapper::toUserUpdatedPermissionsResponse($user, $permissions))->toArray();
     }
 
     public function deletionInvalidTokens(): int

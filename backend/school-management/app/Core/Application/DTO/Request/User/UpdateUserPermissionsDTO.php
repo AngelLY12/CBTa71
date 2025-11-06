@@ -15,6 +15,12 @@ namespace App\Core\Application\DTO\Request\User;
  *         example={"XAXX010101HNEXXXA","XEXX010101HNEXXXB"}
  *     ),
  *     @OA\Property(
+ *         property="role",
+ *         type="string",
+ *         description="Cadena de texto que representa el role a quienes se aplicaran los cambios",
+ *         example={"student"}
+ *     ),
+ *     @OA\Property(
  *         property="permissionsToAdd",
  *         type="array",
  *         description="Lista de permisos a agregar a los usuarios",
@@ -33,9 +39,10 @@ namespace App\Core\Application\DTO\Request\User;
 
 class UpdateUserPermissionsDTO{
     public function __construct(
-        public readonly array $curps =[],
-        public readonly array $permissionsToAdd = [],
-        public readonly array $permissionsToRemove = []
+        public readonly ?array $curps =[],
+        public readonly ?string $role = null,
+        public readonly ?array $permissionsToAdd = [],
+        public readonly ?array $permissionsToRemove = []
     )
     {
 
