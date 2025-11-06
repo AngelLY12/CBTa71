@@ -44,7 +44,15 @@ class SendMailJob implements ShouldQueue
             Mail::to($this->recipientEmail)->send($this->mailable);
             Log::info("Correo enviado exitosamente a {$this->recipientEmail}");
         } catch (\Throwable $e) {
-            Log::error("Error al enviar correo a {$this->recipientEmail}: {$e->getMessage()}");
+           $message = $e->getMessage();
+
+            if (str_contains($message, '429') || str_contains($message, 'Too Many Requests')) {
+                Log::warning("Rate limit detectado al enviar correo a {$this->recipientEmail}, reintentando en 10s...");
+                $this->release(10);
+                return;
+            }
+
+            Log::error("Error al enviar correo a {$this->recipientEmail}: {$message}");
             throw $e;
         }
     }
