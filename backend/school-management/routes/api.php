@@ -2,6 +2,7 @@
 
 use App\Exceptions\Test\TestDomainException;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FindEntityController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RefreshTokenController;
 use App\Http\Controllers\Staff\ConceptsController;
@@ -97,6 +98,11 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:import users')->post('/import-users', [AdminController::class, 'import']);
         Route::middleware('permission:sync permissions')->post('/update-permissions',[AdminController::class,'updatePermissions']);
         Route::middleware('permission:view users')->get('/showUsers',[AdminController::class,'index']);
+    });
+    Route::prefix('find')->middleware(['role:admin','role:student','role:financial staff','throttle:global'])->group(function(){
+        Route::middleware('permission:view concept')->get('/concept/{id}',[FindEntityController::class,'findConcept']);
+        Route::middleware('permission:view payment')->get('/payment/{id}',[FindEntityController::class,'findPayment']);
+        Route::middleware('permission:view profile')->get('/user',[FindEntityController::class,'findUser']);
     });
 
 
