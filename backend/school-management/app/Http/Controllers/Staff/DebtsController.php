@@ -26,15 +26,15 @@ class DebtsController extends Controller
      * @OA\Get(
      *     path="/api/v1/debts",
      *     summary="Listar pagos pendientes",
-     *     description="Obtiene la lista de todos los pagos pendientes registrados. Permite buscar, paginar y forzar la actualización del caché.",
+     *     description="Obtiene una lista paginada de todos los pagos pendientes registrados. Permite buscar por nombre o control del estudiante, paginar los resultados y forzar la actualización del caché.",
      *     tags={"Debts"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Texto de búsqueda para filtrar por nombre o control del estudiante.",
+     *         description="Texto de búsqueda para filtrar por CURP, email o número de control del estudiante.",
      *         required=false,
-     *         @OA\Schema(type="string", example="Angel Lopez")
+     *         @OA\Schema(type="string", example="example@gmail.com")
      *     ),
      *     @OA\Parameter(
      *         name="perPage",
@@ -62,14 +62,21 @@ class DebtsController extends Controller
      *         description="Lista de pagos pendientes obtenida correctamente",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="pending_payments", type="array",
-     *                     @OA\Items(type="object", example={
-     *                         "id": 1,
-     *                         "user_name": "Angel López",
-     *                         "concept_name": "Inscripción",
-     *                         "amount": 1500,
-     *                     })
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="pending_payments",
+     *                     allOf={
+     *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     *                         @OA\Schema(
+     *                             @OA\Property(
+     *                                 property="items",
+     *                                 type="array",
+     *                                 @OA\Items(ref="#/components/schemas/ConceptNameAndAmountResponse")
+     *                             )
+     *                         )
+     *                     }
      *                 )
      *             ),
      *             @OA\Property(property="message", type="string", nullable=true, example=null)
@@ -112,13 +119,13 @@ class DebtsController extends Controller
      *         description="Pago validado correctamente",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="validated_payment", type="object", example={
-     *                     "id": 10,
-     *                     "student": "Angel López",
-     *                     "amount": 1500,
-     *                     "status": "pagado"
-     *                 })
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="validated_payment",
+     *                     ref="#/components/schemas/PaymentValidateResponse"
+     *                 )
      *             ),
      *             @OA\Property(property="message", type="string", example="Pago validado correctamente.")
      *         )
@@ -128,16 +135,15 @@ class DebtsController extends Controller
      *         description="Error de validación en los datos enviados"
      *     ),
      *     @OA\Response(
-     *          response=409,
-     *          description="Recurso no encontrado"
+     *         response=409,
+     *         description="Recurso no encontrado"
      *     ),
      *     @OA\Response(
      *         response=500,
-     *         description="Error de stripe"
+     *         description="Error de Stripe"
      *     )
      * )
      */
-
    public function validatePayment(Request $request)
     {
         $request->validate([
@@ -167,9 +173,9 @@ class DebtsController extends Controller
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="CURP, nombre o email del estudiante",
+     *         description="Stripe customer id del usuario",
      *         required=true,
-     *         @OA\Schema(type="string", example="LOYA030504HMSPXNA8")
+     *         @OA\Schema(type="string", example="cu..")
      *     ),
      *     @OA\Parameter(
      *         name="year",
@@ -190,16 +196,13 @@ class DebtsController extends Controller
      *         description="Pagos obtenidos correctamente desde Stripe",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="payments", type="array",
-     *                     @OA\Items(type="object", example={
-     *                         "id": "ci_3Q...",
-     *                         "payment_intent_id": "pi_3Q...",
-     *                         "concept_name": "Inscripción",
-     *                         "amount_total": 2000,
-     *                         "created": "2025-11-02T12:34:56Z"
-     *                     })
-     *
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="payments",
+     *                     type="array",
+     *                     @OA\Items(ref="#/components/schemas/StripePaymentsResponse")
      *                 )
      *             ),
      *             @OA\Property(property="message", type="string", example="Pagos obtenidos correctamente.")
@@ -215,18 +218,17 @@ class DebtsController extends Controller
      *     ),
      *     @OA\Response(
      *         response=500,
-     *         description="Error de stripe"
+     *         description="Error de Stripe"
      *     )
      * )
      */
-
     public function getStripePayments(Request $request)
     {
         $request->validate([
             'search' => 'required|string',
             'year' => 'nullable|integer',
         ]);
-        $search=$request->input('search');
+        $search=$request->query('search');
         $year=$request->integer('year',null);
         $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
 

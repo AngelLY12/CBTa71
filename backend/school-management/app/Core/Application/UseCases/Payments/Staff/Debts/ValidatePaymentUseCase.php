@@ -91,7 +91,7 @@ class ValidatePaymentUseCase{
             ];
 
             $mail = new PaymentValidatedMail(MailMapper::toPaymentValidatedEmailDTO($data));
-            SendMailJob::dispatch($mail, $student->email);
+            SendMailJob::dispatch($mail, $student->email)->delay(now()->addSeconds(rand(1, 5)));
             //SendMailJob::dispatch(new PaymentValidatedMail($data, $user->name, $user->email), $user->email);
             return PaymentMapper::toPaymentValidateResponse(AppUserMapper::toDataResponse($student),PaymentMapper::toPaymentDataResponse($payment));
         });

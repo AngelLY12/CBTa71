@@ -25,60 +25,78 @@ class StudentsController extends Controller
      * @OA\Get(
      *     path="/api/v1/students",
      *     tags={"Students"},
-     *     summary="Obtener lista de estudiantes",
-     *     description="Devuelve una lista paginada de estudiantes registrados. Permite buscar, filtrar y forzar la actualización del caché.",
+     *     summary="Obtener lista de alumnos",
+     *     description="Devuelve una lista paginada de estudiantes registrados, con opción de búsqueda por email, CURP o número de control, y posibilidad de forzar actualización del caché.",
      *     operationId="getStudents",
+     *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Filtro de búsqueda opcional (por nombre, matrícula, correo, etc.)",
+     *         description="Filtro opcional para buscar por email, CURP o número de control del estudiante.",
      *         required=false,
-     *         @OA\Schema(type="string", example="María López")
+     *         @OA\Schema(type="string", example="PERA020804MSHPNXA8")
      *     ),
      *     @OA\Parameter(
      *         name="perPage",
      *         in="query",
-     *         description="Cantidad de resultados por página (por defecto 15)",
+     *         description="Número de resultados por página (por defecto 15).",
      *         required=false,
      *         @OA\Schema(type="integer", example=10)
      *     ),
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
-     *         description="Número de página (por defecto 1)",
+     *         description="Número de página actual (por defecto 1).",
      *         required=false,
      *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Parameter(
      *         name="forceRefresh",
      *         in="query",
-     *         description="Forzar actualización de caché (true o false)",
+     *         description="Forzar actualización de caché (true o false).",
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
-     *         description="Lista de estudiantes obtenida exitosamente",
+     *         description="Lista de pagos obtenida exitosamente.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="students", type="array",
-     *                     @OA\Items(type="object",
-     *                         @OA\Property(property="user_id", type="integer", example=1),
-     *                         @OA\Property(property="fullName", type="string", example="María López"),
-     *                         @OA\Property(property="semestre", type="integer", example=9),
-     *                         @OA\Property(property="career_name", type="string", example="Matematicas"),
-     *                         @OA\Property(property="num_pending", type="integer", example=2),
-     *                         @OA\Property(property="total_amount_pending", type="integer", example=2500)
-     *
-     *                     )
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="payments",
+     *                     allOf={
+     *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     *                         @OA\Schema(
+     *                             @OA\Property(
+     *                                 property="items",
+     *                                 type="array",
+     *                                 @OA\Items(ref="#/components/schemas/UserWithPendingSumamaryResponse")
+     *                             )
+     *                         )
+     *                     }
      *                 )
      *             ),
      *             @OA\Property(property="message", type="string", nullable=true, example="No hay estudiantes registrados.")
      *         )
      *     ),
      *
-     *     security={{"bearerAuth":{}}}
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación en los parámetros enviados."
+     *     ),
+     *      @OA\Response(
+     *         response=409,
+     *         description="Recurso no encontrado"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor."
+     *     )
      * )
      */
     public function index(Request $request)

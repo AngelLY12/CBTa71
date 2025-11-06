@@ -68,22 +68,28 @@ class ConceptsController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="concepts", type="array",
-     *                     @OA\Items(type="object",
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="concept_name", type="string", example="Pago de inscripción"),
-     *                         @OA\Property(property="amount", type="number", format="float", example=1500.00),
-     *                         @OA\Property(property="status", type="string", example="activo")
-     *                     )
+     *                 @OA\Property(
+     *                     property="concepts",
+     *                     allOf={
+     *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     *                         @OA\Schema(
+     *                             @OA\Property(
+     *                                 property="items",
+     *                                 type="array",
+     *                                 @OA\Items(ref="#/components/schemas/DomainPaymentConcept")
+     *                             )
+     *                         )
+     *                     }
      *                 )
-     *             )
+     *             ),
+     *             @OA\Property(property="message", type="string", nullable=true)
      *         )
      *     )
      * )
      */
     public function index(Request $request)
     {
-        $status = strtolower($request->input('status','todos'));
+        $status = strtolower($request->query('status','todos'));
         $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
         $perPage = $request->query('perPage', 15);
         $page    = $request->query('page', 1);
@@ -106,39 +112,49 @@ class ConceptsController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"concept_name", "status", "start_date", "amount", "is_global", "applies_to"},
-     *             @OA\Property(property="concept_name", type="string", example="Pago de reinscripción"),
-     *             @OA\Property(property="description", type="string", example="Pago correspondiente al semestre agosto-diciembre."),
-     *             @OA\Property(property="status", type="string", example="activo"),
-     *             @OA\Property(property="start_date", type="string", format="date", example="2025-08-01"),
-     *             @OA\Property(property="end_date", type="string", format="date", example="2025-09-01"),
-     *             @OA\Property(property="amount", type="number", example=1500.00),
-     *             @OA\Property(property="is_global", type="boolean", example=true),
-     *             @OA\Property(property="applies_to", type="string", example="todos"),
-     *             @OA\Property(property="semestres", type="array", @OA\Items(type="integer", example=5)),
-     *             @OA\Property(property="careers", type="array", @OA\Items(type="integer", example=3)),
-     *             @OA\Property(property="students", type="array", @OA\Items(type="integer", example=12))
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/CreatePaymentConceptDTO")
      *     ),
      *     @OA\Response(
      *         response=201,
      *         description="Concepto de pago creado exitosamente",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="concept", type="object",
-     *                     @OA\Property(property="id", type="integer", example=5),
-     *                     @OA\Property(property="concept_name", type="string", example="Pago de reinscripción"),
-     *                     @OA\Property(property="status", type="string", example="activo")
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="concept",
+     *                     ref="#/components/schemas/DomainPaymentConcept"
      *                 )
      *             ),
      *             @OA\Property(property="message", type="string", example="Concepto de pago creado con éxito.")
      *         )
      *     ),
-     *     @OA\Response(response=422, description="Error en la validación de datos"),
-     *     @OA\Response(response=409, description="Conflicto en los datos"),
-     *     @OA\Response(response=404, description="Recurso no encontrado")
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error en la validación de datos",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Error en la validación de datos."),
+     *             @OA\Property(property="errors", type="object", description="Errores de validación por campo")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflicto en los datos",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Conflicto en los datos.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Recurso no encontrado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Recurso no encontrado.")
+     *         )
+     *     )
      * )
      */
     public function store(Request $request)
@@ -207,36 +223,8 @@ class ConceptsController extends Controller
      *         @OA\Schema(type="integer", example=5)
      *     ),
      *     @OA\RequestBody(
-     *         required=false,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="concept_name", type="string", example="Pago actualizado"),
-     *             @OA\Property(property="description", type="string", example="Descripción actualizada del concepto"),
-     *             @OA\Property(property="status", type="string", example="activo"),
-     *             @OA\Property(property="start_date", type="string", format="date", example="2025-08-01"),
-     *             @OA\Property(property="end_date", type="string", format="date", example="2025-09-01"),
-     *             @OA\Property(property="amount", type="number", format="float", example=1200.50),
-     *             @OA\Property(property="is_global", type="boolean", example=false),
-     *             @OA\Property(property="applies_to", type="string", example="carrera"),
-     *             @OA\Property(
-     *                 property="semestres",
-     *                 type="array",
-     *                 @OA\Items(type="integer", example=5),
-     *                 description="Array de ids/valores de semestres (opcional)"
-     *             ),
-     *             @OA\Property(
-     *                 property="careers",
-     *                 type="array",
-     *                 @OA\Items(type="integer", example=3),
-     *                 description="Array de ids de carreras (opcional)"
-     *             ),
-     *             @OA\Property(
-     *                 property="students",
-     *                 type="array",
-     *                 @OA\Items(type="integer", example=12),
-     *                 description="Array de ids de estudiantes (opcional)"
-     *             ),
-     *             @OA\Property(property="replaceRelations", type="boolean", example=true, description="Si true, reemplaza relaciones en vez de anexar")
-     *         )
+     *         required=true,
+     *         @OA\JsonContent(ref="#/components/schemas/UpdatePaymentConceptDTO")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -244,12 +232,11 @@ class ConceptsController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="concept", type="object",
-     *                     @OA\Property(property="id", type="integer", example=5),
-     *                     @OA\Property(property="concept_name", type="string", example="Pago actualizado"),
-     *                     @OA\Property(property="amount", type="number", example=1200.50),
-     *                     @OA\Property(property="status", type="string", example="activo")
+     *                 @OA\Property(
+     *                     property="concept",
+     *                     ref="#/components/schemas/DomainPaymentConcept"
      *                 )
+     *
      *             ),
      *             @OA\Property(property="message", type="string", example="Concepto de pago actualizado correctamente.")
      *         )
@@ -320,7 +307,21 @@ class ConceptsController extends Controller
      *     tags={"Payment Concepts"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Concepto de pago finalizado correctamente"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Concepto finalizado correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(
+     *                     property="concept",
+     *                     ref="#/components/schemas/DomainPaymentConcept"
+     *                 )
+     *
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Concepto de pago finalizado correctamente.")
+     *         )
+     *     ),
      *     @OA\Response(response=409, description="Conflicto en los datos")
      * )
      */
@@ -343,7 +344,21 @@ class ConceptsController extends Controller
      *     tags={"Payment Concepts"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Concepto de pago deshabilitado correctamente"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Concepto deshabilitado correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(
+     *                     property="concept",
+     *                     ref="#/components/schemas/DomainPaymentConcept"
+     *                 )
+     *
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Concepto de pago deshabilitado correctamente.")
+     *         )
+     *     ),
      *     @OA\Response(response=409, description="Conflicto en los datos")
      * )
      */
@@ -366,7 +381,21 @@ class ConceptsController extends Controller
      *     tags={"Payment Concepts"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Concepto de pago habilitado correctamente"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Concepto activado correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(
+     *                     property="concept",
+     *                     ref="#/components/schemas/DomainPaymentConcept"
+     *                 )
+     *
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Concepto de pago habilitado correctamente.")
+     *         )
+     *     ),
      *     @OA\Response(response=409, description="Conflicto en los datos")
      * )
      */
@@ -409,7 +438,21 @@ class ConceptsController extends Controller
      *     summary="Eliminar concepto de pago (lógicamente)",
      *     tags={"Payment Concepts"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Response(response=200, description="Concepto eliminado lógicamente correctamente"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Concepto eliminado correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(
+     *                     property="concept",
+     *                     ref="#/components/schemas/DomainPaymentConcept"
+     *                 )
+     *
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Concepto de pago eliminado correctamente.")
+     *         )
+     *     ),
      *     @OA\Response(response=409, description="Conflicto en los datos")
      * )
      */

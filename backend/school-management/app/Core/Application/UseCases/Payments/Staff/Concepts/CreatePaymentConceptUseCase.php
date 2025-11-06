@@ -109,7 +109,7 @@ class CreatePaymentConceptUseCase
                 'amount' => $concept->amount,
                 'end_date' => $concept->end_date
             ];
-            SendMailJob::dispatch(new NewConceptMail(MailMapper::toNewPaymentConceptEmailDTO($data)));
+            SendMailJob::dispatch(new NewConceptMail(MailMapper::toNewPaymentConceptEmailDTO($data)))->delay(now()->addSeconds(rand(1, 5)));
         }
     }
 }

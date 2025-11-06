@@ -22,69 +22,79 @@ class PaymentHistoryController extends Controller
 
     }
 
-    /**
+        /**
      * @OA\Get(
      *     path="/api/v1/history",
+     *     tags={"Payment History"},
      *     summary="Obtener historial de pagos del usuario autenticado",
      *     description="Devuelve el historial de pagos del usuario logueado, con soporte para paginación y cacheo.",
      *     operationId="getUserPaymentHistory",
-     *     tags={"Payment History"},
      *     security={{"bearerAuth":{}}},
      *
      *     @OA\Parameter(
      *         name="perPage",
      *         in="query",
-     *         description="Cantidad de registros por página",
+     *         description="Cantidad de registros por página (por defecto 15).",
      *         required=false,
      *         @OA\Schema(type="integer", example=15)
      *     ),
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
-     *         description="Número de página",
+     *         description="Número de página (por defecto 1).",
      *         required=false,
      *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Parameter(
      *         name="forceRefresh",
      *         in="query",
-     *         description="Forzar actualización del caché (true/false)",
+     *         description="Forzar actualización del caché (true o false).",
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Historial de pagos obtenido correctamente",
+     *         description="Historial de pagos obtenido correctamente.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="payment_history", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="concept_name", type="string", example="Inscripción"),
-     *                         @OA\Property(property="amount", type="number", format="float", example=500.75),
-     *                         @OA\Property(property="status", type="string", example="completed"),
-     *                         @OA\Property(property="date", type="string", format="date-time", example="2025-10-31T14:30:00Z"),
-     *                         @OA\Property(property="reference", type="string", example="pi_Hyg76..."),
-     *                         @OA\Property(property="url", type="string", example="https://stripe..."),
-     *                         @OA\Property(property="payment_method_details", type="array",
-     *                          @OA\Items(
-     *                               type="object",
-     *                               @OA\Property(property="type", type="string", example="card"),
-     *                               @OA\Property(property="brand", type="string", example="visa"),
-     *                               @OA\Property(property="last4", type="string", example="4242")
-     *                               )
-     *                          )
-     *                     )
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="payment_history",
+     *                     allOf={
+     *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     *                         @OA\Schema(
+     *                             @OA\Property(
+     *                                 property="items",
+     *                                 type="array",
+     *                                 @OA\Items(ref="#/components/schemas/PaymentDetailResponse")
+     *                             )
+     *                         )
+     *                     }
      *                 )
      *             ),
-     *             @OA\Property(property="message", type="string", nullable=true, example="No hay historial de pagos para este usuario.")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example="No hay historial de pagos para este usuario."
+     *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=401,
-     *         description="No autorizado - Token inválido o ausente"
+     *         description="No autorizado - Token inválido o ausente."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación en los parámetros enviados."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor."
      *     )
      * )
      */

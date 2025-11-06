@@ -29,43 +29,60 @@ class PendingPaymentController extends Controller
 
     }
 
-     /**
+        /**
      * @OA\Get(
      *     path="/api/v1/pending-payments",
+     *     tags={"Pending Payment"},
      *     summary="Obtener pagos pendientes del usuario autenticado",
      *     description="Devuelve todos los conceptos pendientes de pago del usuario logueado.",
      *     operationId="getUserPendingPayments",
-     *     tags={"Pending Payment"},
      *     security={{"bearerAuth":{}}},
      *
      *     @OA\Parameter(
      *         name="forceRefresh",
      *         in="query",
-     *         description="Forzar actualización del caché (true/false)",
+     *         description="Forzar actualización del caché (true o false).",
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Pagos pendientes obtenidos correctamente",
+     *         description="Pagos pendientes obtenidos correctamente.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="pending_payments", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=12),
-     *                         @OA\Property(property="concept_name", type="string", example="Mensualidad Octubre"),
-     *                         @OA\Property(property="amount", type="integer", example=550),
-     *                     )
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="pending_payments",
+     *                     type="array",
+     *                     @OA\Items(ref="#/components/schemas/PendingPaymentConceptsResponse")
      *                 )
      *             ),
-     *             @OA\Property(property="message", type="string", nullable=true, example="No hay pagos pendientes para el usuario.")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example="No hay pagos pendientes para el usuario."
+     *             )
      *         )
      *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autorizado - Token inválido o ausente."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación en los parámetros enviados."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor."
+     *     )
      * )
      */
-
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -98,22 +115,39 @@ class PendingPaymentController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Pagos vencidos obtenidos correctamente",
+     *         description="Pagos vencidos obtenidos correctamente.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="overdue_payments", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=5),
-     *                         @OA\Property(property="concept_name", type="string", example="Mensualidad Septiembre"),
-     *                         @OA\Property(property="amount", type="integer", example=600),
-     *                     )
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="pending_payments",
+     *                     type="array",
+     *                     @OA\Items(ref="#/components/schemas/PendingPaymentConceptsResponse")
      *                 )
      *             ),
-     *             @OA\Property(property="message", type="string", nullable=true, example="No hay pagos vencidos para el usuario.")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example="No hay pagos vencidos para el usuario."
+     *             )
      *         )
      *     ),
-     *     @OA\Response(response=401, description="No autorizado - Token inválido o ausente")
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autorizado - Token inválido o ausente."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación en los parámetros enviados."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor."
+     *     )
      * )
      */
     public function overdue(Request $request)
@@ -132,34 +166,64 @@ class PendingPaymentController extends Controller
     /**
      * @OA\Post(
      *     path="/api/v1/pending-payments",
-     *     summary="Generar intento de pago para un concepto pendiente",
-     *     description="Crea un intento de pago en Stripe (u otro proveedor) para el concepto indicado.",
-     *     operationId="createPaymentIntent",
      *     tags={"Pending Payment"},
+     *     summary="Generar intento de pago para un concepto pendiente",
+     *     description="Crea un intento de pago en Stripe (u otro proveedor) para el concepto indicado y devuelve la URL del checkout.",
+     *     operationId="createPaymentIntent",
      *     security={{"bearerAuth":{}}},
      *
      *     @OA\RequestBody(
      *         required=true,
+     *         description="Datos necesarios para generar el intento de pago",
      *         @OA\JsonContent(
      *             required={"concept_id"},
-     *             @OA\Property(property="concept_id", type="integer", example=12, description="ID del concepto a pagar")
+     *             @OA\Property(
+     *                 property="concept_id",
+     *                 type="integer",
+     *                 description="ID del concepto pendiente a pagar",
+     *                 example=12
+     *             )
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=201,
-     *         description="Intento de pago generado correctamente",
+     *         description="Intento de pago generado correctamente.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="url_checkout", type="string", example="https://checkout.stripe.com/pay/cs_test_...")
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="url_checkout",
+     *                     type="string",
+     *                     example="https://checkout.stripe.com/pay/cs_test_a1b2c3d4e5"
+     *                 )
      *             ),
-     *             @OA\Property(property="message", type="string", example="El intento de pago se generó con éxito.")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="El intento de pago se generó con éxito."
+     *             )
      *         )
      *     ),
-     *     @OA\Response(response=422, description="Error de validación"),
-     *     @OA\Response(response=404, description="Recurso no encontrado"),
-     *     @OA\Response(response=403, description="No esta permitido")
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="No está permitido realizar esta acción."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Recurso no encontrado."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación en los datos enviados."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor."
+     *     )
      * )
      */
     public function store(Request $request)

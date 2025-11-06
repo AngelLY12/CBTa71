@@ -23,62 +23,62 @@ class LoginController extends Controller
     {
         $this->loginService=$loginService;
     }
-     /**
+    /**
      * @OA\Post(
      *     path="/api/v1/register",
-     *     summary="Registro de nuevo usuario",
+     *     summary="Registrar un nuevo usuario",
      *     description="Crea un nuevo usuario en el sistema con los datos proporcionados.",
+     *     operationId="registerUser",
      *     tags={"Auth"},
+     *
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name","last_name","email","password","phone_number","curp","status"},
-     *             @OA\Property(property="name", type="string", example="Carlos"),
-     *             @OA\Property(property="last_name", type="string", example="Calderon Espinoza"),
-     *             @OA\Property(property="email", type="string", format="email", example="example@gmail.com"),
-     *             @OA\Property(property="password", type="string", example="123"),
-     *             @OA\Property(property="phone_number", type="string", example="7357891145"),
-     *             @OA\Property(property="birthdate", type="string", format="date", example="2000-10-22"),
-     *             @OA\Property(property="gender", type="string", example="Hombre"),
-     *             @OA\Property(property="curp", type="string", example="EXMP090304JMSPXNU7"),
-     *             @OA\Property(
-     *                 property="address",
-     *                 type="object",
-     *                 @OA\Property(property="street", type="string", example="Calle Reforma 123"),
-     *                 @OA\Property(property="city", type="string", example="Cuautla"),
-     *                 @OA\Property(property="state", type="string", example="Morelos"),
-     *                 @OA\Property(property="zip", type="string", example="62740")
-     *             ),
-     *             @OA\Property(property="blood_type", type="string", example="O+"),
-     *             @OA\Property(property="registration_date", type="string", format="date", example="2025-11-02"),
-     *             @OA\Property(property="status", type="string", example="activo")
-     *         )
+     *         description="Datos necesarios para el registro del usuario",
+     *         @OA\JsonContent(ref="#/components/schemas/CreateUserDTO")
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Usuario creado con éxito",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", type="object",
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="email", type="string", example="example@gmail.com")
-     *                 )
+     *                 @OA\Property(property="user", ref="#/components/schemas/DomainUser")
      *             ),
      *             @OA\Property(property="message", type="string", example="El usuario ha sido creado con éxito.")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=422,
      *         description="Error en la validación de datos",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 description="Listado de errores de validación",
+     *                 example={
+     *                     "email": {"El campo email es obligatorio."},
+     *                     "password": {"El campo password debe tener al menos 6 caracteres."}
+     *                 }
+     *             ),
      *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error inesperado en el servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
      *         )
      *     )
      * )
      */
-
     public function register(Request $request)
     {
         $data = $request->only([
@@ -135,42 +135,66 @@ class LoginController extends Controller
      * @OA\Post(
      *     path="/api/v1/login",
      *     summary="Inicio de sesión de usuario",
-     *     description="Autentica un usuario con su correo electrónico y contraseña, y devuelve el token y refresh token.",
+     *     description="Autentica un usuario con su correo electrónico y contraseña, devolviendo el access token y refresh token.",
+     *     operationId="loginUser",
      *     tags={"Auth"},
+     *
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"email","password"},
-     *             @OA\Property(property="email", type="string", example="example@gmail.com"),
-     *             @OA\Property(property="password", type="string", example="123")
-     *         )
+     *         description="Credenciales del usuario para iniciar sesión",
+     *         @OA\JsonContent(ref="#/components/schemas/LoginDTO")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Inicio de sesión exitoso",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user_tokens", type="object",
-     *                     @OA\Property(property="access_token", type="string", example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."),
-     *      *              @OA\Property(property="refresh_token", type="string", example="def50200fcdcb15b13e.."),
-     *                     @OA\Property(property="token_type", type="string", example="Bearer")
-     *                 )
+     *                 @OA\Property(property="user_tokens", ref="#/components/schemas/LoginResponse")
      *             ),
      *             @OA\Property(property="message", type="string", example="Inicio de sesión exitoso.")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=422,
      *         description="Error en la validación de datos",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 description="Listado de errores de validación",
+     *                 example={
+     *                     "email": {"El campo email es obligatorio."},
+     *                     "password": {"El campo password es obligatorio."}
+     *                 }
+     *             ),
      *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=401,
-     *         description="Credenciales incorrectas"
+     *         description="Credenciales incorrectas",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Credenciales incorrectas.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error inesperado del servidor",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
+     *         )
      *     )
      * )
      */

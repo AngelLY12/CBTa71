@@ -31,54 +31,70 @@ class AdminController extends Controller
     /**
      * @OA\Post(
      *     path="/api/v1/admin-actions/attach-student",
-     *     summary="Asociar detalles de estudiante a un usuario existente",
-     *     description="Permite asignar información académica a un usuario, incluyendo carrera, semestre, grupo y taller.",
      *     tags={"Admin"},
+     *     summary="Asociar detalles de estudiante a un usuario existente",
+     *     description="Permite asignar información académica (carrera, semestre, grupo, taller) a un usuario ya registrado.",
+     *     operationId="attachStudentDetailToUser",
      *     security={{"bearerAuth":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"user_id", "career_id", "n_control", "semestre", "group", "workshop"},
-     *             @OA\Property(property="user_id", type="integer", example=12),
-     *             @OA\Property(property="career_id", type="integer", example=3),
-     *             @OA\Property(property="n_control", type="string", example="2020456789"),
-     *             @OA\Property(property="semestre", type="integer", example=5),
-     *             @OA\Property(property="group", type="string", example="B"),
-     *             @OA\Property(property="workshop", type="string", example="Taller de Robótica")
-     *         )
+     *         description="Datos necesarios para asociar un detalle de estudiante al usuario.",
+     *         @OA\JsonContent(ref="#/components/schemas/CreateStudentDetailDTO")
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Usuario asociado correctamente a un detalle de estudiante.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", type="object",
-     *                     @OA\Property(property="id", type="integer", example=12),
-     *                     @OA\Property(property="name", type="string", example="Carlos Pérez"),
-     *                     @OA\Property(property="career", type="string", example="Ingeniería en Sistemas"),
-     *                     @OA\Property(property="n_control", type="string", example="2020456789"),
-     *                     @OA\Property(property="semestre", type="integer", example=5),
-     *                     @OA\Property(property="group", type="string", example="B"),
-     *                     @OA\Property(property="workshop", type="string", example="Taller de Robótica")
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="user",
+     *                     ref="#/components/schemas/DomainUser"
      *                 )
      *             ),
-     *             @OA\Property(property="message", type="string", example="Se asociarón correctamente los datos al estudiante.")
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Se asociarón correctamente los datos al estudiante."
+     *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=422,
-     *         description="Error en la validación de datos",
+     *         description="Error en la validación de datos.",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Error en la validación de datos."),
      *             @OA\Property(property="errors", type="object",
-     *                 @OA\Property(property="user_id", type="array", @OA\Items(type="string", example="El campo user_id es obligatorio."))
+     *                 @OA\Property(
+     *                     property="user_id",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="El campo user_id es obligatorio.")
+     *                 )
      *             )
      *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="No autorizado para realizar esta acción."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Usuario o recurso no encontrado."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor."
      *     )
      * )
      */
+
     public function attachStudent(Request $request)
     {
         $data= $request->only([
@@ -245,7 +261,7 @@ class AdminController extends Controller
      * @OA\Get(
      *     path="/api/v1/admin-actions/users",
      *     summary="Mostrar usuarios existentes",
-     *     description="Permite al administrador ver a todos los usuarios existentes en el sistema, sus roles y permisos.",
+     *     description="Permite al administrador ver a todos los usuarios registrados, junto con sus roles, permisos y detalles académicos (si aplica).",
      *     operationId="showAllUsers",
      *     tags={"Admin"},
      *     security={{"bearerAuth": {}}},
@@ -253,7 +269,7 @@ class AdminController extends Controller
      *     @OA\Parameter(
      *         name="perPage",
      *         in="query",
-     *         description="Número de usuarios por página",
+     *         description="Cantidad de usuarios por página",
      *         required=false,
      *         @OA\Schema(type="integer", default=15)
      *     ),
@@ -267,7 +283,7 @@ class AdminController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Lista de usuarios paginada con roles y permisos",
+     *         description="Usuarios obtenidos correctamente.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="success", type="boolean", example=true),
@@ -276,18 +292,19 @@ class AdminController extends Controller
      *                 type="object",
      *                 @OA\Property(
      *                     property="users",
-     *                     type="object",
-     *                     @OA\Property(property="current_page", type="integer", example=1),
+     *                     ref="#/components/schemas/PaginatedResponse",
+     *                     description="Respuesta paginada con los usuarios.",
      *                     @OA\Property(
-     *                         property="data",
+     *                         property="items",
      *                         type="array",
+     *                         description="Lista de usuarios paginados.",
      *                         @OA\Items(
      *                             type="object",
-     *                             @OA\Property(property="id", type="integer", example=1),
-     *                             @OA\Property(property="name", type="string", example="Juan"),
-     *                             @OA\Property(property="last_name", type="string", example="Perez"),
-     *                             @OA\Property(property="email", type="string", example="juan@example.com"),
-     *                             @OA\Property(property="curp", type="string", example="XXXXXX"),
+     *                             @OA\Property(property="id", type="integer", example=7),
+     *                             @OA\Property(property="name", type="string", example="Ana"),
+     *                             @OA\Property(property="last_name", type="string", example="Lopez"),
+     *                             @OA\Property(property="email", type="string", example="ana@example.com"),
+     *                             @OA\Property(property="curp", type="string", example="XXXX"),
      *                             @OA\Property(
      *                                 property="roles",
      *                                 type="array",
@@ -297,12 +314,18 @@ class AdminController extends Controller
      *                                 property="permissions",
      *                                 type="array",
      *                                 @OA\Items(type="string", example="create payment")
+     *                             ),
+     *                             @OA\Property(
+     *                                 property="student_detail",
+     *                                 type="object",
+     *                                 nullable=true,
+     *                                 @OA\Property(property="career", type="string", example="Ciencias Sociales"),
+     *                                 @OA\Property(property="n_control", type="integer", example=21432),
+     *                                 @OA\Property(property="semestre", type="integer", example=5),
+     *                                 @OA\Property(property="group", type="string", example="B")
      *                             )
      *                         )
-     *                     ),
-     *                     @OA\Property(property="per_page", type="integer", example=15),
-     *                     @OA\Property(property="last_page", type="integer", example=3),
-     *                     @OA\Property(property="total", type="integer", example=25)
+     *                     )
      *                 )
      *             ),
      *             @OA\Property(property="message", type="string", example="Usuarios encontrados.")

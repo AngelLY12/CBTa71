@@ -53,7 +53,7 @@ class RequiresActionUseCase
         }
         if($sendMail && $data){
             $mail = new RequiresActionMail(MailMapper::toRequiresActionEmailDTO($data));
-            SendMailJob::dispatch($mail, $user->email);
+            SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
             return true;
         }
 

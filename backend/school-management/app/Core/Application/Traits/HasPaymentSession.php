@@ -32,7 +32,7 @@ trait HasPaymentSession
         if($payment->status==='paid'){
            $data = MailMapper::toPaymentCreatedEmailDTO($payment, $user->fullName(), $user->email);
            $mail = new PaymentCreatedMail($data);
-           SendMailJob::dispatch($mail, $user->email);
+           SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
         }
 
         return $payment;

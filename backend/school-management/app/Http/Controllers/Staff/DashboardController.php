@@ -22,6 +22,7 @@ class DashboardController extends Controller
 
 
     }
+
     /**
      * @OA\Get(
      *     path="/api/v1/dashboard-staff/data",
@@ -49,16 +50,24 @@ class DashboardController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="statistics", type="object",
-     *                      @OA\Property(property="students", type="integer", example=120),
-     *                      @OA\Property(property="pending", type="object",
-     *                           @OA\Property(property="total_amount", type="integer", example=2500),
-     *                           @OA\Property(property="total_count", type="integer", example=2),
-     *                      ),
-     *                      @OA\Property(property="earnings", type="integer", example=1005),
-     *
-     *                 )
+     *                 @OA\Property(property="statistics", ref="#/components/schemas/DashboardDataResponse")
      *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="No estás autenticado.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado al obtener los datos.")
      *         )
      *     )
      * )
@@ -80,18 +89,21 @@ class DashboardController extends Controller
      * @OA\Get(
      *     path="/api/v1/dashboard-staff/pending-payments",
      *     summary="Obtener cantidad y monto total de pagos pendientes",
+     *     description="Devuelve el total de conceptos pendientes de pago, incluyendo cantidad y monto total. Se puede filtrar por el año actual y forzar la actualización del caché.",
      *     tags={"Dashboard"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="only_this_year",
      *         in="query",
      *         description="Filtrar solo por el año actual",
+     *         required=false,
      *         @OA\Schema(type="boolean", example=true)
      *     ),
      *     @OA\Parameter(
      *         name="forceRefresh",
      *         in="query",
      *         description="Forzar actualización del caché",
+     *         required=false,
      *         @OA\Schema(type="boolean", example=false)
      *     ),
      *     @OA\Response(
@@ -100,11 +112,24 @@ class DashboardController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="total_pending", type="object", example={
-     *                     "total_count": 12,
-     *                     "total_amount": 5600.75
-     *                 })
+     *                 @OA\Property(property="total_pending", ref="#/components/schemas/PendingSummaryResponse")
      *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="No estás autenticado.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error al obtener los pagos pendientes.")
      *         )
      *     )
      * )
@@ -149,6 +174,22 @@ class DashboardController extends Controller
      *                 @OA\Property(property="total_students", type="integer", example=1500)
      *             )
      *         )
+     *     ),
+     *      @OA\Response(
+     *         response=401,
+     *         description="No autenticado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="No estás autenticado.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error al obtener los pagos pendientes.")
+     *         )
      *     )
      * )
      */
@@ -190,8 +231,24 @@ class DashboardController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="total_earning", type="number", example=325000.00)
+     *                 @OA\Property(property="total_earning", type="string", example=325000.00)
      *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="No autenticado",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="No estás autenticado.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error al obtener los pagos pendientes.")
      *         )
      *     )
      * )
@@ -214,27 +271,60 @@ class DashboardController extends Controller
      * @OA\Get(
      *     path="/api/v1/dashboard-staff/concepts",
      *     summary="Obtener todos los conceptos de pago",
+     *     description="Devuelve una lista paginada de conceptos de pago visibles en el panel del personal. Permite filtrar por año actual y forzar actualización del caché.",
      *     tags={"Dashboard"},
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="only_this_year", in="query", @OA\Schema(type="boolean", example=true)),
-     *     @OA\Parameter(name="perPage", in="query", @OA\Schema(type="integer", example=15)),
-     *     @OA\Parameter(name="page", in="query", @OA\Schema(type="integer", example=1)),
-     *     @OA\Parameter(name="forceRefresh", in="query", @OA\Schema(type="boolean", example=false)),
+     *     @OA\Parameter(
+     *         name="only_this_year",
+     *         in="query",
+     *         description="Si es true, filtra los conceptos al año actual",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=true)
+     *     ),
+     *     @OA\Parameter(
+     *         name="perPage",
+     *         in="query",
+     *         description="Cantidad de registros por página",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=15)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Número de página a obtener",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="forceRefresh",
+     *         in="query",
+     *         description="Si es true, fuerza actualización del caché",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=false)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Lista de conceptos obtenida correctamente",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="concepts", type="array",
-     *                     @OA\Items(type="object", example={
-     *                         "id": 1,
-     *                         "concept_name": "Inscripción",
-     *                         "amount": 1500,
-     *                         "status": "activo"
-     *                     })
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="concepts",
+     *                     allOf={
+     *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     *                         @OA\Schema(
+     *                             @OA\Property(
+     *                                 property="items",
+     *                                 type="array",
+     *                                 @OA\Items(ref="#/components/schemas/ConceptsToDashboardResponse")
+     *                             )
+     *                         )
+     *                     }
      *                 )
-     *             )
+     *             ),
+     *             @OA\Property(property="message", type="string", nullable=true)
      *         )
      *     )
      * )

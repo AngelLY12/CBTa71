@@ -47,7 +47,7 @@ class HandleFailedOrExpiredPaymentUseCase
             ];
 
             $mail = new PaymentFailedMail(MailMapper::toPaymentFailedEmailDTO($data));
-            SendMailJob::dispatch($mail, $user->email);
+            SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
             $this->paymentRepo->delete($payment);
             return true;
         }

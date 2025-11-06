@@ -35,26 +35,54 @@ class RefreshTokenController extends Controller
      *             @OA\Property(property="refresh_token", type="string", example="def50200fcdcb15b13e...")
      *         )
      *     ),
-     *     @OA\Response(
+     *    @OA\Response(
      *         response=200,
-     *         description="Token renovado con éxito",
+     *         description="Tokens renovados con exito",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user_tokens", type="object",
-     *                     @OA\Property(property="access_token", type="string", example="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."),
-     *                     @OA\Property(property="refresh_token", type="string", example="def50200fcdcb15b13e..."),
-     *                 )
+     *                 @OA\Property(property="user_tokens", ref="#/components/schemas/LoginResponse")
      *             ),
-     *             @OA\Property(property="token_type", type="string", example="Bearer")
+     *             @OA\Property(property="message", type="string", example="Tokens renovados.")
      *         )
      *     ),
+     *
      *     @OA\Response(
-     *         response=403,
-     *         description="Refresh token invalido",
+     *         response=422,
+     *         description="Error en la validación de datos",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Refresh token inválido.")
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 description="Listado de errores de validación",
+     *                 example={
+     *                     "refresh_token": {"El refresh token es obligatorio."},
+     *                 }
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Credenciales incorrectas",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Credenciales incorrectas.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error inesperado del servidor",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
      *         )
      *     )
      * )
@@ -89,6 +117,43 @@ class RefreshTokenController extends Controller
      *         response=204,
      *         description="Sesión cerrada exitosamente (sin contenido)"
      *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error en la validación de datos",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 description="Listado de errores de validación",
+     *                 example={
+     *                     "refresh_token": {"El refresh token es es invalido o incorrecto."},
+     *                 }
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Credenciales incorrectas",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Credenciales incorrectas.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error inesperado del servidor",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
+     *         )
+     *     )
      * )
      */
     public function logout(Request $request)
