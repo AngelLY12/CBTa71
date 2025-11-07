@@ -4,6 +4,8 @@ namespace App\Core\Application\Mappers;
 
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
+use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
+use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\DTO\Response\User\UserRecipientDTO;
@@ -11,6 +13,7 @@ use App\Core\Application\DTO\Response\User\UserWithPaymentResponse;
 use App\Core\Application\DTO\Response\User\UserWithPendingSumamaryResponse;
 use App\Core\Application\DTO\Response\User\UserWithStudentDetailResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedPermissionsResponse;
+use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
@@ -140,13 +143,41 @@ class UserMapper{
         );
     }
 
-    public static function toUserUpdatedPermissionsResponse(?EloquentUser $user=null, array $permissions, ?string $role=null): UserWithUpdatedPermissionsResponse
+    public static function toUserUpdatedPermissionsResponse(?EloquentUser $user=null, array $permissions, ?string $role=null, int $totalUpdated): UserWithUpdatedPermissionsResponse
     {
         return new UserWithUpdatedPermissionsResponse(
             fullName: $user?->name && $user?->last_name ? "{$user->name} {$user->last_name}" : null,
             curp: $user?->curp ?? null,
             role: $role,
-            updatedPermissions: $permissions
+            updatedPermissions: $permissions,
+            totalUpdated: $totalUpdated ?? 0
+        );
+    }
+    public static function toUpdateUserRoleDTO(array $data): UpdateUserRoleDTO
+    {
+        return new UpdateUserRoleDTO(
+            curps:$data['curps'] ?? [],
+            rolesToAdd:$data['rolesToAdd'] ?? [],
+            rolesToRemove:$data['rolesToRemove'] ?? []
+        );
+    }
+
+    public static function toUserWithUptadedRoleResponse(array $data): UserWithUpdatedRoleResponse
+    {
+        return new UserWithUpdatedRoleResponse(
+            fullNames:$data['names'] ?? [],
+            curps: $data['curps'] ?? [],
+            updatedRoles:$data['roles'] ?? [],
+            totalUpdated: $data['totalUpdated'] ?? 0
+        );
+    }
+
+    public static function toUserChangedStatusResponse(array $data): UserChangedStatusResponse
+    {
+        return new UserChangedStatusResponse(
+            updatedUsers: $data['users'],
+            newStatus: $data['status'],
+            totalUpdated: $data['total'] ?? 0
         );
     }
 }

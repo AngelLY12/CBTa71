@@ -12,6 +12,7 @@ use App\Core\Domain\Repositories\Command\StudentDetailReInterface;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
 use App\Core\Infraestructure\Repositories\Command\EloquentCareerRepository;
@@ -22,6 +23,7 @@ use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentConcep
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentMethodRepository;
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentRepository;
 use App\Core\Infraestructure\Repositories\Command\Stripe\StripeGateway;
+use App\Core\Infraestructure\Repositories\Query\EloquentRolesAndPermissionQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\EloquentUserQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentConceptQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentQueryRepository;
@@ -50,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(StudentDetailReInterface::class,EloquentStudentDetailRepository::class);
         $this->app->bind(RefreshTokenRepInterface::class,EloquentRefreshTokenRepository::class);
         $this->app->singleton(CacheService::class, function () {return new CacheService();});
+        $this->app->bind(RolesAndPermissosQueryRepInterface::class,EloquentRolesAndPermissionQueryRepository::class);
 
     }
 

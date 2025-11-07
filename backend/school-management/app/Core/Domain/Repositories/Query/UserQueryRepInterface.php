@@ -17,6 +17,6 @@ interface UserQueryRepInterface{
     public function getStudentsWithPendingSummary(array $userIds): array;
     public function findAllUsers(int $perPage, int $page): LengthAwarePaginator;
     public function findAuthUser(): ?User;
-
+    public function findByIds(array $ids): iterable;
 
 }

@@ -3,6 +3,11 @@
 namespace App\Core\Domain\Utils\Validators;
 
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
+use App\Core\Domain\Entities\User;
+use App\Exceptions\Conflict\UserAlreadyActiveException;
+use App\Exceptions\Conflict\UserAlreadyDeletedException;
+use App\Exceptions\Conflict\UserAlreadyDisabledException;
+use App\Exceptions\Conflict\UserCannotBeDisabledException;
 use App\Exceptions\ValidationException;
 
 class UserValidator
@@ -25,6 +30,35 @@ class UserValidator
         {
             throw new ValidationException("El tipo de sangre del usuario no es valido");
 
+        }
+    }
+
+    public static function ensureValidStatusTransition(User $user, $newStatus)
+    {
+        switch($newStatus)
+        {
+            case 'eliminado':
+                if($user->isDeleted())
+                {
+                    throw new UserAlreadyDeletedException();
+                }
+                break;
+            case 'baja':
+                if($user->isDeleted())
+                {
+                    throw new UserCannotBeDisabledException();
+                }
+                if($user->isDisable())
+                {
+                    throw new UserAlreadyDisabledException();
+                }
+                break;
+            case 'activo':
+                if($user->isActive())
+                {
+                    throw new UserAlreadyActiveException();
+                }
+                break;
         }
     }
 }

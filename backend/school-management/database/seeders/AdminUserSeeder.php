@@ -42,5 +42,11 @@ class AdminUserSeeder extends Seeder
         $admin->givePermissionTo('import users');
         $admin->givePermissionTo('sync permissions');
         $admin->givePermissionTo('view users');
+        $admin->givePermissionTo('sync roles');
+        $admin->givePermissionTo('activate users');
+        $admin->givePermissionTo('disable users');
+        $admin->givePermissionTo('delete users');
+        $admin->givePermissionTo('view permissions');
+        $admin->givePermissionTo('view roles');
     }
 }

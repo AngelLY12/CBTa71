@@ -55,6 +55,15 @@ class User
     {
         return $this->status === 'activo';
     }
+    public function isDeleted():bool
+    {
+        return $this->status==='eliminado';
+    }
+
+    public function isDisable():bool
+    {
+        return $this->status==='baja';
+    }
     public function setStudentDetail(StudentDetail $detail): void
     {
         $this->studentDetail = $detail;

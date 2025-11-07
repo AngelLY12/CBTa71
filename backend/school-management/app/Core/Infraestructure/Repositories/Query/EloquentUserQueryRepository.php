@@ -4,7 +4,6 @@ namespace App\Core\Infraestructure\Repositories\Query;
 
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
-
 use App\Core\Application\Mappers\UserMapper as MappersUserMapper;
 use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
@@ -13,6 +12,8 @@ use App\Core\Domain\Entities\User;
 use App\Core\Infraestructure\Repositories\Traits\HasPendingQuery;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class EloquentUserQueryRepository implements UserQueryRepInterface
 {
@@ -178,6 +179,17 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             $user->load('studentDetail');
         }
         return optional($user, fn($user) => UserMapper::toDomain($user));
-
     }
+
+    public function findByIds(array $ids): iterable
+    {
+        if(empty($ids))
+        {
+            return [];
+        }
+         return EloquentUser::whereIn('id', $ids)
+        ->lazy()
+        ->map(fn($user) => UserMapper::toDomain($user));
+    }
+
 }
