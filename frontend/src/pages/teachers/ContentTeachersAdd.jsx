@@ -6,12 +6,8 @@ import ButtonPrimary from '../../components/React/ButtonPrimary'
 function ContentTeachersAdd() {
     const [name, setName] = useState("")
     const [apellidos, setApellidos] = useState("")
-    const [optionRol, setOptionRol] = useState("")
-    const optionsRol = ["Administrador", "Personal"]
-    const optionsStatus = ["Activo", "Inactivo"]
-    const optionPermiss = ["Editar", "Visualizar", "Borrar"]
-    const optionsViewAccept = ["Todas", "Roles", "Horarios", "Docentes", "Alumnos", "Matriculado", "Calificaciones", "Materias", "Pago"]
-
+    const [correo, setCorreo] = useState("")
+    const [telefono, setTelefono] = useState("")
     const clickCancell = () => {
         window.history.back();
     }
@@ -22,13 +18,13 @@ function ContentTeachersAdd() {
                 <div className='w-full'>
                     <div className='w-full flex flex-col md:w-9/12'>
                         <InputTitleUp title={"Nombre"} value={name} setValue={setName} />
-                        <InputTitleUp title={"Correo"} value={name} setValue={setName} />
+                        <InputTitleUp type="email" title={"Correo"} value={correo} setValue={setCorreo} />
                     </div>
                 </div>
                 <div className='w-full'>
                     <div className='w-full flex flex-col md:w-9/12'>
                         <InputTitleUp title={"Apellidos"} value={apellidos} setValue={setApellidos} />
-                        <InputTitleUp title={"Telefono"} value={apellidos} setValue={setApellidos} />
+                        <InputTitleUp type='tel' title={"Telefono"} value={telefono} setValue={setTelefono} />
                     </div>
                 </div>
             </div>
