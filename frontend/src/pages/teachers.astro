@@ -1,0 +1,11 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import Layout from "../layouts/Layout.astro";
+import ContentTeachers from "./teachers/ContentTeachers";
+---
+
+<Layout title="Maestros">
+    <DivWithNavbar title="Maestros" >
+      <ContentTeachers client:load>
+    </DivWithNavbar>
+</Layout>

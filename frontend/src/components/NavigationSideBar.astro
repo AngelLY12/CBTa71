@@ -10,10 +10,13 @@ const { isMovil = false } = Astro.props;
 ---
 
 <div
-    id={`${!isMovil ? "container-navbar" : "container-navbarMobil"}`}
-    class={`bg-green-500 ${!isMovil ? "w-[8.7rem] h-full fixed hidden lg:visible lg:block" : "w-[8.7rem] fixed inset-y-0 right-0 z-10 hidden"} `}
+    id="divNav"
+    class={`${isMovil == false ? "w-[8.7rem] h-full fixed hidden lg:visible lg:block" : "fixed inset-0 right-0 z-50 hidden"} `}
 >
-    <nav class="w-full flex flex-col gap-2 pt-2 px-1 text-white">
+    <nav
+        id={`${isMovil == false ? "container-navbar" : "container-navbarMobil"}`}
+        class="bg-green-500 w-[8.7rem] z-10 fixed inset-y-0 right-0 md:h-full md:static md:z-auto md:w-full flex flex-col gap-2 pt-2 px-1 text-white"
+    >
         {
             !isMovil ? (
                 <button
@@ -90,9 +93,9 @@ const { isMovil = false } = Astro.props;
             ))
         }
     </nav>
-</div>
 
-<div id="bg-navbar" class="fixed inset-0 bg-black/25 hidden"></div>
+    <div id="bg-navbar" class="absolute inset-0 bg-black/25 hidden -z-10"></div>
+</div>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -109,6 +112,7 @@ const { isMovil = false } = Astro.props;
         const divContainer = document.getElementById(
             "div-body",
         ) as HTMLDivElement;
+        const divNav = document.getElementById("divNav") as HTMLDivElement;
         const bgNavbar = document.getElementById("bg-navbar") as HTMLDivElement;
         const textlink = document.querySelectorAll(".showText");
         const links = document.querySelectorAll(".links-navbar");
@@ -129,7 +133,7 @@ const { isMovil = false } = Astro.props;
             divNavbar.classList.add("w-20");
         }
 
-        button.addEventListener("click", () => {
+        button?.addEventListener("click", () => {
             textlink.forEach((e) => e.classList.toggle("hidden"));
             links.forEach((e) => {
                 e.classList.toggle("justify-center");
@@ -144,18 +148,17 @@ const { isMovil = false } = Astro.props;
             localStorage.setItem("navbarCollapsed", String(isNowCollapsed));
         });
 
-        bgNavbar.addEventListener("click", () => {
-            hideNavbar();
-        });
+        bgNavbar?.addEventListener("click", hideNavbar);
 
-        closeButton.addEventListener("click", hideNavbar);
+        closeButton?.addEventListener("click", hideNavbar);
 
         function hideNavbar() {
             divNavbarMobil.classList.remove("show-navbar");
             setTimeout(() => {
                 divNavbarMobil.classList.add("hidden");
+                divNav.classList.add("hidden")
             }, 300); // espera a que termine la transición
-            bgNavbar.classList.add("hidden");
+            bgNavbar?.classList?.add("hidden");
             body.classList.remove("overflow-y-hidden");
         }
     });
@@ -163,9 +166,9 @@ const { isMovil = false } = Astro.props;
 
 <style>
     #container-navbarMobil {
-        visibility: hidden;
         transform: translateX(100%);
         transition: 0.4s ease-in-out;
+        visibility: hidden;
     }
 
     #container-navbarMobil.show-navbar {

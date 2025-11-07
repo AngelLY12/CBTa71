@@ -1,0 +1,13 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import { routes } from "../data/routes";
+import Layout from "../layouts/Layout.astro";
+import ContentAddRole from "./roles/ContentAddRole";
+import ContentTeachersAdd from "./teachers/ContentTeachersAdd";
+---
+
+<Layout title="Agregar Maestro">
+    <DivWithNavbar title="Agregar maestros" routesMiddle={[routes.teachers]}>
+        <ContentTeachersAdd client:load />
+    </DivWithNavbar>
+</Layout>

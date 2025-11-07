@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ButtonPrimary from './ButtonPrimary';
 
-function SelectInput({ className, options = [], setOption, setValue, title = "Buscar por" }) {
+function SelectInputOption({ className, options = [], setValue, title, titleSelector }) {
     const [opentOption, setOpenOptions] = useState(false)
     const [openMovilSelect, setOpenMovilSelect] = useState(false);
-    const [indexSelect, setIndexSelect] = useState(0)
-    const [valueSelect, setValueSelect] = useState(options[0])
+    const [indexSelect, setIndexSelect] = useState(-1)
+    const [valueSelect, setValueSelect] = useState("")
     const [isMovil, setIsMovil] = useState(false);
     const wrapperRef = useRef(null);
     const buttonRef = useRef(null)
@@ -87,24 +87,16 @@ function SelectInput({ className, options = [], setOption, setValue, title = "Bu
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [closeOption]);
 
-    useEffect(() => {
-        setValue(options[0])
-    }, [])
-
-    useEffect(() => {
-        if (indexSelect != -1) {
-            setOption()
-        }
-    }, [valueSelect])
+    const focusSelect = () => {
+        buttonRef.current.focus()
+    }
 
     return (
-        <>
+        <div className={`w-full ${className}`}>
+            <p onClick={focusSelect} className='font-medium text-md md:text-lg mb-0.5'>{title}</p>
+
             <div className="md:hidden h-auto w-auto visible block">
-                <ButtonPrimary title="Filtros" onClick={showOptionMovil}>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="size-6 bi bi-filter" viewBox="0 0 16 16">
-                        <path d="M6 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5m-2-3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5m-2-3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5" />
-                    </svg>
-                </ButtonPrimary>
+                <ButtonPrimary showText={true} className={"w-full"} title={!valueSelect ? titleSelector : valueSelect} onClick={showOptionMovil} />
             </div>
 
             {
@@ -113,14 +105,14 @@ function SelectInput({ className, options = [], setOption, setValue, title = "Bu
                 </div>
             }
 
-            <div ref={wrapperRef} className={`md:relative ${className} ${openMovilSelect && isMovil ? "flex flex-col pt-2 active overflow-hidden fixed bottom-0 inset-x-0 h-1/2 z-50 bg-white" : "relative bg-transparent"}`}>
+            <div ref={wrapperRef} className={`md:relative ${className} ${openMovilSelect && isMovil ? "flex flex-col pt-2 active overflow-hidden fixed bottom-0 inset-x-0 h-1/2 z-50 bg-white" : "md:h-12 relative bg-transparent"}`}>
                 <div className='flex w-full md:h-full'>
                     <div className={`w-full md:h-full md:visible md:block hidden`}>
-                        <button ref={buttonRef} className="flex w-full h-full" onClick={showOption}>
-                            <div className='flex w-11/12 items-center px-2 border-[1px] rounded-s'>
-                                <p>{title}: <span className='font-semibold'>{valueSelect}</span></p>
+                        <button ref={buttonRef} className="flex w-full h-full outline-0 group" onClick={showOption}>
+                            <div className='flex w-11/12 items-center px-2 border-[1px] rounded-s group-focus:border-blue-600 group-focus:border-[1.7px]'>
+                                <p>{!valueSelect ? titleSelector : ""} <span className='font-semibold'>{valueSelect}</span></p>
                             </div>
-                            <div className='flex w-12 h-full justify-center items-center border-[1px] rounded-e'>
+                            <div className='flex w-12 h-full justify-center items-center border-[1px] rounded-e group-focus:border-blue-600 group-focus:border-[1.7px]'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                                 </svg>
@@ -134,7 +126,7 @@ function SelectInput({ className, options = [], setOption, setValue, title = "Bu
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                             </svg>
                         </button>
-                        <p>Filtrar por: </p>
+                        <p>{titleSelector}: </p>
                     </div>
                 </div>
 
@@ -150,9 +142,9 @@ function SelectInput({ className, options = [], setOption, setValue, title = "Bu
                         ))}
                     </div>
                 }
-            </div >
-        </>
+            </div>
+        </div>
     )
 }
 
-export default SelectInput
+export default SelectInputOption

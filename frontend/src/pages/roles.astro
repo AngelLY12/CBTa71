@@ -1,36 +1,19 @@
 ---
 import DivWithNavbar from "../components/DivWithNavbar.astro";
-import LinkSubnavbar from "../components/Link.Subnavbar.astro";
 import { routes } from "../data/routes";
 import Layout from "../layouts/Layout.astro";
-import TableRole from "./roles/TableRole.jsx";
+import ContentRole from "./roles/ContentRole.jsx";
+
+const linksSubNavbar = [
+    { tab: "", value: "Roles" },
+    { tab: "role-enable", value: "Habilitar" },
+];
 ---
 
 <Layout title="Roles">
     <DivWithNavbar title="Roles">
-        <div class="flex gap-2">
-            <LinkSubnavbar
-                href={routes.roles.url}
-                title="Roles"
-                active={true}
-            />
-            <LinkSubnavbar
-                href={routes.roles.url + "#roles-enable"}
-                title="Habilitar"
-            />
-        </div>
-
         <div class="w-full">
-            <TableRole client:load />
+            <ContentRole opcionTab={linksSubNavbar} routePrimary={routes.roles.url} client:load />
         </div>
-        <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br
-        /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br
-        /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br
-        /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br
-        /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br
-        /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br
-        /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br
-        /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br
-        /><br /><br /><br /><br />
     </DivWithNavbar>
 </Layout>

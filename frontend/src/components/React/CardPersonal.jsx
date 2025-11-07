@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 
-function CardPersonal({ item, index, indexDelete, deleteAprob, onClickDelete }) {
+function CardPersonal({ item, index, indexDelete, deleteAprob, onClickDelete, info = [] }) {
     const [showOption, setShowOption] = useState(false);
+    const nameComplete = `${item.nombre} ${item.apellidos}`
 
     const openOption = () => {
         setShowOption(!showOption);
@@ -25,14 +26,24 @@ function CardPersonal({ item, index, indexDelete, deleteAprob, onClickDelete }) 
         <div className={`w-full bg-white border-b-[1px] border-green-200 text-sm relative transition-opacity duration-300 ease-out ${(index === indexDelete && deleteAprob) && 'opacity-0'}`}>
             <div className={`flex items-center justify-between px-0.5 pt-1`}>
                 <div className='flex flex-col w-5/12'>
-                    <p className='max-w-full overflow-hidden font-semibold'>{item.apellidos.length >= 10 ? ` ${item.nombre} ${item.apellidos.slice(0, 4)}` + "..." : `${item.nombre} ${item.apellidos}`}</p>
-                    <p>{item.rol}</p>
+                    <p className='max-w-full overflow-hidden font-semibold'>{nameComplete.length >= 10 ? `${nameComplete.slice(0, 14)}` + "..." : `${item.nombre} ${item.apellidos}`}</p>
+                    <p>{info.length > 0 ? item[info[0]] : item.rol}</p>
                 </div>
-                <div className={`w-4/12 font-semibold ${item.status == "Activo" ? "text-green-500" : "text-red-500"}`}>
-                    {
-                        item.status
-                    }
-                </div>
+                {
+                    !item.status
+                        ?
+                        <div className={`w-4/12 font-semibold `}>
+                            {
+                                item[info[1]]
+                            }
+                        </div>
+                        :
+                        <div className={`w-4/12 font-semibold ${item.status == "Activo" ? "text-green-500" : "text-red-500"}`}>
+                            {
+                                item.status
+                            }
+                        </div>
+                }
                 <div className='w-auto relative'>
                     <button onClick={openOption} className='flex justify-center items-center p-1 rounded-full hover:bg-gray-500/40 active:bg-gray-500/40'>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">

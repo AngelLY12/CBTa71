@@ -1,0 +1,23 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import { routes } from "../data/routes";
+import Layout from "../layouts/Layout.astro";
+import ContentStudents from "./students/ContentStudents";
+
+const linksSubNavbar = [
+    { tab: "", value: "Inscritos" },
+    { tab: "aspirant-active", value: "Aspirantes" },
+];
+---
+
+<Layout title="Alumnos">
+    <DivWithNavbar title="Alumnos">
+        <div class="w-full">
+            <ContentStudents
+                opcionTab={linksSubNavbar}
+                routePrimary={routes.students.url}
+                client:load
+            />
+        </div>
+    </DivWithNavbar>
+</Layout>
