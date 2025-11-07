@@ -345,6 +345,505 @@
                 ]
             }
         },
+        "/api/v1/admin-actions/updated-roles": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Sincroniza roles de múltiples usuarios",
+                "description": "Permite agregar o eliminar roles a varios usuarios simultáneamente.",
+                "operationId": "updateManyUserRoles",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateUserRoleDTO"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Roles actualizados correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Roles actualizados correctamente."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "users_roles": {
+                                                    "$ref": "#/components/schemas/UserWithUpdatedRoleResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/activate-users": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Activa múltiples usuarios",
+                "description": "Cambia el estado de los usuarios seleccionados a 'activado'.",
+                "operationId": "8363ce476a6debbe5c28ca1a4157c856",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ids"
+                                ],
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            4,
+                                            5,
+                                            6
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuarios activados correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "concept": {
+                                                    "$ref": "#/components/schemas/UserChangedStatusResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Estatus de usuarios actualizados correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto en los datos"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/delete-users": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Elimina múltiples usuarios",
+                "description": "Cambia el estado de los usuarios seleccionados a 'eliminado'.",
+                "operationId": "44c6cecb49d67ea90286234c6c8afe56",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ids"
+                                ],
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            4,
+                                            5,
+                                            6
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuarios eliminados correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "concept": {
+                                                    "$ref": "#/components/schemas/UserChangedStatusResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Estatus de usuarios actualizados correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto en los datos"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/disable-users": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Da de baja múltiples usuarios",
+                "description": "Cambia el estado de los usuarios seleccionados a 'baja'.",
+                "operationId": "aae2752e29d10fb2083de4cdbef27e7d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ids"
+                                ],
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "example": [
+                                            4,
+                                            5,
+                                            6
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuarios dados de baja correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "concept": {
+                                                    "$ref": "#/components/schemas/UserChangedStatusResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Estatus de usuarios actualizados correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto en los datos"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/find-permissions": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar permisos existentes",
+                "description": "Permite al administrador ver todos los permisos registrados.",
+                "operationId": "showAllPermissions",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de página a mostrar",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permisos obtenidos correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "permissions": {
+                                                    "allOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/PaginatedResponse"
+                                                        },
+                                                        {
+                                                            "properties": {
+                                                                "items": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "$ref": "#/components/schemas/Permission"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/find-roles": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar roles existentes",
+                "description": "Permite al administrador ver todos los roles registrados.",
+                "operationId": "showAllRoles",
+                "responses": {
+                    "200": {
+                        "description": "Roles obtenidos correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "roles": {
+                                                    "description": "Lista de roles disponibles.",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Role"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/roles/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar rol por ID",
+                "description": "Permite al administrador ver la información de un rol específico por su identificador.",
+                "operationId": "showRoleById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del rol a consultar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rol obtenido correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "role": {
+                                                    "$ref": "#/components/schemas/Role"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/permissions/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar permiso por ID",
+                "description": "Permite al administrador ver la información de un permiso específico por su identificador.",
+                "operationId": "showPermissionById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del permiso a consultar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permiso obtenido correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "permission": {
+                                                    "$ref": "#/components/schemas/Permission"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/find/concept/{id}": {
             "get": {
                 "tags": [
@@ -3895,6 +4394,44 @@
                 },
                 "type": "object"
             },
+            "UpdateUserRoleDTO": {
+                "description": "Datos para actualizar roles de múltiples usuarios",
+                "required": [
+                    "curps"
+                ],
+                "properties": {
+                    "curps": {
+                        "description": "Lista de CURPs de los usuarios a actualizar",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "PEPJ800101HDFRRN09"
+                        }
+                    },
+                    "rolesToAdd": {
+                        "description": "Lista de roles que se añadirán a los usuarios",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "student",
+                            "admin"
+                        ]
+                    },
+                    "rolesToRemove": {
+                        "description": "Lista de roles que se eliminarán de los usuarios",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "guest"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
             "DashboardDataResponse": {
                 "properties": {
                     "earnings": {
@@ -4401,6 +4938,43 @@
                 },
                 "type": "object"
             },
+            "UserChangedStatusResponse": {
+                "description": "Respuesta después de cambiar el estado de uno o más usuarios",
+                "properties": {
+                    "updatedUsers": {
+                        "description": "Usuarios que han cambiado su estado",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "example": "Juan Pérez"
+                                },
+                                "curp": {
+                                    "type": "string",
+                                    "example": "PEPJ800101HDFRRN09"
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "example": "activo"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "newStatus": {
+                        "description": "Nuevo estado asignado a los usuarios",
+                        "type": "string",
+                        "example": "activo"
+                    },
+                    "totalUpdated": {
+                        "description": "Número total de usuarios actualizados",
+                        "type": "integer",
+                        "example": 5
+                    }
+                },
+                "type": "object"
+            },
             "UserDataResponse": {
                 "properties": {
                     "id": {
@@ -4548,6 +5122,7 @@
                 "type": "object"
             },
             "UserWithUpdatedPermissionsResponse": {
+                "description": "Respuesta con los permisos actualizados de un usuario o grupo de usuarios",
                 "properties": {
                     "fullName": {
                         "description": "Nombre completo del usuario",
@@ -4560,12 +5135,12 @@
                         "example": "PEPJ800101HDFRRN09"
                     },
                     "role": {
-                        "description": "Role de usuarios",
+                        "description": "Rol actual del usuario",
                         "type": "string",
                         "example": "student"
                     },
                     "updatedPermissions": {
-                        "description": "Lista de permisos actualizados para el usuario",
+                        "description": "Lista de permisos actualizados (añadidos o removidos)",
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -4574,6 +5149,68 @@
                             "find user",
                             "create payment"
                         ]
+                    },
+                    "totalUpdated": {
+                        "description": "Número total de usuarios afectados por la actualización",
+                        "type": "integer",
+                        "example": 10
+                    }
+                },
+                "type": "object"
+            },
+            "UserWithUpdatedRoleResponse": {
+                "description": "Respuesta con los roles actualizados de varios usuarios",
+                "properties": {
+                    "fullNames": {
+                        "description": "Nombres completos de los usuarios afectados",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Juan Pérez",
+                            "Ana Gómez"
+                        ]
+                    },
+                    "curps": {
+                        "description": "CURPs de los usuarios afectados",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "PEPJ800101HDFRRN09",
+                            "GOMA900202MDFLRN05"
+                        ]
+                    },
+                    "updatedRoles": {
+                        "description": "Roles agregados y removidos",
+                        "properties": {
+                            "added": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "student"
+                                ]
+                            },
+                            "removed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "guest"
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "totalUpdated": {
+                        "description": "Número total de usuarios actualizados",
+                        "type": "integer",
+                        "example": 3
                     }
                 },
                 "type": "object"
@@ -4781,6 +5418,23 @@
                 },
                 "type": "object"
             },
+            "Permission": {
+                "title": "Permission",
+                "description": "Representa un permiso dentro del sistema.",
+                "properties": {
+                    "id": {
+                        "description": "Identificador único del permiso.",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "description": "Nombre del permiso.",
+                        "type": "string",
+                        "example": "edit users"
+                    }
+                },
+                "type": "object"
+            },
             "DomainRefreshToken": {
                 "description": "Representa un token de actualización para un usuario",
                 "properties": {
@@ -4804,6 +5458,23 @@
                     "revoked": {
                         "type": "boolean",
                         "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "Role": {
+                "title": "Role",
+                "description": "Representa un rol dentro del sistema.",
+                "properties": {
+                    "id": {
+                        "description": "Identificador único del rol.",
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "name": {
+                        "description": "Nombre del rol.",
+                        "type": "string",
+                        "example": "Administrator"
                     }
                 },
                 "type": "object"

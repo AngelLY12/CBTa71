@@ -6,7 +6,6 @@ use App\Models\Career;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -73,9 +72,11 @@ class DatabaseSeeder extends Seeder
             'view roles'
         ];
 
-        $permissionsToInsert = array_map(fn($p) => ['name' => $p], $permissions);
+        foreach($permissions as $perm)
+        {
+            Permission::firstOrCreate(['name'=>$perm]);
+        }
 
-        DB::table('permissions')->insertOrIgnore($permissionsToInsert);
         $careers=
         [
             'Técnico Agropecuario',
@@ -83,8 +84,10 @@ class DatabaseSeeder extends Seeder
             'Técnico en Administración para el Emprendimiento'
         ];
 
-        $careersToInsert = array_map(fn($career)=>['career_name'=> $career], $careers);
-        DB::table('careers')->insertOrIgnore($careersToInsert);
+        foreach($careers as $career)
+        {
+            Career::firstOrCreate(['career_name'=>$career]);
+        }
 
         // ------------------------
         // CREAR ROLES
