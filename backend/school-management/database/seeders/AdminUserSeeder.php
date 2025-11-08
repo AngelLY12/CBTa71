@@ -37,16 +37,20 @@ class AdminUserSeeder extends Seeder
                 'status' => 'activo',
             ]
         );
+
         $admin->assignRole('admin');
-        $admin->givePermissionTo('attach student');
-        $admin->givePermissionTo('import users');
-        $admin->givePermissionTo('sync permissions');
-        $admin->givePermissionTo('view users');
-        $admin->givePermissionTo('sync roles');
-        $admin->givePermissionTo('activate users');
-        $admin->givePermissionTo('disable users');
-        $admin->givePermissionTo('delete users');
-        $admin->givePermissionTo('view permissions');
-        $admin->givePermissionTo('view roles');
+        $admin->givePermissionTo([
+            'attach student',
+            'import users',
+            'sync permissions',
+            'view users',
+            'sync roles',
+            'activate users',
+            'disable users',
+            'delete users',
+            'view permissions',
+            'view roles',
+            'view profile',
+        ]);
     }
 }

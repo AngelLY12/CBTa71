@@ -9,23 +9,28 @@ use App\Core\Infraestructure\Mappers\CareerMapper;
 
 class EloquentCareerRepository implements CareerRepInterface{
 
-    public function findByName(string $careerName): ?Career
+    public function create(Career $career): Career
     {
-        $career = EloquentCareer::where('career_name', $careerName)->first();
-        return $career ? CareerMapper::toDomain($career) : null;
+        $career=EloquentCareer::create(CareerMapper::toPersistence($career));
+        $career->refresh();
+        return CareerMapper::toDomain($career);
     }
 
-    public function findAll():array
+    public function delete(int $careerId): void
     {
-        return EloquentCareer::all()
-        ->map(fn($career) => CareerMapper::toDomain($career))
-        ->toArray();
+        $eloquent=$this->findOrFail($careerId);
+        $eloquent->delete();
     }
 
-    public function findById(int $id): ?Career
+    public function update(int $careerId, array $fields): Career
     {
-        return optional(EloquentCareer::find($id), fn($career) => CareerMapper::toDomain($career));
-
+        $eloquent=$this->findOrFail($careerId);
+        $eloquent->update($fields);
+        return CareerMapper::toDomain($eloquent);
     }
 
+     private function findOrFail(int $id): EloquentCareer
+    {
+        return EloquentCareer::findOrFail($id);
+    }
 }

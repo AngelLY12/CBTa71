@@ -6,6 +6,7 @@ use App\Models\Career;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
@@ -21,45 +22,53 @@ class DatabaseSeeder extends Seeder
         // ------------------------
         // PERMISOS
         // ------------------------
-        $permissions = [
+        $permissionsStudent = [
             //permisos de alumnos
-            'view own financial overview',
-            'view own pending concepts summary',
-            'view own paid concepts summary',
-            'view own overdue concepts summary',
-            'view payments history',
-            'view cards',
-            'create setup',
-            'delete card',
-            'view payment history',
-            'view pending concepts',
-            'create payment',
-            'view overdue concepts',
-            'refresh all dashboard',
-            'view concept',
-            'view payment',
-            'view profile',
-            //permisos de staff
-            'view all financial overview',
-            'view all pending concepts summary',
-            'view all students summary',
-            'view all paid concepts summary',
-            'view concepts history',
-            'view concepts',
-            'create concepts',
-            'update concepts',
-            'finalize concepts',
-            'disable concepts',
-            'eliminate concepts',
-            'activate concept',
-            'eliminate logical concept',
-            'view debts',
-            'validate debt',
-            'view payments',
-            'view students',
-            'view stripe-payments',
-            'refresh all dashboard',
-            //permisos de admin
+            'role' =>[
+                'view own financial overview',
+                'view own pending concepts summary',
+                'view own paid concepts summary',
+                'view own overdue concepts summary',
+                'view payments history',
+                'view cards',
+                'view payment history',
+                'view pending concepts',
+                'view overdue concepts',
+            ],
+            'model'=>[
+                'create setup',
+                'delete card',
+                'create payment',
+            ],
+        ];
+
+        $permissionsStaff=[
+            'role' =>[
+                'view all financial overview',
+                'view all pending concepts summary',
+                'view all students summary',
+                'view all paid concepts summary',
+                'view concepts history',
+                'view concepts',
+                'view debts',
+                'view payments',
+
+            ],
+            'model' =>[
+                'create concepts',
+                'update concepts',
+                'finalize concepts',
+                'disable concepts',
+                'eliminate concepts',
+                'activate concept',
+                'eliminate logical concept',
+                'validate debt',
+                'view students',
+                'view stripe-payments',
+            ],
+        ];
+
+        $permissionsAdmin=[
             'attach student',
             'import users',
             'sync permissions',
@@ -72,10 +81,36 @@ class DatabaseSeeder extends Seeder
             'view roles'
         ];
 
-        foreach($permissions as $perm)
-        {
-            Permission::firstOrCreate(['name'=>$perm]);
-        }
+        $global=[
+            'refresh all dashboard',
+            'view concept',
+            'view payment',
+            'view profile',
+        ];
+
+         $insertPermissions = function (array $permissions, string $type='role') {
+            DB::table('permissions')->insertOrIgnore(
+                collect($permissions)->map(fn($name) => [
+                    'name' => $name,
+                    'guard_name' => 'web',
+                    'type' => $type,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])->toArray()
+            );
+        };
+
+         $insertPermissions(array_merge(
+            $permissionsStudent['role'],
+            $permissionsStaff['role'],
+            $global
+        ),'role');
+
+        $insertPermissions(array_merge(
+            $permissionsStudent['model'],
+            $permissionsStaff['model'],
+            $permissionsAdmin,
+        ),'model');
 
         $careers=
         [
@@ -92,11 +127,22 @@ class DatabaseSeeder extends Seeder
         // ------------------------
         // CREAR ROLES
         // ------------------------
-        Role::firstOrCreate(['name' => 'student']);
-        Role::firstOrCreate(['name' => 'financial staff']);
+
+
+        $studentRole=Role::firstOrCreate(['name' => 'student']);
+        $staffRole=Role::firstOrCreate(['name' => 'financial staff']);
         Role::firstOrCreate(['name' => 'admin']);
 
-        $admin = $this->call(AdminUserSeeder::class);
+        $studentRole->syncPermissions(array_merge(
+            $permissionsStudent['role'],
+            $global
+        ));
+
+        $staffRole->syncPermissions(array_merge(
+            $permissionsStaff['role'],
+            $global
+        ));
+        $this->call(AdminUserSeeder::class);
 
     }
 

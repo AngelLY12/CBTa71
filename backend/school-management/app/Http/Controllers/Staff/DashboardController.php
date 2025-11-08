@@ -76,7 +76,6 @@ class DashboardController extends Controller
     {
         $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
         $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-
         $data = $this->dashboardService->getData($onlyThisYear, $forceRefresh);
 
         return response()->json([

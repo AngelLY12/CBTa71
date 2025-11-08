@@ -26,19 +26,19 @@ class LoginUseCase
 
    public function execute(LoginDTO $request): LoginResponse
    {
-        $user=$this->userRepo->findUserByEmail($request->email);
+        $user=$this->uqRepo->findUserByEmail($request->email);
         if(!$user || !Hash::check($request->password,$user->password)){
             throw new InvalidCredentialsException();
         }
-        if ($this->uqRepo->hasRole($user, 'student') && !$user->stripe_customer_id) {
+        if ($this->uqRepo->hasRole($user->id, 'student') && !$user->stripe_customer_id) {
             DB::transaction(function() use ($user) {
                 $stripeCustomerId = $this->stripe->createStripeUser($user);
-                $this->userRepo->update($user, ['stripe_customer_id' => $stripeCustomerId]);
+                $this->userRepo->update($user->id, ['stripe_customer_id' => $stripeCustomerId]);
                 $user->stripe_customer_id = $stripeCustomerId;
             });
         }
-        $token = $this->userRepo->createToken($user,'api-token');
-        $refreshToken = $this->userRepo->createRefreshToken($user, 'refresh-token');
+        $token = $this->userRepo->createToken($user->id,'api-token');
+        $refreshToken = $this->userRepo->createRefreshToken($user->id, 'refresh-token');
         return GeneralMapper::toLoginResponse($token,$refreshToken,'Bearer');
    }
 }

@@ -21,16 +21,16 @@ class PendingPaymentServiceFacades{
 
     public function showPendingPayments(User $user, bool $forceRefresh): array {
         $key = "$this->prefix:pending:$user->id";
-        return $this->cache($key,$forceRefresh ,fn() =>  $this->pending->execute($user));
+        return $this->cache($key,$forceRefresh ,fn() =>  $this->pending->execute($user->id));
     }
 
     public function showOverduePayments(User $user, bool $forceRefresh): array {
         $key = "$this->prefix:overdue:$user->id";
-        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user));
+        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user->id));
     }
 
     public function payConcept(User $user, int $conceptId): string {
-        $pay=$this->pay->execute($user,$conceptId);
+        $pay=$this->pay->execute($user->id,$conceptId);
         $this->service->forget("pending:pending:$user->id");
         return $pay;
     }

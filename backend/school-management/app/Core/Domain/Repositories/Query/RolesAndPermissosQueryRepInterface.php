@@ -12,5 +12,5 @@ interface RolesAndPermissosQueryRepInterface
     public function findRoleById(int $id):?Role;
     public function findAllRoles(): array;
     public function findPermissionById(int $id):?Permission;
-    public function findAllPermissions(int $page): LengthAwarePaginator;
+    public function findAllPermissions(): array;
 }

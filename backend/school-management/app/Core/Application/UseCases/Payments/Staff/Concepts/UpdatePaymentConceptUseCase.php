@@ -39,13 +39,13 @@ class UpdatePaymentConceptUseCase
                 throw new ConceptAppliesToConflictException();
             }
 
-            $existingConcept = $this->pcRepo->findById($dto->id);
+            $existingConcept = $this->pcqRepo->findById($dto->id);
 
             if (!$existingConcept) {
                 throw new ConceptNotFoundException();
             }
             PaymentConceptValidator::ensureConceptIsValidToUpdate($existingConcept);
-            $paymentConcept = $this->pcRepo->update($existingConcept, $dto->fieldsToUpdate);
+            $paymentConcept = $this->pcRepo->update($existingConcept->id, $dto->fieldsToUpdate);
             PaymentConceptValidator::ensureConceptHasRequiredFields($paymentConcept);
             $detachCareer = $detachSemester = $detachUsers = false;
 
@@ -55,7 +55,7 @@ class UpdatePaymentConceptUseCase
                         $detachSemester = true;
                         $detachUsers = true;
                         if ($dto->careers) {
-                            $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept, $dto->careers,$dto->replaceRelations);
+                            $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers,$dto->replaceRelations);
                         } else {
                              throw new CareersNotFoundException();
                         }
@@ -64,7 +64,7 @@ class UpdatePaymentConceptUseCase
                         $detachCareer = true;
                         $detachUsers = true;
                         if ($dto->semesters) {
-                            $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept, $dto->semesters);
+                            $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters);
                         }else{
                             throw new SemestersNotFoundException();
                         }
@@ -78,7 +78,7 @@ class UpdatePaymentConceptUseCase
                                 throw new StudentsNotFoundException();
 
                             }
-                            $paymentConcept=$this->pcRepo->attachToUsers($paymentConcept, $userIdListDTO, $dto->replaceRelations);
+                            $paymentConcept=$this->pcRepo->attachToUsers($paymentConcept->id, $userIdListDTO, $dto->replaceRelations);
 
                         }else{
                             throw new StudentsNotFoundException();
@@ -87,8 +87,8 @@ class UpdatePaymentConceptUseCase
                     case 'carrera_semestre':
                         $detachUsers = true;
                         if($dto->careers && $dto->semesters){
-                            $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept, $dto->careers);
-                            $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept, $dto->semesters);
+                            $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers);
+                            $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters);
                         }else {
                             throw new CareerSemesterInvalidException();
                         }
@@ -102,9 +102,9 @@ class UpdatePaymentConceptUseCase
                         break;
                 }
             }
-            if ($detachCareer) $this->pcRepo->detachFromCareer($paymentConcept);
-            if ($detachSemester) $this->pcRepo->detachFromSemester($paymentConcept);
-            if ($detachUsers) $this->pcRepo->detachFromUsers($paymentConcept);
+            if ($detachCareer) $this->pcRepo->detachFromCareer($paymentConcept->id);
+            if ($detachSemester) $this->pcRepo->detachFromSemester($paymentConcept->id);
+            if ($detachUsers) $this->pcRepo->detachFromUsers($paymentConcept->id);
 
             $recipients = $this->uqRepo->getRecipients($paymentConcept, $dto->appliesTo ?? 'todos');
             if(empty($recipientsArray)){

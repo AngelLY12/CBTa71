@@ -36,10 +36,9 @@ class CardsServiceFacades
         return $delete;
     }
 
-    public function getUserPaymentMethods(User $user, bool $forceRefresh): array
+    public function getUserPaymentMethods(int $userId, bool $forceRefresh): array
     {
-        $key="$this->prefix:show:$user->id";
-        return $this->cache($key,$forceRefresh ,fn() =>$this->show->execute($user));
+        $key="$this->prefix:show:$userId";
+        return $this->cache($key,$forceRefresh ,fn() =>$this->show->execute($userId));
     }
-
 }

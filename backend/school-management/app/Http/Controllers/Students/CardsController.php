@@ -77,7 +77,7 @@ class CardsController extends Controller
     {
        $user = Auth::user();
         $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-        $cards = $this->cardsService->getUserPaymentMethods(UserMapper::toDomain($user), $forceRefresh);
+        $cards = $this->cardsService->getUserPaymentMethods($user->id, $forceRefresh);
         return response()->json([
             'success' => true,
             'data' => ['cards'=>$cards],

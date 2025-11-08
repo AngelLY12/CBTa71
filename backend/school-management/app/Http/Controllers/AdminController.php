@@ -313,6 +313,13 @@ class AdminController extends Controller
      *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
+     *         name="forceRefresh",
+     *         in="query",
+     *         description="Forzar actualización del caché (true o false).",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Parameter(
      *         name="perPage",
      *         in="query",
      *         description="Cantidad de usuarios por página",
@@ -381,9 +388,10 @@ class AdminController extends Controller
      */
     public function index(Request $request)
     {
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
         $perPage = $request->query('perPage', 15);
         $page    = $request->query('page', 1);
-        $users=$this->service->showAllUsers($perPage, $page);
+        $users=$this->service->showAllUsers($perPage, $page,$forceRefresh);
         return response()->json([
             'success' => true,
             'data' =>['users'=> $users],
@@ -617,6 +625,13 @@ class AdminController extends Controller
      *     tags={"Admin"},
      *     security={{"bearerAuth": {}}},
      *
+     *      @OA\Parameter(
+     *         name="forceRefresh",
+     *         in="query",
+     *         description="Forzar actualización del caché (true o false).",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=false)
+     *     ),
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
@@ -654,8 +669,8 @@ class AdminController extends Controller
      */
     public function findAllPermissions(Request $request)
     {
-        $page = $request->query('page',1);
-        $permissions= $this->service->findAllPermissions($page);
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $permissions= $this->service->findAllPermissions($forceRefresh);
         return response()->json([
             'success' => true,
             'data' =>['permissions'=> $permissions],
@@ -671,6 +686,13 @@ class AdminController extends Controller
      *     tags={"Admin"},
      *     security={{"bearerAuth": {}}},
      *
+     *      @OA\Parameter(
+     *         name="forceRefresh",
+     *         in="query",
+     *         description="Forzar actualización del caché (true o false).",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=false)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Roles obtenidos correctamente.",
@@ -691,9 +713,10 @@ class AdminController extends Controller
      *     )
      * )
      */
-    public function findAllRoles()
+    public function findAllRoles(Request $request)
     {
-        $roles= $this->service->findAllRoles();
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $roles= $this->service->findAllRoles($forceRefresh);
         return response()->json([
             'success' => true,
             'data' =>['roles'=> $roles],

@@ -10,6 +10,7 @@ use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
 use App\Core\Infraestructure\Repositories\Traits\HasPendingQuery;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
@@ -18,6 +19,34 @@ use Spatie\Permission\Models\Role;
 class EloquentUserQueryRepository implements UserQueryRepInterface
 {
     use HasPendingQuery;
+
+    public function findById(int $userId): ?User
+    {
+        return optional(EloquentUser::find($userId),fn($eloquent)=>UserMapper::toDomain($eloquent));
+    }
+
+    public function getUserWithStudentDetail(int $userId): User
+    {
+        $eloquent = EloquentUser::findOrFail($userId);
+        $eloquent->load('studentDetail');
+        return UserMapper::toDomain($eloquent);
+    }
+
+    public function getUserByStripeCustomer(string $customerId): User
+    {
+        $user = EloquentUser::where('stripe_customer_id', $customerId)->first();
+        if (!$user) {
+            throw new ModelNotFoundException('Usuario no encontrado');
+        }
+        return UserMapper::toDomain($user);
+    }
+
+    public function findUserByEmail(string $email): ?User
+    {
+        $user=EloquentUser::where('email',$email)->first();
+        return $user ? UserMapper::toDomain($user): null;
+
+    }
 
     public function getUserIdsByControlNumbers(array $controlNumbers): UserIdListDTO
     {
@@ -95,9 +124,9 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return $recipients;
     }
 
-    public function hasRole(User $user, string $role): bool
+    public function hasRole(int $userId, string $role): bool
     {
-        $eloquentUser = EloquentUser::find($user->id);
+        $eloquentUser = EloquentUser::find($userId);
         return $eloquentUser ? $eloquentUser->hasRole($role) : false;
     }
 
@@ -138,7 +167,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         ->whereDoesntHave('roles', function($query) {
             $query->where('name', 'admin');
         })
-        ->select('id','name','last_name','email','curp')
+        ->select('id','name','last_name','email','curp', 'phone_number','address','blood_type')
         ->paginate($perPage, ['*'], 'page', $page);
 
         $paginator->getCollection()->transform(function ($user) {
@@ -174,7 +203,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
     {
         /** @var \App\Models\User $user */
         $user=Auth::user();
-        $isStudent=$this->hasRole(UserMapper::toDomain($user),'student');
+        $isStudent=$this->hasRole($user->id,'student');
         if($isStudent){
             $user->load('studentDetail');
         }

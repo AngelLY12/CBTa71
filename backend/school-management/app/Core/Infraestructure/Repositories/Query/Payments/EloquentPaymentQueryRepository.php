@@ -14,8 +14,26 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
 {
-    public function sumPaymentsByUserYear(User $user): string {
-        $total = EloquentPayment::where('user_id', $user->id)
+
+    public function findById(int $id): ?Payment
+    {
+        return optional(EloquentPayment::find($id), fn($pc) => PaymentMapper::toDomain($pc));
+    }
+
+    public function findBySessionId(string $sessionId): ?Payment
+    {
+        $payment= EloquentPayment::where('stripe_session_id', $sessionId)->first();
+        return $payment ? PaymentMapper::toDomain($payment) : null;
+    }
+
+    public function findByIntentId(string $intentId): ?Payment
+    {
+        $payment=EloquentPayment::where('payment_intent_id', $intentId)->first();
+        return $payment ? PaymentMapper::toDomain($payment) : null;
+    }
+
+    public function sumPaymentsByUserYear(int $userId): string {
+        $total = EloquentPayment::where('user_id', $userId)
         ->whereYear('created_at', now()->year)
         ->sum('amount');
 
@@ -30,18 +48,18 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     }
 
 
-    public function getPaymentHistory(User $user, int $perPage, int $page): LengthAwarePaginator
+    public function getPaymentHistory(int $userId, int $perPage, int $page): LengthAwarePaginator
     {
-         return EloquentPayment::where('user_id', $user->id)
+         return EloquentPayment::where('user_id', $userId)
         ->select('id', 'concept_name', 'amount', 'created_at')
         ->orderBy('created_at','desc')
         ->paginate($perPage, ['*'], 'page', $page)
         ->through(fn($p) => MappersPaymentMapper::toHistoryResponse($p));
     }
 
-    public function getPaymentHistoryWithDetails(User $user, int $perPage, int $page): LengthAwarePaginator
+    public function getPaymentHistoryWithDetails(int $userId, int $perPage, int $page): LengthAwarePaginator
     {
-        return EloquentPayment::where('user_id', $user->id)
+        return EloquentPayment::where('user_id', $userId)
             ->select('id', 'concept_name', 'amount', 'status','payment_intent_id','url','payment_method_details', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page)

@@ -8,6 +8,7 @@ use App\Core\Domain\Repositories\Command\RefreshToken;
 use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
 use App\Core\Infraestructure\Mappers\RefreshTokenMapper;
 use App\Models\RefreshToken as ModelsRefreshToken;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
@@ -19,15 +20,15 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
         $eloquent = ModelsRefreshToken::where('token', $hashedToken)->first();
 
         if (!$eloquent) {
-            return null;
+            throw new ModelNotFoundException('El token no fue encontrado');
         }
 
         return RefreshTokenMapper::toDomain($eloquent);
     }
-    public function create(User $user, string $token, int $days = 7): EntitiesRefreshToken
+    public function create(int $userId, string $token, int $days = 7): EntitiesRefreshToken
     {
         $eloquent = ModelsRefreshToken::create(
-            RefreshTokenMapper::toPersistence($user, $token, $days)
+            RefreshTokenMapper::toPersistence($userId, $token, $days)
         );
         return RefreshTokenMapper::toDomain($eloquent);
     }
@@ -37,21 +38,22 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
         $refresh = $this->findByToken($tokenValue);
 
         if ($refresh) {
-            $refresh=$this->update($refresh,['revoked' => true]);
+            $refresh=$this->update($refresh->id,['revoked' => true]);
         }
     }
 
-    public function update(EntitiesRefreshToken $token, array $fields): EntitiesRefreshToken
+    public function update(int $tokenId, array $fields): EntitiesRefreshToken
     {
-        $eloquentToken =  ModelsRefreshToken::findOrFail($token->id);
+        $eloquentToken =  $this->findOrFail($tokenId);
         $eloquentToken->update($fields);
         return RefreshTokenMapper::toDomain($eloquentToken);
 
     }
 
-    public function delete(EntitiesRefreshToken $token):void
+    public function delete(int $tokenId):void
     {
-        ModelsRefreshToken::where('id',$token->id)->delete();
+        $eloquent=$this->findOrFail($tokenId);
+        $eloquent->delete();
     }
 
     public function deletionInvalidTokens(): int
@@ -71,6 +73,11 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
             ->delete();
 
         return $deleted;
+    }
+
+    private function findOrFail(int $tokenId):ModelsRefreshToken
+    {
+        return ModelsRefreshToken::findOrFail($tokenId);
     }
 
 

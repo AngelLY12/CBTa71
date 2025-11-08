@@ -14,8 +14,8 @@ class GetPaymentHistoryUseCase
         private PaymentQueryRepInterface $pqRepo
     ) {}
 
-    public function execute(User $user, int $perPage, int $page): PaginatedResponse {
-        $paymentsPaginated= $this->pqRepo->getPaymentHistoryWithDetails($user, $perPage, $page);
+    public function execute(int $userId, int $perPage, int $page): PaginatedResponse {
+        $paymentsPaginated= $this->pqRepo->getPaymentHistoryWithDetails($userId, $perPage, $page);
         return GeneralMapper::toPaginatedResponse($paymentsPaginated->items(), $paymentsPaginated);
     }
 

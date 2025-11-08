@@ -5,6 +5,7 @@ namespace App\Core\Infraestructure\Repositories\Query\Payments;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
 use App\Core\Application\Mappers\PaymentConceptMapper as MappersPaymentConceptMapper;
 use App\Core\Application\Mappers\UserMapper;
+use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Entities\User;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper;
@@ -19,6 +20,10 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 {
     use HasPendingQuery;
 
+    public function findById(int $id): ?PaymentConcept
+    {
+        return optional(EloquentPaymentConcept::find($id), fn($pc) => PaymentConceptMapper::toDomain($pc));
+    }
     public function getPendingPaymentConcepts(User $user): PendingSummaryResponse {
         $result = $this->basePaymentConcept($user)
             ->selectRaw('COALESCE(SUM(amount), 0) as total_amount, COUNT(id) as total_count')

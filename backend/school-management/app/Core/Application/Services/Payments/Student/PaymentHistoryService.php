@@ -15,7 +15,7 @@ class PaymentHistoryService {
 
     public function paymentHistory(User $user, int $perPage, int $page, bool $forceRefresh): PaginatedResponse {
         $key = "history:$user->id:$perPage:$page";
-        return $this->cache($key,$forceRefresh ,fn() => $this->history->execute($user, $perPage, $page));
+        return $this->cache($key,$forceRefresh ,fn() => $this->history->execute($user->id, $perPage, $page));
     }
 
 }

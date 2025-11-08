@@ -3,13 +3,13 @@
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
 use App\Core\Application\Traits\HasPaymentSession;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use Stripe\Stripe;
 
 class SessionCompletedUseCase
 {
     public function __construct(
-        private UserRepInterface $userRepo,
+        private UserQueryRepInterface $uqRepo,
         private FinalizeSetupSessionUseCase $finalize
     ) {
 
@@ -29,7 +29,7 @@ class SessionCompletedUseCase
             ]);
         }
         if($obj->mode==='setup'){
-            $user = $this->userRepo->findUserByEmail($obj->customer_email ?? null);
+            $user = $this->uqRepo->findUserByEmail($obj->customer_email ?? null);
             if (!$user) {
                 logger()->error("Usuario no encontrado para session_id={$obj->id}");
                 return;

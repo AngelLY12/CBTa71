@@ -129,6 +129,14 @@ class FindEntityController extends Controller
      *     description="Devuelve la información del usuario autenticado en el sistema.",
      *     tags={"FindEntity"},
      *     security={{"bearerAuth":{}}},
+     *
+     *      @OA\Parameter(
+     *         name="forceRefresh",
+     *         in="query",
+     *         description="Forzar actualización del caché (true o false).",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=false)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Usuario autenticado encontrado correctamente.",
@@ -156,9 +164,10 @@ class FindEntityController extends Controller
      *     @OA\Response(response=500, description="Error inesperado")
      * )
      */
-    public function findUser()
+    public function findUser(Request $request)
     {
-        $user=$this->service->findUser();
+        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $user=$this->service->findUser($forceRefresh);
         return response()->json([
             'success' => true,
             'data' =>['user'=> $user],

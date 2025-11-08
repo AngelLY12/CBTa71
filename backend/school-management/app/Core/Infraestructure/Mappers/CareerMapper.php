@@ -13,5 +13,10 @@ class CareerMapper{
         );
     }
 
+    public static function toPersistence(DomainCareer $career): array
+    {
+        return ['career_name'=>$career->career_name];
+    }
+
 }
 

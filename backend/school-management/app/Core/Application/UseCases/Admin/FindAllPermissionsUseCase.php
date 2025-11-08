@@ -14,9 +14,8 @@ class FindAllPermissionsUseCase
     {
     }
 
-    public function execute(int $page): PaginatedResponse
+    public function execute(): array
     {
-        $permissions= $this->rpqRepo->findAllPermissions($page);
-        return GeneralMapper::toPaginatedResponse($permissions->items(),$permissions);
+        return $this->rpqRepo->findAllPermissions();
     }
 }

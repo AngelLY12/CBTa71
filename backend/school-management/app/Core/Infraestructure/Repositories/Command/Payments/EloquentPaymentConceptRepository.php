@@ -12,11 +12,6 @@ use Illuminate\Support\Facades\DB;
 class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
 
 
-    public function findById(int $id): ?PaymentConcept
-    {
-        return optional(EloquentPaymentConcept::find($id), fn($pc) => PaymentConceptMapper::toDomain($pc));
-    }
-
     public function create(PaymentConcept $concept): PaymentConcept
     {
         $pc = EloquentPaymentConcept::create(
@@ -26,16 +21,16 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         return PaymentConceptMapper::toDomain($pc);
     }
 
-    public function update(PaymentConcept $concept, array $data): PaymentConcept
+    public function update(int $conceptId, array $data): PaymentConcept
     {
-        $pc = $this->findOrFail($concept->id);
+        $pc = $this->findOrFail($conceptId);
         $pc->update($data);
         return PaymentConceptMapper::toDomain($pc);
     }
 
     public function finalize(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept, [
+        return $this->update($concept->id, [
             'end_date' => now(),
             'status'   => 'finalizado',
         ]);
@@ -43,7 +38,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
 
     public function activate(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept,[
+        return $this->update($concept->id,[
             'status'   => 'activo',
             'end_date' => null,
         ]);
@@ -51,23 +46,23 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
 
     public function disable(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept, ['status' => 'desactivado']);
+        return $this->update($concept->id, ['status' => 'desactivado']);
     }
 
     public function deleteLogical(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept, ['status' => 'eliminado']);
+        return $this->update($concept->id, ['status' => 'eliminado']);
     }
 
-    public function delete(PaymentConcept $concept): void
+    public function delete(int $conceptId): void
     {
-        $pc = $this->findOrFail($concept->id);
+        $pc = $this->findOrFail($conceptId);
         $pc->delete();
     }
 
-    public function attachToUsers(PaymentConcept $concept, UserIdListDTO $userIds, bool $replaceRelations=false): PaymentConcept
+    public function attachToUsers(int $conceptId, UserIdListDTO $userIds, bool $replaceRelations=false): PaymentConcept
     {
-        $pc = $this->findOrFail($concept->id);
+        $pc = $this->findOrFail($conceptId);
         $chunkSize = 50;
 
         if($replaceRelations){
@@ -85,9 +80,9 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
 
     }
 
-    public function attachToCareer(PaymentConcept $concept, array $careerIds, bool $replaceRelations=false): PaymentConcept
+    public function attachToCareer(int $conceptId, array $careerIds, bool $replaceRelations=false): PaymentConcept
     {
-        $pc = $this->findOrFail($concept->id);
+        $pc = $this->findOrFail($conceptId);
         if($replaceRelations){
             $pc->careers()->sync($careerIds);
         }else{
@@ -98,9 +93,9 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     }
 
 
-    public function attachToSemester(PaymentConcept $concept, array $semesters, bool $replaceRelations=false): PaymentConcept
+    public function attachToSemester(int $conceptId, array $semesters, bool $replaceRelations=false): PaymentConcept
     {
-        $pc = $this->findOrFail($concept->id);
+        $pc = $this->findOrFail($conceptId);
         if ($replaceRelations) {
             $pc->paymentConceptSemesters()->delete();
         }
@@ -116,19 +111,19 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         return PaymentConceptMapper::toDomain($pc);
     }
 
-    public function detachFromSemester(PaymentConcept $concept): void
+    public function detachFromSemester(int $conceptId): void
     {
-        $this->findOrFail($concept->id)->paymentConceptSemesters()->delete();
+        $this->findOrFail($conceptId)->paymentConceptSemesters()->delete();
     }
 
-    public function detachFromCareer(PaymentConcept $concept): void
+    public function detachFromCareer(int $conceptId): void
     {
-        $this->findOrFail($concept->id)->careers()->detach();
+        $this->findOrFail($conceptId)->careers()->detach();
     }
 
-    public function detachFromUsers(PaymentConcept $concept): void
+    public function detachFromUsers(int $conceptId): void
     {
-        $this->findOrFail($concept->id)->users()->detach();
+        $this->findOrFail($conceptId)->users()->detach();
     }
      private function findOrFail(int $id): EloquentPaymentConcept
     {

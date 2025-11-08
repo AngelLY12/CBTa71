@@ -4,10 +4,10 @@ namespace App\Core\Application\UseCases\Payments;
 
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Exceptions\DomainException;
 use App\Exceptions\NotFound\PaymentMethodNotFoundException;
 use App\Exceptions\ServerError\PaymentNotificationException;
@@ -20,8 +20,8 @@ class ReconcilePaymentUseCase
     public function __construct(
         private PaymentQueryRepInterface $pqRepo,
         private StripeGatewayInterface $stripe,
-        private UserRepInterface $userRepo,
-        private PaymentMethodRepInterface $pmRepo
+        private UserQueryRepInterface $userRepo,
+        private PaymentMethodQueryRepInterface $pmRepo
     )
     {}
     public function execute():void

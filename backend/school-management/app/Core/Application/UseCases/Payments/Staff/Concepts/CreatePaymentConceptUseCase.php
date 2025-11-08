@@ -54,7 +54,7 @@ class CreatePaymentConceptUseCase
             switch($dto->appliesTo) {
                 case 'carrera':
                     if ($dto->careers) {
-                        $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept, $dto->careers);
+                        $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers);
 
                     } else {
                         throw new CareersNotFoundException();
@@ -62,7 +62,7 @@ class CreatePaymentConceptUseCase
                     break;
                 case 'semestre':
                     if ($dto->semesters) {
-                        $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept, $dto->semesters);
+                        $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters);
                     } else {
                         throw new SemestersNotFoundException();
                     }
@@ -73,15 +73,15 @@ class CreatePaymentConceptUseCase
                         if (empty($userIdListDTO->userIds)) {
                             throw new StudentsNotFoundException();
                         }
-                        $paymentConcept=$this->pcRepo->attachToUsers($paymentConcept, $userIdListDTO);
+                        $paymentConcept=$this->pcRepo->attachToUsers($paymentConcept->id, $userIdListDTO);
                     }else{
                         throw new StudentsNotFoundException();
                     }
                     break;
                 case 'carrera_semestre':
                     if($dto->careers && $dto->semesters){
-                        $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept, $dto->careers);
-                        $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept, $dto->semesters);
+                        $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers);
+                        $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters);
                     }else {
                         throw new CareerSemesterInvalidException();
                     }

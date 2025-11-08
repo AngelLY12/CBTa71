@@ -10,12 +10,15 @@ use Generator;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 interface PaymentQueryRepInterface{
-    public function sumPaymentsByUserYear(User $user): string;
-    public function getPaymentHistory(User $user, int $perPage, int $page): LengthAwarePaginator;
+    public function findBySessionId(string $sessionId): ?Payment;
+    public function findById(int $id): ?Payment;
+    public function findByIntentId(string $intentId): ?Payment;
+    public function sumPaymentsByUserYear(int $userId): string;
+    public function getPaymentHistory(int $userId, int $perPage, int $page): LengthAwarePaginator;
     //Dashboard Staff
     public function getAllPaymentsMade(bool $onlyThisYear):string;
     //Others
-    public function getPaymentHistoryWithDetails(User $user, int $perPage, int $page): LengthAwarePaginator;
+    public function getPaymentHistoryWithDetails(int $userId, int $perPage, int $page): LengthAwarePaginator;
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment;
 //    public function getAllWithSearch(?string $search = null, int $perPage = 15): LengthAwarePaginator;
     public function getPaidWithinLastMonthCursor(): Generator;

@@ -21,10 +21,10 @@ class RefreshTokenMapper
         );
     }
 
-    public static function toPersistence(User $user, string $token, int $days): array
+    public static function toPersistence(int $userId, string $token, int $days): array
     {
         return [
-            'user_id' => $user->id,
+            'user_id' => $userId,
             'token' => $token,
             'expires_at' => now()->addDays($days),
             'revoked' => false,

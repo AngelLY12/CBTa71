@@ -35,46 +35,22 @@ class EloquentUserRepository implements UserRepInterface{
         return UserMapper::toDomain($eloquentUser);
     }
 
-    public function findById(int $userId): User
+    public function update(int $userId, array $fields): User
     {
-        $eloquent= $this->findOrFail($userId);
-        return UserMapper::toDomain($eloquent);
-    }
-
-
-    public function getUserByStripeCustomer(string $customerId): User
-    {
-        $user = EloquentUser::where('stripe_customer_id', $customerId)->first();
-        if (!$user) {
-            logger()->error("Usuario no encontrado: {$customerId}");
-            throw new ModelNotFoundException('Usuario no encontrado');
-        }
-        return UserMapper::toDomain($user);
-    }
-
-    public function findUserByEmail(string $email): ?User
-    {
-        $user=EloquentUser::where('email',$email)->first();
-        return $user ? UserMapper::toDomain($user): null;
-
-    }
-
-    public function update(User $user, array $fields): User
-    {
-        $eloquentUser =  $this->findOrFail($user->id);
+        $eloquentUser =  $this->findOrFail($userId);
         $eloquentUser->update($fields);
         return UserMapper::toDomain($eloquentUser);
     }
 
-    public function createToken(User $user, string $name): string
+    public function createToken(int $userId, string $name): string
     {
-        $eloquentUser = $this->findOrFail($user->id);
+        $eloquentUser = $this->findOrFail($userId);
         return $eloquentUser->createToken($name, expiresAt:now()->addMinutes(15))->plainTextToken;
     }
 
-    public function createRefreshToken(User $user, string $name): string
+    public function createRefreshToken(int $userId, string $name): string
     {
-        $eloquentUser = $this->findOrFail($user->id);
+        $eloquentUser = $this->findOrFail($userId);
         $refreshToken = bin2hex(random_bytes(64));
         $eloquentUser->refreshTokens()->create([
             'token' => hash('sha256', $refreshToken),
@@ -109,13 +85,6 @@ class EloquentUserRepository implements UserRepInterface{
         $eloquentUser->load('studentDetail');
         $eloquentUser->assignRole('student');
         return UserMapper::toDomain($eloquentUser);
-    }
-
-    public function getUserWithStudentDetail(User $user): User
-    {
-        $eloquent = $this->findOrFail($user->id);
-        $eloquent->load('studentDetail');
-        return UserMapper::toDomain($eloquent);
     }
 
     private function findOrFail(int $id):EloquentUser

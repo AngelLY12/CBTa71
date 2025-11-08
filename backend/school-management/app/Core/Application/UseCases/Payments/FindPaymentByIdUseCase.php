@@ -3,13 +3,13 @@
 namespace App\Core\Application\UseCases\Payments;
 
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Exceptions\NotFound\PaymentNotFountException;
 
 class FindPaymentByIdUseCase
 {
     public function __construct(
-        private PaymentRepInterface $paymentRepo
+        private PaymentQueryRepInterface $paymentRepo
     )
     {
     }

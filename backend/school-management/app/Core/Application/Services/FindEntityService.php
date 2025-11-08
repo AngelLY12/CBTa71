@@ -31,8 +31,8 @@ class FindEntityService
     {
         return $this->payment->execute($id);
     }
-    public function findUser(): User
+    public function findUser(bool $forceRefresh): User
     {
-        return $this->user->execute();
+        return $this->user->execute($forceRefresh);
     }
 }

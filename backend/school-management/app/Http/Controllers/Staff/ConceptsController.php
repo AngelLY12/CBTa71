@@ -246,7 +246,7 @@ class ConceptsController extends Controller
      *     @OA\Response(response=404, description="Recurso no encontrado")
      * )
      */
-      public function update(Request $request, PaymentConcept $concept)
+      public function update(Request $request, int $id)
     {
         $data = $request->only([
             'concept_name',
@@ -287,7 +287,7 @@ class ConceptsController extends Controller
                 'message' => 'Error en la validación de datos.'
             ], 422);
         }
-        $data['id'] = $concept->id;
+        $data['id'] = $id;
         $dto = PaymentConceptMapper::toUpdateConceptDTO($data);
 
         $updatedConcept = $this->conceptsService->updatePaymentConcept($dto);
@@ -421,10 +421,9 @@ class ConceptsController extends Controller
      *     @OA\Response(response=200, description="Concepto de pago eliminado correctamente")
      * )
      */
-    public function eliminate(PaymentConcept $concept)
+    public function eliminate(int $conceptId)
     {
-        $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
-        $this->conceptsService->eliminatePaymentConcept($domainConcept);
+        $this->conceptsService->eliminatePaymentConcept($conceptId);
 
         return response()->json([
             'success' => true,

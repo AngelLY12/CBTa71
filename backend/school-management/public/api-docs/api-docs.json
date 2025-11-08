@@ -288,6 +288,16 @@
                 "operationId": "showAllUsers",
                 "parameters": [
                     {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    },
+                    {
                         "name": "perPage",
                         "in": "query",
                         "description": "Cantidad de usuarios por página",
@@ -635,6 +645,16 @@
                 "operationId": "showAllPermissions",
                 "parameters": [
                     {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "description": "Número de página a mostrar",
@@ -701,6 +721,18 @@
                 "summary": "Mostrar roles existentes",
                 "description": "Permite al administrador ver todos los roles registrados.",
                 "operationId": "showAllRoles",
+                "parameters": [
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Roles obtenidos correctamente.",
@@ -842,6 +874,276 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/v1/careers": {
+            "get": {
+                "tags": [
+                    "Careers"
+                ],
+                "summary": "Obtener todas las carreras",
+                "operationId": "47f4386bfc85fc8263fc82d76256e604",
+                "parameters": [
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de carreras",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "careers": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/DomainCareer"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carreras encontradas."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1//careers/{id}": {
+            "get": {
+                "tags": [
+                    "Careers"
+                ],
+                "summary": "Obtener una carrera por ID",
+                "operationId": "1da3b0431b893f26ba50522ac3fb75db",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la carrera",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Carrera encontrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "career": {
+                                                    "$ref": "#/components/schemas/DomainCareer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrera encontrada."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Careers"
+                ],
+                "summary": "Eliminar una carrera",
+                "operationId": "c9604f40880663bcf210b1cd508ea16c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la carrera a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Carrera eliminada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrera eliminada con éxito."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Careers"
+                ],
+                "summary": "Actualizar una carrera existente",
+                "operationId": "4dab81598c9454d2d4242a634e909705",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la carrera",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "career_name": {
+                                        "type": "string",
+                                        "example": "Ingeniería en Software"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Carrera actualizada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "updated": {
+                                                    "$ref": "#/components/schemas/DomainCareer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrera actualizada."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1//careers": {
+            "post": {
+                "tags": [
+                    "Careers"
+                ],
+                "summary": "Crear una nueva carrera",
+                "operationId": "87edb3b595b3cb81cc8d693a736c3042",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DomainCareer"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Carrera creada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "career": {
+                                                    "$ref": "#/components/schemas/DomainCareer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrera creada."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/v1/find/concept/{id}": {
@@ -1024,6 +1326,18 @@
                 "summary": "Obtener usuario autenticado",
                 "description": "Devuelve la información del usuario autenticado en el sistema.",
                 "operationId": "ebfc31a0a1f630400906aec03096a4c6",
+                "parameters": [
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Usuario autenticado encontrado correctamente.",
@@ -4040,6 +4354,135 @@
                     }
                 ]
             }
+        },
+        "/api/v1/users/{id}": {
+            "patch": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Actualizar los datos generales de un usuario",
+                "operationId": "3cc4803b4b6d7fc974e8fb21b3b6b46b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del usuario",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DomainUser"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuario actualizado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "$ref": "#/components/schemas/DomainUser"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El usuario ha sido actualizado con éxito."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/{id}/password": {
+            "patch": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Actualizar la contraseña de un usuario",
+                "operationId": "2c04cec480a17c40c24162582ac82c29",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del usuario",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 8,
+                                        "example": "newpassword123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contraseña actualizada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password actualizada con éxito"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -5431,6 +5874,11 @@
                         "description": "Nombre del permiso.",
                         "type": "string",
                         "example": "edit users"
+                    },
+                    "type": {
+                        "description": "Tipo de permiso.",
+                        "type": "string",
+                        "example": "model"
                     }
                 },
                 "type": "object"
@@ -5614,6 +6062,10 @@
             "description": "Endpoints para gestión administrativa (asignación e importación de usuarios)"
         },
         {
+            "name": "Careers",
+            "description": "Operaciones relacionadas con carreras"
+        },
+        {
             "name": "FindEntity",
             "description": "Operaciones para buscar usuarios, pagos y conceptos"
         },
@@ -5644,6 +6096,10 @@
         {
             "name": "Dashboard",
             "description": "Endpoints relacionados con el panel de control del usuario (estadísticas, pagos y resumen financiero)"
+        },
+        {
+            "name": "Users",
+            "description": "Operaciones para actualizar usuarios"
         },
         {
             "name": "Payment History",

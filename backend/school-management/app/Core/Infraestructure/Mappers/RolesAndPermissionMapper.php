@@ -20,7 +20,8 @@ class RolesAndPermissionMapper{
     {
         return new EntitiesPermission(
             id:$permission->id,
-            name: $permission->name
+            name: $permission->name,
+            type:$permission->type
         );
     }
 }

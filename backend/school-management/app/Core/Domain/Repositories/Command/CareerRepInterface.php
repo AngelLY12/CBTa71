@@ -4,9 +4,10 @@ namespace App\Core\Domain\Repositories\Command;
 
 use App\Core\Domain\Entities\Career;
 
-interface CareerRepInterface{
-    public function findById(int $id): ?Career;
-    public function findByName(string $careerName): ?Career;
-    public function findAll(): ?array;
+interface CareerRepInterface
+{
+    public function create(Career $career): Career;
+    public function delete(int $careerId): void;
+    public function update(int $careerId, array $fields): Career;
 
 }

@@ -11,8 +11,8 @@ class EliminatePaymentConceptUseCase
     )
     {}
 
-    public function execute(PaymentConcept $concept):void
+    public function execute(int $conceptId):void
     {
-        $this->pcRepo->delete($concept);
+        $this->pcRepo->delete($conceptId);
     }
 }

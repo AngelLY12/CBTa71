@@ -5,6 +5,7 @@ namespace App\Core\Application\UseCases\Payments\Stripe;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Jobs\SendMailJob;
 use App\Mail\RequiresActionMail;
 use Stripe\Stripe;
@@ -12,7 +13,7 @@ use Stripe\Stripe;
 class RequiresActionUseCase
 {
     public function __construct(
-        private UserRepInterface $userRepo,
+        private UserQueryRepInterface $userRepo,
         private PaymentQueryRepInterface $pqRepo
 
     ) {

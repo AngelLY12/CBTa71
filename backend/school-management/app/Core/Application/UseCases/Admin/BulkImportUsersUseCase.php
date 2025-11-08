@@ -10,16 +10,17 @@ class BulkImportUsersUseCase
         private UserRepInterface $userRepo
     ) {}
 
-    public function execute(array $rows): void
+    public function execute(array $rows): int
     {
         $chunks = array_chunk($rows, 200);
-
+        $affected=null;
         foreach ($chunks as $chunk) {
             try {
-                $this->userRepo->bulkInsertWithStudentDetails($chunk);
+                $affected=$this->userRepo->bulkInsertWithStudentDetails($chunk);
             } catch (\Throwable $e) {
                 logger()->error('Error importing users: '.$e->getMessage());
             }
         }
+        return $affected;
     }
 }

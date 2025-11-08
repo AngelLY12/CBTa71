@@ -27,9 +27,12 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
     {
         return optional(Permission::find($id),fn($permission)=>RolesAndPermissionMapper::toPermissionDomain($permission));
     }
-    public function findAllPermissions(int $page): LengthAwarePaginator
+    public function findAllPermissions(): array
     {
-        return Permission::select('id','name')->paginate(15,['*'],'page',$page)
-        ->through(fn($permission)=>RolesAndPermissionMapper::toPermissionDomain($permission));
+       return Permission::where('type', 'model')
+        ->select('id', 'name', 'type')
+        ->get()
+        ->map(fn($permission) => RolesAndPermissionMapper::toPermissionDomain($permission))
+        ->toArray();
     }
 }

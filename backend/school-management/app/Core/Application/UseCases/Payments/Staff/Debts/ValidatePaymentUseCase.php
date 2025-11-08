@@ -14,6 +14,8 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use Illuminate\Support\Facades\DB;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
+use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Exceptions\NotFound\ConceptNotFoundException;
 use App\Exceptions\NotFound\PaymentMethodNotFoundException;
 use App\Exceptions\NotFound\UserNotFoundException;
@@ -27,8 +29,8 @@ class ValidatePaymentUseCase{
         public PaymentRepInterface $paymentRepo,
         public PaymentQueryRepInterface $pqRepo,
         public StripeGatewayInterface $stripeRepo,
-        public PaymentMethodRepInterface $pmRepo,
-        public PaymentConceptRepInterface $pcRepo,
+        public PaymentMethodQueryRepInterface $pmqRepo,
+        public PaymentConceptQueryRepInterface $pcqRepo,
     )
     {
     }
@@ -46,8 +48,8 @@ class ValidatePaymentUseCase{
             if (!$payment) {
                     $stripe=$this->stripeRepo->getIntentAndCharge($payment_intent_id);
                     $paymentConceptId = $stripe['intent']->metadata->payment_concept_id ?? null;
-                    $pc= $this->pcRepo->findById($paymentConceptId) ?? null;
-                    $pm = $this->pmRepo->findByStripeId($stripe['charge']->payment_method);
+                    $pc= $this->pcqRepo->findById($paymentConceptId) ?? null;
+                    $pm = $this->pmqRepo->findByStripeId($stripe['charge']->payment_method);
                     $paymentMethodDetails=null;
                     if (!$pc) throw new ConceptNotFoundException();
                     if (!$pm) throw new PaymentMethodNotFoundException();
@@ -75,7 +77,7 @@ class ValidatePaymentUseCase{
                 if ($payment->status === 'paid' && empty($payment->payment_method_details)) {
                     logger()->info("Reconciling existing payment ID={$payment->id}");
                     $stripe=$this->stripeRepo->getIntentAndCharge($payment_intent_id);
-                    $pm = $this->pmRepo->findByStripeId($stripe['charge']->payment_method);
+                    $pm = $this->pmqRepo->findByStripeId($stripe['charge']->payment_method);
                     if (!$pm) throw new PaymentMethodNotFoundException();
                     $this->pqRepo->updatePaymentWithStripeData($payment, $stripe['intent'], $stripe['charge'], $pm);
                 }
@@ -92,7 +94,6 @@ class ValidatePaymentUseCase{
 
             $mail = new PaymentValidatedMail(MailMapper::toPaymentValidatedEmailDTO($data));
             SendMailJob::dispatch($mail, $student->email)->delay(now()->addSeconds(rand(1, 5)));
-            //SendMailJob::dispatch(new PaymentValidatedMail($data, $user->name, $user->email), $user->email);
             return PaymentMapper::toPaymentValidateResponse(AppUserMapper::toDataResponse($student),PaymentMapper::toPaymentDataResponse($payment));
         });
 

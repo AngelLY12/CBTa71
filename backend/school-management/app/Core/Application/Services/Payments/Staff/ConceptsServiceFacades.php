@@ -63,8 +63,8 @@ class ConceptsServiceFacades{
         return $result;
     }
 
-    public function eliminatePaymentConcept(PaymentConcept $concept): void {
-        $this->eliminate->execute($concept);
+    public function eliminatePaymentConcept(int $conceptId): void {
+        $this->eliminate->execute($conceptId);
         $this->service->clearPrefix($this->prefix);
     }
 

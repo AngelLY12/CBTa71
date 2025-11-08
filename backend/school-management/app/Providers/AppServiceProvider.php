@@ -10,7 +10,9 @@ use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Command\StudentDetailReInterface;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Query\CareerQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
@@ -23,9 +25,11 @@ use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentConcep
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentMethodRepository;
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentRepository;
 use App\Core\Infraestructure\Repositories\Command\Stripe\StripeGateway;
+use App\Core\Infraestructure\Repositories\Query\EloquentCareerQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\EloquentRolesAndPermissionQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\EloquentUserQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentConceptQueryRepository;
+use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentMethodQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentQueryRepository;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -42,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(StripeGatewayInterface::class, StripeGateway::class);
         $this->app->bind(PaymentMethodRepInterface::class, EloquentPaymentMethodRepository::class);
+        $this->app->bind(PaymentMethodQueryRepInterface::class, EloquentPaymentMethodQueryRepository::class);
         $this->app->bind(PaymentRepInterface::class, EloquentPaymentRepository::class);
         $this->app->bind(PaymentQueryRepInterface::class, EloquentPaymentQueryRepository::class);
         $this->app->bind(PaymentConceptRepInterface::class, EloquentPaymentConceptRepository::class);
@@ -49,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserRepInterface::class, EloquentUserRepository::class);
         $this->app->bind(UserQueryRepInterface::class, EloquentUserQueryRepository::class);
         $this->app->bind(CareerRepInterface::class, EloquentCareerRepository::class);
+        $this->app->bind(CareerQueryRepInterface::class, EloquentCareerQueryRepository::class);
         $this->app->bind(StudentDetailReInterface::class,EloquentStudentDetailRepository::class);
         $this->app->bind(RefreshTokenRepInterface::class,EloquentRefreshTokenRepository::class);
         $this->app->singleton(CacheService::class, function () {return new CacheService();});
