@@ -62,12 +62,12 @@ FROM php:8.4-fpm
 # Install only runtime libraries needed in production
 # libfcgi-bin and procps are required for the php-fpm-healthcheck script
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    libicu72 \
-    libzip4 \
+    libpq-dev \
+    libicu-dev \
+    libzip-dev \
     libpng16-16 \
-    libjpeg62-turbo \
-    libfreetype6 \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     libfcgi-bin \
     procps \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
