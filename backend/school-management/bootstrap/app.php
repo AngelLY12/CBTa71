@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use App\Exceptions\DomainException;
 use App\Http\Middleware\SecureHeadersMiddleware;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -38,6 +39,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         //
+    })
+    ->withSchedule(function (Schedule $schedule){
+        $schedule->command('concepts:dispatch-finalize-job')->daily();
+        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyMinute();
+        $schedule->command('users:dispatch-delete-users')->weekly()->at('00:00');
+        $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('00:00');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
