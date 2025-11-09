@@ -6,6 +6,10 @@ php artisan queue:work redis --max-jobs=50 --sleep=3 --tries=3 --timeout=90 --ba
 php artisan schedule:list
 echo "Iniciando scheduler..."
 while true; do
-    php artisan schedule:run 2>&1 | tee -a /var/www/storage/logs/scheduler.log
+    {
+        echo "---- $(date '+%Y-%m-%d %H:%M:%S') Ejecutando schedule:run ----"
+        php artisan schedule:run
+        echo "---- Esperando 60 segundos ----"
+    } | tee -a /var/www/storage/logs/scheduler.log
     sleep 60
 done &
