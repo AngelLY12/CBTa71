@@ -8,11 +8,12 @@ echo "Mostrando tareas programadas..."
 php artisan schedule:list
 
 echo "Iniciando scheduler..."
+LOG_FILE="/var/www/storage/logs/scheduler-$(date '+%Y-%m-%d').log"
 while true; do
     {
         echo "---- $(date '+%Y-%m-%d %H:%M:%S') Ejecutando schedule:run ----"
         php artisan schedule:run
-        echo "---- Esperando 60 segundos ----"
-    } | tee -a /var/www/storage/logs/scheduler.log
-    sleep 60
+        echo "---- Esperando 10 minutos ----"
+    } | tee -a "$LOG_FILE"
+    sleep 600
 done
