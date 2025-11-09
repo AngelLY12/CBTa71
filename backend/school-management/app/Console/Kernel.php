@@ -10,7 +10,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
          $schedule->command('concepts:dispatch-finalize-job')->daily();
-         $schedule->command('tokens:dispatch-clean-expired-tokens')->days([0, 3])->at('03:00');
+         $schedule->command('tokens:dispatch-clean-expired-tokens')->everyMinute();
          $schedule->command('users:dispatch-delete-users')->weekly()->at('00:00');
          $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('00:00');
 
