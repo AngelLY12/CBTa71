@@ -42,7 +42,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule){
         $schedule->command('concepts:dispatch-finalize-job')->daily();
-        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyMinute();
+        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyFourHours();
+        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->days([0, 3])->at('03:00');
         $schedule->command('users:dispatch-delete-users')->weekly()->at('00:00');
         $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('00:00');
     })

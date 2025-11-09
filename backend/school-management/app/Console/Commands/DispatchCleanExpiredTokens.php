@@ -19,7 +19,7 @@ class DispatchCleanExpiredTokens extends Command
      *
      * @var string
      */
-    protected $description = 'Despacha el job que elimina tokens expirados';
+    protected $description = 'Despacha el job que elimina tokens de acceso expirados';
 
     /**
      * Execute the console command.
