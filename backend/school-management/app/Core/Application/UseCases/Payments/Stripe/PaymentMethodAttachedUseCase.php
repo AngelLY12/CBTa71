@@ -6,6 +6,7 @@ use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Infraestructure\Cache\CacheService;
 use Illuminate\Support\Facades\DB;
 use Stripe\Stripe;
 
@@ -15,6 +16,7 @@ class PaymentMethodAttachedUseCase
         private PaymentMethodRepInterface $pmRepo,
         private PaymentMethodQueryRepInterface $pmqRepo,
         private UserQueryRepInterface $userRepo,
+        private CacheService $service
 
     ) {
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -45,6 +47,7 @@ class PaymentMethodAttachedUseCase
             $this->pmRepo->create($pmDomain);
 
         });
+        $this->service->clearPrefix("student:cards:show:$user->id");
         return true;
     }
 }

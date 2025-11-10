@@ -111,6 +111,10 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             'semestre' => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {
                 $q->whereIn('semester', $concept->getSemesters());
             }),
+            'carrera_semestre' => $usersQuery->whereHas('studentDetail', function($q) use ($concept){
+                $q->whereIn('career_id', $concept->getCareerIds())
+                ->whereIn('semester', $concept->getSemesters());
+            }),
             'estudiantes' => $usersQuery->whereIn('id', $concept->getUserIds()),
             'todos' => $usersQuery,
         };

@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Core\Infraestructure\Cache\CacheService;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
+class ClearStudentConceptCacheJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    private int $userId;
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(int $userId)
+    {
+        $this->userId=$userId;
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(CacheService $cacheService): void
+    {
+        $cacheService->clearStudentConcepts($this->userId);
+        Log::info("Cache de conceptos limpiado correctamente");
+    }
+}

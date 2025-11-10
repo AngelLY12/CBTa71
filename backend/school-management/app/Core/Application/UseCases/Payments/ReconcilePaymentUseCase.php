@@ -13,6 +13,8 @@ use App\Exceptions\DomainException;
 use App\Exceptions\NotFound\PaymentMethodNotFoundException;
 use App\Exceptions\ServerError\PaymentNotificationException;
 use App\Exceptions\ServerError\PaymentReconciliationException;
+use App\Jobs\ClearStaffCacheJob;
+use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentValidatedMail;
 
@@ -50,14 +52,9 @@ class ReconcilePaymentUseCase
                 logger()->error("Error al reconciliar el pago {$payment->id}: {$e->getMessage()}");
             }
         }
-        $this->cacheService->clearPrefix("staff:dashboard:*");
-        $this->cacheService->clearPrefix("staff:debts:*");
-        $this->cacheService->clearPrefix("staff:payments:*");
-        $this->cacheService->clearPrefix("staff:students:*");
+        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
         foreach (array_unique($affectedUsers) as $userId) {
-            $this->cacheService->clearPrefix("student:dashboard-user:*:$userId");
-            $this->cacheService->clearPrefix("student:pending:*:$userId");
-            $this->cacheService->clearPrefix("student:history:$userId");
+            ClearStudentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
         }
 
     }

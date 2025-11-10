@@ -69,38 +69,39 @@ class PaymentConceptValidator{
     public static function ensureValidStatusTransition(PaymentConcept $concept, string $newStatus)
     {
 
-        switch ($newStatus) {
-            case 'activo':
-                if ($concept->isActive()) {
-                    throw new ConceptAlreadyActiveException();
-                }
-                break;
+        $current = $concept->status;
 
-            case 'desactivado':
-                if ($concept->isDisable()) {
-                    throw new ConceptAlreadyDisabledException();
-                }
-                if ($concept->isFinalize()) {
-                    throw new ConceptCannotBeDisabledException();
+        switch ($current) {
+            case 'activo':
+                if (!in_array($newStatus, ['finalizado', 'eliminado', 'desactivado'], true)) {
+                    throw new ConceptInvalidStatusException("Un concepto activo solo puede finalizarse, eliminarse o desactivarse.");
                 }
                 break;
 
             case 'finalizado':
-                if ($concept->isFinalize()) {
-                    throw new ConceptAlreadyFinalizedException();
-                }
-                if ($concept->isDelete()) {
-                    throw new ConceptCannotBeFinalizedException();
+                if (!in_array($newStatus, ['activo', 'eliminado'], true)) {
+                    throw new ConceptInvalidStatusException("Un concepto finalizado solo puede reactivarse o eliminarse.");
                 }
                 break;
+
             case 'eliminado':
-                if($concept->isDelete()){
-                    throw new ConceptAlreadyDeletedException();
+                if ($newStatus !== 'activo') {
+                    throw new ConceptInvalidStatusException("Un concepto eliminado solo puede reactivarse.");
+                }
+                break;
+
+            case 'desactivado':
+                if (!in_array($newStatus, ['activo', 'eliminado'], true)) {
+                    throw new ConceptInvalidStatusException("Un concepto desactivado solo puede reactivarse o eliminarse.");
                 }
                 break;
 
             default:
-                throw new ConceptInvalidStatusException();
+                throw new ConceptInvalidStatusException("Estado actual inválido: {$current}");
+        }
+
+        if ($current === $newStatus) {
+            throw new ValidationException("El concepto ya está en el estado '{$newStatus}'.");
         }
     }
 

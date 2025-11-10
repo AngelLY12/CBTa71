@@ -38,9 +38,50 @@ class CacheService
 
     public function clearPrefix(string $prefix): void
     {
-        $keys = Cache::getRedis()->keys("$prefix*");
-        foreach ($keys as $key) {
-            Cache::forget(str_replace(config('cache.prefix').':', '', $key));
+        $redis = Cache::getRedis();
+        $cursor = '0';
+
+        do {
+            [$cursor, $keys] = $redis->scan($cursor, ['match' => "$prefix*", 'count' => 100]);
+            if (!empty($keys)) {
+                $redis->del(...$keys);
+            }
+        } while ($cursor != 0);
+    }
+
+    public function clearStaffCache():void
+    {
+        $prefixes=[
+            "staff:dashboard:*",
+            "staff:debts:*",
+            "staff:payments:*",
+            "staff:students:*"
+        ];
+        foreach($prefixes as $prefix)
+        {
+            $this->clearPrefix($prefix);
         }
+
+    }
+
+    public function clearStudentCache(int $userId):void
+    {
+        $prefixes=[
+            "student:dashboard-user:*:$userId",
+            "student:pending:*:$userId",
+            "student:history:$userId"
+        ];
+        foreach($prefixes as $prefix)
+        {
+            $this->clearPrefix($prefix);
+        }
+    }
+    public function clearStudentConcepts(int $userId):void
+    {
+        $this->clearPrefix("student:pending:pending:$userId");
+    }
+     public function clearStudentOverdueConcepts(int $userId):void
+    {
+        $this->clearPrefix("student:pending:overdue:$userId");
     }
 }
