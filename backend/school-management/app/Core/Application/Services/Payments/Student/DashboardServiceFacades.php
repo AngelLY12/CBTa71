@@ -15,7 +15,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class DashboardServiceFacades {
     use HasCache;
-    private string $prefix= 'dashboard-user';
+    private string $prefix= 'student:dashboard-user';
     public function __construct(
         private PendingPaymentAmountUseCase $pending,
         private PaymentsMadeUseCase $payments,

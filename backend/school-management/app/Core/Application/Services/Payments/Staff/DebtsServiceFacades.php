@@ -12,7 +12,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class DebtsServiceFacades{
     use HasCache;
-    private string $prefix='debts';
+    private string $prefix='staff:debts';
     public function __construct(
         private ShowAllPendingPaymentsUseCase $pending,
         private ValidatePaymentUseCase $validate,

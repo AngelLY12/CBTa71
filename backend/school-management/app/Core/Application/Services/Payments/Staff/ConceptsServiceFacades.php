@@ -19,7 +19,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class ConceptsServiceFacades{
     use HasCache;
-    private string $prefix = 'concepts:list';
+    private string $prefix = 'staff:concepts:list';
 
     public function __construct(
         private ShowConceptsUseCase $show,

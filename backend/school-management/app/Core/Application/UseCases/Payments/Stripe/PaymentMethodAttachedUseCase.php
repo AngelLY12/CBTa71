@@ -4,7 +4,8 @@ namespace App\Core\Application\UseCases\Payments\Stripe;
 
 use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
+use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use Illuminate\Support\Facades\DB;
 use Stripe\Stripe;
 
@@ -12,7 +13,8 @@ class PaymentMethodAttachedUseCase
 {
     public function __construct(
         private PaymentMethodRepInterface $pmRepo,
-        private UserRepInterface $userRepo,
+        private PaymentMethodQueryRepInterface $pmqRepo,
+        private UserQueryRepInterface $userRepo,
 
     ) {
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -25,7 +27,7 @@ class PaymentMethodAttachedUseCase
             throw new \InvalidArgumentException('El PaymentMethod es nulo.');
         }
         $paymentMethodId = $obj->id;
-        $pm=$this->pmRepo->findByStripeId($paymentMethodId);
+        $pm=$this->pmqRepo->findByStripeId($paymentMethodId);
         if ($pm) {
             logger()->info("El método de pago {$paymentMethodId} ya existe");
             return false;

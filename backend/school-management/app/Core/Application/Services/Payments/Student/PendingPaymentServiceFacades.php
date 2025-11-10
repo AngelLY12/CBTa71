@@ -11,7 +11,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class PendingPaymentServiceFacades{
     use HasCache;
-    private string $prefix='pending';
+    private string $prefix='student:pending';
     public function __construct(
         private ShowPendingPaymentsUseCase $pending,
         private ShowOverduePaymentsUseCase $overdue,
@@ -31,7 +31,8 @@ class PendingPaymentServiceFacades{
 
     public function payConcept(User $user, int $conceptId): string {
         $pay=$this->pay->execute($user->id,$conceptId);
-        $this->service->forget("pending:pending:$user->id");
+        $this->service->clearPrefix("$this->prefix:pending:$user->id");
+        $this->service->clearPrefix("student:history:$user->id");
         return $pay;
     }
 

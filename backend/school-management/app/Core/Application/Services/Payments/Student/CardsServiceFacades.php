@@ -14,7 +14,7 @@ class CardsServiceFacades
 {
 
     use HasCache;
-    private string $prefix='cards';
+    private string $prefix='student:cards';
     public function __construct(
         private SetupCardUseCase $setup,
         private DeletePaymentMethoUseCase $delete,
@@ -26,13 +26,13 @@ class CardsServiceFacades
     public function setupCard(User $user): SetupCardResponse
     {
         $setup= $this->setup->execute($user);
-        $this->service->forget("$this->prefix:show:$user->id");
+        $this->service->clearPrefix("$this->prefix:show:$user->id");
         return $setup;
     }
     public function deletePaymentMethod(User $user, string $paymentMethodId): bool
     {
         $delete=$this->delete->execute($paymentMethodId);
-        $this->service->forget("$this->prefix:show:$user->id");
+        $this->service->clearPrefix("$this->prefix:show:$user->id");
         return $delete;
     }
 

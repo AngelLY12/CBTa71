@@ -18,7 +18,7 @@ class StudentsService
 
     public function showAllStudents(?string $search, int $perPage, int $page, bool $forceRefresh):PaginatedResponse
     {
-        $key = "students:show:$search:$perPage:$page";
+        $key = "staff:students:show:$search:$perPage:$page";
         return $this->cache($key,$forceRefresh ,fn() =>$this->show->execute($search,$perPage, $page));
     }
 

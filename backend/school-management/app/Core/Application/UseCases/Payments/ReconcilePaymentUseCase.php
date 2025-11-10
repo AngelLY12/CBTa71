@@ -8,6 +8,7 @@ use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Infraestructure\Cache\CacheService;
 use App\Exceptions\DomainException;
 use App\Exceptions\NotFound\PaymentMethodNotFoundException;
 use App\Exceptions\ServerError\PaymentNotificationException;
@@ -21,11 +22,13 @@ class ReconcilePaymentUseCase
         private PaymentQueryRepInterface $pqRepo,
         private StripeGatewayInterface $stripe,
         private UserQueryRepInterface $userRepo,
-        private PaymentMethodQueryRepInterface $pmRepo
+        private PaymentMethodQueryRepInterface $pmRepo,
+        private CacheService $cacheService
     )
     {}
     public function execute():void
     {
+        $affectedUsers = [];
         foreach ($this->pqRepo->getPaidWithinLastMonthCursor() as $payment) {
             try {
                 [$pi, $charge] = $this->stripe->getIntentAndCharge($payment->payment_intent_id);
@@ -39,12 +42,22 @@ class ReconcilePaymentUseCase
                 }
                 $this->pqRepo->updatePaymentWithStripeData($payment, $pi, $charge,$pm);
                 $this->notifyUser($payment);
+                $affectedUsers[] = $payment->user_id;
 
             } catch (DomainException $e) {
                 logger()->warning("[ReconcilePayment] {$e->getMessage()} (code: {$e->getCode()})");
             } catch (\Throwable $e) {
                 logger()->error("Error al reconciliar el pago {$payment->id}: {$e->getMessage()}");
             }
+        }
+        $this->cacheService->clearPrefix("staff:dashboard:*");
+        $this->cacheService->clearPrefix("staff:debts:*");
+        $this->cacheService->clearPrefix("staff:payments:*");
+        $this->cacheService->clearPrefix("staff:students:*");
+        foreach (array_unique($affectedUsers) as $userId) {
+            $this->cacheService->clearPrefix("student:dashboard-user:*:$userId");
+            $this->cacheService->clearPrefix("student:pending:*:$userId");
+            $this->cacheService->clearPrefix("student:history:$userId");
         }
 
     }

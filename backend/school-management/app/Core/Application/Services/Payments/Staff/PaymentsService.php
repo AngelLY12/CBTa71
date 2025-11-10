@@ -19,7 +19,7 @@ class PaymentsService{
     }
     public function showAllPayments(?string $search, int $perPage, int $page,  bool $forceRefresh): PaginatedResponse
     {
-        $key = "payments:show:$search:$perPage:$page";
+        $key = "staff:payments:show:$search:$perPage:$page";
         return $this->cache($key,$forceRefresh ,fn() =>$this->payments->execute($search,$perPage, $page));
     }
 }
