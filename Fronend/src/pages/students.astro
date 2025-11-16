@@ -1,330 +1,438 @@
 ---
-// 1. ASTRO FRONTMATTER
-import Layout from "../layouts/Layout.astro"; 
+// src/pages/estudiante_lista.astro
+import Layout from '../layouts/Layout.astro';
 
-const pageTitle = "Lista de Estudiantes";
+// Lógica de carga de datos: Intenta cargar de la API o usa datos de respaldo
+let students = [];
+try {
+  const res = await fetch('/api/students');
+  if (res.ok) {
+    const json = await res.json();
+    students = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
+  }
+} catch (e) {
+  // Ignorar error de API y cargar datos de respaldo si están disponibles
+}
+
+// Cargar datos de respaldo si la lista está vacía o hubo error
+if (!students || !students.length) {
+  try {
+    // Asegúrese de que '../data/students.js' contenga un array de objetos
+    const mod = await import('../data/students.js');
+    students = mod.default || mod.students || [];
+    // Ejemplo de datos de respaldo: ¡DATOS AMPLIADOS PARA MEJOR PRUEBA DE FILTROS!
+    if (students.length === 0) {
+        students = [
+            { id: '1', numControl: 'A19014', nombre: 'Fabían', apellidoP: 'Cruz', apellidoM: 'Mendoza', semestre: 5, carrera: 'AGR', correo: 'fabian.cruz@uni.edu', password: 'pass'},
+            { id: '2', numControl: 'A19015', nombre: 'Elena', apellidoP: 'Gómez', apellidoM: 'Vargas', semestre: 1, carrera: 'INF', correo: 'elena.gomez@uni.edu', password: 'pass'},
+            { id: '3', numControl: 'A19013', nombre: 'Carla', apellidoP: 'Flores', apellidoM: 'Herrera', semestre: 3, carrera: 'ADM', correo: 'carla.flores@uni.edu', password: 'pass'},
+            { id: '4', numControl: 'A19010', nombre: 'Julio', apellidoP: 'Pérez', apellidoM: 'López', semestre: 6, carrera: 'TEC', correo: 'julio.perez@uni.edu', password: 'pass'},
+            { id: '5', numControl: 'A19011', nombre: 'Sofía', apellidoP: 'Ramírez', apellidoM: 'García', semestre: 2, carrera: 'INF', correo: 'sofia.ramirez@uni.edu', password: 'pass'},
+            
+            // --- DATOS ADICIONALES PARA PROBAR FILTRO DE SEMESTRE 3 ---
+            { id: '6', numControl: 'A20001', nombre: 'David', apellidoP: 'Soto', apellidoM: 'Ramos', semestre: 3, carrera: 'ADM', correo: 'david.soto@uni.edu', password: 'pass'}, 
+            { id: '7', numControl: 'A20002', nombre: 'Laura', apellidoP: 'Ruiz', apellidoM: 'Mora', semestre: 3, carrera: 'INF', correo: 'laura.ruiz@uni.edu', password: 'pass'}, 
+            { id: '8', numControl: 'A20003', nombre: 'Miguel', apellidoP: 'Téllez', apellidoM: 'Vela', semestre: 1, carrera: 'AGR', correo: 'miguel.tellez@uni.edu', password: 'pass'},
+            { id: '9', numControl: 'A20004', nombre: 'Diana', apellidoP: 'Vega', apellidoM: 'Paz', semestre: 5, carrera: 'AGR', correo: 'diana.vega@uni.edu', password: 'pass'},
+        ];
+    }
+  } catch (e) {
+    students = [];
+  }
+}
+
+// Normalizar y asegurar datos (importante para evitar errores en el JS)
+students = students.map((s, i) => ({
+  numControl: s.numControl ?? s.id ?? '',
+  nombre: s.nombre ?? s.name ?? '',
+  apellidoP: s.apellidoP ?? s.apellidoPaterno ?? s.apellido_paterno ?? '',
+  apellidoM: s.apellidoM ?? s.apellidoMaterno ?? s.apellido_materno ?? '',
+  semestre: s.semestre ? parseInt(s.semestre) : 0, // Asegura que sea número
+  carrera: s.carrera ?? s.career ?? '',
+  correo: s.correo ?? s.email ?? '', 
+  password: s.password ?? s.contrasena ?? '', 
+  id: s.id ?? String(i + 1), // Asegura un ID único para lógica de pagos/local storage
+}));
+
+// Pasar datos a JS de manera segura para la inicialización
+const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
 ---
+<Layout title="Gestión de Estudiantes">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" type="text/javascript" defer></script>
 
-<Layout title={pageTitle}>
-    <!-- incluir SheetJS CDN (client-only) -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" type="text/javascript" defer></script>
+    <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 py-10 bg-gray-50 min-h-screen"> 
+    <header class="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
+      <div>
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.656-.126-1.283-.356-1.857M9 20l-2.003-.594A4 4 0 003 15.25V7a4 4 0 014-4h10a4 4 0 014 4v8.25c0 .59-.234 1.157-.659 1.571L17 20m-2 1a2 2 0 100-4 2 2 0 000 4zM8 10h.01M12 10h.01M16 10h.01M9 16h.01M13 16h.01" />
+            </svg>
+            Lista de Estudiantes
+        </h1>
+        <p class="text-sm text-gray-500 mt-1 ml-10">Visualiza, filtra y exporta la lista de alumnos.</p>
+      </div>
+      <div>
+        <a href="/Dashboard" class="text-sm font-medium text-teal-600 hover:text-teal-800 transition duration-150 ease-in-out flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Volver
+        </a>
+      </div>
+    </header>
 
-    <!-- Función que devuelve el objeto para Alpine -->
-    <script type="text/javascript">
-        function studentsData(){
-            return {
-                // inicializa desde localStorage si existe, si no usa la lista por defecto
-                allStudents: (function(){
-                    try {
-                        const stored = JSON.parse(localStorage.getItem('studentsList'));
-                        if (Array.isArray(stored) && stored.length) return stored;
-                    } catch(e){}
-                    return [
-                        { id: '22739', name: 'Dwight', semester: 3, status: 'Pendiente', due: 492.00 },
-                        { id: '39635', name: 'Arlene', semester: 2, status: 'Pagado', due: 0.00 },
-                        { id: '39635', name: 'Courtney', semester: 8, status: 'Pendiente', due: 922.00 },
-                        { id: '70668', name: 'Kristin', semester: 9, status: 'En proceso', due: 357.00 },
-                        { id: '22739', name: 'Cody', semester: 9, status: 'Pendiente', due: 447.00 },
-                        { id: '39635', name: 'Ronald', semester: 2, status: 'Pendiente', due: 196.00 },
-                        { id: '39635', name: 'Eduardo', semester: 6, status: 'Pendiente', due: 429.00 },
-                        { id: '39635', name: 'Arlene', semester: 9, status: 'Pendiente', due: 492.00 },
-                        { id: '97174', name: 'Aubrey', semester: 3, status: 'Pendiente', due: 703.00 },
-                        { id: '22739', name: 'Shawn', semester: 8, status: 'En proceso', due: 154.00 },
-                        { id: '11111', name: 'Alice', semester: 1, status: 'Pagado', due: 0.00 },
-                        { id: '22222', name: 'Bob', semester: 3, status: 'Pendiente', due: 250.50 },
-                        { id: '33333', name: 'Charlie', semester: 5, status: 'En proceso', due: 100.00 },
-                        { id: '44444', name: 'Diana', semester: 7, status: 'Pendiente', due: 800.00 },
-                        { id: '55555', name: 'Eve', semester: 1, status: 'Pagado', due: 0.00 },
-                        { id: '66666', name: 'Frank', semester: 3, status: 'Pendiente', due: 300.00 },
-                        { id: '77777', name: 'Grace', semester: 5, status: 'En proceso', due: 50.00 },
-                    ];
-                })(),
-
-                // ui state
-                searchTerm: '',
-                sortBy: 'id',
-                sortDir: 'asc',
-                currentPage: 1,
-                studentsPerPage: 10,
-
-                // helpers de tabla (mismo código que ya tienes)
-                sort(column) {
-                    if (this.sortBy === column) {
-                        this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-                    } else {
-                        this.sortBy = column;
-                        this.sortDir = 'asc';
-                    }
-                },
-
-                get filteredAndSortedStudents() {
-                    const searchLower = this.searchTerm.toLowerCase();
-                    let results = this.allStudents.filter(student =>
-                        (student.name || '').toString().toLowerCase().includes(searchLower) ||
-                        (student.id || '').toString().includes(searchLower)
-                    );
-
-                    results.sort((a, b) => {
-                        const aVal = a[this.sortBy];
-                        const bVal = b[this.sortBy];
-                        let comparison = 0;
-                        if (typeof aVal === 'string') comparison = aVal.localeCompare(bVal);
-                        else {
-                            if (aVal > bVal) comparison = 1;
-                            else if (aVal < bVal) comparison = -1;
-                        }
-                        return this.sortDir === 'asc' ? comparison : comparison * -1;
-                    });
-                    return results;
-                },
-
-                get paginatedStudents() {
-                    const start = (this.currentPage - 1) * this.studentsPerPage;
-                    const end = start + this.studentsPerPage;
-                    return this.filteredAndSortedStudents.slice(start, end);
-                },
-
-                get totalPages() {
-                    return Math.ceil(this.filteredAndSortedStudents.length / this.studentsPerPage);
-                },
-
-                get paginationRange() {
-                    const total = this.totalPages;
-                    const current = this.currentPage;
-                    const delta = 2;
-                    const range = [];
-                    for (let i = 1; i <= total; i++) {
-                        if (i === 1 || i === total || (i >= current - delta && i <= current + delta)) range.push(i);
-                    }
-                    const finalRange = [];
-                    let last = 0;
-                    for (let i of range) {
-                        if (last) {
-                            if (i - last === 2) finalRange.push(last + 1);
-                            else if (i - last !== 1) finalRange.push('...');
-                        }
-                        finalRange.push(i);
-                        last = i;
-                    }
-                    return finalRange;
-                },
-
-                // ---- IMPORTAR desde Excel ----
-                importExcel(e) {
-                    const file = e.target.files && e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (evt) => {
-                        try {
-                            const data = evt.target.result;
-                            // usar XLSX (de CDN cargado)
-                            const workbook = XLSX.read(data, { type: 'binary' });
-                            const firstSheetName = workbook.SheetNames[0];
-                            const sheet = workbook.Sheets[firstSheetName];
-                            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-                            // filas esperadas: id, name, semester, status, due
-                            let added = 0;
-                            rows.forEach(r => {
-                                const id = (r.id || r.ID || r.Id || r['Identificación'] || '').toString().trim();
-                                const name = (r.name || r.Name || r.NOMBRE || '').toString().trim();
-                                const semester = Number(r.semester || r.Semester || r.sem || r['Semestre']) || 0;
-                                const status = (r.status || r.Status || r.Estado || '').toString().trim() || 'Pendiente';
-                                const due = parseFloat(r.due || r.Due || r.Adeudo) || 0.00;
-                                if (id && name) {
-                                    this.allStudents.push({ id, name, semester, status, due });
-                                    added++;
-                                }
-                            });
-                            if (added > 0) {
-                                this.save();
-                                alert(`Importados ${added} estudiantes.`);
-                            } else {
-                                alert('No se encontraron filas válidas (esperadas columnas: id, name, semester, status, due).');
-                            }
-                        } catch(err){
-                            console.error(err);
-                            alert('Error procesando el archivo. Asegúrate que sea un Excel válido.');
-                        } finally {
-                            // reset file input
-                            e.target.value = '';
-                        }
-                    };
-                    reader.readAsBinaryString(file);
-                },
-
-                // guarda local y opcionalmente intenta persistir al backend
-                save() {
-                    try {
-                        localStorage.setItem('studentsList', JSON.stringify(this.allStudents));
-                    } catch(e){}
-                    // intentar enviar al backend (si existe)
-                    try {
-                        fetch('/api/students', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(this.allStudents)
-                        }).catch(()=>{ /* no interrumpir si falla */ });
-                    } catch(e){}
-                },
-
-                // permite exportar la lista actual como Excel (opcional)
-                exportExcel(){
-                    try {
-                        const ws = XLSX.utils.json_to_sheet(this.allStudents);
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, ws, 'students');
-                        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-                        function s2ab(s) {
-                            const buf = new ArrayBuffer(s.length);
-                            const view = new Uint8Array(buf);
-                            for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-                            return buf;
-                        }
-                        const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url; a.download = 'students.xlsx'; a.click();
-                        URL.revokeObjectURL(url);
-                    } catch(e){
-                        console.error(e);
-                        alert('Error al exportar.');
-                    }
-                }
-            };
-        }
-    </script>
-
-    <!-- CONTENEDOR PRINCIPAL: ahora usa studentsData() -->
-    <div 
-        x-data="studentsData()" 
-        class="space-y-8 max-w-5xl mx-auto bg-white p-6 md:p-10 shadow-xl rounded-xl" 
-    > 
-
-        <header class="pb-4 border-b border-gray-100 flex items-center space-x-4"> 
-            <i class="fas fa-users text-4xl text-[#2e594d]"></i>
-            <div>
-                <h1 class="text-3xl font-extrabold text-[#2e594d]">Estudiantes</h1> 
-                <p class="text-gray-500 mt-1">Gestión y visualización de la lista completa de alumnos.</p>
-            </div>
-        </header> 
-        
-        <!-- Sección de Filtro y Botones (Import/Export) -->
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold text-gray-700 flex items-center space-x-2">
-                    <i class="fas fa-th-list text-[#2e594d]"></i>
-                    <span>Todos los estudiantes</span>
-                </h2>
-
-                <div class="flex items-center gap-2">
-                    <input x-ref="file" type="file" accept=".xlsx,.xls,.csv" @change="importExcel" class="hidden" />
-                    <button @click="$refs.file.click()" class="px-3 py-2 rounded bg-[#2e594d] text-white font-semibold">Importar desde Excel</button>
-                    <button @click="exportExcel" class="px-3 py-2 rounded border border-gray-200 bg-white text-gray-700">Exportar Excel</button>
-                    <button @click="save" class="px-3 py-2 rounded bg-green-600 text-white">Guardar</button>
+    <section class="grid grid-cols-1 gap-6"> 
+        <div id="table-container" class="bg-white p-6 rounded-xl shadow-xl col-span-1 flex flex-col border border-gray-100"> 
+          
+          <div class="flex items-center justify-between mb-4 flex-wrap gap-3 relative">
+            
+            <h2 class="font-bold text-xl text-gray-800">Lista de Estudiantes <span id="students-total" class="text-sm font-medium text-teal-600">({students.length})</span></h2>
+            
+            <div class="flex flex-wrap gap-2 items-center">
+                
+                <div class="relative w-48 sm:w-56"> 
+                    <input type="text" id="search-bar" placeholder="Buscar N. Control o Nombre..." class="w-full p-2 pl-10 border border-gray-300 rounded-lg text-xs focus:ring-teal-500 focus:border-teal-500" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </div>
+                
+                <button id="toggle-filters-btn" class="flex items-center px-3 py-2 rounded-lg bg-teal-50 border border-teal-200 text-teal-700 text-xs font-medium hover:bg-teal-100 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v3.414l-4 4v-4.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    <span id="filters-status">Filtros</span>
+                </button>
+                
+                <div id="filters-popover" class="absolute z-20 top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-2xl p-4 border border-gray-200 hidden transform origin-top-right transition duration-200 ease-out scale-95 opacity-0">
+                    <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">Aplicar Filtros</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="filter-carrera" class="block text-xs font-medium text-gray-500 mb-1">Carrera:</label>
+                            <select id="filter-carrera" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-800 shadow-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition text-sm">
+                                <option value="">Todas</option>
+                                <option value="AGR">Agronomía</option>
+                                <option value="INF">Informática</option>
+                                <option value="ADM">Administración</option>
+                                <option value="TEC">Ofimática</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="filter-semestre" class="block text-xs font-medium text-gray-500 mb-1">Semestre:</label>
+                            <select id="filter-semestre" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-800 shadow-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition text-sm">
+                                <option value="">Todos</option>
+                                <option value="1">1ro</option>
+                                <option value="2">2do</option>
+                                <option value="3">3ro</option>
+                                <option value="4">4to</option>
+                                <option value="5">5to</option>
+                                <option value="6">6to</option>
+                                <option value="0">N/A</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="clear-filters-btn" class="w-full mt-4 px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg shadow-sm hover:bg-red-100 transition flex items-center justify-center text-xs">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Limpiar Filtros
+                    </button>
+                </div>
+                
+                <button id="export-xlsx" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border text-gray-700 text-xs hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>XLSX</button>
+                <button id="export-csv" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border text-gray-700 text-xs hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>CSV</button>
             </div>
-
-            <!-- Campo de Búsqueda -->
-            <div class="relative max-w-sm">
-                <input type="text" x-model="searchTerm" placeholder="Nombre o ID de estudiante"
-                    class="w-full p-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:ring-[#2e594d] focus:border-[#2e594d] transition duration-150">
-                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
             </div>
-        </div>
-
-        <!-- Tabla de Estudiantes -->
-        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-lg">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-[#2e594d]/10">
-                    <tr>
-                        <!-- Encabezados con función de ordenamiento -->
-                        <th class="px-4 py-3 text-left text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('id')">
-                            ID 
-                            <span x-show="sortBy === 'id'">
-                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
-                            </span>
-                        </th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('name')">
-                            Nombre
-                            <span x-show="sortBy === 'name'">
-                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
-                            </span>
-                        </th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('semester')">
-                            Semestre
-                            <span x-show="sortBy === 'semester'">
-                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
-                            </span>
-                        </th>
-                        <th class="px-4 py-3 text-left text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('status')">
-                            St. Pagos
-                            <span x-show="sortBy === 'status'">
-                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
-                            </span>
-                        </th>
-                        <th class="px-4 py-3 text-right text-xs font-bold text-[#2e594d] uppercase tracking-wider cursor-pointer" @click="sort('due')">
-                            Adeudo
-                            <span x-show="sortBy === 'due'">
-                                <i :class="sortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down'"></i>
-                            </span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <template x-for="student in paginatedStudents" :key="student.id">
-                        <tr class="text-sm text-gray-700 odd:bg-white even:bg-[#f0fff4] hover:bg-[#e0f2f1] transition duration-200 cursor-pointer">
-                            <td x-text="student.id" class="px-4 py-2 whitespace-nowrap font-mono"></td>
-                            <td x-text="student.name" class="px-4 py-2 whitespace-nowrap"></td>
-                            <td x-text="student.semester" class="px-4 py-2 whitespace-nowrap"></td>
-                            <td class="px-4 py-2 whitespace-nowrap">
-                                <span x-text="student.status"
-                                      :class="{
-                                          'text-green-800 bg-green-100': student.status === 'Pagado',
-                                          'text-yellow-800 bg-yellow-100': student.status === 'Pendiente',
-                                          'text-blue-800 bg-blue-100': student.status === 'En proceso',
-                                      }"
-                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                </span>
-                            </td>
-                            <td x-text="'$' + student.due.toFixed(2)" class="px-4 py-2 whitespace-nowrap text-right font-semibold"></td>
-                        </tr>
-                    </template>
-                    <tr x-show="paginatedStudents.length === 0">
-                        <td colspan="5" class="text-center py-4 text-gray-500">No se encontraron estudiantes que coincidan con la búsqueda.</td>
-                    </tr>
+          
+          <div class="overflow-x-auto rounded-lg border border-gray-200">
+            <table class="min-w-full text-xs divide-y divide-gray-200">
+              <thead class="bg-gray-50 text-left sticky top-0 z-10">
+                <tr>
+                    <th class="px-3 py-2 font-semibold text-gray-600 w-24">N. Control</th>
+                    <th class="px-3 py-2 font-semibold text-gray-600 w-32">Nombre</th>
+                    <th class="px-3 py-2 font-semibold text-gray-600 w-32">Apellido P.</th>
+                    <th class="px-3 py-2 font-semibold text-gray-600 w-32">Apellido M.</th>
+                    <th class="px-3 py-2 font-semibold text-gray-600 w-20 text-center">Semestre</th>
+                    <th class="px-3 py-2 font-semibold text-gray-600 w-24">Carrera</th>
+                    <th class="px-3 py-2 font-semibold text-gray-600 w-24 text-center">St. Pagos</th>
+                    <th class="px-3 py-2 font-semibold text-gray-600 w-24 text-right">Adeudo</th>
+                </tr>
+              </thead>
+              <tbody id="students-tbody" class="bg-white divide-y divide-gray-100">
                 </tbody>
             </table>
+          </div>
         </div>
+    </section>
+  </div>
 
-        <!-- Paginación -->
-        <div class="flex flex-col sm:flex-row justify-between items-center pt-4">
-            <p class="text-sm text-gray-600 mb-2 sm:mb-0">
-                Mostrando <span x-text="paginatedStudents.length"></span> de <span x-text="filteredAndSortedStudents.length"></span> estudiantes
-            </p>
+  <script>
+    // Variable global para inicializar el script de cliente con los datos de Astro
+    window.__INITIAL_STUDENTS = JSON.parse('${initialJSON}');
+  </script>
+
+  <script type="module" client:load>
+  (function () {
+    const STORAGE_KEY = 'studentsList';
+    const initial = Array.isArray(window.__INITIAL_STUDENTS) ? window.__INITIAL_STUDENTS : [];
+    
+    const CARRERA_MAP = {
+        'AGR': 'Agronomía',
+        'INF': 'Informática',
+        'ADM': 'Administración',
+        'TEC': 'Ofimática',
+        '': 'Sin Carrera',
+        '0': 'Sin Carrera',
+    };
+    
+    // Estado de los filtros, ahora incluye el término de búsqueda
+    let currentFilters = {
+        semestre: '',
+        carrera: '',
+        searchText: ''
+    };
+
+
+    // Elementos del DOM
+    const tbody = document.getElementById('students-tbody');
+    const totalEl = document.getElementById('students-total');
+    const filterCarrera = document.getElementById('filter-carrera');
+    const filterSemestre = document.getElementById('filter-semestre');
+    const filtersPopover = document.getElementById('filters-popover');
+    const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
+    const filtersStatusEl = document.getElementById('filters-status');
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+    const searchBar = document.getElementById('search-bar'); 
+
+
+    // --- FUNCIONES DE UTILIDAD CLAVE ---
+    
+    // Leer Local Storage o usar la lista inicial de Astro
+    const readLocal = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw && raw !== '[]') {
+             const arr = JSON.parse(raw);
+             return Array.isArray(arr) ? arr : initial.slice();
+        }
+        return initial.slice();
+      } catch (e) {
+        return initial.slice();
+      }
+    };
+    
+    // Función de escape HTML
+    function escapeHtml(s) {
+      if (s === undefined || s === null) return '';
+      return String(s).replace(/[&<>"']/g, function (m) {
+        return ({ '&':'&amp;','<':'&amp;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m];
+      });
+    }
+    
+    // Aplicar Filtros (Incluye búsqueda de texto)
+    const applyFilters = (list) => {
+        const text = currentFilters.searchText.toLowerCase().trim();
+
+        return list.filter(s => {
+            // Filtro por Carrera y Semestre
+            const matchCarrera = !currentFilters.carrera || s.carrera === currentFilters.carrera;
+            // CORRECCIÓN: Se asegura que el semestre del estudiante sea tratado como string para la comparación
+            const matchSemestre = !currentFilters.semestre || String(s.semestre) === currentFilters.semestre; 
             
-            <nav class="flex items-center space-x-1" aria-label="Pagination">
-                <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-                        :class="currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-[#2e594d] hover:bg-gray-100'"
-                        class="px-3 py-1 rounded-lg text-sm font-medium transition duration-150">
-                    <i class="fas fa-arrow-left mr-1"></i> Previous
-                </button>
+            // Filtro por Texto (Nombre o N. Control)
+            let matchSearch = true;
+            if (text.length > 0) {
+                const nombreCompleto = `${s.nombre} ${s.apellidoP} ${s.apellidoM}`.toLowerCase();
+                const numControl = s.numControl.toLowerCase();
+                
+                // Busca el texto en Nombre Completo o Número de Control
+                matchSearch = nombreCompleto.includes(text) || numControl.includes(text);
+            }
+            
+            return matchCarrera && matchSemestre && matchSearch;
+        });
+    };
+    
+    // Actualizar el estado de los filtros
+    const updateFiltersStatus = (filteredCount, totalCount) => {
+        // Se considera activo si hay búsqueda, o filtro de carrera/semestre aplicado
+        const isActive = currentFilters.carrera || currentFilters.semestre || currentFilters.searchText.length > 0;
+        totalEl.textContent = `(${totalCount}${isActive ? ' - Filtrados: ' + filteredCount : ''})`;
+        
+        // Muestra si hay filtros de búsqueda o selectores activos
+        let statusText = 'Filtros';
+        if (isActive) {
+            statusText = currentFilters.searchText.length > 0 ? 'Búsqueda/Filtros' : 'Filtros Activos';
+        }
+        filtersStatusEl.textContent = statusText;
+        
+        // Estilo del botón de filtros
+        toggleFiltersBtn.classList.toggle('bg-teal-50', !isActive);
+        toggleFiltersBtn.classList.toggle('bg-yellow-100', isActive);
+        toggleFiltersBtn.classList.toggle('border-teal-200', !isActive);
+        toggleFiltersBtn.classList.toggle('border-yellow-300', isActive);
+    };
 
-                <template x-for="page in paginationRange" :key="page">
-                    <span x-if="page === '...'" class="px-3 py-1 text-gray-500">...</span>
-                    <button x-else @click="currentPage = page"
-                            :class="page === currentPage ? 'bg-[#2e594d] text-white shadow-md' : 'text-gray-600 hover:bg-gray-100'"
-                            class="px-3 py-1 rounded-lg text-sm font-medium transition duration-150">
-                        <span x-text="page"></span>
-                    </button>
-                </template>
+    // LÓGICA DE SIMULACIÓN DE PAGOS/ADEUDOS 
+    const getStudentPaymentStatus = (studentId) => {
+        const idStr = String(studentId);
+        const idNum = parseInt(idStr.replace(/[^0-9]/g, '').slice(-3) || '0'); 
+        
+        let status;
+        let adeudo = 0;
 
-                <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage === totalPages"
-                        :class="currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-[#2e594d] hover:bg-gray-100'"
-                        class="px-3 py-1 rounded-lg text-sm font-medium transition duration-150">
-                    Next <i class="fas fa-arrow-right ml-1"></i>
-                </button>
-            </nav>
-        </div>
+        if (idNum % 7 === 0) {
+            status = 'Adeudo Grave';
+            adeudo = 1500 + (idNum * 10);
+        } else if (idNum % 3 === 0) {
+            status = 'Pago Parcial';
+            adeudo = 500 + (idNum * 5);
+        } else if (idNum % 2 === 0) {
+            status = 'Al Corriente';
+            adeudo = 0;
+        } else { 
+            status = 'Pendiente';
+            adeudo = 300;
+        }
 
-    </div> 
+        return { 
+            status: status, 
+            adeudo: adeudo.toFixed(2), 
+            isAdeudo: adeudo > 0 
+        };
+    };
+
+    const getStatusBadge = (statusObj) => {
+        const status = statusObj.status;
+        const adeudo = statusObj.adeudo;
+        
+        let colorClasses = '';
+        if (status === 'Adeudo Grave') {
+            colorClasses = 'bg-red-100 text-red-800';
+        } else if (status === 'Pago Parcial') {
+            colorClasses = 'bg-yellow-100 text-yellow-800';
+        } else if (status === 'Al Corriente') {
+            colorClasses = 'bg-green-100 text-green-800';
+        } else { 
+            colorClasses = 'bg-gray-100 text-gray-800';
+        }
+        
+        const adeudoFormat = statusObj.isAdeudo ? `<span class="font-bold text-red-600">$${adeudo}</span>` : `<span class="text-green-600">N/A</span>`;
+
+        return {
+            statusHtml: `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorClasses}">${status}</span>`,
+            adeudoHtml: adeudoFormat
+        };
+    };
+    
+    // Función de renderizado principal
+    const render = () => {
+      // 1. Leer y Filtrar - Se lee del local storage y se aplican filtros
+      const rawList = readLocal(); 
+      const filteredList = applyFilters(rawList); 
+      
+      tbody.innerHTML = '';
+      
+      // La tabla tiene 8 columnas
+      if (filteredList.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-gray-500 italic">
+                    No se encontraron estudiantes (${rawList.length} en total) con los filtros de búsqueda o selección aplicados.
+                </td>
+            </tr>
+        `;
+      } else {
+        // 2. Renderizar la lista filtrada
+        filteredList.forEach((s) => {
+            const paymentStatus = getStudentPaymentStatus(s.id); 
+            const badges = getStatusBadge(paymentStatus); 
+
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-gray-50';
+          
+          tr.innerHTML = `
+            <td class="px-3 py-2 font-medium text-gray-900 w-24">${escapeHtml(s.numControl)}</td>
+            <td class="px-3 py-2 w-32">${escapeHtml(s.nombre)}</td>
+            <td class="px-3 py-2 w-32">${escapeHtml(s.apellidoP)}</td>
+            <td class="px-3 py-2 w-32">${escapeHtml(s.apellidoM)}</td>
+            <td class="px-3 py-2 w-20 text-center">${s.semestre === 0 ? 'N/A' : s.semestre}</td>
+            <td class="px-3 py-2 text-teal-600 font-medium w-24">${CARRERA_MAP[s.carrera] || s.carrera}</td>
+            
+            <td class="px-3 py-2 w-24 text-center">${badges.statusHtml}</td>
+            <td class="px-3 py-2 w-24 text-right">${badges.adeudoHtml}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      updateFiltersStatus(filteredList.length, rawList.length);
+    };
+    
+    // --- Listeners de Eventos ---
+    
+    // Listener para la barra de búsqueda
+    searchBar.addEventListener('input', (e) => {
+        currentFilters.searchText = e.target.value;
+        render(); // Llama a render en cada cambio para actualizar la tabla
+    });
+
+    // Listeners de Filtros 
+    toggleFiltersBtn.addEventListener('click', () => {
+        filtersPopover.classList.toggle('hidden');
+        filtersPopover.classList.toggle('scale-95');
+        filtersPopover.classList.toggle('opacity-0');
+        filtersPopover.classList.toggle('scale-100');
+        filtersPopover.classList.toggle('opacity-100');
+    });
+
+    filterCarrera.addEventListener('change', (e) => {
+        currentFilters.carrera = e.target.value;
+        render();
+    });
+
+    filterSemestre.addEventListener('change', (e) => {
+        currentFilters.semestre = e.target.value;
+        render();
+    });
+
+    clearFiltersBtn.addEventListener('click', () => {
+        filterCarrera.value = '';
+        filterSemestre.value = '';
+        searchBar.value = ''; // Limpiar barra de búsqueda también
+        currentFilters.carrera = '';
+        currentFilters.semestre = '';
+        currentFilters.searchText = '';
+        render();
+        // Opcional: Cerrar el popover después de limpiar
+        filtersPopover.classList.add('hidden', 'scale-95', 'opacity-0');
+        filtersPopover.classList.remove('scale-100', 'opacity-100');
+    });
+
+    // Función de Exportación 
+    const exportData = (format) => {
+        const studentsToExport = readLocal().map(s => ({
+            'Num Control': s.numControl,
+            'Nombre': s.nombre,
+            'Apellido Paterno': s.apellidoP,
+            'Apellido Materno': s.apellidoM,
+            'Semestre': s.semestre,
+            'Carrera': CARRERA_MAP[s.carrera] || s.carrera,
+            'Correo': s.correo,
+            'Status Pago': getStudentPaymentStatus(s.id).status,
+            'Adeudo': getStudentPaymentStatus(s.id).adeudo,
+        }));
+        
+        const worksheet = XLSX.utils.json_to_sheet(studentsToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Estudiantes");
+        XLSX.writeFile(workbook, `estudiantes_lista.${format}`);
+    };
+    
+    document.getElementById('export-xlsx').addEventListener('click', () => exportData('xlsx'));
+    document.getElementById('export-csv').addEventListener('click', () => exportData('csv'));
+
+    // 🏁 Inicialización (Primer renderizado)
+    render();
+  })();
+  </script>
 </Layout>
