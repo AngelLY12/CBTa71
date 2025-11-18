@@ -72,7 +72,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $credentialsPath = storage_path('app/google/credentials.json');
         if (!file_exists($credentialsPath)) {
-            $json = base64_decode(env('GOOGLE_CREDENTIALS_JSON_BASE64'));
+            $json = base64_decode(env('GOOGLE_CREDENTIALS_BASE64'));
             file_put_contents($credentialsPath, $json);
         }
         if (config('app.env') === 'production') {
