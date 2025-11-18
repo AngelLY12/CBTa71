@@ -18,7 +18,7 @@ interface UserRepInterface{
     public function createRefreshToken(int $userId, string $name): string;
     public function revokeToken(string $tokenId): void;
     public function attachStudentDetail(CreateStudentDetailDTO $details): User;
-    public function bulkInsertWithStudentDetails(array $users): int;
+    public function bulkInsertWithStudentDetails(array $users): array;
     public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): array;
     public function updateRoleToMany(UpdateUserRoleDTO $dto): UserWithUpdatedRoleResponse;
     public function deletionInvalidTokens(): int;

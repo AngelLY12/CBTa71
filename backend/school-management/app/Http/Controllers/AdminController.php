@@ -10,6 +10,7 @@ use App\Imports\UsersImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 
 /**
@@ -28,6 +29,111 @@ class AdminController extends Controller
     }
 
 
+        /**
+     * @OA\Post(
+     *     path="/api/v1/admin-actions/register",
+     *     summary="Registrar un nuevo usuario",
+     *     description="Crea un nuevo usuario en el sistema con los datos proporcionados.",
+     *     operationId="adminRegisterUser",
+     *     tags={"Admin"},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Datos necesarios para el registro del usuario",
+     *         @OA\JsonContent(ref="#/components/schemas/CreateUserDTO")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Usuario creado con éxito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="user", ref="#/components/schemas/DomainUser")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="El usuario ha sido creado con éxito.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error en la validación de datos",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 description="Listado de errores de validación",
+     *                 example={
+     *                     "email": {"El campo email es obligatorio."},
+     *                     "password": {"El campo password debe tener al menos 6 caracteres."}
+     *                 }
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error inesperado en el servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
+     *         )
+     *     )
+     * )
+     */
+    public function registerUser(Request $request)
+    {
+        $data = $request->only([
+            'name',
+            'last_name',
+            'email',
+            'phone_number',
+            'birthdate',
+            'gender',
+            'curp',
+            'address',
+            'blood_type',
+            'registration_date',
+            'status'
+        ]);
+        $rules = [
+            'name' => 'required|string',
+            'last_name'  => 'required|string',
+            'email'  => 'required|email',
+            'phone_number'  => 'required|string',
+            'birthdate' => 'sometimes|required|date',
+            'gender' => 'sometimes|required|string',
+            'curp' => 'required|string',
+            'address' => 'sometimes|required|array',
+            'blood_type' => 'sometimes|required|string',
+            'registration_date' => 'sometimes|required|date',
+            'status' => 'required|string'
+        ];
+
+        $validator = Validator::make($data,$rules);
+        if($validator->fails()){
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+                'message' => 'Error en la validación de datos.'
+            ], 422);
+        }
+        $password= Str::random(12);
+        $data['password'] = $password;
+        $createUser = UserMapper::toCreateUserDTO($data);
+
+        $user = $this->service->registerUser($createUser, $password);
+
+        return response()->json([
+            'success' => true,
+            'data' => ['user'=>$user],
+            'message' => 'El usuario ha sido creado con éxito.',
+        ]);
+    }
     /**
      * @OA\Post(
      *     path="/api/v1/admin-actions/attach-student",

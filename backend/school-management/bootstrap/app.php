@@ -41,9 +41,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule){
+        $schedule->command('backup:run --only-db --only-to-disk=google')->dailyAt('02:00');
+        $schedule->command('backup:clean')->dailyAt('02:30');
+        $schedule->command('db:auto-restore')->dailyAt('03:00');
         $schedule->command('concepts:dispatch-finalize-job')->daily();
         $schedule->command('tokens:dispatch-clean-expired-tokens')->everyFourHours();
-        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->days([0, 3])->at('03:00');
+        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('03:00');
         $schedule->command('users:dispatch-delete-users')->weekly()->at('00:00');
         $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('00:00');
     })

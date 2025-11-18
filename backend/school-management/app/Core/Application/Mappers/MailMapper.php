@@ -3,6 +3,7 @@
 namespace App\Core\Application\Mappers;
 
 use App\Core\Application\DTO\Request\Mail\NewPaymentConceptEmailDTO;
+use App\Core\Application\DTO\Request\Mail\NewUserCreatedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\PaymentCreatedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\PaymentFailedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\PaymentValidatedEmailDTO;
@@ -69,6 +70,14 @@ class MailMapper
             amount: $data['amount'],
             next_action: $data['next_action'],
             payment_method_options: $data['payment_method_options']
+        );
+    }
+    public static function toNewUserCreatedEmailDTO(array $data): NewUserCreatedEmailDTO
+    {
+        return new NewUserCreatedEmailDTO(
+            recipientName: $data['fullName'],
+            recipientEmail:$data['email'],
+            password:$data['password']
         );
     }
 

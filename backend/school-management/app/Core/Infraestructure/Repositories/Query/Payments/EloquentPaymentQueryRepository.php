@@ -40,14 +40,6 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         return number_format($total, 2, '.', '');
     }
 
-    public function getConceptNameFromPayment(string $paymentIntentId): ?string
-    {
-        $conceptName = EloquentPayment::where('payment_intent_id', $paymentIntentId)
-        ->value('concept_name');
-        return $conceptName;
-    }
-
-
     public function getPaymentHistory(int $userId, int $perPage, int $page): LengthAwarePaginator
     {
          return EloquentPayment::where('user_id', $userId)

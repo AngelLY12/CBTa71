@@ -78,7 +78,8 @@ class DatabaseSeeder extends Seeder
             'disable users',
             'delete users',
             'view permissions',
-            'view roles'
+            'view roles',
+            'create user'
         ];
 
         $global=[

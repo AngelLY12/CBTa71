@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Core\Application\DTO\Request\Mail;
-use Carbon\Carbon;
 
 class PaymentCreatedEmailDTO{
     public function __construct(

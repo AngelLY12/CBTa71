@@ -108,6 +108,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:view permissions')->get('/permissions/{id}', [AdminController::class, 'findPermissionById']);
         Route::middleware('permission:view roles')->get('/find-roles', [AdminController::class, 'findAllRoles']);
         Route::middleware('permission:view roles')->get('/roles/{id}', [AdminController::class, 'findRoleById']);
+        Route::middleware('permission:create user')->post('/register',[AdminController::class,'registerUser']);
     });
     Route::prefix('find')->middleware(['role:admin','role:student','role:financial staff','throttle:global'])->group(function(){
         Route::middleware('permission:view concept')->get('/concept/{id}',[FindEntityController::class,'findConcept']);

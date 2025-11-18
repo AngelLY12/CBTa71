@@ -51,6 +51,7 @@ class AdminUserSeeder extends Seeder
             'view permissions',
             'view roles',
             'view profile',
+            'create user'
         ]);
     }
 }

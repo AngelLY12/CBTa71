@@ -58,9 +58,9 @@ class AdminService
         return $student;
     }
 
-    public function registerUser(CreateUserDTO $user):User
+    public function registerUser(CreateUserDTO $user, string $password):User
     {
-        $user=$this->register->execute($user);
+        $user=$this->register->execute($user, $password);
         $this->service->clearPrefix("$this->prefix:users:all");
         return $user;
     }

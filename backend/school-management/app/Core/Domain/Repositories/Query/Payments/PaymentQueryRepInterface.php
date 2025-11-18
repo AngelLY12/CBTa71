@@ -24,6 +24,4 @@ interface PaymentQueryRepInterface{
     public function getPaidWithinLastMonthCursor(): Generator;
     public function updatePaymentWithStripeData(Payment $payment, $pi, $charge,PaymentMethod $savedPaymentMethod): void;
     public function getAllWithSearchEager(?string $search, int $perPage,int $page): LengthAwarePaginator;
-    public function getConceptNameFromPayment(string $paymentIntentId): ?string;
-
 }

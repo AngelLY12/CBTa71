@@ -23,6 +23,7 @@ use Spatie\Permission\Models\Permission;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Str;
 
 class EloquentUserRepository implements UserRepInterface{
 
@@ -92,31 +93,35 @@ class EloquentUserRepository implements UserRepInterface{
         return EloquentUser::findOrFail($id);
     }
 
-    public function bulkInsertWithStudentDetails(array $rows): int
+    public function bulkInsertWithStudentDetails(array $rows): array
     {
-        $totalInserted = DB::transaction(function () use ($rows) {
+        $createdUsers=[];
+        $totalInserted = DB::transaction(function () use ($rows, $createdUsers) {
+            $tempPasswords = [];
             $users = [];
             $studentDetails = [];
             foreach ($rows as $row) {
+                $tempPassword = Str::random(12);
+                $tempPasswords[] = $tempPassword;
                 $users[] = [
                     'name' => $row[0],
                     'last_name' => $row[1],
                     'email' => $row[2],
-                    'password' => Hash::make($row[3] ?? 'default123'),
-                    'phone_number' => $row[4],
-                    'birthdate' => !empty($row[5]) ? Carbon::parse($row[5]) : null,
-                    'gender' => $row[6],
-                    'curp' => $row[7],
+                    'password' => Hash::make($tempPassword ?? 'default123'),
+                    'phone_number' => $row[3],
+                    'birthdate' => !empty($row[4]) ? Carbon::parse($row[4]) : null,
+                    'gender' => $row[5],
+                    'curp' => $row[6],
                     'address' => [
-                        'street' => $row[8] ?? null,
-                        'city' => $row[9] ?? null,
-                        'state' => $row[10] ?? null,
-                        'zip_code' => $row[11] ?? null,
+                        'street' => $row[7] ?? null,
+                        'city' => $row[8] ?? null,
+                        'state' => $row[9] ?? null,
+                        'zip_code' => $row[10] ?? null,
                     ],
-                    'stripe_customer_id' => $row[12] ?? null,
-                    'blood_type' => $row[13] ?? null,
-                    'registration_date' => !empty($row[14]) ? Carbon::parse($row[14]) : now(),
-                    'status' => $row[15] ?? 'activo',
+                    'stripe_customer_id' => $row[11] ?? null,
+                    'blood_type' => $row[12] ?? null,
+                    'registration_date' => !empty($row[13]) ? Carbon::parse($row[13]) : now(),
+                    'status' => $row[14] ?? 'activo',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -152,9 +157,18 @@ class EloquentUserRepository implements UserRepInterface{
                     'model_id' => $user->id,
                 ];
             }
+             foreach ($insertedUsers as $index => $user) {
+                $createdUsers[] = [
+                    'user' => UserMapper::toDomain($user),
+                    'password' => $tempPasswords[$index]
+                ];
+            }
 
             DB::table('model_has_roles')->insertOrIgnore($roleRows);
-            return $insertedUsers->count();
+            return [
+                'affected'=>$insertedUsers->count(),
+                'users'=>$createdUsers
+            ];
 
         });
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();

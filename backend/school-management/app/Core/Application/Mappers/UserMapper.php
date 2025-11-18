@@ -180,4 +180,5 @@ class UserMapper{
             totalUpdated: $data['total'] ?? 0
         );
     }
+
 }
