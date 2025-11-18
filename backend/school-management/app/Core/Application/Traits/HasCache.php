@@ -6,7 +6,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 trait HasCache
 {
-    public function __constructor(CacheService $service)
+    public function __construct(CacheService $service)
     {}
 
     private function cache(string $key, bool $forceRefresh, callable $callback)

@@ -79,9 +79,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (QueryException $e, Request $request) {
             logger()->error('Database error: ' . $e->getMessage());
+            if ($e->errorInfo[1] === 1062) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Registro duplicado, ya existe un usuario con esos datos.',
+                    'errors' => $e->errorInfo,
+                ], 409);
+            }
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno al procesar la base de datos.',
+                'errors' => $e->errorInfo
             ], 500);
         });
 
