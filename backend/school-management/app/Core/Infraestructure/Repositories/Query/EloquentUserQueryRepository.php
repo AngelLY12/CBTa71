@@ -188,7 +188,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             $students->load([
                 'studentDetail' => function ($query) {
                     $query->select('id', 'user_id', 'career_id', 'n_control', 'semestre', 'group')
-                        ->with(['career:id,name']);
+                        ->with(['career:id,career_name']);
                 }
             ]);
 

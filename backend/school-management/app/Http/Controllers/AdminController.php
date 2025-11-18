@@ -411,7 +411,7 @@ class AdminController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/admin-actions/users",
+     *     path="/api/v1/admin-actions/showUsers",
      *     summary="Mostrar usuarios existentes",
      *     description="Permite al administrador ver a todos los usuarios registrados, junto con sus roles, permisos y detalles académicos (si aplica).",
      *     operationId="showAllUsers",
