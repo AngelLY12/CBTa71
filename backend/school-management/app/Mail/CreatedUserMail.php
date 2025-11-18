@@ -3,12 +3,8 @@
 namespace App\Mail;
 
 use App\Core\Application\DTO\Request\Mail\NewUserCreatedEmailDTO;
-use App\Core\Application\DTO\Request\User\AdminCreateUserDTO;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use MailerSend\Helpers\Builder\Personalization;
 use MailerSend\LaravelDriver\MailerSendTrait;
