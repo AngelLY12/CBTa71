@@ -37,7 +37,7 @@ class PaymentFailedMail extends Mailable
         ];
 
         return $this->mailersend(
-                     template_id:'neqvygme2ez40p7w',
+                     template_id:'351ndgwmzxnlzqx8',
                      personalization: $personalization
                  );
 

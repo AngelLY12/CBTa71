@@ -61,7 +61,7 @@ class RequiresActionMail extends Mailable
             ];
 
             return $this->mailersend(
-                template_id: 'vywj2lp72zml7oqz',
+                template_id: 'pq3enl6d8z7g2vwr',
                 personalization: $personalization
             );
 
