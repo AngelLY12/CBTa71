@@ -13,7 +13,7 @@ while true; do
     {
         echo "---- $(date '+%Y-%m-%d %H:%M:%S') Ejecutando schedule:run ----"
         php artisan schedule:run
-        echo "---- Esperando 10 minutos ----"
+        echo "---- Esperando 60 segundos ----"
     } | tee -a "$LOG_FILE"
-    sleep 600
+    sleep 60
 done

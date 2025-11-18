@@ -24,6 +24,109 @@
         }
     ],
     "paths": {
+        "/api/v1/admin-actions/register": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Registrar un nuevo usuario",
+                "description": "Crea un nuevo usuario en el sistema con los datos proporcionados.",
+                "operationId": "adminRegisterUser",
+                "requestBody": {
+                    "description": "Datos necesarios para el registro del usuario",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateUserDTO"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Usuario creado con éxito",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "$ref": "#/components/schemas/DomainUser"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El usuario ha sido creado con éxito."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error en la validación de datos",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "errors": {
+                                            "description": "Listado de errores de validación",
+                                            "type": "object",
+                                            "example": {
+                                                "email": [
+                                                    "El campo email es obligatorio."
+                                                ],
+                                                "password": [
+                                                    "El campo password debe tener al menos 6 caracteres."
+                                                ]
+                                            }
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error en la validación de datos."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error inesperado en el servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ocurrió un error inesperado."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/admin-actions/attach-student": {
             "post": {
                 "tags": [
@@ -5028,175 +5131,6 @@
                 },
                 "type": "object"
             },
-            "PaymentDataResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID interno del pago",
-                        "type": "integer",
-                        "example": 123,
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "status": {
-                        "description": "Estado del pago",
-                        "type": "string",
-                        "example": "completed",
-                        "nullable": true
-                    },
-                    "payment_intent_id": {
-                        "description": "ID del Payment Intent asociado",
-                        "type": "string",
-                        "example": "pi_01HXXXXXX",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentDetailResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID interno del pago",
-                        "type": "integer",
-                        "example": 123,
-                        "nullable": true
-                    },
-                    "concept": {
-                        "description": "Concepto del pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "date": {
-                        "description": "Fecha del pago",
-                        "type": "string",
-                        "example": "2025-11-04",
-                        "nullable": true
-                    },
-                    "status": {
-                        "description": "Estado del pago",
-                        "type": "string",
-                        "example": "completed",
-                        "nullable": true
-                    },
-                    "reference": {
-                        "description": "Referencia del pago",
-                        "type": "string",
-                        "example": "REF123456",
-                        "nullable": true
-                    },
-                    "url": {
-                        "description": "URL del recibo de pago",
-                        "type": "string",
-                        "example": "https://example.com/receipt/123",
-                        "nullable": true
-                    },
-                    "payment_method_details": {
-                        "description": "Detalles del método de pago utilizado",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentHistoryResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID interno del pago",
-                        "type": "integer",
-                        "example": 123,
-                        "nullable": true
-                    },
-                    "concept": {
-                        "description": "Concepto del pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "date": {
-                        "description": "Fecha del pago",
-                        "type": "string",
-                        "example": "2025-11-04",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentListItemResponse": {
-                "properties": {
-                    "date": {
-                        "description": "Fecha del pago",
-                        "type": "string",
-                        "example": "2025-11-04",
-                        "nullable": true
-                    },
-                    "concept": {
-                        "description": "Concepto del pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "method": {
-                        "description": "Método de pago usado",
-                        "type": "string",
-                        "example": "Tarjeta de crédito",
-                        "nullable": true
-                    },
-                    "fullName": {
-                        "description": "Nombre completo del usuario que realizó el pago",
-                        "type": "string",
-                        "example": "Juan Pérez",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentValidateResponse": {
-                "properties": {
-                    "student": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/UserDataResponse"
-                            }
-                        ],
-                        "nullable": true
-                    },
-                    "payment": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/PaymentDataResponse"
-                            }
-                        ],
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
             "ConceptNameAndAmountResponse": {
                 "properties": {
                     "user_name": {
@@ -5376,6 +5310,175 @@
                         "description": "URL para completar el setup de la tarjeta",
                         "type": "string",
                         "example": "https://example.com/setup/pm_01HXXXXXX",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentDataResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID interno del pago",
+                        "type": "integer",
+                        "example": 123,
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "status": {
+                        "description": "Estado del pago",
+                        "type": "string",
+                        "example": "completed",
+                        "nullable": true
+                    },
+                    "payment_intent_id": {
+                        "description": "ID del Payment Intent asociado",
+                        "type": "string",
+                        "example": "pi_01HXXXXXX",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentDetailResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID interno del pago",
+                        "type": "integer",
+                        "example": 123,
+                        "nullable": true
+                    },
+                    "concept": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "date": {
+                        "description": "Fecha del pago",
+                        "type": "string",
+                        "example": "2025-11-04",
+                        "nullable": true
+                    },
+                    "status": {
+                        "description": "Estado del pago",
+                        "type": "string",
+                        "example": "completed",
+                        "nullable": true
+                    },
+                    "reference": {
+                        "description": "Referencia del pago",
+                        "type": "string",
+                        "example": "REF123456",
+                        "nullable": true
+                    },
+                    "url": {
+                        "description": "URL del recibo de pago",
+                        "type": "string",
+                        "example": "https://example.com/receipt/123",
+                        "nullable": true
+                    },
+                    "payment_method_details": {
+                        "description": "Detalles del método de pago utilizado",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentHistoryResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID interno del pago",
+                        "type": "integer",
+                        "example": 123,
+                        "nullable": true
+                    },
+                    "concept": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "date": {
+                        "description": "Fecha del pago",
+                        "type": "string",
+                        "example": "2025-11-04",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentListItemResponse": {
+                "properties": {
+                    "date": {
+                        "description": "Fecha del pago",
+                        "type": "string",
+                        "example": "2025-11-04",
+                        "nullable": true
+                    },
+                    "concept": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "method": {
+                        "description": "Método de pago usado",
+                        "type": "string",
+                        "example": "Tarjeta de crédito",
+                        "nullable": true
+                    },
+                    "fullName": {
+                        "description": "Nombre completo del usuario que realizó el pago",
+                        "type": "string",
+                        "example": "Juan Pérez",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentValidateResponse": {
+                "properties": {
+                    "student": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserDataResponse"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "payment": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentDataResponse"
+                            }
+                        ],
                         "nullable": true
                     }
                 },

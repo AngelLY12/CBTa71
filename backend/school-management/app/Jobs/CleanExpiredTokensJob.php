@@ -6,11 +6,14 @@ use App\Core\Application\UseCases\Jobs\CleanExpiredAccessTokensUseCase;
 use App\Core\Application\UseCases\Jobs\CleanExpiredTokensUseCase;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
 class CleanExpiredTokensJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * Create a new job instance.
