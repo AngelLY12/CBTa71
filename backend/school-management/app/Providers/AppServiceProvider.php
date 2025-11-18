@@ -70,11 +70,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $credentialsPath = storage_path('app/google/credentials.json');
-        if (!file_exists($credentialsPath)) {
-            $json = base64_decode(env('GOOGLE_CREDENTIALS_BASE64'));
-            file_put_contents($credentialsPath, $json);
+        $credentialsBase64 = env('GOOGLE_CREDENTIALS_BASE64');
+        if ($credentialsBase64) {
+            $credentialsPath = storage_path('app/google/credentials.json');
+            @mkdir(dirname($credentialsPath), 0755, true);
+            if (!file_exists($credentialsPath)) {
+                file_put_contents($credentialsPath, base64_decode($credentialsBase64));
+            }
         }
+
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
