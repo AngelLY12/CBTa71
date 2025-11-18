@@ -39,7 +39,7 @@ class AdminController extends Controller
      *
      *     @OA\RequestBody(
      *         required=true,
-     *         description="Datos necesarios para el registro del usuario",
+     *         description="Datos necesarios para el registro del usuario. Nota: La contraseña no debe ser incluida en la request, se genera para cada usuario desde el sistema",
      *         @OA\JsonContent(ref="#/components/schemas/CreateUserDTO")
      *     ),
      *

@@ -75,8 +75,8 @@ class MailMapper
     public static function toNewUserCreatedEmailDTO(array $data): NewUserCreatedEmailDTO
     {
         return new NewUserCreatedEmailDTO(
-            recipientName: $data['fullName'],
-            recipientEmail:$data['email'],
+            recipientName: $data['recipientName'],
+            recipientEmail:$data['recipientEmail'],
             password:$data['password']
         );
     }
