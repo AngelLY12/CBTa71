@@ -41,7 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule){
-        $schedule->command('backup:run --only-db --only-to-disk=google')->dailyAt('02:00');
+        $schedule->command('backup:run --only-db --only-to-disk=google')->everyFiveMinutes();
         $schedule->command('backup:clean')->dailyAt('02:30');
         $schedule->command('db:auto-restore')->dailyAt('03:00');
         $schedule->command('concepts:dispatch-finalize-job')->daily();
