@@ -1,5 +1,13 @@
 #!/bin/bash
 set -e
+echo "Iniciando configuración de Laravel..."
+
+echo "Limpiando cachés de Laravel..."
+php artisan config:clear || echo "No se pudo limpiar config"
+php artisan cache:clear || echo "No se pudo limpiar cache"
+php artisan route:clear || echo "No se pudo limpiar rutas"
+php artisan optimize:clear || echo "No se pudo limpiar"
+
 echo "Ejecutando backup manual..."
 php artisan backup:run --only-db --only-to-disk=google --verbose || echo "Backup fallo manualmente"
 echo "Iniciando worker de colas..."
