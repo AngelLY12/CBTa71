@@ -70,6 +70,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     libfcgi-bin \
     procps \
+    mariadb-client \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Download and install php-fpm health check script
