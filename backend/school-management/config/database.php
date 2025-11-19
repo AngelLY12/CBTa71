@@ -71,7 +71,7 @@ return [
             'dump' => [
                 'ssl' => false,
                 'skip-comments' => true,
-                'add_extra_option' => '--ssl-mode=DISABLED',
+                'add_extra_option' => '--ssl=0',
             ],
         ],
 
