@@ -3,15 +3,14 @@
 namespace App\Core\Domain\Utils\Validators;
 
 use App\Core\Domain\Entities\RefreshToken;
-use App\Exceptions\ValidationException;
-use Spatie\Permission\Exceptions\UnauthorizedException;
+use Illuminate\Auth\AuthenticationException;
 
 class TokenValidator
 {
     public static function ensureIsTokenValid(RefreshToken $token)
     {
          if (!$token || !$token->isValid()) {
-            throw new UnauthorizedException(403,"Refresh token inválido");
+            throw new AuthenticationException("Refresh token inválido");
 
         }
     }

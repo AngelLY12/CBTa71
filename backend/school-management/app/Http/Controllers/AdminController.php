@@ -373,7 +373,14 @@ class AdminController extends Controller
      */
     public function updatePermissions(Request $request)
     {
-        $validated = $request->validate([
+        $input = $request->only([
+            'curps',
+            'role',
+            'permissionsToAdd',
+            'permissionsToRemove'
+        ]);
+
+        $validated = validator($input, [
             'curps' => ['array'],
             'curps.*' => ['string', 'exists:users,curp'],
             'role' => ['nullable', 'string', 'exists:roles,name'],
@@ -381,7 +388,7 @@ class AdminController extends Controller
             'permissionsToAdd.*' => ['string', 'exists:permissions,name'],
             'permissionsToRemove' => ['array'],
             'permissionsToRemove.*' => ['string', 'exists:permissions,name'],
-        ]);
+        ])->validate();
 
         $hasCurps = !empty($validated['curps'] ?? []);
         $hasRole = !empty($validated['role'] ?? null);
@@ -533,14 +540,19 @@ class AdminController extends Controller
      */
     public function syncRoles(Request $request)
     {
-        $validated = $request->validate([
+        $input=$request->only([
+            'curps',
+            'rolesToAdd',
+            'rolesToRemove'
+        ]);
+        $validated = validator($input, [
             'curps' => ['array'],
             'curps.*' => ['string', 'exists:users,curp'],
             'rolesToAdd' => ['array'],
-            'rolesToAdd.*' => ['string', 'exists:permissions,name'],
+            'rolesToAdd.*' => ['string', 'exists:roles,name'],
             'rolesToRemove' => ['array'],
-            'rolesToRemove.*' => ['string', 'exists:permissions,name'],
-        ]);
+            'rolesToRemove.*' => ['string', 'exists:roles,name'],
+        ])->validate();
 
         $hasCurps = !empty($validated['curps'] ?? []);
 
@@ -595,9 +607,10 @@ class AdminController extends Controller
      */
     public function activateUsers(Request $request)
     {
-        $ids = $request->validate([
+        $input=$request->only(['ids']);
+        $ids = validator($input, [
             'ids'=> ['array'],
-        ]);
+        ])->validate();
         if(!$ids)
         {
              return response()->json([
@@ -649,9 +662,10 @@ class AdminController extends Controller
      */
     public function deleteUsers(Request $request)
     {
-        $ids = $request->validate([
+        $input=$request->only(['ids']);
+        $ids = validator($input, [
             'ids'=> ['array'],
-        ]);
+        ])->validate();
         if(!$ids)
         {
              return response()->json([
@@ -703,9 +717,10 @@ class AdminController extends Controller
      */
     public function disableUsers(Request $request)
     {
-        $ids = $request->validate([
+        $input=$request->only(['ids']);
+        $ids = validator($input, [
             'ids'=> ['array'],
-        ]);
+        ])->validate();
         if(!$ids)
         {
              return response()->json([
