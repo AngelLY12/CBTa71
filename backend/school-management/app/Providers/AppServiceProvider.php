@@ -38,6 +38,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Storage;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -70,13 +71,31 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $credentialsBase64 = env('GOOGLE_CREDENTIALS_BASE64');
-        if ($credentialsBase64) {
-            $credentialsPath = storage_path('app/google/credentials.json');
-            @mkdir(dirname($credentialsPath), 0755, true);
-            if (!file_exists($credentialsPath)) {
-                file_put_contents($credentialsPath, base64_decode($credentialsBase64));
-            }
+        try {
+            Storage::extend('google', function($app, $config) {
+                $options = [];
+
+                if (!empty($config['teamDriveId'] ?? null)) {
+                    $options['teamDriveId'] = $config['teamDriveId'];
+                }
+
+                if (!empty($config['sharedFolderId'] ?? null)) {
+                    $options['sharedFolderId'] = $config['sharedFolderId'];
+                }
+
+                $client = new \Google\Client();
+                $client->setClientId($config['clientId']);
+                $client->setClientSecret($config['clientSecret']);
+                $client->refreshToken($config['refreshToken']);
+
+                $service = new \Google\Service\Drive($client);
+                $adapter = new \Masbug\Flysystem\GoogleDriveAdapter($service, $config['folder'] ?? '/', $options);
+                $driver = new \League\Flysystem\Filesystem($adapter);
+
+                return new \Illuminate\Filesystem\FilesystemAdapter($driver, $adapter);
+            });
+        } catch(\Exception $e) {
+            info("Google Drive init failed: " . $e->getMessage());
         }
 
         if (config('app.env') === 'production') {
