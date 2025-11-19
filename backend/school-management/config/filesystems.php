@@ -63,7 +63,7 @@ return [
             'driver' => 'google',
             'clientId' => env('GOOGLE_DRIVE_CLIENT_ID'),
             'serviceAccount' => json_decode(base64_decode(env('GOOGLE_CREDENTIALS_BASE64')), true),
-            'folderId' => env('GOOGLE_DRIVE_FOLDER_ID', null),
+            'folder' => env('GOOGLE_DRIVE_FOLDER_ID', null),
         ],
 
     ],
