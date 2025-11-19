@@ -15,6 +15,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -41,7 +42,9 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule){
-        $schedule->command('backup:run --only-db --only-to-disk=google')->everyFiveMinutes();
+        $schedule->command('backup:run --only-db --only-to-disk=google')->everyFiveMinutes()->onFailure(function () {
+        Log::channel('stderr')->error("Fallo el backup a Google Drive");
+    });
         $schedule->command('backup:clean')->dailyAt('02:30');
         $schedule->command('db:auto-restore')->dailyAt('03:00');
         $schedule->command('concepts:dispatch-finalize-job')->daily();
