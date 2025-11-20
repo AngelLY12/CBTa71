@@ -8,14 +8,6 @@ php artisan cache:clear || echo "No se pudo limpiar cache"
 php artisan route:clear || echo "No se pudo limpiar rutas"
 php artisan optimize:clear || echo "No se pudo limpiar"
 
-echo "Probando acceso a Google Drive..."
-php -r "
-use Illuminate\Support\Facades\Storage;
-require __DIR__.'/vendor/autoload.php';
-\$contents = Storage::disk('google')->listContents();
-print_r(\$contents);
-"
-
 echo "Ejecutando backup manual..."
 php artisan backup:run --only-db --only-to-disk=google --verbose || echo "Backup fallo manualmente"
 echo "Iniciando worker de colas..."
