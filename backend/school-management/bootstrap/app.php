@@ -42,7 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule){
-        $schedule->command('backup:run --only-db --only-to-disk=google')->everyFiveMinutes()->onFailure(function () {
+        $schedule->command('backup:run --only-db --only-to-disk=google')->dailyAt('02:00')->onFailure(function () {
         Log::channel('stderr')->error("Fallo el backup a Google Drive");
     });
         $schedule->command('backup:clean')->dailyAt('02:30');
