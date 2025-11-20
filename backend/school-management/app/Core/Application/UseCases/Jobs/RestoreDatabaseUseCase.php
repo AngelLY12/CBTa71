@@ -42,7 +42,8 @@ class RestoreDatabaseUseCase
 
         $localPath = storage_path('app/restore.zip');
          try {
-            Storage::disk('google')->download($latestBackup, $localPath);
+            $content=Storage::disk('google')->get($latestBackup);
+            file_put_contents($localPath, $content);
         } catch (\Exception $e) {
             Log::error('Error al descargar el respaldo: ' . $e->getMessage());
             return false;
@@ -60,7 +61,7 @@ class RestoreDatabaseUseCase
             return false;
         }
 
-        $sqlFiles = glob($restoreDir . '/*.sql');
+        $sqlFiles = glob($restoreDir . '/**/*.sql',GLOB_BRACE);
         if (empty($sqlFiles)) {
             Log::error('No se encontró un archivo SQL para restaurar.');
             return false;
