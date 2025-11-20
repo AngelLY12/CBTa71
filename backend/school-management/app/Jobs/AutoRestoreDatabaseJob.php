@@ -25,8 +25,9 @@ class AutoRestoreDatabaseJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(RestoreDatabaseUseCase $restore): void
+    public function handle(): void
     {
+        $restore = app(RestoreDatabaseUseCase::class);
         $success = $restore->execute();
         if ($success) {
             Log::info("Se restauro la base de datos o no hay nada que restaurar");
