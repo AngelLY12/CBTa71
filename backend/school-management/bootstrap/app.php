@@ -46,7 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
         Log::channel('stderr')->error("Fallo el backup a Google Drive");
     });
         $schedule->command('backup:clean')->dailyAt('02:30');
-        $schedule->command('db:auto-restore')->dailyAt('03:00');
+        $schedule->command('db:auto-restore')->everyFiveMinutes();
         $schedule->command('concepts:dispatch-finalize-job')->daily();
         $schedule->command('tokens:dispatch-clean-expired-tokens')->everyFourHours();
         $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('03:00');
