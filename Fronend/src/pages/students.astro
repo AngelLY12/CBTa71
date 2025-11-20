@@ -272,50 +272,52 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
         toggleFiltersBtn.classList.toggle('border-yellow-300', isActive);
     };
 
-    // LÓGICA DE SIMULACIÓN DE PAGOS/ADEUDOS 
-    const getStudentPaymentStatus = (studentId) => {
-        const idStr = String(studentId);
-        const idNum = parseInt(idStr.replace(/[^0-9]/g, '').slice(-3) || '0'); 
-        
-        let status;
-        let adeudo = 0;
-
-        if (idNum % 7 === 0) {
-            status = 'Adeudo Grave';
-            adeudo = 1500 + (idNum * 10);
-        } else if (idNum % 3 === 0) {
-            status = 'Pago Parcial';
-            adeudo = 500 + (idNum * 5);
-        } else if (idNum % 2 === 0) {
-            status = 'Al Corriente';
-            adeudo = 0;
-        } else { 
-            status = 'Pendiente';
-            adeudo = 300;
+    // LÓGICA DE PAGOS/ADEUDOS — usar solo cargos (chargesList) para determinar estado
+    function getChargesSumForStudent(studentId) {
+        try {
+            const charges = JSON.parse(localStorage.getItem('chargesList') || '[]');
+            return charges
+              .filter(c => String(c.studentId) === String(studentId))
+              .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+        } catch (e) {
+            return 0;
         }
+    }
 
-        return { 
-            status: status, 
-            adeudo: adeudo.toFixed(2), 
-            isAdeudo: adeudo > 0 
-        };
+    // Si tiene adeudo (>0) => "Pago Pendiente", si no => "Al Corriente"
+    const getStudentPaymentStatus = (studentId) => {
+        const chargesSum = getChargesSumForStudent(studentId);
+        const total = Number(chargesSum || 0);
+
+        if (total > 0) {
+            return {
+                status: 'Pago Pendiente',
+                adeudo: total.toFixed(2),
+                isAdeudo: true
+            };
+        } else {
+            return {
+                status: 'Al Corriente',
+                adeudo: '0.00',
+                isAdeudo: false
+            };
+        }
     };
 
+    // Ajuste de badges para los dos estados usados
     const getStatusBadge = (statusObj) => {
         const status = statusObj.status;
         const adeudo = statusObj.adeudo;
-        
+
         let colorClasses = '';
-        if (status === 'Adeudo Grave') {
-            colorClasses = 'bg-red-100 text-red-800';
-        } else if (status === 'Pago Parcial') {
+        if (status === 'Pago Pendiente') {
             colorClasses = 'bg-yellow-100 text-yellow-800';
         } else if (status === 'Al Corriente') {
             colorClasses = 'bg-green-100 text-green-800';
-        } else { 
+        } else {
             colorClasses = 'bg-gray-100 text-gray-800';
         }
-        
+
         const adeudoFormat = statusObj.isAdeudo ? `<span class="font-bold text-red-600">$${adeudo}</span>` : `<span class="text-green-600">N/A</span>`;
 
         return {
@@ -430,6 +432,13 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
     
     document.getElementById('export-xlsx').addEventListener('click', () => exportData('xlsx'));
     document.getElementById('export-csv').addEventListener('click', () => exportData('csv'));
+
+    // Re-render cuando cambie localStorage (por ejemplo, se asignó un concepto y se creó chargesList)
+    window.addEventListener('storage', (e) => {
+      if (['chargesList', 'studentsList', 'chargesLastUpdate', 'studentsLastUpdate'].includes(e.key)) {
+        try { render(); } catch (err) { /* silent */ }
+      }
+    });
 
     // 🏁 Inicialización (Primer renderizado)
     render();

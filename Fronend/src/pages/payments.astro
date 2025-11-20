@@ -4,8 +4,6 @@ import Layout from "../layouts/Layout.astro";
 
 const pageTitle = "Estado de Pagos - CBTA 71";
 ---
-
-<!-- 2. Uso del Layout con el título definido -->
 <Layout title={pageTitle}>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-6">
@@ -14,153 +12,207 @@ const pageTitle = "Estado de Pagos - CBTA 71";
         <p class="text-sm text-gray-500 mt-1">Monitoreo de pagos de estudiantes</p>
       </div>
 
-      <!-- Filtros -->
+      <!-- Filtro por método -->
       <div class="flex gap-3">
-        <select id="status-filter" class="border rounded-lg px-3 py-2 text-sm">
-          <option value="all">Todos los estados</option>
-          <option value="current">Al corriente</option>
-          <option value="pending">Pendientes</option>
+        <select id="method-filter" class="border rounded-lg px-3 py-2 text-sm">
+          <option value="all">Todos los métodos</option>
+          <option value="tarjeta">Tarjeta</option>
+          <option value="referenciado">Pago referenciado</option>
+          <option value="transferencia">Transferencia</option>
         </select>
       </div>
     </div>
 
-    <!-- Grid de tarjetas de estudiantes -->
-    <div id="students-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Se renderiza en cliente -->
+    <div class="bg-white rounded-xl shadow border overflow-x-auto mb-6">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-[#2e594d]">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Concepto</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Monto</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Método</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">N. Control</th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Nombre</th>
+            <th class="px-6 py-3 text-right text-xs font-semibold text-white uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="payments-table-body" class="bg-white divide-y divide-gray-200">
+          <!-- Rellenado en cliente -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal Registrar Pago -->
+    <div id="pay-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+      <div class="bg-white rounded-lg w-full max-w-md p-6">
+        <h3 class="text-lg font-semibold mb-4">Registrar Pago</h3>
+        <form id="pay-form" class="space-y-3">
+          <div>
+            <label class="block text-sm">Matrícula / N. Control</label>
+            <input id="pay-student-id" type="text" class="w-full border rounded px-3 py-2" placeholder="Matrícula o id del alumno" required />
+          </div>
+          <div>
+            <label class="block text-sm">Monto</label>
+            <input id="pay-amount" type="number" step="0.01" class="w-full border rounded px-3 py-2" required />
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Método</label>
+            <select id="pay-method" class="w-full border rounded px-3 py-2">
+              <option value="tarjeta">Tarjeta</option>
+              <option value="referencia">Referencia</option>
+              <option value="metodo_referenciado">Método referenciado</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm">Referencia (opcional)</label>
+            <input id="pay-ref" type="text" class="w-full border rounded px-3 py-2" />
+          </div>
+          <div class="flex justify-end gap-2 pt-4">
+            <button type="button" id="pay-cancel" class="px-4 py-2 border rounded">Cancelar</button>
+            <button type="submit" class="px-4 py-2 bg-[#2e594d] text-white rounded">Guardar pago</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
   <script type="module" client:load>
-    function getStudentsWithPayments() {
-      try {
-        // Obtener estudiantes
-        const students = JSON.parse(localStorage.getItem('studentsList') || '[]');
-        // Obtener conceptos de pago
-        const concepts = JSON.parse(localStorage.getItem('conceptsList') || '[]');
-        
-        // Calcular estado de pagos para cada estudiante
-        return students.map(student => {
-          const applicableConcepts = concepts.filter(c => {
-            if (!c.status === 'active') return false;
-            
-            switch(c.scope) {
-              case 'all':
-                return true;
-              case 'career':
-                return c.career === student.carrera;
-              case 'semester':
-                return c.semester === student.semestre;
-              case 'students':
-                return c.selectedStudents?.some(s => s.id === student.id);
-              default:
-                return false;
-            }
-          });
+    // Lectura/escritura localStorage
+    const getCharges = () => { try { return JSON.parse(localStorage.getItem('chargesList') || '[]'); } catch(e){ return []; } };
+    const getStudents = () => { try { return JSON.parse(localStorage.getItem('studentsList') || '[]'); } catch(e){ return []; } };
+    const getConcepts = () => { try { return JSON.parse(localStorage.getItem('conceptsList') || '[]'); } catch(e){ return []; } };
+    const saveCharges = (arr) => { localStorage.setItem('chargesList', JSON.stringify(arr)); try{ localStorage.setItem('chargesLastUpdate', Date.now().toString()); }catch(e){} };
 
-          const totalDebt = applicableConcepts.reduce((sum, c) => sum + c.amount, 0);
-          
-          return {
-            ...student,
-            paymentStatus: totalDebt > 0 ? 'pending' : 'current',
-            totalDebt
-          };
-        });
-      } catch (e) {
-        console.error('Error loading data:', e);
-        return [];
-      }
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const fmtCurrency = n => { const v = Number(n || 0); return '$' + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    const parseDate = d => { try { if (!d) return '-'; const dt = new Date(d); if (isNaN(dt)) return String(d).slice(0, 16); return dt.toLocaleString(); } catch(e){ return String(d); } };
+
+    function buildPaymentsList() {
+      const charges = getCharges();
+      const students = getStudents();
+      const concepts = getConcepts();
+      if (!Array.isArray(charges) || charges.length === 0) return [];
+      return charges.map(ch => {
+        const student = students.find(s => String(s.id) === String(ch.studentId) || String(s.numControl) === String(ch.studentId) || String(s.matricula) === String(ch.studentId)) || {};
+        const concept = concepts.find(c => String(c.id) === String(ch.conceptId)) || {};
+        return {
+          id: ch.id || ('chg_' + Math.random().toString(36).slice(2,8)),
+          date: ch.paidAt || ch.createdAt || ch.created || ch.date || null,
+          conceptTitle: concept.title || concept.concept || ch.conceptTitle || '-',
+          amount: ch.amount ?? ch.monto ?? concept.amount ?? concept.monto ?? 0,
+          method: (ch.method || ch.paymentMethod || ch.metodo || '').toString().toLowerCase(),
+          studentControl: student.numControl ?? student.matricula ?? student.id ?? ch.studentId ?? '-',
+          studentName: [student.nombre, student.apellidoP, student.apellidoM].filter(Boolean).join(' ') || student.fullName || student.name || '-',
+          status: (ch.status || '').toLowerCase()
+        };
+      }).sort((a,b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return db - da;
+      });
     }
 
-    function renderStudents(filter = 'all') {
-      const grid = document.getElementById('students-grid');
-      if (!grid) return;
+    function methodMatchesFilter(method, filter) {
+      if (!filter || filter === 'all') return true;
+      if (!method) return false;
+      const m = method.toLowerCase();
+      if (filter === 'tarjeta') return m.includes('tarjeta') || m.includes('card');
+      if (filter === 'referenciado') return m.includes('referen') || m.includes('referenc') || m.includes('metodo_referenciado') || m.includes('referencia');
+      if (filter === 'transferencia') return m.includes('transfer') || m.includes('transferencia') || m.includes('bank') || m.includes('spei') || m.includes('virement');
+      return false;
+    }
 
-      const students = getStudentsWithPayments();
-      const filtered = filter === 'all' ? 
-        students : 
-        students.filter(s => s.paymentStatus === filter);
-
-      if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full text-center py-12 text-gray-500">
-            <i class="fas fa-folder-open text-4xl mb-3"></i>
-            <p>No hay estudiantes ${filter === 'current' ? 'al corriente' : 'con pagos pendientes'}.</p>
-          </div>
-        `;
+    function renderPayments(filter = 'all') {
+      const tbody = document.getElementById('payments-table-body');
+      if (!tbody) return;
+      const list = buildPaymentsList();
+      const filtered = list.filter(item => methodMatchesFilter(item.method, filter));
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No hay registros.</td></tr>';
         return;
       }
-
-      grid.innerHTML = filtered.map(student => `
-        <div class="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow p-5">
-          <div class="flex justify-between items-start mb-3">
-            <div>
-              <h3 class="font-bold text-gray-800">
-                ${escapeHtml(student.nombre)} ${escapeHtml(student.apellidoP)} ${escapeHtml(student.apellidoM)}
-              </h3>
-              <p class="text-sm text-gray-500">#${escapeHtml(student.numControl)}</p>
-            </div>
-            <span class="px-3 py-1 text-xs rounded-full ${
-              student.paymentStatus === 'current' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-yellow-100 text-yellow-800'
-            }">
-              ${student.paymentStatus === 'current' ? 'Al corriente' : 'Pendiente'}
-            </span>
-          </div>
-
-          <div class="space-y-2 text-sm">
-            <div class="flex items-center text-gray-600">
-              <i class="fas fa-graduation-cap w-5"></i>
-              <span class="ml-2">${escapeHtml(student.carrera)}</span>
-            </div>
-            
-            <div class="flex items-center text-gray-600">
-              <i class="fas fa-layer-group w-5"></i>
-              <span class="ml-2">${escapeHtml(String(student.semestre))}° Semestre</span>
-            </div>
-
-            <div class="flex items-center ${student.totalDebt > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}">
-              <i class="fas fa-money-bill w-5"></i>
-              <span class="ml-2">
-                ${student.totalDebt > 0 
-                  ? `Adeudo: $${student.totalDebt.toFixed(2)}` 
-                  : 'Sin adeudos'}
-              </span>
-            </div>
-          </div>
-
-          <div class="mt-4 pt-4 border-t flex justify-end space-x-2">
-            <button class="px-3 py-1 text-sm border rounded hover:bg-gray-50">
-              <i class="fas fa-history mr-1"></i> Historial
-            </button>
-            <button class="px-3 py-1 text-sm bg-[#2e594d] text-white rounded hover:bg-[#234539]">
-              <i class="fas fa-file-invoice-dollar mr-1"></i> Registrar Pago
-            </button>
-          </div>
-        </div>
+      tbody.innerHTML = filtered.map(r => `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 text-sm text-gray-700">${esc(parseDate(r.date))}</td>
+          <td class="px-6 py-4 text-sm text-gray-800 font-medium">${esc(r.conceptTitle)}</td>
+          <td class="px-6 py-4 text-sm text-gray-900 font-semibold">${esc(fmtCurrency(r.amount))}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">${esc(r.method)}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">${esc(r.studentControl)}</td>
+          <td class="px-6 py-4 text-sm text-gray-800">${esc(r.studentName)}</td>
+          <td class="px-6 py-4 text-right text-sm">
+            <button data-id="${esc(r.id)}" class="px-3 py-1 text-sm border rounded hover:bg-gray-50 view-payment">Detalle</button>
+          </td>
+        </tr>
       `).join('');
     }
 
-    // Helpers
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      })[m]);
-    }
+    // Modal registrar pago (usa matrícula / N. control manualmente)
+    const modal = document.getElementById('pay-modal');
+    const payForm = document.getElementById('pay-form');
 
-    // Event Listeners
-    document.getElementById('status-filter')?.addEventListener('change', (e) => {
-      renderStudents(e.target.value);
+    document.getElementById('method-filter')?.addEventListener('change', (e) => renderPayments(e.target.value));
+    renderPayments(document.getElementById('method-filter')?.value || 'all');
+
+    document.addEventListener('click', (ev) => {
+      const btn = ev.target.closest && ev.target.closest('.view-payment');
+      if (btn) {
+        const id = btn.getAttribute('data-id');
+        alert('Detalle pago: ' + id);
+      }
     });
 
-    // Initial render
-    renderStudents('all');
+    // Abrir modal: también permito abrirlo desde consola o desde otras pantallas.
+    // Para abrir, ejecutar en consola: document.getElementById('method-filter').dispatchEvent(new Event('change'));
+    // (o se puede añadir un botón "Nuevo pago" en el futuro)
+    document.addEventListener('click', (ev) => {
+      const open = ev.target.closest && ev.target.closest('.open-pay-modal');
+      if (!open) return;
+      const sid = open.getAttribute('data-id') || '';
+      const sname = open.getAttribute('data-name') || '';
+      const inputId = document.getElementById('pay-student-id');
+      inputId.value = sid;
+      document.getElementById('pay-amount').value = '';
+      document.getElementById('pay-ref').value = '';
+      document.getElementById('pay-method').value = 'tarjeta';
+      document.getElementById('pay-student-id').focus();
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    });
 
-    // Re-render on storage changes
+    document.getElementById('pay-cancel')?.addEventListener('click', () => {
+      modal.classList.add('hidden'); modal.classList.remove('flex');
+    });
+
+    payForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const studentId = document.getElementById('pay-student-id').value.trim();
+      const amount = parseFloat(document.getElementById('pay-amount').value) || 0;
+      const method = document.getElementById('pay-method').value || 'tarjeta';
+      const reference = document.getElementById('pay-ref').value || '';
+      if (!studentId || amount <= 0) { alert('Complete matrícula y monto válido'); return; }
+      const charges = getCharges();
+      const now = new Date().toISOString();
+      const newCharge = {
+        id: 'chg_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
+        studentId,
+        amount,
+        method,
+        reference,
+        status: 'paid',
+        paidAt: now,
+        createdAt: now
+      };
+      charges.push(newCharge);
+      saveCharges(charges);
+      modal.classList.add('hidden'); modal.classList.remove('flex');
+      renderPayments(document.getElementById('method-filter')?.value || 'all');
+      alert('Pago registrado.');
+    });
+
+    // Re-render en cambios de localStorage
     window.addEventListener('storage', (e) => {
-      if (e.key === 'studentsList' || e.key === 'conceptsList') {
-        renderStudents(document.getElementById('status-filter')?.value || 'all');
+      if (['chargesList','studentsList','conceptsList','chargesLastUpdate','studentsLastUpdate','conceptsLastUpdate'].includes(e.key)) {
+        renderPayments(document.getElementById('method-filter')?.value || 'all');
       }
     });
   </script>

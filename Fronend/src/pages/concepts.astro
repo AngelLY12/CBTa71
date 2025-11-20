@@ -19,108 +19,315 @@ const pageTitle = "Conceptos de Cobro";
   </div>
 
   <script type="module" client:load>
-    function renderConcepts() {
-      const grid = document.getElementById('concepts-grid');
-      if (!grid) return;
+  // Helpers para localStorage
+  function getStudents() {
+    return JSON.parse(localStorage.getItem('studentsList') || '[]');
+  }
 
-      try {
-        const concepts = JSON.parse(localStorage.getItem('conceptsList') || '[]');
-        
-        if (concepts.length === 0) {
-          grid.innerHTML = `
-            <div class="col-span-full text-center py-12 text-gray-500">
-              <i class="fas fa-folder-open text-4xl mb-3"></i>
-              <p>No hay conceptos guardados.</p>
-              <a href="/new" class="text-[#2e594d] hover:underline mt-2 inline-block">Crear nuevo concepto</a>
+  function saveStudents(students) {
+    localStorage.setItem('studentsList', JSON.stringify(students));
+    try { localStorage.setItem('studentsLastUpdate', Date.now().toString()); } catch(e) {}
+  }
+
+  function getCharges() {
+    return JSON.parse(localStorage.getItem('chargesList') || '[]');
+  }
+
+  function saveCharges(charges) {
+    localStorage.setItem('chargesList', JSON.stringify(charges));
+    try { localStorage.setItem('chargesLastUpdate', Date.now().toString()); } catch(e) {}
+  }
+
+  function getConcepts() {
+    return JSON.parse(localStorage.getItem('conceptsList') || '[]');
+  }
+
+  function saveConcepts(concepts) {
+    localStorage.setItem('conceptsList', JSON.stringify(concepts));
+    try { localStorage.setItem('conceptsLastUpdate', Date.now().toString()); } catch(e) {}
+  }
+
+  // Escapa HTML seguro (evita null)
+  function escapeHtml(str = '') {
+    return String(str).replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m]);
+  }
+
+  function getScopeText(scope, concept) {
+    switch(scope) {
+      case 'all': 
+        return 'Todos los estudiantes';
+      case 'career':
+        return `Carrera: ${concept.career}`;
+      case 'semester':
+        return `${concept.semester}° Semestre`;
+      case 'students':
+        return `${concept.selectedStudents?.length || 0} estudiantes específicos`;
+      default:
+        return 'No definido';
+    }
+  }
+
+  // Obtiene los alumnos que cumplen el ámbito del concepto
+  function getTargetStudentsForConcept(concept) {
+    const students = getStudents() || [];
+    const scope = String(concept.scope || '').toLowerCase();
+
+    switch (scope) {
+      case 'all':
+      case 'todos':
+        // Solo estudiantes activos si tienen campo status
+        return students.filter(s => {
+          if (s.status) return String(s.status).toLowerCase() !== 'inactive' && String(s.status).toLowerCase() !== 'inactivo';
+          return true;
+        });
+      case 'career':
+      case 'carrera':
+        return students.filter(s => String(s.carrera || s.career || '').toLowerCase() === String(concept.career || '').toLowerCase());
+      case 'semester':
+      case 'semestre':
+        return students.filter(s => Number(s.semestre) === Number(concept.semester));
+      case 'students':
+      case 'especificos':
+        // selectedStudents puede ser lista de ids o de objetos {id,...}
+        const sel = concept.selectedStudents || [];
+        const ids = sel.map(x => (typeof x === 'object' ? String(x.id) : String(x)));
+        return students.filter(s => ids.includes(String(s.id)));
+      default:
+        return [];
+    }
+  }
+
+  // Asigna un concepto según su ámbito: crea cargos para los alumnos objetivo y actualiza adeudos
+  function assignConceptToScope(concept, opts = {}) {
+    const targets = getTargetStudentsForConcept(concept);
+    if (!targets || targets.length === 0) {
+      if (!opts.silent) alert('No hay alumnos objetivo para este concepto según el ámbito seleccionado.');
+      throw new Error('No target students for concept');
+    }
+
+    // Asegurar id del concepto
+    if (!concept.id) {
+      concept.id = 'c_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
+      const concepts = getConcepts();
+      const idx = concepts.findIndex(x => x.title === concept.title && x.createdAt === concept.createdAt);
+      if (idx >= 0) concepts[idx].id = concept.id;
+      else { concepts.push(concept); saveConcepts(concepts); }
+    }
+
+    const amount = Number(concept.amount) || 0;
+    const existingCharges = getCharges();
+    const nowIso = new Date().toISOString();
+
+    // Crear cargos solo para los targets que no tengan ya un cargo del mismo concepto
+    const toAdd = targets.reduce((acc, s) => {
+      const exists = existingCharges.some(ec => ec.conceptId === concept.id && String(ec.studentId) === String(s.id));
+      if (!exists) {
+        acc.push({
+          id: 'chg_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
+          studentId: s.id,
+          conceptId: concept.id,
+          amount,
+          status: 'pending',
+          createdAt: nowIso,
+          scopeApplied: concept.scope || 'all'
+        });
+      }
+      return acc;
+    }, []);
+
+    if (toAdd.length === 0) {
+      if (!opts.silent) alert('Ya existen cargos para los alumnos objetivo de este concepto.');
+      return;
+    }
+
+    // Guardar cargos y recalcular adeudos
+    const combined = existingCharges.concat(toAdd);
+    saveCharges(combined);
+    recalcStudentAdeudosFromCharges();
+
+    // Actualizar marca en concepto (assignedCount/assignedScopes)
+    const concepts = getConcepts();
+    const idxc = concepts.findIndex(c => c.id === concept.id);
+    if (idxc >= 0) {
+      concepts[idxc].assignedCount = (concepts[idxc].assignedCount || 0) + toAdd.length;
+      concepts[idxc].lastAssignedAt = nowIso;
+      // marcar assignedAll solo si scope es 'all'
+      if ((concept.scope || '').toLowerCase() === 'all') concepts[idxc].assignedAll = true;
+      saveConcepts(concepts);
+    }
+
+    if (!opts.silent) alert(`Asignado a ${toAdd.length} alumno(s). Adeudos actualizados.`);
+    return toAdd.length;
+  }
+
+  // Recalcula adeudo de cada alumno usando todos los cargos actuales (chargesList)
+  function recalcStudentAdeudosFromCharges() {
+    const charges = getCharges();
+    const students = getStudents();
+    const chargesByStudent = {};
+    charges.forEach(ch => {
+      const sid = String(ch.studentId);
+      chargesByStudent[sid] = (chargesByStudent[sid] || 0) + Number(ch.amount || 0);
+    });
+    const updated = students.map(s => {
+      const prev = Number(s.adeudo || 0);
+      const total = chargesByStudent[String(s.id)] || 0;
+      s.adeudo = parseFloat((total).toFixed(2));
+      return s;
+    });
+    saveStudents(updated);
+  }
+
+  // Editar concepto: guardar en localStorage y redirigir a la interfaz /new para prellenar
+  function editConcept(conceptId) {
+    const concepts = getConcepts();
+    const idx = concepts.findIndex(c => c.id === conceptId);
+    if (idx < 0) { alert('Concepto no encontrado'); return; }
+    const concept = concepts[idx];
+
+    // Guardar el concepto completo (o solo id) para que la página /new lo use y prellenar el formulario
+    try {
+      localStorage.setItem('editingConcept', JSON.stringify(concept));
+      localStorage.setItem('editingConceptLastUpdate', Date.now().toString());
+    } catch (e) {
+      console.error('No se pudo guardar editingConcept', e);
+    }
+
+    // Redirigir a la interfaz de creación/edición. La página /new debe leer 'editingConcept' para prellenar.
+    window.location.href = '/new?edit=' + encodeURIComponent(conceptId);
+  }
+
+  // Eliminar concepto y sus cargos asociados, recalcular adeudos
+  function deleteConcept(conceptId) {
+    if (!confirm('¿Eliminar este concepto y todos sus cargos? Esta acción no se puede deshacer.')) return;
+
+    // Eliminar concepto
+    let concepts = getConcepts();
+    concepts = concepts.filter(c => c.id !== conceptId);
+    saveConcepts(concepts);
+
+    // Eliminar cargos asociados
+    let charges = getCharges();
+    charges = charges.filter(ch => ch.conceptId !== conceptId);
+    saveCharges(charges);
+
+    // Recalcular adeudos
+    recalcStudentAdeudosFromCharges();
+
+    try { localStorage.setItem('conceptsLastUpdate', Date.now().toString()); } catch(e){}
+    try { localStorage.setItem('chargesLastUpdate', Date.now().toString()); } catch(e){}
+    try { localStorage.setItem('studentsLastUpdate', Date.now().toString()); } catch(e){}
+
+    alert('Concepto eliminado y adeudos actualizados.');
+    renderConcepts();
+  }
+
+  // Render de conceptos con botón "Asignar a todos", "Editar" y "Eliminar"
+  function renderConcepts() {
+    const grid = document.getElementById('concepts-grid');
+    if (!grid) return;
+    try {
+      const concepts = getConcepts();
+      if (concepts.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 text-gray-500">
+            <i class="fas fa-folder-open text-4xl mb-3"></i>
+            <p>No hay conceptos guardados.</p>
+            <a href="/new" class="text-[#2e594d] hover:underline mt-2 inline-block">Crear nuevo concepto</a>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = concepts.map(c => `
+        <div class="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow p-5">
+          <div class="flex justify-between items-start mb-3">
+            <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
+            <span class="px-2 py-1 text-xs rounded-full ${c.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+              ${c.status === 'active' ? 'Activo' : 'Borrador'}
+            </span>
+          </div>
+
+          <div class="text-2xl font-bold text-[#2e594d] mb-4">
+            $${(Number(c.amount) || 0).toFixed(2)}
+          </div>
+
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center text-gray-600">
+              <i class="fas fa-layer-group w-5"></i>
+              <span class="ml-2">${getScopeText(c.scope, c)}</span>
             </div>
-          `;
-          return;
-        }
+            ${c.description ? `<div class="flex items-start text-gray-600"><i class="fas fa-align-left w-5 mt-1"></i><span class="ml-2">${escapeHtml(c.description)}</span></div>` : ''}
+            <div class="flex items-center text-gray-400 text-xs"><i class="fas fa-clock w-4"></i><span class="ml-2">${new Date(c.createdAt).toLocaleDateString()}</span></div>
+          </div>
 
-        grid.innerHTML = concepts.map(c => `
-          <div class="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow p-5">
-            <div class="flex justify-between items-start mb-3">
-              <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
-              <span class="px-2 py-1 text-xs rounded-full ${
-                c.status === 'active' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-gray-100 text-gray-800'
-              }">
-                ${c.status === 'active' ? 'Activo' : 'Borrador'}
-              </span>
+          <div class="mt-4 pt-4 border-t flex justify-between items-center">
+            <div class="text-xs text-gray-500">
+              ${c.assignedAll ? '<span class="text-green-600">Asignado a todos</span>' : '<span class="text-yellow-600">No asignado</span>'}
             </div>
-
-            <div class="text-2xl font-bold text-[#2e594d] mb-4">
-              $${c.amount.toFixed(2)}
-            </div>
-
-            <div class="space-y-2 text-sm">
-              <!-- Scope -->
-              <div class="flex items-center text-gray-600">
-                <i class="fas fa-layer-group w-5"></i>
-                <span class="ml-2">${getScopeText(c.scope, c)}</span>
-              </div>
-
-              <!-- Description if exists -->
-              ${c.description ? `
-                <div class="flex items-start text-gray-600">
-                  <i class="fas fa-align-left w-5 mt-1"></i>
-                  <span class="ml-2">${escapeHtml(c.description)}</span>
-                </div>
-              ` : ''}
-
-              <!-- Created date -->
-              <div class="flex items-center text-gray-400 text-xs">
-                <i class="fas fa-clock w-4"></i>
-                <span class="ml-2">${new Date(c.createdAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-
-            <div class="mt-4 pt-4 border-t flex justify-end space-x-2">
-              <button class="px-3 py-1 text-sm border rounded hover:bg-gray-50">
-                <i class="fas fa-edit mr-1"></i> Editar
-              </button>
-              <button class="px-3 py-1 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100">
-                <i class="fas fa-trash-alt mr-1"></i> Eliminar
+            <div class="flex space-x-2">
+              <button data-concept-id="${c.id || ''}" class="edit-concept px-3 py-1 text-sm border rounded hover:bg-gray-50"><i class="fas fa-edit mr-1"></i> Editar</button>
+              <button data-concept-id="${c.id || ''}" class="delete-concept px-3 py-1 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100"><i class="fas fa-trash-alt mr-1"></i> Eliminar</button>
+              <button data-concept-id="${c.id || ''}" class="assign-all px-3 py-1 text-sm bg-[#2e594d] text-white rounded hover:bg-[#234539]">
+                <i class="fas fa-user-plus mr-1"></i> Asignar a todos
               </button>
             </div>
           </div>
-        `).join('');
+        </div>
+      `).join('');
+    } catch(e) {
+      console.error(e);
+      grid.innerHTML = '<div class="text-red-500">Error cargando conceptos</div>';
+    }
+  }
 
-      } catch(e) {
-        console.error(e);
-        grid.innerHTML = '<div class="text-red-500">Error cargando conceptos</div>';
+  // Delegación de eventos para "Asignar a todos", "Editar", "Eliminar"
+  document.addEventListener('click', (ev) => {
+    const assignBtn = ev.target.closest && ev.target.closest('.assign-all');
+    if (assignBtn) {
+      const conceptId = assignBtn.getAttribute('data-concept-id');
+      const concept = getConcepts().find(c => (c.id || '') === conceptId);
+      if (!concept) { alert('Concepto no encontrado. Asegúrate de que el concepto tenga id.'); return; }
+      try {
+        assignConceptToScope(concept);
+        renderConcepts();
+        // notificar students page para que se actualice si está abierta
+        try { localStorage.setItem('chargesLastUpdate', Date.now().toString()); } catch(e) {}
+      } catch (err) {
+        console.error(err);
       }
+      return;
     }
 
-    // Helpers
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      })[m]);
+    const editBtn = ev.target.closest && ev.target.closest('.edit-concept');
+    if (editBtn) {
+      const conceptId = editBtn.getAttribute('data-concept-id');
+      editConcept(conceptId);
+      return;
     }
 
-    function getScopeText(scope, concept) {
-      switch(scope) {
-        case 'all': 
-          return 'Todos los estudiantes';
-        case 'career':
-          return `Carrera: ${concept.career}`;
-        case 'semester':
-          return `${concept.semester}° Semestre`;
-        case 'students':
-          return `${concept.selectedStudents?.length || 0} estudiantes específicos`;
-        default:
-          return 'No definido';
-      }
+    const delBtn = ev.target.closest && ev.target.closest('.delete-concept');
+    if (delBtn) {
+      const conceptId = delBtn.getAttribute('data-concept-id');
+      deleteConcept(conceptId);
+      return;
     }
+  });
 
-    // Render inicial
-    renderConcepts();
+  // Render inicial y re-render cuando cambie storage (concepts, charges, students)
+  renderConcepts();
+  window.addEventListener('storage', (e) => {
+    if (['conceptsList', 'chargesList', 'studentsList', 'chargesLastUpdate', 'studentsLastUpdate', 'conceptsLastUpdate'].includes(e.key)) {
+      renderConcepts();
+    }
+  });
 
-    // Re-render si hay cambios en storage
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'conceptsList') renderConcepts();
-    });
-  </script>
+  // Exponer funciones correctas y alias legacy
+  window.assignConceptToScope = assignConceptToScope;
+  window.assignConceptToAll = assignConceptToScope; // alias para compatibilidad con llamadas antiguas
+  window.editConcept = editConcept;
+  window.deleteConcept = deleteConcept;
+</script>
 </Layout>

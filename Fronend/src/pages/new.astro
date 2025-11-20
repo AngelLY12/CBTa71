@@ -51,31 +51,55 @@ import Layout from '../layouts/Layout.astro';
             { id: '3', name: 'Tercer Semestre' },
             { id: '5', name: 'Quinto Semestre' },
           ],
-          allStudents: [
-            { id: '1001', name: 'Esteban Martínez' },
-            { id: '1002', name: 'Fernanda López' },
-            { id: '1003', name: 'Gabriel Soto' },
-            { id: '1004', name: 'Hilda Vázquez' },
-            { id: '1005', name: 'Iván Ramírez' },
-            { id: '1006', name: 'Juan Hernández' },
-            { id: '1007', name: 'Karla García' },
-            { id: '1008', name: 'Laura Mendoza' },
-            { id: '1009', name: 'Miguel Torres' },
-            { id: '1010', name: 'Natalia Ruiz' },
-          ],
+
+          // lista de alumnos poblada desde localStorage (/estudiante_lista) o fallback
+          allStudents: [],
+
           formData: {
             title: '',
             amount: 0,
             career: '',
             semester: '',
             description: '',
-            status: 'inactive', // Active: available for use, Inactive: draft/not yet used
-            scope: 'all', // all, career, semester, students
+            status: 'inactive',
+            scope: 'all',
             selectedStudents: []
           },
           searchTerm: '',
           isSearching: false,
           errorMessage: '',
+
+          // Cargar alumnos desde localStorage o API; mapear a {id,name}
+          loadStudents() {
+            try {
+              const raw = localStorage.getItem('studentsList');
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                this.allStudents = parsed.map(s => ({
+                  id: String(s.id ?? s.numControl ?? s.num_control ?? s.studentId ?? ''),
+                  name: String(s.nombre ?? s.name ?? (s.nombreCompleto || '')).trim() || ('Alumno ' + (s.id || ''))
+                })).filter(s => s.id);
+                return;
+              }
+            } catch (e) {
+              console.warn('No se pudo leer studentsList de localStorage', e);
+            }
+
+            // Fallback local (mientras no haya studentsList)
+            this.allStudents = [
+              { id: '1001', name: 'Esteban Martínez' },
+              { id: '1002', name: 'Fernanda López' },
+              { id: '1003', name: 'Gabriel Soto' },
+              { id: '1004', name: 'Hilda Vázquez' },
+              { id: '1005', name: 'Iván Ramírez' },
+              { id: '1006', name: 'Juan Hernández' },
+              { id: '1007', name: 'Karla García' },
+              { id: '1008', name: 'Laura Mendoza' },
+              { id: '1009', name: 'Miguel Torres' },
+              { id: '1010', name: 'Natalia Ruiz' },
+            ];
+          },
+
           toggleStudent(student) {
             const index = this.formData.selectedStudents.findIndex(s => s.id === student.id);
             if (index === -1) {
@@ -87,6 +111,7 @@ import Layout from '../layouts/Layout.astro';
             this.isSearching = false;
             this.errorMessage = '';
           },
+
           get filteredStudents() {
             if (!this.searchTerm) return this.allStudents.slice(0, 10);
             const searchLower = this.searchTerm.toLowerCase();
@@ -95,9 +120,11 @@ import Layout from '../layouts/Layout.astro';
               student.id.includes(searchLower)
             ).slice(0, 10);
           },
+
           removeStudent(studentId) {
             this.formData.selectedStudents = this.formData.selectedStudents.filter(s => s.id !== studentId);
           },
+
           submitForm() {
             this.errorMessage = '';
             if (!this.formData.title || !this.formData.amount || parseFloat(this.formData.amount) <= 0) {
@@ -162,6 +189,7 @@ import Layout from '../layouts/Layout.astro';
             this.errorMessage = '';
           }
         }"
+        x-init="loadStudents()"
         class="space-y-8 max-w-4xl mx-auto bg-white p-6 md:p-10 card-shadow rounded-2xl border border-gray-100"
       >
         <header class="pb-4 border-b-2 border-primary/20">
@@ -363,4 +391,89 @@ import Layout from '../layouts/Layout.astro';
         </form>
       </div>
     </div>
+
+    <script type="module" client:load>
+(function () {
+  function qs(sel){ return document.querySelector(sel); }
+  function setValue(el, value){
+    if (!el) return;
+    if (el.type === 'checkbox') { el.checked = Boolean(value); el.dispatchEvent(new Event('change',{bubbles:true})); return; }
+    if (el.type === 'radio') { el.checked = Boolean(value); el.dispatchEvent(new Event('change',{bubbles:true})); return; }
+    el.value = value ?? '';
+    el.dispatchEvent(new Event('input',{bubbles:true})); 
+    el.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+
+  try {
+    const raw = localStorage.getItem('editingConcept');
+    if (!raw) return;
+    const concept = JSON.parse(raw);
+
+    // 1) Rellenar inputs/selecciones que sí existen en el DOM (IDs del formulario)
+    setValue(qs('#title'), concept.title || '');
+    setValue(qs('#amount'), concept.amount ?? '');
+    setValue(qs('#description'), concept.description || '');
+
+    // scope: marcar el radio correspondiente
+    if (concept.scope) {
+      const scopeRadio = qs(`input[name="scope"][value="${concept.scope}"]`);
+      if (scopeRadio) { scopeRadio.checked = true; scopeRadio.dispatchEvent(new Event('change',{bubbles:true})); }
+    }
+
+    // career / semester selects (tus ids reales)
+    setValue(qs('#career-select'), concept.career || '');
+    setValue(qs('#semester-select'), concept.semester || '');
+
+    // 2) Esperar a Alpine e inyectar directamente en formData para que se refleje la UI (estado, scope, selectedStudents)
+    const maxTries = 30;
+    let tries = 0;
+    const interval = setInterval(() => {
+      tries++;
+      const alpineRoot = document.querySelector('[x-data]');
+      // Alpine v3 suele exponer _x_dataStack o __x (varía); probamos ambas opciones
+      const alpineData = alpineRoot && (alpineRoot._x_dataStack ? alpineRoot._x_dataStack[0] : (alpineRoot.__x && alpineRoot.__x.$data ? alpineRoot.__x.$data : null));
+      if (alpineData && alpineData.formData) {
+        // Fusionar conservando propiedades existentes de formData
+        alpineData.formData.title = concept.title ?? alpineData.formData.title;
+        alpineData.formData.amount = concept.amount ?? alpineData.formData.amount;
+        alpineData.formData.description = concept.description ?? alpineData.formData.description;
+        alpineData.formData.scope = concept.scope ?? alpineData.formData.scope;
+        alpineData.formData.career = concept.career ?? alpineData.formData.career;
+        alpineData.formData.semester = concept.semester ?? alpineData.formData.semester;
+        // selectedStudents en tu app son objetos {id,name}; si vienen como ids, convertimos a objetos básicos
+        if (Array.isArray(concept.selectedStudents)) {
+          alpineData.formData.selectedStudents = concept.selectedStudents.map(s => (typeof s === 'string' || typeof s === 'number') ? { id: String(s), name: String(s) } : s);
+        }
+        // estado (active/inactive)
+        if (concept.status) alpineData.formData.status = concept.status;
+
+        // Disparar cambio para que UI reactiva se actualice (si usa getters)
+        try {
+          const ev = new Event('input', { bubbles: true });
+          (qs('#title') || document.body).dispatchEvent(ev);
+        } catch(e){}
+        clearInterval(interval);
+        return;
+      }
+      if (tries >= maxTries) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    // 3) Asegurar hidden id para identificar edición (opcional, facilita submit si quieres actualizar)
+    let hid = qs('#concept-id') || qs('input[name="id"]');
+    if (!hid) {
+      hid = document.createElement('input');
+      hid.type = 'hidden';
+      hid.id = 'concept-id';
+      hid.name = 'id';
+      (qs('form') || document.body).appendChild(hid);
+    }
+    hid.value = concept.id || '';
+
+  } catch (e) {
+    console.error('No se pudo prellenar el formulario de concepto:', e);
+  }
+})();
+</script>
 </Layout>
