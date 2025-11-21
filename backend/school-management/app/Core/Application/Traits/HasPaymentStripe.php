@@ -10,7 +10,7 @@ trait HasPaymentStripe
 {
 
     public function __construct(
-        private PaymentRepInterface $paymentRepo,
+        private PaymentRepInterface $repo,
     )
     {}
     public function updatePaymentWithStripeData(Payment $payment, $pi, $charge, PaymentMethod $savedPaymentMethod): Payment
@@ -23,7 +23,7 @@ trait HasPaymentStripe
             'payment_method_details'=>$paymentMethodDetails,
             'url' => $charge?->receipt_url ?? $payment->url,
         ];
-        $newPayment=$this->paymentRepo->update($payment->id, $fields);
+        $newPayment=$this->repo->update($payment->id, $fields);
         logger()->info("Pago {$payment->id} actualizado correctamente.");
         return $newPayment;
     }
