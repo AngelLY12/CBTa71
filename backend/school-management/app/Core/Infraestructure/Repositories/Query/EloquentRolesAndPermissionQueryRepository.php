@@ -36,7 +36,7 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
       return Permission::where('type', 'model')
         ->where(function($query) use ($roleName) {
             $query->where('belongs_to', $roleName)
-                  ->orWhereNull('belongs_to');
+                  ->orWhere('belongs_to', 'global');
         })
         ->select('id', 'name', 'type')
         ->get()
