@@ -24,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('permissions', function (Blueprint $table) {
             $table->dropColumn('type');
+            $table->dropColumn('belongs_to');
         });
     }
 };
