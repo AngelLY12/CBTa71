@@ -3,8 +3,8 @@
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
 use App\Core\Application\Mappers\MailMapper;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Jobs\SendMailJob;
@@ -36,7 +36,7 @@ class HandleFailedOrExpiredPaymentUseCase
 
         $user = $this->uqRepo->getUserByStripeCustomer($obj->customer);
 
-        if ($payment && $payment->status !== 'succeeded') {
+        if ($payment && $payment->status !== PaymentStatus::SUCCEEDED->value) {
             logger()->info("Pago fallido eliminado: payment_id={$obj->id}");
             logger()->info("Motivo: {$error}");
             $data = [

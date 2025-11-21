@@ -3,6 +3,10 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use App\Core\Domain\Enum\User\UserBloodType;
+use App\Core\Domain\Enum\User\UserGender;
+use App\Core\Domain\Enum\User\UserStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -92,6 +96,9 @@ class User extends Authenticatable
             'address' => 'array',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'gender' => UserGender::class,
+            'blood_type' => UserBloodType::class,
+            'status' => UserStatus::class
         ];
     }
 

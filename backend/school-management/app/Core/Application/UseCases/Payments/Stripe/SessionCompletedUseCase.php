@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
+use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Application\Traits\HasPaymentSession;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use Stripe\Stripe;
@@ -23,9 +24,10 @@ class SessionCompletedUseCase
             return true;
         }
         if($obj->mode==='payment'){
+            $status=EnumMapper::fromStripe($obj->payment_status);
             return $this->handlePaymentSession($obj, [
                 'payment_intent_id' => $obj->payment_intent,
-                'status' => $obj->payment_status,
+                'status' => $status,
             ]);
         }
         if($obj->mode==='setup'){

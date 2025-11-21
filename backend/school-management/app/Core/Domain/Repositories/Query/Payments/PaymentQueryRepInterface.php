@@ -22,6 +22,5 @@ interface PaymentQueryRepInterface{
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment;
 //    public function getAllWithSearch(?string $search = null, int $perPage = 15): LengthAwarePaginator;
     public function getPaidWithinLastMonthCursor(): Generator;
-    public function updatePaymentWithStripeData(Payment $payment, $pi, $charge,PaymentMethod $savedPaymentMethod): void;
     public function getAllWithSearchEager(?string $search, int $perPage,int $page): LengthAwarePaginator;
 }

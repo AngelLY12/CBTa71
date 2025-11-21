@@ -3,12 +3,12 @@
 namespace App\Core\Application\UseCases\Payments;
 
 use App\Core\Application\Mappers\MailMapper;
+use App\Core\Application\Traits\HasPaymentStripe;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
-use App\Core\Infraestructure\Cache\CacheService;
 use App\Exceptions\DomainException;
 use App\Exceptions\NotFound\PaymentMethodNotFoundException;
 use App\Exceptions\ServerError\PaymentNotificationException;
@@ -20,12 +20,12 @@ use App\Mail\PaymentValidatedMail;
 
 class ReconcilePaymentUseCase
 {
+    use HasPaymentStripe;
     public function __construct(
         private PaymentQueryRepInterface $pqRepo,
         private StripeGatewayInterface $stripe,
         private UserQueryRepInterface $userRepo,
         private PaymentMethodQueryRepInterface $pmRepo,
-        private CacheService $cacheService
     )
     {}
     public function execute():void
@@ -42,9 +42,9 @@ class ReconcilePaymentUseCase
                 if (!$pm) {
                     throw new PaymentMethodNotFoundException();
                 }
-                $this->pqRepo->updatePaymentWithStripeData($payment, $pi, $charge,$pm);
-                $this->notifyUser($payment);
-                $affectedUsers[] = $payment->user_id;
+                $newPayment=$this->updatePaymentWithStripeData($payment, $pi, $charge,$pm);
+                $this->notifyUser($newPayment);
+                $affectedUsers[] = $newPayment->user_id;
 
             } catch (DomainException $e) {
                 logger()->warning("[ReconcilePayment] {$e->getMessage()} (code: {$e->getCode()})");

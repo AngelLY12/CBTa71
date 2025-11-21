@@ -16,6 +16,10 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
     {
        return optional(Role::find($id),fn($role)=>RolesAndPermissionMapper::toRoleDomain($role));
     }
+    public function findRoleByName(string $name): ?EntitiesRole
+    {
+        return optional(Role::where('name',$name)->first(),fn($role)=>RolesAndPermissionMapper::toRoleDomain($role));
+    }
     public function findAllRoles(): array
     {
         return Role::select('id','name')
@@ -27,9 +31,13 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
     {
         return optional(Permission::find($id),fn($permission)=>RolesAndPermissionMapper::toPermissionDomain($permission));
     }
-    public function findAllPermissions(): array
+    public function findPermissionsByUserRole(string $roleName): array
     {
-       return Permission::where('type', 'model')
+      return Permission::where('type', 'model')
+        ->where(function($query) use ($roleName) {
+            $query->where('belongs_to', $roleName)
+                  ->orWhereNull('belongs_to');
+        })
         ->select('id', 'name', 'type')
         ->get()
         ->map(fn($permission) => RolesAndPermissionMapper::toPermissionDomain($permission))

@@ -89,29 +89,29 @@ class DatabaseSeeder extends Seeder
             'view profile',
         ];
 
-         $insertPermissions = function (array $permissions, string $type='role') {
+         $insertPermissions = function (array $permissions, string $type='role', ?string $belongsTo=null) {
             DB::table('permissions')->insertOrIgnore(
                 collect($permissions)->map(fn($name) => [
                     'name' => $name,
                     'guard_name' => 'web',
                     'type' => $type,
+                    'belongs_to' => $belongsTo,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ])->toArray()
             );
         };
 
-         $insertPermissions(array_merge(
-            $permissionsStudent['role'],
-            $permissionsStaff['role'],
-            $global
-        ),'role');
+        $insertPermissions(array_merge($permissionsStudent['role']), 'role', 'student');
+        $insertPermissions(array_merge($permissionsStudent['model']), 'model', 'student');
 
-        $insertPermissions(array_merge(
-            $permissionsStudent['model'],
-            $permissionsStaff['model'],
-            $permissionsAdmin,
-        ),'model');
+        $insertPermissions(array_merge($permissionsStaff['role']), 'role', 'financial staff');
+        $insertPermissions(array_merge($permissionsStaff['model']), 'model', 'financial staff');
+
+        $insertPermissions($global, 'role', null);
+
+        $insertPermissions($permissionsAdmin, 'model', 'admin');
+
 
         $careers=
         [

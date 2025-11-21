@@ -17,6 +17,9 @@ use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
+use App\Core\Domain\Enum\User\UserBloodType;
+use App\Core\Domain\Enum\User\UserGender;
+use App\Core\Domain\Enum\User\UserStatus;
 use Carbon\Carbon;
 
 class UserMapper{
@@ -50,12 +53,16 @@ class UserMapper{
             password: $data['password'],
             phone_number: $data['phone_number'],
             birthdate: new Carbon($data['birthdate']) ?? null,
-            gender: $data['gender'] ?? null,
+            gender: isset($data['gender'])
+            ? UserGender::from(strtolower($data['gender']))
+            : null,
             curp:$data['curp'],
             address: $data['address'] ?? [],
-            blood_type: $data['blood_type'] ?? null,
+             blood_type: isset($data['blood_type'])
+            ? UserBloodType::from($data['blood_type'])
+            : null,
             registration_date: new Carbon($data['registration_date'] ?? Carbon::now()),
-            status: $data['status']
+            status: UserStatus::from($data['status'])
         );
 
     }
@@ -98,13 +105,13 @@ class UserMapper{
             email: $user->email ?? null,
             phone_number: $user->phone_number ?? null,
             birthdate: $user->birthdate ? $user->birthdate->format('Y-m-d H:i:s'): null,
-            gender: $user->gender ?? null,
+            gender: $user->gender->value ?? null,
             curp: $user->curp ?? null,
             address: $user->address ?? null,
             stripe_customer_id: $user->stripe_customer_id ?? null,
-            blood_type: $user->blood_type ?? null,
+            blood_type: $user->blood_type->value ?? null,
             registration_date: $user->registration_date ? $user->registration_date->format('Y-m-d H:i:s'): null,
-            status: $user->status ?? null,
+            status: $user->status->value ?? null,
             career_id: $user->studentDetail?->career_id ?? null,
             semestre: $user->studentDetail?->semestre ?? null,
             group: $user->studentDetail?->group ?? null,

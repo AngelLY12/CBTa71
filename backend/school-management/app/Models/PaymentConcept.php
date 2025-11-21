@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Career;
@@ -30,6 +32,8 @@ class PaymentConcept extends Model
             'start_date' => 'date',
             'end_date' =>  'date',
             'amount' => 'decimal:2',
+            'status' => PaymentConceptStatus::class,
+            'applies_to' => PaymentConceptAppliesTo::class
         ];
     }
 

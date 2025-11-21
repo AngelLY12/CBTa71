@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Models\Career;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
@@ -17,13 +18,13 @@ return new class extends Migration
             $table->string('last_name',25)->after('name');
             $table->string('phone_number',15)->after('last_name');
             $table->date('birthdate')->after('phone_number');
-            $table->enum('gender',array('Hombre','Mujer'))->nullable()->after('birthdate');
+            $table->string('gender',10)->nullable()->after('birthdate');
             $table->char('curp',18)->after('gender')->unique();
             $table->json('address')->nullable()->after('curp');
             $table->string('stripe_customer_id',50)->nullable()->unique();
-            $table->enum('blood_type',['O+','O-','A+','A-','B+','B-','AB+','AB-'])->nullable();
+            $table->char('blood_type',4)->nullable();
             $table->date('registration_date');
-            $table->enum('status',['activo','baja','eliminado'])->default('activo');
+            $table->string('status',20)->default(UserStatus::ACTIVO->value);
             $table->index(['last_name', 'created_at','status']);
 
         });

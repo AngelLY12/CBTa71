@@ -5,6 +5,7 @@ namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Entities\PaymentConcept;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
@@ -31,10 +32,11 @@ class UpdatePaymentConceptUseCase
     {}
      public function execute(UpdatePaymentConceptDTO $dto): PaymentConcept {
         return DB::transaction(function() use ($dto) {
+            PaymentConceptValidator::ensureAppliesToIsValid($dto->appliesTo->value);
             if (isset($dto->appliesTo)) {
-                $dto->fieldsToUpdate['is_global'] = $dto->appliesTo === 'todos';
+                $dto->fieldsToUpdate['is_global'] = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
             } else if (isset($dto->fieldsToUpdate['is_global']) && $dto->fieldsToUpdate['is_global'] === true) {
-                $dto->appliesTo = 'todos';
+                $dto->appliesTo = PaymentConceptAppliesTo::TODOS;
             }
             if (($dto->fieldsToUpdate['is_global'] ?? false) && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
                 throw new ConceptAppliesToConflictException();
@@ -52,7 +54,7 @@ class UpdatePaymentConceptUseCase
 
             if ($dto->appliesTo) {
                 switch($dto->appliesTo) {
-                    case 'carrera':
+                    case PaymentConceptAppliesTo::CARRERA:
                         $detachSemester = true;
                         $detachUsers = true;
                         if ($dto->careers) {
@@ -61,7 +63,7 @@ class UpdatePaymentConceptUseCase
                              throw new CareersNotFoundException();
                         }
                         break;
-                    case 'semestre':
+                    case PaymentConceptAppliesTo::SEMESTRE:
                         $detachCareer = true;
                         $detachUsers = true;
                         if ($dto->semesters) {
@@ -70,7 +72,7 @@ class UpdatePaymentConceptUseCase
                             throw new SemestersNotFoundException();
                         }
                         break;
-                    case 'estudiantes':
+                    case PaymentConceptAppliesTo::ESTUDIANTES:
                         $detachCareer = true;
                         $detachSemester = true;
                         if ($dto->students) {
@@ -85,7 +87,7 @@ class UpdatePaymentConceptUseCase
                             throw new StudentsNotFoundException();
                         }
                         break;
-                    case 'carrera_semestre':
+                    case PaymentConceptAppliesTo::CARRERA_SEMESTRE:
                         $detachUsers = true;
                         if($dto->careers && $dto->semesters){
                             $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers);
@@ -94,7 +96,7 @@ class UpdatePaymentConceptUseCase
                             throw new CareerSemesterInvalidException();
                         }
                         break;
-                    case 'todos':
+                    case PaymentConceptAppliesTo::TODOS:
                         $detachCareer = $detachSemester = $detachUsers = true;
                         $paymentConcept->is_global = true;
                         break;

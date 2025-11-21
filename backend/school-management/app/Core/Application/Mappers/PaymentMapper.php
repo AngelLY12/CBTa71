@@ -3,7 +3,6 @@
 namespace App\Core\Application\Mappers;
 
 
-use App\Core\Application\DTO\Request\Payment\PaymentCreatedEmailDTO;
 use App\Core\Application\DTO\Response\Payment\PaymentDataResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentDetailResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentHistoryResponse;
@@ -32,7 +31,7 @@ class PaymentMapper{
             concept: $payment->concept_name ?? null,
             amount: $payment->amount ?? null,
             date: $payment->created_at ? $payment->created_at->format('Y-m-d H:i:s'): null,
-            status: $payment->status ?? null,
+            status: $payment->status->value ?? null,
             reference: $payment->payment_intent_id ?? null,
             url: $payment->url ?? null,
             payment_method_details: $payment->payment_method_details ? : null,
@@ -43,7 +42,7 @@ class PaymentMapper{
         return new PaymentDataResponse(
             id:$payment->id ?? null,
             amount:$payment->amount ?? null,
-            status:$payment->status ?? null,
+            status:$payment->status->value ?? null,
             payment_intent_id:$payment->payment_intent_id ?? null
         );
 
@@ -62,7 +61,7 @@ class PaymentMapper{
             payment: new PaymentDataResponse(
                 id: $payment->id ?? null,
                 amount: $payment->amount ?? null,
-                status: $payment->status ?? null,
+                status: $payment->status->value ?? null,
                 payment_intent_id: $payment->payment_intent_id ?? null,
             )
         );

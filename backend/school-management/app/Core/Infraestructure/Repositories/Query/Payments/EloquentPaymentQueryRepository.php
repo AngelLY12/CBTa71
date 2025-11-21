@@ -100,6 +100,9 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     }
 
 
+     /**
+     * @return Generator<int, Payment>
+     */
     public function getPaidWithinLastMonthCursor(): Generator
     {
         foreach (EloquentPayment::where('status', 'paid')
@@ -107,40 +110,5 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
                 ->cursor() as $model) {
             yield PaymentMapper::toDomain($model);
         }
-    }
-
-
-    public function updatePaymentWithStripeData(Payment $payment, $pi, $charge, PaymentMethod $savedPaymentMethod): void
-    {
-        if (!$payment->id) {
-            logger()->warning("El pago no tiene ID, no se puede actualizar.");
-            return;
-        }
-
-        $eloquent= EloquentPayment::findOrFail($payment->id);
-
-        $paymentMethodDetails = $this->formatPaymentMethodDetails($charge->payment_method_details);
-        $eloquent->update([
-            'payment_method_id' => $savedPaymentMethod?->id,
-            'stripe_payment_method_id' => $charge?->payment_method,
-            'status' => $pi->status,
-            'payment_method_details'=>$paymentMethodDetails,
-            'url' => $charge?->receipt_url ?? $payment->url,
-        ]);
-        logger()->info("Pago {$payment->id} actualizado correctamente.");
-
-    }
-    private function formatPaymentMethodDetails($details): array
-    {
-        if ($details->type === 'card' && isset($details->card)) {
-            return [
-                'type' => $details->type,
-                'brand' => $details->card->brand,
-                'last4' => $details->card->last4,
-                'funding' => $details->card->funding,
-            ];
-        }
-
-        return (array) $details;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Core\Domain\Entities;
 
+use App\Core\Domain\Enum\Payment\PaymentStatus;
+
 /**
  * @OA\Schema(
  *     schema="DomainPayment",
@@ -18,7 +20,7 @@ namespace App\Core\Domain\Entities;
  *         @OA\Items(type="string"),
  *         example={"Tarjeta de crédito", "Banco XYZ"}
  *     ),
- *     @OA\Property(property="status", type="string", example="pendiente"),
+ *     @OA\Property(property="status", ref="#/components/schemas/PaymentStatus", example="pendiente"),
  *     @OA\Property(property="payment_intent_id", type="string", nullable=true, example="pi_1Hh1Xx2eZvKYlo2Cd1234567"),
  *     @OA\Property(property="url", type="string", nullable=true, example="https://checkout.stripe.com/pay/cs_test_a1b2c3d4"),
  *     @OA\Property(property="stripe_session_id", type="string", nullable=true, example="cs_test_a1b2c3d4")
@@ -35,7 +37,7 @@ class Payment
         public ?string $concept_name,
         public ?string $amount,
         public ?array $payment_method_details = [],
-        public string $status,
+        public PaymentStatus $status,
         public ?string $payment_intent_id=null,
         public ?string $url,
         public ?string $stripe_session_id

@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Core\Domain\Enum\User\UserBloodType;
+use App\Core\Domain\Enum\User\UserGender;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -23,7 +26,7 @@ class AdminUserSeeder extends Seeder
                 'password' => Hash::make('123'),
                 'phone_number' => '7352770097',
                 'birthdate' => '2003-05-04',
-                'gender' => 'Hombre',
+                'gender' => UserGender::HOMBRE,
                 'curp' => 'LOYA030504HMSPXNA8',
                 'address' => [
                     'street' => 'Calle Falsa 123',
@@ -32,9 +35,9 @@ class AdminUserSeeder extends Seeder
                     'zip' => '12345'
                 ],
                 'stripe_customer_id' => null,
-                'blood_type' => 'O+',
+                'blood_type' => UserBloodType::O_POSITIVE,
                 'registration_date' => now()->toDateString(),
-                'status' => 'activo',
+                'status' => UserStatus::ACTIVO,
             ]
         );
 

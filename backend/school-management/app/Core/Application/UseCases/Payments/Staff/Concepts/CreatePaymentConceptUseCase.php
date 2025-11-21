@@ -3,10 +3,11 @@
 namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
+use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Entities\PaymentConcept;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
-use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
 use App\Exceptions\Conflict\ConceptAppliesToConflictException;
@@ -19,20 +20,20 @@ use App\Jobs\ClearStudentConceptCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\NewConceptMail;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class CreatePaymentConceptUseCase
 {
     public function __construct(
         private PaymentConceptRepInterface $pcRepo,
-        private PaymentConceptQueryRepInterface $pcqRepo,
         private UserQueryRepInterface $uqRepo,
     )
     {}
 
     public function execute(CreatePaymentConceptDTO $dto): PaymentConcept {
         return DB::transaction(function() use ($dto) {
-            $dto->is_global = $dto->appliesTo === 'todos';
+            PaymentConceptValidator::ensureAppliesToIsValid($dto->appliesTo->value);
+            PaymentConceptValidator::ensureValidStatus($dto->status->value);
+            $dto->is_global = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
             if ($dto->is_global && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
                 throw new ConceptAppliesToConflictException();
             }
@@ -53,7 +54,7 @@ class CreatePaymentConceptUseCase
             $paymentConcept = $this->pcRepo->create($pc);
 
             switch($dto->appliesTo) {
-                case 'carrera':
+                case PaymentConceptAppliesTo::CARRERA:
                     if ($dto->careers) {
                         $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers);
 
@@ -61,14 +62,14 @@ class CreatePaymentConceptUseCase
                         throw new CareersNotFoundException();
                     }
                     break;
-                case 'semestre':
+                case PaymentConceptAppliesTo::SEMESTRE:
                     if ($dto->semesters) {
                         $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters);
                     } else {
                         throw new SemestersNotFoundException();
                     }
                     break;
-                case 'estudiantes':
+                case PaymentConceptAppliesTo::ESTUDIANTES:
                     if ($dto->students) {
                         $userIdListDTO = $this->uqRepo->getUserIdsByControlNumbers((array)$dto->students);
                         if (empty($userIdListDTO->userIds)) {
@@ -79,7 +80,7 @@ class CreatePaymentConceptUseCase
                         throw new StudentsNotFoundException();
                     }
                     break;
-                case 'carrera_semestre':
+                case PaymentConceptAppliesTo::CARRERA_SEMESTRE:
                     if($dto->careers && $dto->semesters){
                         $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers);
                         $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters);
@@ -87,12 +88,12 @@ class CreatePaymentConceptUseCase
                         throw new CareerSemesterInvalidException();
                     }
                     break;
-                case 'todos':
+                case PaymentConceptAppliesTo::TODOS:
                     break;
                 default:
                     break;
             }
-            $recipients = $this->uqRepo->getRecipients($paymentConcept, $dto->appliesTo);
+            $recipients = $this->uqRepo->getRecipients($paymentConcept, $dto->appliesTo->value);
             if(empty($recipientsArray)){
                 throw new RecipientsNotFoundException();
             }

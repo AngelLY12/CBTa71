@@ -1,5 +1,6 @@
 <?php
 
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Models\User;
 use App\Models\PaymentConcept;
 use App\Models\PaymentMethod;
@@ -23,7 +24,7 @@ return new class extends Migration
             $table->string('concept_name');
             $table->decimal('amount', 7,2)->index();
             $table->json('payment_method_details');
-            $table->string('status',20);
+            $table->string('status',20)->default(PaymentStatus::UNPAID->value);
             $table->string('payment_intent_id',50)->unique()->nullable();
             $table->text('url')->nullable();
             $table->string('stripe_session_id')->nullable()->unique();

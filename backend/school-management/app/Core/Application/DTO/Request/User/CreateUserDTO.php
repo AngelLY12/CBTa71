@@ -2,6 +2,9 @@
 
 namespace App\Core\Application\DTO\Request\User;
 
+use App\Core\Domain\Enum\User\UserBloodType;
+use App\Core\Domain\Enum\User\UserGender;
+use App\Core\Domain\Enum\User\UserStatus;
 use Carbon\Carbon;
 
 /**
@@ -16,12 +19,12 @@ use Carbon\Carbon;
  *     @OA\Property(property="password", type="string", format="password", example="Password123!", description="Contraseña del usuario"),
  *     @OA\Property(property="phone_number", type="string", example="+5215512345678", description="Número de teléfono"),
  *     @OA\Property(property="birthdate", type="string", format="date", nullable=true, example="1995-04-23", description="Fecha de nacimiento"),
- *     @OA\Property(property="gender", type="string", nullable=true, example="male", description="Género del usuario"),
+ *     @OA\Property(property="gender", ref="#/components/schemas/UserGender", nullable=true, example="male", description="Género del usuario"),
  *     @OA\Property(property="curp", type="string", example="PEPJ950423HDFRRL09", description="CURP del usuario"),
  *     @OA\Property(property="address", type="array", nullable=true, @OA\Items(type="string"), description="Dirección del usuario"),
- *     @OA\Property(property="blood_type", type="string", nullable=true, example="O+", description="Tipo de sangre"),
+ *     @OA\Property(property="blood_type", ref="#/components/schemas/UserBloodType", nullable=true, example="O+", description="Tipo de sangre"),
  *     @OA\Property(property="registration_date", type="string", format="date-time", nullable=true, example="2025-11-04T19:00:00Z", description="Fecha de registro"),
- *     @OA\Property(property="status", type="string", nullable=true, example="activo", description="Estado del usuario")
+ *     @OA\Property(property="status", ref="#/components/schemas/UserStatus", nullable=true, example="activo", description="Estado del usuario")
  * )
  */
 class CreateUserDTO
@@ -33,12 +36,12 @@ class CreateUserDTO
         public readonly string $password,
         public readonly string $phone_number,
         public readonly ?Carbon $birthdate,
-        public readonly ?string $gender,
+        public readonly ?UserGender $gender,
         public readonly string $curp,
         public readonly ?array $address,
-        public readonly ?string $blood_type,
+        public readonly ?UserBloodType $blood_type,
         public readonly ?Carbon $registration_date,
-        public readonly ?string $status,
+        public readonly ?UserStatus $status,
     )
     {
 

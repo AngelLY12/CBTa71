@@ -14,6 +14,7 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use Illuminate\Support\Facades\DB;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
+use App\Core\Application\Traits\HasPaymentStripe;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Exceptions\NotFound\ConceptNotFoundException;
@@ -23,6 +24,8 @@ use App\Jobs\SendMailJob;
 use App\Mail\PaymentValidatedMail;
 
 class ValidatePaymentUseCase{
+
+    use HasPaymentStripe;
 
     public function __construct(
         public UserQueryRepInterface $uqRepo,
@@ -79,7 +82,7 @@ class ValidatePaymentUseCase{
                     $stripe=$this->stripeRepo->getIntentAndCharge($payment_intent_id);
                     $pm = $this->pmqRepo->findByStripeId($stripe['charge']->payment_method);
                     if (!$pm) throw new PaymentMethodNotFoundException();
-                    $this->pqRepo->updatePaymentWithStripeData($payment, $stripe['intent'], $stripe['charge'], $pm);
+                    $this->updatePaymentWithStripeData($payment, $stripe['intent'], $stripe['charge'], $pm);
                 }
             }
             $data = [
@@ -97,19 +100,5 @@ class ValidatePaymentUseCase{
             return PaymentMapper::toPaymentValidateResponse(AppUserMapper::toDataResponse($student),PaymentMapper::toPaymentDataResponse($payment));
         });
 
-    }
-
-    private function formatPaymentMethodDetails($details): array
-    {
-        if ($details->type === 'card' && isset($details->card)) {
-            return [
-                'type' => $details->type,
-                'brand' => $details->card->brand,
-                'last4' => $details->card->last4,
-                'funding' => $details->card->funding,
-            ];
-        }
-
-        return (array) $details;
     }
 }

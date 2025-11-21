@@ -8,21 +8,31 @@ use App\Core\Application\DTO\Response\PaymentConcept\ConceptNameAndAmountRespons
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptsToDashboardResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingPaymentConceptsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Models\PaymentConcept;
 use Carbon\Carbon;
 
 class PaymentConceptMapper{
    public static function toCreateConceptDTO(array $data): CreatePaymentConceptDTO
     {
+        $statusEnum = isset($data['status'])
+            ? PaymentConceptStatus::from(strtolower($data['status']))
+            : PaymentConceptStatus::ACTIVO;
+
+        $appliesToEnum = isset($data['applies_to'])
+            ? PaymentConceptAppliesTo::from(strtolower($data['applies_to']))
+            : PaymentConceptAppliesTo::TODOS;
+
         return new CreatePaymentConceptDTO(
             concept_name: $data['concept_name'],
             description: $data['description'] ?? null,
             amount: $data['amount'],
-            status: strtolower($data['status']),
+            status: $statusEnum,
             start_date: isset($data['start_date']) ? new Carbon($data['start_date']) : null,
             end_date: isset($data['end_date']) ? new Carbon($data['end_date']) : null,
-            is_global: (bool) $data['is_global'],
-            appliesTo: strtolower($data['applies_to'] ?? 'todos'),
+            is_global: (bool) ($data['is_global'] ?? false),
+            appliesTo: $appliesToEnum,
             semesters: $data['semestres'] ?? [],
             careers: $data['careers'] ?? [],
             students: $data['students'] ?? []
@@ -69,9 +79,9 @@ class PaymentConceptMapper{
         return new ConceptsToDashboardResponse(
             id: $pc->id ?? null,
             concept_name: $pc->concept_name ?? null,
-            status: $pc->status ?? null,
+            status: $pc->status->value ?? null,
             amount: $pc->amount ?? null,
-            applies_to:$pc->applies_to ?? null,
+            applies_to:$pc->applies_to->value ?? null,
             start_date: $pc->start_date ? $pc->start_date->format('Y-m-d H:i:s') : null,
             end_date: $pc->end_date ? $pc->end_date->format('Y-m-d H:i:s') : null
         );

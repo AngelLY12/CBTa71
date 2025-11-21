@@ -4,6 +4,9 @@ namespace App\Core\Domain\Utils\Validators;
 
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\User\UserBloodType;
+use App\Core\Domain\Enum\User\UserGender;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Exceptions\Conflict\UserAlreadyActiveException;
 use App\Exceptions\Conflict\UserAlreadyDeletedException;
 use App\Exceptions\Conflict\UserAlreadyDisabledException;
@@ -14,51 +17,44 @@ class UserValidator
 {
     public static function ensureUserDataIsValid(CreateUserDTO $user)
     {
-        $bloodTypes = ['O+','O-','A+','A-','B+','B-','AB+','AB-'];
-        $status = ['activo','baja','eliminado'];
-        $genders =['Hombre','Mujer'];
-
-        if(!in_array($user->status,$status,true))
-        {
+        if (UserStatus::tryFrom($user->status->value) === null) {
             throw new ValidationException("El estatus del usuario no es valido");
         }
-        if(!in_array($user->gender,$genders,true))
-        {
-            throw new ValidationException("El genero del usuario no es valido, debe ser Hombre o Mujer");
-        }
-        if(!in_array($user->blood_type,$bloodTypes,true))
-        {
-            throw new ValidationException("El tipo de sangre del usuario no es valido");
 
+        if (UserGender::tryFrom(strtolower($user->gender->value)) === null) {
+            throw new ValidationException("El genero del usuario no es valido, debe ser hombre o mujer");
+        }
+
+        if (UserBloodType::tryFrom($user->blood_type->value) === null) {
+            throw new ValidationException("El tipo de sangre del usuario no es valido");
         }
     }
 
-    public static function ensureValidStatusTransition(User $user, $newStatus)
+    public static function ensureValidStatusTransition(User $user, UserStatus $newStatus)
     {
-        switch($newStatus)
-        {
-            case 'eliminado':
-                if($user->isDeleted())
-                {
+        switch ($newStatus) {
+
+            case UserStatus::ELIMINADO:
+                if ($user->isDeleted()) {
                     throw new UserAlreadyDeletedException();
                 }
                 break;
-            case 'baja':
-                if($user->isDeleted())
-                {
+
+            case UserStatus::BAJA:
+                if ($user->isDeleted()) {
                     throw new UserCannotBeDisabledException();
                 }
-                if($user->isDisable())
-                {
+                if ($user->isDisable()) {
                     throw new UserAlreadyDisabledException();
                 }
                 break;
-            case 'activo':
-                if($user->isActive())
-                {
+
+            case UserStatus::ACTIVO:
+                if ($user->isActive()) {
                     throw new UserAlreadyActiveException();
                 }
                 break;
         }
     }
+
 }

@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\DTO\Request\PaymentConcept;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 
 /**
  * @OA\Schema(
@@ -40,7 +41,7 @@ namespace App\Core\Application\DTO\Request\PaymentConcept;
  *         example={"12345","67891"},
  *         description="Numeros de control de estudiantes asociados al concepto"
  *     ),
- *     @OA\Property(property="appliesTo", type="string", nullable=true, example="todos", description="A quién aplica el concepto"),
+ *     @OA\Property(property="appliesTo", ref="#/components/schemas/PaymentConceptAppliesTo", nullable=true, example="todos", description="A quién aplica el concepto"),
  *     @OA\Property(property="replaceRelations", type="boolean", example=false, description="Si es true, reemplaza las relaciones existentes con las nuevas")
  * )
  */
@@ -52,7 +53,7 @@ class UpdatePaymentConceptDTO
         public array|int|null $semesters = null,
         public array|int|null $careers = null,
         public array|string|null $students = null,
-        public ?string $appliesTo = null,
+        public ?PaymentConceptAppliesTo $appliesTo = null,
         public bool $replaceRelations = false
     ) {}
 }

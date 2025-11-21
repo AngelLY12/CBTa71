@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
@@ -38,6 +39,7 @@ class Payment extends Model
     {   return [
             'payment_method_details' => 'array',
             'amount' => 'decimal:2',
+            'status' => PaymentStatus::class
         ];
     }
 

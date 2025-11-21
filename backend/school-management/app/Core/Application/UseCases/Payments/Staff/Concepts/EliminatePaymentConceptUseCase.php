@@ -23,7 +23,7 @@ class EliminatePaymentConceptUseCase
         $this->pcRepo->delete($conceptId);
         $concept=$this->pcqRepo->findById($conceptId);
         if($concept){
-            $users=$this->uqRepo->getRecipients($concept,$concept->applies_to);
+            $users=$this->uqRepo->getRecipients($concept,$concept->applies_to->value);
             foreach ($users as $user)
             {
                 ClearStudentConceptCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));

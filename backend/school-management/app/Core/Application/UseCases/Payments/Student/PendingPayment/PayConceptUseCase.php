@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\UseCases\Payments\Student\PendingPayment;
 
+use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
@@ -40,7 +41,7 @@ class PayConceptUseCase
                 concept_name:$concept->concept_name,
                 amount:$concept->amount,
                 payment_method_details: [],
-                status: $session->payment_status,
+                status: EnumMapper::fromStripe($session->payment_status),
                 url: $session->url ?? null,
                 stripe_session_id: $session->id ?? null
             );

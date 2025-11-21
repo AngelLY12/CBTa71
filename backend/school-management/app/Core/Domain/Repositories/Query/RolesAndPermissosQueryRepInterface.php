@@ -10,7 +10,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 interface RolesAndPermissosQueryRepInterface
 {
     public function findRoleById(int $id):?Role;
+    public function findRoleByName(string $name): ?Role;
     public function findAllRoles(): array;
     public function findPermissionById(int $id):?Permission;
-    public function findAllPermissions(): array;
+    public function findPermissionsByUserRole(string $roleName): array;
 }

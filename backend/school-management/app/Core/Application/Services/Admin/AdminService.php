@@ -109,10 +109,10 @@ class AdminService
         return $users;
     }
 
-    public function findAllPermissions(bool $forceRefresh): array
+    public function findAllPermissions(string $roleName, bool $forceRefresh = false): array
     {
-        $key = "$this->prefix:permissions";
-        return $this->cache($key, $forceRefresh, fn() => $this->permissions->execute());
+        $key = "$this->prefix:permissions:role:$roleName";
+        return $this->cache($key, $forceRefresh, fn() => $this->permissions->execute($roleName));
     }
 
     public function findAllRoles(bool $forceRefresh): array

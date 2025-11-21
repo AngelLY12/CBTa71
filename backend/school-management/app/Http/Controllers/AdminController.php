@@ -754,11 +754,11 @@ class AdminController extends Controller
      *         @OA\Schema(type="boolean", example=false)
      *     ),
      *     @OA\Parameter(
-     *         name="page",
+     *         name="roleName",
      *         in="query",
-     *         description="Número de página a mostrar",
-     *         required=false,
-     *         @OA\Schema(type="integer", default=1)
+     *         description="Nombre del role al que pertenecen los permisos",
+     *         required=true,
+     *         @OA\Schema(type="string", default="student")
      *     ),
      *
      *     @OA\Response(
@@ -791,7 +791,14 @@ class AdminController extends Controller
     public function findAllPermissions(Request $request)
     {
         $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-        $permissions= $this->service->findAllPermissions($forceRefresh);
+        $roleName = $request->query('role_name', 'student');
+        if (!$roleName) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El nombre del rol es requerido.'
+            ], 400);
+        }
+        $permissions= $this->service->findAllPermissions($roleName,$forceRefresh);
         return response()->json([
             'success' => true,
             'data' =>['permissions'=> $permissions],

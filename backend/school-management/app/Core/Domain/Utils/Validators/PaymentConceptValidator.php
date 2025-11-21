@@ -5,6 +5,8 @@ use Carbon\Carbon;
 use InvalidArgumentException;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Exceptions\Conflict\ConceptAlreadyActiveException;
 use App\Exceptions\Conflict\ConceptAlreadyDeletedException;
 use App\Exceptions\Conflict\ConceptAlreadyDisabledException;
@@ -60,55 +62,40 @@ class PaymentConceptValidator{
 
     public static function ensureValidStatus(string $status)
     {
-        $arrayStatus = ['todos','activos','finalizados','desactivados','eliminados'];
-        if(!in_array($status,$arrayStatus,true)){
+        if(!PaymentConceptStatus::tryFrom($status)){
             throw new ValidationException("Estado inválido: {$status}");
         }
     }
 
-    public static function ensureValidStatusTransition(PaymentConcept $concept, string $newStatus)
+    public static function ensureValidStatusTransition(PaymentConcept $concept, PaymentConceptStatus $newStatus)
     {
 
         $current = $concept->status;
-
-        switch ($current) {
-            case 'activo':
-                if (!in_array($newStatus, ['finalizado', 'eliminado', 'desactivado'], true)) {
-                    throw new ConceptInvalidStatusException("Un concepto activo solo puede finalizarse, eliminarse o desactivarse.");
-                }
-                break;
-
-            case 'finalizado':
-                if (!in_array($newStatus, ['activo', 'eliminado'], true)) {
-                    throw new ConceptInvalidStatusException("Un concepto finalizado solo puede reactivarse o eliminarse.");
-                }
-                break;
-
-            case 'eliminado':
-                if ($newStatus !== 'activo') {
-                    throw new ConceptInvalidStatusException("Un concepto eliminado solo puede reactivarse.");
-                }
-                break;
-
-            case 'desactivado':
-                if (!in_array($newStatus, ['activo', 'eliminado'], true)) {
-                    throw new ConceptInvalidStatusException("Un concepto desactivado solo puede reactivarse o eliminarse.");
-                }
-                break;
-
-            default:
-                throw new ConceptInvalidStatusException("Estado actual inválido: {$current}");
-        }
-
         if ($current === $newStatus) {
-            throw new ValidationException("El concepto ya está en el estado '{$newStatus}'.");
+            throw new ValidationException("El concepto ya está en el estado '{$newStatus->value}'.");
         }
+
+        if (!$current->canTransitionTo($newStatus)) {
+            throw new ConceptInvalidStatusException(
+                "No se puede cambiar el estado de {$current->value} a {$newStatus->value}."
+            );
+        }
+
     }
 
     public static function ensureConceptIsValidToUpdate(PaymentConcept $concept){
-        if(!in_array($concept->status,['activo','desactivado'])){
+        if (!$concept->status->isUpdatable()) {
             throw new ConceptCannotBeUpdatedException();
         }
+    }
+
+    public static function ensureAppliesToIsValid(string $appliesTo)
+    {
+        if(!PaymentConceptAppliesTo::tryFrom($appliesTo))
+        {
+            return new ValidationException("El valor {$appliesTo} no es válido para aplicar.");
+        }
+
     }
 
     public static function ensureConceptHasRequiredFields(PaymentConcept $concept)
