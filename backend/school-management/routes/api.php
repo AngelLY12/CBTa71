@@ -125,8 +125,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
 
     Route::prefix('users')->middleware(['role:admin','role:student','role:financial staff','throttle:10,1'])->group(function () {
-        Route::patch('/{user}', [UpdateUserController::class, 'update']);
-        Route::patch('/{user}/password', [UpdateUserController::class, 'updatePassword']);
+        Route::patch('/{userId}', [UpdateUserController::class, 'update']);
+        Route::patch('/{userId}/password', [UpdateUserController::class, 'updatePassword']);
     });
 
 

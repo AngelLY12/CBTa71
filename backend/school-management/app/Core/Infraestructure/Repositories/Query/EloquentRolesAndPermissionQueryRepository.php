@@ -6,6 +6,7 @@ use App\Core\Domain\Entities\Permission as EntitiesPermission;
 use App\Core\Domain\Entities\Role as EntitiesRole;
 use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
 use App\Core\Infraestructure\Mappers\RolesAndPermissionMapper;
+use App\Exceptions\ValidationException;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\Permission\Models\Permission;
@@ -33,10 +34,19 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
         return optional(Permission::find($id),fn($permission)=>RolesAndPermissionMapper::toPermissionDomain($permission));
     }
 
-    public function findPermissionsApplicableByUsers(array $curps): array
+    public function findPermissionsApplicableByUsers(?string $role, ?array $curps): array
     {
-        $users = User::with('roles')->whereIn('curp', $curps)
-        ->get(['id','name','last_name','curp']);
+        if (!empty($role)) {
+            $users = User::role($role)
+                ->with('roles')
+                ->get(['id','name','last_name','curp']);
+        }
+
+        if (!empty($curps)) {
+            $users = User::with('roles')
+                ->whereIn('curp', $curps)
+                ->get(['id','name','last_name','curp']);
+        }
 
         if ($users->isEmpty()) return [];
 

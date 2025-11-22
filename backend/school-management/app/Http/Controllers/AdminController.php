@@ -751,7 +751,7 @@ class AdminController extends Controller
      *         name="curps",
      *         in="query",
      *         description="Curps de los usuarios",
-     *         required=true,
+     *         required=false,
      *         @OA\Schema(
      *           type="array",
      *           @OA\Items(
@@ -759,6 +759,14 @@ class AdminController extends Controller
      *               example="GAAA900101HDFRRN05"
      *           )
      *       )
+     *     ),
+     *
+     *      @OA\Parameter(
+     *         name="role",
+     *         in="query",
+     *         description="Role de los usuarios a los que aplican los permisos.",
+     *         required=false,
+     *         @OA\Schema(type="string", example="student")
      *     ),
      *
      *     @OA\Response(
@@ -810,13 +818,25 @@ class AdminController extends Controller
     public function findAllPermissions(Request $request)
     {
         $curps = $request->query('curps', []);
-        if (empty($curps)) {
+        $role = $request->query('role', null);
+
+        if (!empty($curps) && !is_array($curps)) {
+            $curps = [$curps];
+        }
+        if (empty($curps) && empty($role)) {
             return response()->json([
                 'success' => false,
-                'message' => 'No hay ningun usuario agregado.'
+                'message' => 'No hay curps ni roles.'
             ], 400);
         }
-        $permissions= $this->service->findAllPermissions($curps);
+        if(!empty($curps) && !empty($role))
+        {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debe haber solo curps o roles.'
+            ], 400);
+        }
+        $permissions= $this->service->findAllPermissions($curps, $role);
         return response()->json([
             'success' => true,
             'data' =>['permissions'=> $permissions],

@@ -2,7 +2,7 @@
 
 namespace App\Exceptions\NotFound;
 
-use DomainException;
+use App\Exceptions\DomainException;
 
 class PermissionsByUserNotFoundException extends DomainException
 {

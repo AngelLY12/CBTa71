@@ -110,13 +110,13 @@ class AdminService
         return $users;
     }
 
-    public function findAllPermissions(array $curps): PermissionsByUsers
+    public function findAllPermissions(?array $curps, ?string $role): PermissionsByUsers
     {
         $key = implode(',', $curps);
         if (isset($this->requestCache[$key])) {
             return $this->requestCache[$key];
         }
-        $permissions = $this->permissions->execute($curps);
+        $permissions = $this->permissions->execute($curps, $role);
         $this->requestCache[$key] = $permissions;
 
         return $permissions;

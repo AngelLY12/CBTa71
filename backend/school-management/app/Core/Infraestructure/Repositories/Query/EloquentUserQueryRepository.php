@@ -225,4 +225,5 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         ->map(fn($user) => UserMapper::toDomain($user));
     }
 
+
 }

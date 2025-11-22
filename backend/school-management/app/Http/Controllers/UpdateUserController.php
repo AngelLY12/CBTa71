@@ -23,7 +23,7 @@ class UpdateUserController extends Controller
 
      /**
      * @OA\Patch(
-     *     path="/api/v1/users/{id}",
+     *     path="/api/v1/users/{userId}",
      *     tags={"Users"},
      *     summary="Actualizar los datos generales de un usuario",
      *     @OA\Parameter(
@@ -92,7 +92,7 @@ class UpdateUserController extends Controller
 
     /**
      * @OA\Patch(
-     *     path="/api/v1/users/{id}/password",
+     *     path="/api/v1/users/{userId}/password",
      *     tags={"Users"},
      *     summary="Actualizar la contraseña de un usuario",
      *     @OA\Parameter(
@@ -105,9 +105,9 @@ class UpdateUserController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"password", "password_confirmation"},
-     *             @OA\Property(property="password", type="string", minLength=8, example="newpassword123"),
-     *             @OA\Property(property="password_confirmation", type="string", example="newpassword123")
+     *             required={"newPassword", "currentPassword"},
+     *             @OA\Property(property="newPassword", type="string", minLength=8, example="oldPassword123"),
+     *             @OA\Property(property="currentPassword", type="string", example="newpassword123")
      *         )
      *     ),
      *     @OA\Response(
@@ -123,9 +123,13 @@ class UpdateUserController extends Controller
     public function updatePassword(Request $request, int $userId)
     {
         $data = $request->only([
-            'password'
+            'newPassword',
+            'currentPassword'
         ]);
-        $rules=['required|string|min:8|confirmed'];
+        $rules=[
+            'newPassword' =>'required|string|min:8',
+            'currentPassword' => 'required|string|min:8'
+        ];
         $validator = Validator::make($data,$rules);
         if($validator->fails()){
             return response()->json([
@@ -134,7 +138,7 @@ class UpdateUserController extends Controller
                 'message' => 'Error en la validación de datos.'
             ], 422);
         }
-        $updated = $this->service->updatePassword($userId, $data['password']);
+        $updated = $this->service->updatePassword($userId,$data['currentPassword'], $data['newPassword']);
 
         return response()->json([
             'success' => true,

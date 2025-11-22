@@ -58,7 +58,7 @@ class CareerController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1//careers/{id}",
+     *     path="/api/v1/careers/{id}",
      *     tags={"Careers"},
      *     summary="Obtener una carrera por ID",
      *     @OA\Parameter(
@@ -102,7 +102,7 @@ class CareerController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v1//careers",
+     *     path="/api/v1/careers",
      *     tags={"Careers"},
      *     summary="Crear una nueva carrera",
      *     @OA\RequestBody(
@@ -140,7 +140,7 @@ class CareerController extends Controller
 
     /**
      * @OA\Patch(
-     *     path="/api/v1//careers/{id}",
+     *     path="/api/v1/careers/{id}",
      *     tags={"Careers"},
      *     summary="Actualizar una carrera existente",
      *     @OA\Parameter(
@@ -205,9 +205,9 @@ class CareerController extends Controller
      *     )
      * )
      */
-    public function destroy(int $careerId)
+    public function destroy(int $id)
     {
-        $this->service->deleteCareer($careerId);
+        $this->service->deleteCareer($id);
 
         return response()->json([
             'success' => true,

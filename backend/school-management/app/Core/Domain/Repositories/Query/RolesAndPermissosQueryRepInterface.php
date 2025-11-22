@@ -13,5 +13,5 @@ interface RolesAndPermissosQueryRepInterface
     public function findRoleByName(string $name): ?Role;
     public function findAllRoles(): array;
     public function findPermissionById(int $id):?Permission;
-    public function findPermissionsApplicableByUsers(array $curps): array;
+    public function findPermissionsApplicableByUsers(?string $role, ?array $curps): array;
 }
