@@ -746,19 +746,19 @@ class AdminController extends Controller
      *     tags={"Admin"},
      *     security={{"bearerAuth": {}}},
      *
-     *      @OA\Parameter(
-     *         name="forceRefresh",
-     *         in="query",
-     *         description="Forzar actualización del caché (true o false).",
-     *         required=false,
-     *         @OA\Schema(type="boolean", example=false)
-     *     ),
+     *
      *     @OA\Parameter(
-     *         name="roleName",
+     *         name="curps",
      *         in="query",
-     *         description="Nombre del role al que pertenecen los permisos",
+     *         description="Curps de los usuarios",
      *         required=true,
-     *         @OA\Schema(type="string", default="student")
+     *         @OA\Schema(
+     *           type="array",
+     *           @OA\Items(
+     *               type="string",
+     *               example="GAAA900101HDFRRN05"
+     *           )
+     *       )
      *     ),
      *
      *     @OA\Response(
@@ -773,10 +773,29 @@ class AdminController extends Controller
      *                 @OA\Property(
      *                     property="permissions",
      *                     allOf={
-     *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+     *                         @OA\Schema(ref="#/components/schemas/PermissionsByUsers"),
+     *                          @OA\Schema(
+     *                             @OA\Property(
+     *                                 property="role",
+     *                                 type="string",
+     *                                 example="student"
+     *                             )
+     *                         ),
      *                         @OA\Schema(
      *                             @OA\Property(
-     *                                 property="items",
+     *                                 property="users",
+     *                                 type="array",
+     *                                 @OA\Items(
+     *                                      type="object",
+     *                                      @OA\Property(property="id", type="integer", example=1),
+     *                                      @OA\Property(property="fullName", type="string", example="Ana García"),
+     *                                      @OA\Property(property="curp", type="string", example="GAAA900101HDFRRN05")
+     *                                  )
+     *                             )
+     *                         ),
+     *                         @OA\Schema(
+     *                             @OA\Property(
+     *                                 property="permissions",
      *                                 type="array",
      *                                 @OA\Items(ref="#/components/schemas/Permission")
      *                             )
@@ -790,15 +809,14 @@ class AdminController extends Controller
      */
     public function findAllPermissions(Request $request)
     {
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-        $roleName = $request->query('role_name', 'student');
-        if (!$roleName) {
+        $curps = $request->query('curps', []);
+        if (empty($curps)) {
             return response()->json([
                 'success' => false,
-                'message' => 'El nombre del rol es requerido.'
+                'message' => 'No hay ningun usuario agregado.'
             ], 400);
         }
-        $permissions= $this->service->findAllPermissions($roleName,$forceRefresh);
+        $permissions= $this->service->findAllPermissions($curps);
         return response()->json([
             'success' => true,
             'data' =>['permissions'=> $permissions],

@@ -7,6 +7,7 @@ use App\Core\Application\DTO\Response\General\DashboardDataResponse;
 use App\Core\Application\DTO\Response\General\DashboardDataUserResponse;
 use App\Core\Application\DTO\Response\General\LoginResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\General\StripePaymentsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -69,6 +70,15 @@ class GeneralMapper{
             completed:$realizados ?? null,
             pending:$pendientes ?? null,
             overdue:$vencidos ?? null
+        );
+    }
+
+    public static function toPermissionsByUsers(array $data): PermissionsByUsers
+    {
+        return new PermissionsByUsers(
+            role: $data['role'],
+            users: $data['users'],
+            permissions: $data['permissions']
         );
     }
 }

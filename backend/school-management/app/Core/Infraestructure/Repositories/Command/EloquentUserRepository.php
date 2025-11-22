@@ -187,21 +187,37 @@ class EloquentUserRepository implements UserRepInterface{
         if ($users->isEmpty()) {
             return [];
         }
-        $permissionsToAddIds=[];
-        $permissionsToRemoveIds=[];
-        if(!empty($dto->permissionsToAdd)){
-            $permissionsToAddIds = Permission::whereIn('name', $dto->permissionsToAdd)->pluck('id')->toArray();
-        }
-        if(!empty($dto->permissionsToRemove))
-        {
-            $permissionsToRemoveIds = Permission::whereIn('name', $dto->permissionsToRemove)->pluck('id')->toArray();
-        }
-        if (empty($permissionsToAddIds) && empty($permissionsToRemoveIds)) {
-            return [];
-        }
 
-        DB::transaction(function () use ($users, $permissionsToAddIds, $permissionsToRemoveIds) {
-            $userIds = $users->pluck('id')->toArray();
+        $usersGroupedByRole = $users->flatMap(function($user) {
+            return $user->roles->map(fn($role) => ['role' => $role->name, 'user' => $user]);
+        })->groupBy('role')
+        ->map(fn($items) => $items->pluck('user'));
+
+
+        DB::transaction(function () use ($usersGroupedByRole, $dto) {
+            foreach ($usersGroupedByRole as $role => $usersOfRole) {
+
+            $userIds = $usersOfRole->pluck('id')->toArray();
+            $permissionsToAddIds = !empty($dto->permissionsToAdd)
+                ? Permission::whereIn('name', $dto->permissionsToAdd)
+                    ->where(function($q) use ($role) {
+                        $q->where('belongs_to', $role)
+                          ->orWhere('belongs_to', 'global');
+                    })
+                    ->pluck('id')
+                    ->toArray()
+                : [];
+
+            $permissionsToRemoveIds = !empty($dto->permissionsToRemove)
+                ? Permission::whereIn('name', $dto->permissionsToRemove)
+                    ->where(function($q) use ($role) {
+                        $q->where('belongs_to', $role)
+                          ->orWhere('belongs_to', 'global');
+                    })
+                    ->pluck('id')
+                    ->toArray()
+                : [];
+
             if (!empty($permissionsToRemoveIds)) {
                 DB::table('model_has_permissions')
                     ->whereIn('model_id', $userIds)
@@ -211,18 +227,14 @@ class EloquentUserRepository implements UserRepInterface{
             }
 
             if (!empty($permissionsToAddIds)) {
-                $rows = [];
-                foreach ($userIds as $userId) {
-                    foreach ($permissionsToAddIds as $permissionId) {
-                        $rows[] = [
-                            'permission_id' => $permissionId,
-                            'model_type' => EloquentUser::class,
-                            'model_id' => $userId,
-                        ];
-                    }
-                }
+                $rows = collect($userIds)->crossJoin($permissionsToAddIds)->map(fn($pair) => [
+                    'model_id' => $pair[0],
+                    'permission_id' => $pair[1],
+                    'model_type' => EloquentUser::class,
+                ])->toArray();
 
-            DB::table('model_has_permissions')->insertOrIgnore($rows);
+                DB::table('model_has_permissions')->insertOrIgnore($rows);
+            }
         }
 
     });

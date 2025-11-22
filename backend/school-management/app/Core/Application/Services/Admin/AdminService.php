@@ -7,6 +7,7 @@ use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Application\Traits\HasCache;
@@ -31,7 +32,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 class AdminService
 {
     use HasCache;
-
+    private array $requestCache = [];
     private string $prefix = 'admin';
     public function __construct(
         private AttachStudentDetailUserCase $attach,
@@ -109,10 +110,16 @@ class AdminService
         return $users;
     }
 
-    public function findAllPermissions(string $roleName, bool $forceRefresh = false): array
+    public function findAllPermissions(array $curps): PermissionsByUsers
     {
-        $key = "$this->prefix:permissions:role:$roleName";
-        return $this->cache($key, $forceRefresh, fn() => $this->permissions->execute($roleName));
+        $key = implode(',', $curps);
+        if (isset($this->requestCache[$key])) {
+            return $this->requestCache[$key];
+        }
+        $permissions = $this->permissions->execute($curps);
+        $this->requestCache[$key] = $permissions;
+
+        return $permissions;
     }
 
     public function findAllRoles(bool $forceRefresh): array
