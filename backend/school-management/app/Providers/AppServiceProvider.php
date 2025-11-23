@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Core\Domain\Repositories\Command\AccessTokenRepInterface;
 use App\Core\Domain\Repositories\Command\CareerRepInterface;
 use App\Core\Domain\Repositories\Command\DBRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
+use App\Core\Domain\Repositories\Command\RolesAndPermissionsRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Command\StudentDetailReInterface;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
@@ -18,9 +20,11 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
+use App\Core\Infraestructure\Repositories\Command\EloquentAccessTokenRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentCareerRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentDBRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentRefreshTokenRepository;
+use App\Core\Infraestructure\Repositories\Command\EloquentRolesAndPermissionsRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentStudentDetailRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentUserRepository;
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentConceptRepository;
@@ -60,6 +64,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(CareerQueryRepInterface::class, EloquentCareerQueryRepository::class);
         $this->app->bind(StudentDetailReInterface::class,EloquentStudentDetailRepository::class);
         $this->app->bind(RefreshTokenRepInterface::class,EloquentRefreshTokenRepository::class);
+        $this->app->bind(AccessTokenRepInterface::class, EloquentAccessTokenRepository::class);
+        $this->app->bind(RolesAndPermissionsRepInterface::class, EloquentRolesAndPermissionsRepository::class);
         $this->app->bind(DBRepInterface::class, EloquentDBRepository::class);
         $this->app->singleton(CacheService::class, function () {return new CacheService();});
         $this->app->bind(RolesAndPermissosQueryRepInterface::class,EloquentRolesAndPermissionQueryRepository::class);
