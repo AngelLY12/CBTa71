@@ -8,7 +8,6 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
 use Illuminate\Support\Facades\DB;
-use Stripe\Stripe;
 
 class PaymentMethodAttachedUseCase
 {
@@ -19,7 +18,6 @@ class PaymentMethodAttachedUseCase
         private CacheService $service
 
     ) {
-        Stripe::setApiKey(config('services.stripe.secret'));
 
     }
     public function execute($obj){

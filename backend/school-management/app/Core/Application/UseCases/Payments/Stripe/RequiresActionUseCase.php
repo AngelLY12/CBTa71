@@ -5,13 +5,11 @@ namespace App\Core\Application\UseCases\Payments\Stripe;
 use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\RequiresActionMail;
-use Stripe\Stripe;
 
 class RequiresActionUseCase
 {
@@ -21,8 +19,6 @@ class RequiresActionUseCase
         private PaymentRepInterface $paymentRepo
 
     ) {
-        Stripe::setApiKey(config('services.stripe.secret'));
-
     }
     public function execute($obj){
         $user = $this->userRepo->getUserByStripeCustomer($obj->customer);

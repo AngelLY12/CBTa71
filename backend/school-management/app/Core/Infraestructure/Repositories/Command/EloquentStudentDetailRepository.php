@@ -15,4 +15,5 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
         $eloquentStudentDetails = EloquentStudentDetail::where('user_id',$user->id);
         return $eloquentStudentDetails ? StudentDetailMapper::toDomain($eloquentStudentDetails): null;
     }
+
 }

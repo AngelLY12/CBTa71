@@ -3,7 +3,6 @@
 namespace App\Core\Infraestructure\Repositories\Query\Payments;
 
 use App\Core\Domain\Entities\PaymentMethod;
-use App\Core\Domain\Entities\User;
 use App\Models\PaymentMethod as EloquentPaymentMethod;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Infraestructure\Mappers\PaymentMethodMapper;

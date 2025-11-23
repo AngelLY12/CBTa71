@@ -4,11 +4,8 @@ namespace App\Core\Application\UseCases\Payments\Student\PendingPayment;
 
 use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;

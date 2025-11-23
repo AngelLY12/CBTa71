@@ -5,8 +5,6 @@ namespace App\Core\Infraestructure\Repositories\Query\Payments;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Application\Mappers\PaymentMapper as MappersPaymentMapper;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Entities\PaymentMethod;
-use App\Core\Domain\Entities\User;
 use App\Core\Infraestructure\Mappers\PaymentMapper;
 use App\Models\Payment as EloquentPayment;
 use Generator;

@@ -2,7 +2,6 @@
 
 namespace App\Core\Application\UseCases\Career;
 
-use App\Core\Domain\Entities\Career;
 use App\Core\Domain\Repositories\Command\CareerRepInterface;
 
 class DeleteCareerUseCase

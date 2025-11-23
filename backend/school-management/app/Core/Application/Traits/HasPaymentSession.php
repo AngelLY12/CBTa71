@@ -4,7 +4,6 @@ namespace App\Core\Application\Traits;
 
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Jobs\SendMailJob;

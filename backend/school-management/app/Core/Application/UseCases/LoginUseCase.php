@@ -11,7 +11,6 @@ use App\Core\Infraestructure\Repositories\Command\Stripe\StripeGateway;
 use App\Exceptions\InvalidCredentialsException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class LoginUseCase
 {

@@ -6,8 +6,6 @@ use App\Core\Application\DTO\Response\Payment\PaymentValidateResponse;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Mappers\PaymentMapper;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
-use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;

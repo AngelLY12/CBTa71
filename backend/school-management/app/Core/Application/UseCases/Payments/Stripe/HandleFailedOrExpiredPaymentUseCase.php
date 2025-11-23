@@ -9,7 +9,6 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentFailedMail;
-use Stripe\Stripe;
 
 class HandleFailedOrExpiredPaymentUseCase
 {
@@ -18,7 +17,6 @@ class HandleFailedOrExpiredPaymentUseCase
         private PaymentRepInterface $paymentRepo,
         private PaymentQueryRepInterface $pqRepo,
     ) {
-        Stripe::setApiKey(config('services.stripe.secret'));
 
     }
     public function execute($obj, string $eventType)

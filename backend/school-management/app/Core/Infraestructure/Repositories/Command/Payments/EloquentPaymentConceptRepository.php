@@ -3,6 +3,7 @@ namespace App\Core\Infraestructure\Repositories\Command\Payments;
 
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Domain\Entities\PaymentConcept;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper;
 use App\Models\PaymentConcept as EloquentPaymentConcept;
@@ -32,26 +33,26 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         return $this->update($concept->id, [
             'end_date' => now(),
-            'status'   => 'finalizado',
+            'status'   => PaymentConceptStatus::FINALIZADO,
         ]);
     }
 
     public function activate(PaymentConcept $concept): PaymentConcept
     {
         return $this->update($concept->id,[
-            'status'   => 'activo',
+            'status'   => PaymentConceptStatus::ACTIVO,
             'end_date' => null,
         ]);
     }
 
     public function disable(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept->id, ['status' => 'desactivado']);
+        return $this->update($concept->id, ['status' => PaymentConceptStatus::DESACTIVADO]);
     }
 
     public function deleteLogical(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept->id, ['status' => 'eliminado']);
+        return $this->update($concept->id, ['status' => PaymentConceptStatus::ELIMINADO]);
     }
 
     public function delete(int $conceptId): void

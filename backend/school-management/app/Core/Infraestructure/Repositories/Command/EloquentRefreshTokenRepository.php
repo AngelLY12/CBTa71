@@ -3,8 +3,6 @@
 namespace App\Core\Infraestructure\Repositories\Command;
 
 use App\Core\Domain\Entities\RefreshToken as EntitiesRefreshToken;
-use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Command\RefreshToken;
 use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
 use App\Core\Infraestructure\Mappers\RefreshTokenMapper;
 use App\Models\RefreshToken as ModelsRefreshToken;
@@ -23,13 +21,6 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
             throw new ModelNotFoundException('El token no fue encontrado');
         }
 
-        return RefreshTokenMapper::toDomain($eloquent);
-    }
-    public function create(int $userId, string $token, int $days = 7): EntitiesRefreshToken
-    {
-        $eloquent = ModelsRefreshToken::create(
-            RefreshTokenMapper::toPersistence($userId, $token, $days)
-        );
         return RefreshTokenMapper::toDomain($eloquent);
     }
 

@@ -2,11 +2,8 @@
 
 namespace App\Core\Infraestructure\Mappers;
 
-use App\Core\Application\DTO\PaymentMethod\DisplayPaymentMethodDTO;
-use App\Core\Application\DTO\PaymentMethod\SetupCardDTO;
 use App\Models\PaymentMethod;
 use App\Core\Domain\Entities\PaymentMethod as DomainPaymentMethod;
-use Stripe\Checkout\Session;
 
 class PaymentMethodMapper{
 

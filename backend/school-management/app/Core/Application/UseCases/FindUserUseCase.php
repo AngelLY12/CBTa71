@@ -4,12 +4,7 @@ namespace App\Core\Application\UseCases;
 
 use App\Core\Application\Traits\HasCache;
 use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Command\StudentDetailReInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
-use App\Core\Infraestructure\Cache\CacheService;
-use App\Exceptions\NotFound\RoleNotFoundException;
-use App\Exceptions\NotFound\StudentsDetailNotFoundException;
 use App\Exceptions\NotFound\UserNotFoundException;
 
 class FindUserUseCase

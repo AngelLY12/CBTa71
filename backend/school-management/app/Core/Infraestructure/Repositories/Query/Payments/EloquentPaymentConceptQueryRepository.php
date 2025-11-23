@@ -4,12 +4,11 @@ namespace App\Core\Infraestructure\Repositories\Query\Payments;
 
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
 use App\Core\Application\Mappers\PaymentConceptMapper as MappersPaymentConceptMapper;
-use App\Core\Application\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Entities\User;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper;
-use App\Core\Infraestructure\Repositories\Traits\HasPendingQuery;
+use App\Core\Infraestructure\Traits\HasPendingQuery;
 use App\Models\PaymentConcept as EloquentPaymentConcept;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;

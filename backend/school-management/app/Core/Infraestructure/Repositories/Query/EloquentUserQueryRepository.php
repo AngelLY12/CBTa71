@@ -9,12 +9,10 @@ use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
-use App\Core\Infraestructure\Repositories\Traits\HasPendingQuery;
+use App\Core\Infraestructure\Traits\HasPendingQuery;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class EloquentUserQueryRepository implements UserQueryRepInterface
 {

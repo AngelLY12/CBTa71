@@ -3,10 +3,6 @@
 namespace App\Core\Infraestructure\Mappers;
 
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
-use App\Core\Application\DTO\User\UserDataDTO;
-use App\Core\Application\DTO\User\UserPaymentDTO;
-use App\Core\Application\DTO\User\UserRecipientDTO;
-use App\Core\Application\DTO\User\UserWithStudentDetail;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
 use Carbon\Carbon;

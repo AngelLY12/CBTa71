@@ -4,7 +4,6 @@ namespace App\Core\Application\UseCases;
 
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\Mappers\MailMapper;
-use App\Core\Application\Mappers\UserMapper;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Utils\Validators\UserValidator;

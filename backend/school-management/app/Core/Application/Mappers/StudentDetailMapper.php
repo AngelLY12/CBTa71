@@ -3,8 +3,6 @@
 namespace App\Core\Application\Mappers;
 
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
-use App\Core\Domain\Entities\StudentDetail as DomainStudentDetail;
-use App\Models\StudentDetail;
 
 class StudentDetailMapper{
 

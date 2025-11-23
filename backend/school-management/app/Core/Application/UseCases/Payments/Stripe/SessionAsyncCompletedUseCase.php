@@ -4,7 +4,6 @@ namespace App\Core\Application\UseCases\Payments\Stripe;
 
 use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Application\Traits\HasPaymentSession;
-use Stripe\Stripe;
 
 class SessionAsyncCompletedUseCase
 {

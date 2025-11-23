@@ -3,12 +3,8 @@
 namespace App\Core\Application\Services\Payments\Staff;
 
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
-use App\Core\Application\Mappers\GeneralMapper;
-use App\Core\Application\Mappers\PaymentMapper;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Payments\Staff\Payments\ShowAllPaymentUseCase;
-use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
-use App\Core\Infraestructure\Cache\CacheService;
 
 class PaymentsService{
     use HasCache;

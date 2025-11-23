@@ -2,7 +2,6 @@
 
 namespace App\Core\Application\UseCases;
 
-use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 
 class UpdateUserUseCase

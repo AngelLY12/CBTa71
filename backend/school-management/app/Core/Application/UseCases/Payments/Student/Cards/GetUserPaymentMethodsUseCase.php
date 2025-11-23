@@ -3,8 +3,6 @@
 namespace App\Core\Application\UseCases\Payments\Student\Cards;
 
 use App\Core\Application\Mappers\PaymentMethodMapper;
-use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 
 class GetUserPaymentMethodsUseCase

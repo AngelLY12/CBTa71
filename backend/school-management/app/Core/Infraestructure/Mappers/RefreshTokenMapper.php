@@ -3,9 +3,7 @@
 namespace App\Core\Infraestructure\Mappers;
 
 use App\Core\Domain\Entities\RefreshToken as DomainRefreshToken;
-use App\Core\Domain\Entities\User;
 use App\Models\RefreshToken;
-use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 
 class RefreshTokenMapper

@@ -2,7 +2,6 @@
 
 namespace App\Core\Application\UseCases\Payments\Student\Dashboard;
 
-use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 

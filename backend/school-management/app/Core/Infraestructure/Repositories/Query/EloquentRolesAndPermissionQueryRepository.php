@@ -6,9 +6,7 @@ use App\Core\Domain\Entities\Permission as EntitiesPermission;
 use App\Core\Domain\Entities\Role as EntitiesRole;
 use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
 use App\Core\Infraestructure\Mappers\RolesAndPermissionMapper;
-use App\Exceptions\ValidationException;
 use App\Models\User;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 

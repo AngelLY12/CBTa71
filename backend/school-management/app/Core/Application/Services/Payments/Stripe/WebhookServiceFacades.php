@@ -7,7 +7,6 @@ use App\Core\Application\UseCases\Payments\Stripe\PaymentMethodAttachedUseCase;
 use App\Core\Application\UseCases\Payments\Stripe\RequiresActionUseCase;
 use App\Core\Application\UseCases\Payments\Stripe\SessionAsyncCompletedUseCase;
 use App\Core\Application\UseCases\Payments\Stripe\SessionCompletedUseCase;
-use Stripe\Stripe;
 
 class WebhookServiceFacades{
 
@@ -18,7 +17,6 @@ class WebhookServiceFacades{
        private RequiresActionUseCase $requires,
        private HandleFailedOrExpiredPaymentUseCase $handle
     ) {
-        Stripe::setApiKey(config('services.stripe.secret'));
 
     }
 

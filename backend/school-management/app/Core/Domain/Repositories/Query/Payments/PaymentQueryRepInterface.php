@@ -2,10 +2,7 @@
 
 namespace App\Core\Domain\Repositories\Query\Payments;
 
-use App\Core\Application\DTO\Request\Mail\PaymentCreatedEmailDTO;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Entities\PaymentMethod;
-use App\Core\Domain\Entities\User;
 use Generator;
 use Illuminate\Pagination\LengthAwarePaginator;
 

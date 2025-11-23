@@ -2,17 +2,17 @@
 
 namespace App\Core\Application\UseCases\Jobs;
 
-use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Command\AccessTokenRepInterface;
 
 class CleanExpiredAccessTokensUseCase
 {
     public function __construct(
-    private UserRepInterface $userRepo)
+    private AccessTokenRepInterface $repo)
     {
     }
     public function execute():int
     {
-        $sanctum=$this->userRepo->deletionInvalidTokens();
+        $sanctum=$this->repo->deletionInvalidTokens();
         return $sanctum;
     }
 }

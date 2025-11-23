@@ -2,15 +2,6 @@
 
 namespace App\Core\Infraestructure\Mappers;
 
-use App\Core\Application\DTO\Payment\PaymentCreatedEmailDTO;
-use App\Core\Application\DTO\Payment\PaymentDataDTO;
-use App\Core\Application\DTO\Payment\PaymentDetailDTO;
-use App\Core\Application\DTO\Payment\PaymentDTO;
-use App\Core\Application\DTO\Payment\PaymentHistoryDTO;
-use App\Core\Application\DTO\Payment\PaymentListItemDTO;
-use App\Core\Application\DTO\Payment\PaymentValidateDTO;
-use App\Core\Application\DTO\Payment\PaymentWithConceptDTO;
-use App\Core\Application\DTO\User\UserDataDTO;
 use App\Models\Payment;
 use App\Core\Domain\Entities\Payment as DomainPayment;
 

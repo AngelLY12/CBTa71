@@ -14,7 +14,6 @@ use App\Core\Application\DTO\Response\User\UserWithPendingSumamaryResponse;
 use App\Core\Application\DTO\Response\User\UserWithStudentDetailResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedPermissionsResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
-use App\Core\Domain\Entities\PaymentConcept;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
 use App\Core\Domain\Enum\User\UserBloodType;

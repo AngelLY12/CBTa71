@@ -1,7 +1,6 @@
 <?php
 
-namespace App\Core\Infraestructure\Repositories\Traits;
-
+namespace App\Core\Infraestructure\Traits;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
