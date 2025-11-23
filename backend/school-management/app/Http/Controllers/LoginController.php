@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Application\Mappers\UserMapper;
 use App\Core\Application\Services\LoginService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 
 /**
  * @OA\Tag(
  *     name="Auth",
- *     description="Endpoints relacionados con la autenticación de usuarios"
+ *     description="Endpoints relacionados con la autenticación de usuarios, tokens de acceso, contraseñas y verificación"
  * )
  */
 class LoginController extends Controller
@@ -79,45 +79,9 @@ class LoginController extends Controller
      *     )
      * )
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $data = $request->only([
-            'name',
-            'last_name',
-            'email',
-            'password',
-            'phone_number',
-            'birthdate',
-            'gender',
-            'curp',
-            'address',
-            'blood_type',
-            'registration_date',
-            'status'
-        ]);
-        $rules = [
-            'name' => 'required|string',
-            'last_name'  => 'required|string',
-            'email'  => 'required|email',
-            'password'  => 'required',
-            'phone_number'  => 'required|string',
-            'birthdate' => 'sometimes|required|date',
-            'gender' => 'sometimes|required|string',
-            'curp' => 'required|string',
-            'address' => 'sometimes|required|array',
-            'blood_type' => 'sometimes|required|string',
-            'registration_date' => 'sometimes|required|date',
-            'status' => 'required|string'
-        ];
-
-        $validator = Validator::make($data,$rules);
-        if($validator->fails()){
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-                'message' => 'Error en la validación de datos.'
-            ], 422);
-        }
+        $data = $request->validated();
 
         $createUser = UserMapper::toCreateUserDTO($data);
 
@@ -198,26 +162,10 @@ class LoginController extends Controller
      *     )
      * )
      */
-    public function login(Request $request){
+    public function login(LoginRequest $request){
 
-        $data = $request->only([
-            'email',
-            'password'
-        ]);
-        $rules = [
-            'email'=>'required|email',
-            'password'=>'required'
-        ];
-
-        $validator = Validator::make($data,$rules);
-        if($validator->fails()){
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-                'message' => 'Error en la validación de datos.'
-            ], 422);
-
-        }
+        $request->authenticate();
+        $data = $request->validated();
         $loginRequest = GeneralMapper::toLoginDTO($data);
 
         $userToken = $this->loginService->login($loginRequest);
@@ -227,6 +175,5 @@ class LoginController extends Controller
             'data' => ['user_tokens'=>$userToken],
             'message' => 'Inicio de sesión exitoso.',
         ]);
-
    }
 }

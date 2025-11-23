@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Http\Requests\Payments\Staff;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class ValidatePaymentRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'search'=> ['required', 'string'],
+            'payment_intent_id' => ['required', 'string'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'search.required'            => 'El campo search es obligatorio.',
+            'search.string'              => 'El campo search debe ser una cadena de texto.',
+            'payment_intent_id.required' => 'El campo payment_intent_id es obligatorio.',
+            'payment_intent_id.string'   => 'El campo payment_intent_id debe ser una cadena de texto.',
+        ];
+    }
+}

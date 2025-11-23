@@ -15,10 +15,34 @@ use Illuminate\Validation\ValidationException;
 class NewPasswordController extends Controller
 {
     /**
-     * Handle an incoming new password request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
+    * Handle an incoming new password request.
+    *
+    * @throws \Illuminate\Validation\ValidationException
+    *
+    * @OA\Post(
+    *     path="/api/reset-password",
+    *     tags={"Auth"},
+    *     summary="Actualizar contraseña usando token",
+    *     description="Permite que un usuario actualice su contraseña usando el token enviado por correo.",
+    *     operationId="resetPassword",
+    *     @OA\RequestBody(
+    *         required=true,
+    *         @OA\JsonContent(
+    *             required={"token","email","password","password_confirmation"},
+    *             @OA\Property(property="token", type="string", example="token_generado_por_correo"),
+    *             @OA\Property(property="email", type="string", format="email", example="usuario@mail.com"),
+    *             @OA\Property(property="password", type="string", format="password", example="nuevaContrasena123"),
+    *             @OA\Property(property="password_confirmation", type="string", format="password", example="nuevaContrasena123")
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response=200,
+    *         description="Contraseña actualizada correctamente",
+    *         @OA\JsonContent(@OA\Property(property="status", type="string", example="passwords.reset"))
+    *     ),
+    *     @OA\Response(response=422, description="Validación fallida o token inválido")
+    * )
+    */
     public function store(Request $request): JsonResponse
     {
         $request->validate([

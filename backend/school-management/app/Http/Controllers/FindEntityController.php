@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Core\Application\Services\FindEntityService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\General\ForceRefreshRequest;
 
 /**
  * @OA\Tag(
@@ -164,9 +163,9 @@ class FindEntityController extends Controller
      *     @OA\Response(response=500, description="Error inesperado")
      * )
      */
-    public function findUser(Request $request)
+    public function findUser(ForceRefreshRequest $request)
     {
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $user=$this->service->findUser($forceRefresh);
         return response()->json([
             'success' => true,

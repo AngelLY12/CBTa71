@@ -6,12 +6,6 @@ use App\Core\Application\Services\RefreshTokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * @OA\Tag(
- *     name="Auth",
- *     description="Endpoints de autenticación: renovación y cierre de sesión"
- * )
- */
 class RefreshTokenController extends Controller
 {
     private RefreshTokenService $service;

@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Core\Application\Mappers\CareerMapper;
 use App\Core\Application\Services\CareerServiceFacades;
-use App\Core\Infraestructure\Mappers\CareerMapper as MappersCareerMapper;
-use App\Models\Career;
-use Illuminate\Http\Request;
+use App\Http\Requests\Career\CreateCareerRequest;
+use App\Http\Requests\Career\UpdateCareerRequest;
+use App\Http\Requests\General\ForceRefreshRequest;
 
 /**
  * @OA\Tag(
@@ -45,9 +45,9 @@ class CareerController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(ForceRefreshRequest $request)
     {
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $careers=$this->service->findAllCareers($forceRefresh);
         return response()->json([
             'success' => true,
@@ -88,9 +88,9 @@ class CareerController extends Controller
      *     )
      * )
      */
-    public function show(Request $request,int $id)
+    public function show(ForceRefreshRequest $request,int $id)
     {
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $career = $this->service->findById($id, $forceRefresh);
         return response()->json([
             'success' => true,
@@ -122,13 +122,9 @@ class CareerController extends Controller
      *     )
      * )
      */
-    public function store(Request $request)
+    public function store(CreateCareerRequest $request)
     {
-        $validated = $request->validate([
-            'career_name' => 'required|string|max:50',
-        ]);
-
-        $career = CareerMapper::toDomain($validated);
+        $career = CareerMapper::toDomain($request->validated());
 
         $created = $this->service->createCareer($career);
         return response()->json([
@@ -169,12 +165,9 @@ class CareerController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, int $id)
+    public function update(UpdateCareerRequest $request, int $id)
     {
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:50',
-        ]);
-        $updated = $this->service->updateCareer($id, $validated);
+        $updated = $this->service->updateCareer($id, $request->validated());
 
         return response()->json([
             'success' => true,

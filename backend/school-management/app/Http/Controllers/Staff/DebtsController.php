@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Staff;
 
 use App\Core\Application\Services\Payments\Staff\DebtsServiceFacades;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Payments\Staff\GetStripePaymentsRequest;
+use App\Http\Requests\Payments\Staff\PaginationWithSearchRequest;
+use App\Http\Requests\Payments\Staff\ValidatePaymentRequest;
 
 /**
  * @OA\Tag(
@@ -84,12 +86,12 @@ class DebtsController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(PaginationWithSearchRequest $request)
     {
-        $search = $request->query('search', null);
-        $perPage = $request->query('perPage', 15);
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-        $page = $request->query('page', 1);
+        $search = $request->validated()['search'] ?? null;
+        $perPage = $request->validated()['perPage'] ?? 15;
+        $page = $request->validated()['page'] ?? 1;
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $pendingPayments = $this->debtsService->showAllpendingPayments($search, $perPage, $page, $forceRefresh);
 
         return response()->json([
@@ -144,21 +146,18 @@ class DebtsController extends Controller
      *     )
      * )
      */
-   public function validatePayment(Request $request)
+   public function validatePayment(ValidatePaymentRequest $request)
     {
-        $request->validate([
-            'search' => 'required|string',
-            'payment_intent_id' => 'required|string',
-        ]);
+        $data = $request->validated();
 
-        $data = $this->debtsService->validatePayment(
-            $request->input('search'),
-            $request->input('payment_intent_id')
+        $validatedPayment = $this->debtsService->validatePayment(
+            $data['search'],
+            $data['payment_intent_id']
         );
 
         return response()->json([
             'success' => true,
-            'data' => ['validated_payment'=>$data],
+            'data' => ['validated_payment'=>$validatedPayment],
             'message' => 'Pago validado correctamente.'
         ]);
     }
@@ -222,17 +221,15 @@ class DebtsController extends Controller
      *     )
      * )
      */
-    public function getStripePayments(Request $request)
+    public function getStripePayments(GetStripePaymentsRequest $request)
     {
-        $request->validate([
-            'search' => 'required|string',
-            'year' => 'nullable|integer',
-        ]);
-        $search=$request->query('search');
-        $year=$request->integer('year',null);
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $data = $request->validated();
 
-        $payments = $this->debtsService->getPaymentsFromStripe($search, $year, $forceRefresh);
+        $payments = $this->debtsService->getPaymentsFromStripe(
+            $data['search'],
+            $data['year'] ?? null,
+            $data['forceRefresh'] ?? false
+        );
 
         return response()->json([
             'success' => true,

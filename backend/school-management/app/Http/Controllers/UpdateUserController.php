@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Core\Application\Services\UpdateUserServiceFacades;
-use App\Core\Infraestructure\Mappers\UserMapper;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\User\UpdatePasswordRequest;
+use App\Http\Requests\User\UpdateUserRequest;
 
 
 /**
@@ -50,37 +48,9 @@ class UpdateUserController extends Controller
      *     )
      * )
      */
-    public function update(Request $request, int $userId)
+    public function update(UpdateUserRequest $request, int $userId)
     {
-        $data = $request->only([
-            'name',
-            'last_name',
-            'email',
-            'phone_number',
-            'birthdate',
-            'gender',
-            'address',
-            'blood_type',
-        ]);
-        $rules = [
-            'name' => 'required|string',
-            'last_name'  => 'required|string',
-            'email' => 'sometimes|email|unique:users,email,' . $userId,
-            'phone_number'  => 'required|string',
-            'birthdate' => 'sometimes|required|date',
-            'gender' => 'sometimes|required|string',
-            'address' => 'sometimes|required|array',
-            'blood_type' => 'sometimes|required|string',
-        ];
-
-        $validator = Validator::make($data,$rules);
-        if($validator->fails()){
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-                'message' => 'Error en la validación de datos.'
-            ], 422);
-        }
+        $data=$request->validated();
         $updated=$this->service->updateUser($userId,$data);
 
         return response()->json([
@@ -120,25 +90,15 @@ class UpdateUserController extends Controller
      *     )
      * )
      */
-    public function updatePassword(Request $request, int $userId)
+    public function updatePassword(UpdatePasswordRequest $request, int $userId)
     {
-        $data = $request->only([
-            'newPassword',
-            'currentPassword'
-        ]);
-        $rules=[
-            'newPassword' =>'required|string|min:8',
-            'currentPassword' => 'required|string|min:8'
-        ];
-        $validator = Validator::make($data,$rules);
-        if($validator->fails()){
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-                'message' => 'Error en la validación de datos.'
-            ], 422);
-        }
-        $updated = $this->service->updatePassword($userId,$data['currentPassword'], $data['newPassword']);
+        $data = $request->validated();
+
+        $updated = $this->service->updatePassword(
+            $userId,
+            $data['currentPassword'],
+            $data['newPassword']
+        );
 
         return response()->json([
             'success' => true,

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Students;
 
-use App\Core\Application\Services\Payments\Student\DashboardService;
 use App\Core\Application\Services\Payments\Student\DashboardServiceFacades;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Client\Request;
+use App\Http\Requests\General\ForceRefreshRequest;
+use App\Http\Requests\General\PaginationRequest;
 
 
 /**
@@ -70,17 +70,17 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(ForceRefreshRequest $request)
     {
-         $user = Auth::user();
-         $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $user = Auth::user();
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
 
-            $data = $this->dashboardService->getDashboardData(UserMapper::toDomain($user), $forceRefresh);
+        $data = $this->dashboardService->getDashboardData(UserMapper::toDomain($user), $forceRefresh);
 
-            return response()->json([
-                'success' => true,
-                'data' => ['statistics'=>$data]
-            ]);
+        return response()->json([
+            'success' => true,
+            'data' => ['statistics'=>$data]
+        ]);
     }
 
     /**
@@ -127,17 +127,17 @@ class DashboardController extends Controller
      * )
      */
 
-    public function pending(Request $request)
+    public function pending(ForceRefreshRequest $request)
     {
-         $user = Auth::user();
-         $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $user = Auth::user();
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
 
-            $data = $this->dashboardService->pendingPaymentAmount(UserMapper::toDomain($user), $forceRefresh);
+        $data = $this->dashboardService->pendingPaymentAmount(UserMapper::toDomain($user), $forceRefresh);
 
-            return response()->json([
-                'success' => true,
-                'data' => ['total_pending'=>$data]
-            ]);
+        return response()->json([
+            'success' => true,
+            'data' => ['total_pending'=>$data]
+        ]);
     }
 
     /**
@@ -168,17 +168,17 @@ class DashboardController extends Controller
      * )
      */
 
-    public function paid(Request $request)
+    public function paid(ForceRefreshRequest $request)
     {
         $user = Auth::user();
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
 
-            $data = $this->dashboardService->paymentsMade(UserMapper::toDomain($user), $forceRefresh);
+        $data = $this->dashboardService->paymentsMade(UserMapper::toDomain($user), $forceRefresh);
 
-            return response()->json([
-                'success' => true,
-                'paid' => ['total_paid'=>$data]
-            ]);
+        return response()->json([
+            'success' => true,
+            'paid' => ['total_paid'=>$data]
+        ]);
     }
 
     /**
@@ -208,17 +208,17 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function overdue(Request $request)
+    public function overdue(ForceRefreshRequest $request)
     {
         $user = Auth::user();
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
 
-            $data = $this->dashboardService->overduePayments(UserMapper::toDomain($user), $forceRefresh);
+        $data = $this->dashboardService->overduePayments(UserMapper::toDomain($user), $forceRefresh);
 
-            return response()->json([
-                'success' => true,
-                'overdue' => ['total_overdue'=>$data]
-            ]);
+        return response()->json([
+            'success' => true,
+            'overdue' => ['total_overdue'=>$data]
+        ]);
     }
     /**
      * @OA\Get(
@@ -288,20 +288,20 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function history(Request $request)
+    public function history(PaginationRequest $request)
     {
-         $user = Auth::user();
-         $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-         $perPage = $request->query('perPage', 15);
-         $page    = $request->query('page', 1);
-            $data = $this->dashboardService->paymentHistory(UserMapper::toDomain($user), $perPage, $page, $forceRefresh);
+        $user = Auth::user();
+        $forceRefresh = $request->boolean('forceRefresh');
+        $perPage = $request->integer('perPage', 15);
+        $page = $request->integer('page', 1);
+        $data = $this->dashboardService->paymentHistory(UserMapper::toDomain($user), $perPage, $page, $forceRefresh);
 
-            return response()->json([
-                'success' => true,
-                'data' => ['payment_history'=>$data],
-                'message' => empty($data)?'No hay pagos registrados en el historial':null
+        return response()->json([
+            'success' => true,
+            'data' => ['payment_history'=>$data],
+            'message' => empty($data)?'No hay pagos registrados en el historial':null
 
-            ]);
+        ]);
     }
 
     /**

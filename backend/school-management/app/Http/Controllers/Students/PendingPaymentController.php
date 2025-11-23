@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Students;
 
 use App\Core\Application\Services\Payments\Student\PendingPaymentServiceFacades;
 use App\Core\Infraestructure\Mappers\UserMapper;
-use App\Exceptions\ConceptNotFoundException;
-use App\Exceptions\StripeCheckoutSessionException;
 use App\Http\Controllers\Controller;
-use Http\Client\Exception\HttpException;
-use Illuminate\Http\Request;
+use App\Http\Requests\General\ForceRefreshRequest;
+use App\Http\Requests\Payments\Students\PayConceptRequest;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -83,10 +81,10 @@ class PendingPaymentController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(ForceRefreshRequest $request)
     {
         $user = Auth::user();
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $pending=$this->pendingPaymentService->showPendingPayments(UserMapper::toDomain($user), $forceRefresh);
         return response()->json([
             'success' => true,
@@ -150,10 +148,10 @@ class PendingPaymentController extends Controller
      *     )
      * )
      */
-    public function overdue(Request $request)
+    public function overdue(ForceRefreshRequest $request)
     {
         $user = Auth::user();
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $pending=$this->pendingPaymentService->showOverduePayments(UserMapper::toDomain($user), $forceRefresh);
         return response()->json([
             'success' => true,
@@ -226,13 +224,13 @@ class PendingPaymentController extends Controller
      *     )
      * )
      */
-    public function store(Request $request)
+    public function store(PayConceptRequest $request)
     {
-             $user = Auth::user();
-            $payment= $this->pendingPaymentService->payConcept(
-                    UserMapper::toDomain($user),
-                    $request->integer('concept_id')
-                );
+        $user = Auth::user();
+        $payment= $this->pendingPaymentService->payConcept(
+            UserMapper::toDomain($user),
+            $request->validated()['concept_id']
+        );
         return response()->json([
             'success'=>true,
             'data'=>['url_checkout'=>$payment],

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Core\Application\Services\Payments\Staff\PaymentsService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Payments\Staff\PaginationWithSearchRequest;
 
 /**
  * @OA\Tag(
@@ -100,12 +100,12 @@ class PaymentsController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(PaginationWithSearchRequest $request)
     {
-        $search = $request->query('search', null);
-        $perPage = $request->query('perPage', 15);
-        $page    = $request->query('page', 1);
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $search = $request->validated()['search'] ?? null;
+        $perPage = $request->validated()['perPage'] ?? 15;
+        $page = $request->validated()['page'] ?? 1;
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $payments = $this->paymentsService->showAllPayments($search, $perPage, $page, $forceRefresh);
 
         return response()->json([

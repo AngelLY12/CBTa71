@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Staff;
 
 use App\Core\Application\Services\Payments\Staff\DashboardServiceFacades;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Payments\Staff\AllConceptsRequest;
+use App\Http\Requests\Payments\Staff\DashboardRequest;
 
 /**
  * @OA\Tag(
@@ -72,11 +73,12 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function getData(Request $request)
+    public function getData(DashboardRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-        $data = $this->dashboardService->getData($onlyThisYear, $forceRefresh);
+        $data = $this->dashboardService->getData(
+            $request->validated()['only_this_year'] ?? false,
+            $request->validated()['forceRefresh'] ?? false
+        );
 
         return response()->json([
             'success' => true,
@@ -133,12 +135,10 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function pendingPayments(Request $request)
+    public function pendingPayments(DashboardRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-
-        $data = $this->dashboardService->pendingPaymentAmount($onlyThisYear, $forceRefresh);
+        $data = $this->dashboardService->pendingPaymentAmount($request->validated()['only_this_year'] ?? false,
+            $request->validated()['forceRefresh'] ?? false);
 
         return response()->json([
             'success' => true,
@@ -193,12 +193,10 @@ class DashboardController extends Controller
      * )
      */
 
-    public function allStudents(Request $request)
+    public function allStudents(DashboardRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-
-        $count = $this->dashboardService->getAllStudents($onlyThisYear, $forceRefresh);
+        $count = $this->dashboardService->getAllStudents($request->validated()['only_this_year'] ?? false,
+            $request->validated()['forceRefresh'] ?? false);
 
         return response()->json([
             'success' => true,
@@ -253,12 +251,10 @@ class DashboardController extends Controller
      * )
      */
 
-    public function paymentsMade(Request $request)
+    public function paymentsMade(DashboardRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-
-        $total = $this->dashboardService->paymentsMade($onlyThisYear, $forceRefresh);
+        $total = $this->dashboardService->paymentsMade($request->validated()['only_this_year'] ?? false,
+            $request->validated()['forceRefresh'] ?? false);
 
         return response()->json([
             'success' => true,
@@ -328,13 +324,16 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function allConcepts(Request $request)
+    public function allConcepts(AllConceptsRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
-        $perPage = $request->query('perPage', 15);
-        $page    = $request->query('page', 1);
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-        $concepts = $this->dashboardService->getAllConcepts($onlyThisYear, $perPage, $page, $forceRefresh);
+        $validated = $request->validated();
+
+        $concepts = $this->dashboardService->getAllConcepts(
+            $validated['only_this_year'] ?? false,
+            $validated['perPage'] ?? 15,
+            $validated['page'] ?? 1,
+            $validated['forceRefresh'] ?? false
+        );
 
         return response()->json([
             'success' => true,

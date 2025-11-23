@@ -5,10 +5,16 @@ namespace App\Http\Controllers;
 use App\Core\Application\Mappers\StudentDetailMapper;
 use App\Core\Application\Mappers\UserMapper;
 use App\Core\Application\Services\Admin\AdminService;
+use App\Http\Requests\Admin\AttachStudentRequest;
+use App\Http\Requests\Admin\ChangeUserStatusRequest;
+use App\Http\Requests\Admin\FindPermissionsRequest;
+use App\Http\Requests\Admin\RegisterUserRequest;
+use App\Http\Requests\Admin\UpdatePermissionsRequest;
+use App\Http\Requests\Admin\UpdateRolesRequest;
+use App\Http\Requests\General\ForceRefreshRequest;
+use App\Http\Requests\General\PaginationRequest;
 use App\Http\Requests\ImportUsersRequest;
 use App\Imports\UsersImport;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 
@@ -85,43 +91,9 @@ class AdminController extends Controller
      *     )
      * )
      */
-    public function registerUser(Request $request)
+    public function registerUser(RegisterUserRequest $request)
     {
-        $data = $request->only([
-            'name',
-            'last_name',
-            'email',
-            'phone_number',
-            'birthdate',
-            'gender',
-            'curp',
-            'address',
-            'blood_type',
-            'registration_date',
-            'status'
-        ]);
-        $rules = [
-            'name' => 'required|string',
-            'last_name'  => 'required|string',
-            'email'  => 'required|email',
-            'phone_number'  => 'required|string',
-            'birthdate' => 'sometimes|required|date',
-            'gender' => 'sometimes|required|string',
-            'curp' => 'required|string',
-            'address' => 'sometimes|required|array',
-            'blood_type' => 'sometimes|required|string',
-            'registration_date' => 'sometimes|required|date',
-            'status' => 'required|string'
-        ];
-
-        $validator = Validator::make($data,$rules);
-        if($validator->fails()){
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-                'message' => 'Error en la validación de datos.'
-            ], 422);
-        }
+        $data = $request->validated();
         $password= Str::random(12);
         $data['password'] = $password;
         $createUser = UserMapper::toCreateUserDTO($data);
@@ -201,35 +173,9 @@ class AdminController extends Controller
      * )
      */
 
-    public function attachStudent(Request $request)
+    public function attachStudent(AttachStudentRequest $request)
     {
-        $data= $request->only([
-            'user_id',
-            'career_id',
-            'n_control',
-            'semestre',
-            'group',
-            'workshop'
-        ]);
-
-        $rules = [
-            'user_id' => 'required|int',
-            'career_id' => 'required|int',
-            'n_control' => 'required|string',
-            'semestre' => 'required|int',
-            'group' => 'required|string',
-            'workshop' => 'required|string'
-        ];
-
-        $validator = Validator::make($data,$rules);
-        if($validator->fails()){
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-                'message' => 'Error en la validación de datos.'
-            ], 422);
-        }
-
+        $data= $request->validated();
         $attachUser = StudentDetailMapper::toCreateStudentDetailDTO($data);
 
         $user = $this->service->attachStudentDetail($attachUser);
@@ -371,41 +317,9 @@ class AdminController extends Controller
      *     )
      * )
      */
-    public function updatePermissions(Request $request)
+    public function updatePermissions(UpdatePermissionsRequest $request)
     {
-        $input = $request->only([
-            'curps',
-            'role',
-            'permissionsToAdd',
-            'permissionsToRemove'
-        ]);
-
-        $validated = validator($input, [
-            'curps' => ['array'],
-            'curps.*' => ['string', 'exists:users,curp'],
-            'role' => ['nullable', 'string', 'exists:roles,name'],
-            'permissionsToAdd' => ['array'],
-            'permissionsToAdd.*' => ['string', 'exists:permissions,name'],
-            'permissionsToRemove' => ['array'],
-            'permissionsToRemove.*' => ['string', 'exists:permissions,name'],
-        ])->validate();
-
-        $hasCurps = !empty($validated['curps'] ?? []);
-        $hasRole = !empty($validated['role'] ?? null);
-
-        if ($hasCurps && $hasRole) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No puedes especificar CURPs y rol al mismo tiempo.',
-            ], 422);
-        }
-
-        if (!$hasCurps && !$hasRole) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Debes proporcionar al menos un array de CURPs o un rol.',
-            ], 422);
-        }
+        $validated=$request->validated();
         $dto = UserMapper::toUpdateUserPermissionsDTO($validated);
         $updated=$this->service->syncPermissions($dto);
 
@@ -499,11 +413,11 @@ class AdminController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(PaginationRequest $request)
     {
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-        $perPage = $request->query('perPage', 15);
-        $page    = $request->query('page', 1);
+        $forceRefresh = $request->boolean('forceRefresh');
+        $perPage = $request->integer('perPage', 15);
+        $page = $request->integer('page', 1);
         $users=$this->service->showAllUsers($perPage, $page,$forceRefresh);
         return response()->json([
             'success' => true,
@@ -538,30 +452,9 @@ class AdminController extends Controller
      *     @OA\Response(response=422, description="Error de validación")
      * )
      */
-    public function syncRoles(Request $request)
+    public function syncRoles(UpdateRolesRequest $request)
     {
-        $input=$request->only([
-            'curps',
-            'rolesToAdd',
-            'rolesToRemove'
-        ]);
-        $validated = validator($input, [
-            'curps' => ['array'],
-            'curps.*' => ['string', 'exists:users,curp'],
-            'rolesToAdd' => ['array'],
-            'rolesToAdd.*' => ['string', 'exists:roles,name'],
-            'rolesToRemove' => ['array'],
-            'rolesToRemove.*' => ['string', 'exists:roles,name'],
-        ])->validate();
-
-        $hasCurps = !empty($validated['curps'] ?? []);
-
-        if (!$hasCurps) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Debes proporcionar un array de CURPs.',
-            ], 422);
-        }
+        $validated=$request->validated();
         $dto = UserMapper::toUpdateUserRoleDTO($validated);
         $updated=$this->service->syncRoles($dto);
 
@@ -605,19 +498,9 @@ class AdminController extends Controller
      *     @OA\Response(response=409, description="Conflicto en los datos")
      * )
      */
-    public function activateUsers(Request $request)
+    public function activateUsers(ChangeUserStatusRequest $request)
     {
-        $input=$request->only(['ids']);
-        $ids = validator($input, [
-            'ids'=> ['array'],
-        ])->validate();
-        if(!$ids)
-        {
-             return response()->json([
-                'success' => false,
-                'message' => 'Debes proporcionar un array de ids.',
-            ], 422);
-        }
+        $ids = $request->validated()['ids'];
         $updated=$this->service->activateUsers($ids);
 
         return response()->json([
@@ -660,19 +543,9 @@ class AdminController extends Controller
      *     @OA\Response(response=409, description="Conflicto en los datos")
      * )
      */
-    public function deleteUsers(Request $request)
+    public function deleteUsers(ChangeUserStatusRequest $request)
     {
-        $input=$request->only(['ids']);
-        $ids = validator($input, [
-            'ids'=> ['array'],
-        ])->validate();
-        if(!$ids)
-        {
-             return response()->json([
-                'success' => false,
-                'message' => 'Debes proporcionar un array de ids.',
-            ], 422);
-        }
+        $ids = $request->validated()['ids'];
         $updated=$this->service->deleteUsers($ids);
 
         return response()->json([
@@ -715,19 +588,9 @@ class AdminController extends Controller
      *     @OA\Response(response=409, description="Conflicto en los datos")
      * )
      */
-    public function disableUsers(Request $request)
+    public function disableUsers(ChangeUserStatusRequest $request)
     {
-        $input=$request->only(['ids']);
-        $ids = validator($input, [
-            'ids'=> ['array'],
-        ])->validate();
-        if(!$ids)
-        {
-             return response()->json([
-                'success' => false,
-                'message' => 'Debes proporcionar un array de ids.',
-            ], 422);
-        }
+        $ids = $request->validated()['ids'];
         $updated=$this->service->disableUsers($ids);
 
         return response()->json([
@@ -815,27 +678,11 @@ class AdminController extends Controller
      *     )
      * )
      */
-    public function findAllPermissions(Request $request)
+    public function findAllPermissions(FindPermissionsRequest $request)
     {
-        $curps = $request->query('curps', []);
-        $role = $request->query('role', null);
-
-        if (!empty($curps) && !is_array($curps)) {
-            $curps = [$curps];
-        }
-        if (empty($curps) && empty($role)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No hay curps ni roles.'
-            ], 400);
-        }
-        if(!empty($curps) && !empty($role))
-        {
-            return response()->json([
-                'success' => false,
-                'message' => 'Debe haber solo curps o roles.'
-            ], 400);
-        }
+        $validated = $request->validated();
+        $curps = $validated['curps'] ?? [];
+        $role  = $validated['role'] ?? null;
         $permissions= $this->service->findAllPermissions($curps, $role);
         return response()->json([
             'success' => true,
@@ -879,9 +726,9 @@ class AdminController extends Controller
      *     )
      * )
      */
-    public function findAllRoles(Request $request)
+    public function findAllRoles(ForceRefreshRequest $request)
     {
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $roles= $this->service->findAllRoles($forceRefresh);
         return response()->json([
             'success' => true,

@@ -6,8 +6,9 @@ use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper as InfraPaymentConceptMapper;
 use App\Core\Application\Services\Payments\Staff\ConceptsServiceFacades;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\Payments\Staff\ConceptsIndexRequest;
+use App\Http\Requests\Payments\Staff\StorePaymentConceptRequest;
+use App\Http\Requests\Payments\Staff\UpdatePaymentConceptRequest;
 use App\Models\PaymentConcept;
 
 /**
@@ -87,14 +88,16 @@ class ConceptsController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(ConceptsIndexRequest $request)
     {
-        $status = strtolower($request->query('status','todos'));
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
-        $perPage = $request->query('perPage', 15);
-        $page    = $request->query('page', 1);
+       $validated = $request->validated();
 
-        $paginatedData = $this->conceptsService->showConcepts($status, $perPage, $page, $forceRefresh);
+        $paginatedData = $this->conceptsService->showConcepts(
+            $validated['status'] ?? 'todos',
+            $validated['perPage'] ?? 15,
+            $validated['page'] ?? 1,
+            $validated['forceRefresh'] ?? false
+        );
         return response()->json([
                 'success' => true,
                 'data' => ['concepts'=>$paginatedData],
@@ -157,45 +160,9 @@ class ConceptsController extends Controller
      *     )
      * )
      */
-    public function store(Request $request)
+    public function store(StorePaymentConceptRequest $request)
     {
-        $data = $request->only([
-            'concept_name',
-            'description',
-            'status',
-            'start_date',
-            'end_date',
-            'amount',
-            'is_global',
-            'applies_to',
-            'semestres',
-            'careers',
-            'students'
-        ]);
-        $rules = [
-            'concept_name'  =>'required|string|max:50',
-            'description'   =>'nullable|string|max:100',
-            'status'        =>'required|string',
-            'start_date'    =>'required|date',
-            'end_date'      =>'nullable|date',
-            'amount'        =>'required|numeric',
-            'is_global'     =>'required|boolean',
-            'applies_to'            =>'required|string',
-            'semestres'              =>'nullable|array',
-            'careers'                =>'nullable|array',
-            'students'              =>'nullable|array'
-
-        ];
-
-        $validator = Validator::make($data,$rules);
-        if($validator->fails()){
-            return response()->json([
-            'success' => false,
-            'errors'  => $validator->errors(),
-            'message' => 'Error en la validación de datos.'
-        ], 422);
-
-        }
+        $data = $request->validated();
         $dto = PaymentConceptMapper::toCreateConceptDTO($data);
 
         $createdConcept=$this->conceptsService->createPaymentConcept($dto);
@@ -246,47 +213,9 @@ class ConceptsController extends Controller
      *     @OA\Response(response=404, description="Recurso no encontrado")
      * )
      */
-      public function update(Request $request, int $id)
+      public function update(UpdatePaymentConceptRequest $request, int $id)
     {
-        $data = $request->only([
-            'concept_name',
-            'description',
-            'status',
-            'start_date',
-            'end_date',
-            'amount',
-            'is_global',
-            'applies_to',
-            'semestres',
-            'careers',
-            'students',
-            'replaceRelations'
-        ]);
-
-        $rules = [
-            'concept_name'  => 'sometimes|required|string|max:50',
-            'description'   => 'nullable|string|max:100',
-            'status'        => 'sometimes|required|string',
-            'start_date'    => 'sometimes|required|date',
-            'end_date'      => 'nullable|date',
-            'amount'        => 'sometimes|required|numeric',
-            'is_global'     => 'sometimes|required|boolean',
-            'applies_to'    => 'nullable|string|in:carrera,semestre,estudiantes,todos',
-            'semestres'      => 'nullable|array',
-            'careers'        => 'nullable|array',
-            'students'      => 'nullable|array',
-            'replaceRelations' => 'sometimes|required|boolean'
-        ];
-
-        $validator = Validator::make($data, $rules);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-                'message' => 'Error en la validación de datos.'
-            ], 422);
-        }
+        $data = $request->validated();
         $data['id'] = $id;
         $dto = PaymentConceptMapper::toUpdateConceptDTO($data);
 

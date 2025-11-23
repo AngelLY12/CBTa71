@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Students;
 
-use App\Core\Application\Services\Payments\Student\CardsService;
 use App\Core\Application\Services\Payments\Student\CardsServiceFacades;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\General\ForceRefreshRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -73,10 +73,10 @@ class CardsController extends Controller
      *     )
      * )
      */
-    public function index(Request $request)
+    public function index(ForceRefreshRequest $request)
     {
-       $user = Auth::user();
-        $forceRefresh = filter_var($request->query('forceRefresh', false), FILTER_VALIDATE_BOOLEAN);
+        $user = Auth::user();
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $cards = $this->cardsService->getUserPaymentMethods($user->id, $forceRefresh);
         return response()->json([
             'success' => true,
@@ -115,7 +115,7 @@ class CardsController extends Controller
     {
         $user = Auth::user();
 
-         $session= $this->cardsService->setupCard(UserMapper::toDomain($user));
+        $session= $this->cardsService->setupCard(UserMapper::toDomain($user));
 
 
         return response()->json([
