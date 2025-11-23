@@ -2,26 +2,17 @@
 
 namespace App\Core\Infraestructure\Repositories\Command;
 
-use App\Core\Application\DTO\CreateStudentDetail;
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
-use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
-use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
-use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
-use App\Core\Application\DTO\Response\User\UserWithUptadedRoleResponse;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Sanctum\PersonalAccessToken;
-use Spatie\Permission\Models\Permission;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
 
@@ -61,15 +52,6 @@ class EloquentUserRepository implements UserRepInterface{
         return $refreshToken;
     }
 
-    public function revokeToken(string $tokenId): void
-    {
-        $token = PersonalAccessToken::find($tokenId);
-
-        if ($token) {
-            $token->delete();
-        }
-    }
-
     public function attachStudentDetail(CreateStudentDetailDTO $detail): User
     {
         $eloquentUser =  $this->findOrFail($detail->user_id);
@@ -100,6 +82,7 @@ class EloquentUserRepository implements UserRepInterface{
             $tempPasswords = [];
             $users = [];
             $studentDetails = [];
+            $roleRows = [];
             foreach ($rows as $row) {
                 $tempPassword = Str::random(12);
                 $tempPasswords[] = $tempPassword;
@@ -107,7 +90,7 @@ class EloquentUserRepository implements UserRepInterface{
                     'name' => $row[0],
                     'last_name' => $row[1],
                     'email' => $row[2],
-                    'password' => Hash::make($tempPassword ?? 'default123'),
+                    'password' => Hash::make($tempPassword),
                     'phone_number' => $row[3],
                     'birthdate' => !empty($row[4]) ? Carbon::parse($row[4]) : null,
                     'gender' => $row[5],
@@ -130,41 +113,48 @@ class EloquentUserRepository implements UserRepInterface{
             EloquentUser::insert($users);
 
             $insertedUsers = EloquentUser::whereIn('email', collect($users)->pluck('email'))->get();
+            $roleId = Role::where('name', 'student')->value('id');
 
             foreach ($insertedUsers as $index => $user) {
                 $row = $rows[$index];
-                $studentDetails[] = [
-                    'user_id' => $user->id,
-                    'career_id' => $row[16],
-                    'n_control' => $row[17],
-                    'semestre'  => $row[18],
-                    'group'     => $row[19],
-                    'workshop'  => $row[20],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
 
-            DB::table('student_details')->insert($studentDetails);
+                $hasStudentDetails =
+                !empty($row[16]) &&
+                !empty($row[17]) &&
+                !empty($row[18]);
 
-            $roleId = Role::where('name', 'student')->value('id');
-
-            $roleRows = [];
-            foreach ($insertedUsers as $user) {
-                $roleRows[] = [
-                    'role_id' => $roleId,
-                    'model_type' => EloquentUser::class,
-                    'model_id' => $user->id,
-                ];
-            }
-             foreach ($insertedUsers as $index => $user) {
+                if($hasStudentDetails)
+                {
+                    $studentDetails[] = [
+                        'user_id' => $user->id,
+                        'career_id' => $row[16],
+                        'n_control' => $row[17],
+                        'semestre'  => $row[18],
+                        'group'     => $row[19] ?? null,
+                        'workshop'  => $row[20] ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    $roleRows[] = [
+                        'role_id' => $roleId,
+                        'model_type' => EloquentUser::class,
+                        'model_id' => $user->id,
+                    ];
+                }
                 $createdUsers[] = [
                     'user' => UserMapper::toDomain($user),
                     'password' => $tempPasswords[$index]
                 ];
             }
 
-            DB::table('model_has_roles')->insertOrIgnore($roleRows);
+            if (!empty($studentDetails)) {
+                DB::table('student_details')->insert($studentDetails);
+            }
+
+            if (!empty($roleRows)) {
+                DB::table('model_has_roles')->insertOrIgnore($roleRows);
+            }
+
             return [
                 'affected'=>$insertedUsers->count(),
                 'users'=>$createdUsers
@@ -173,157 +163,6 @@ class EloquentUserRepository implements UserRepInterface{
         });
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
         return $totalInserted;
-    }
-
-    public function updatePermissionToMany(UpdateUserPermissionsDTO $dto): array
-    {
-        if (!empty($dto->role)) {
-            $users = EloquentUser::role($dto->role)->get(['id', 'name', 'last_name', 'curp']);
-        } elseif (!empty($dto->curps)) {
-            $users = EloquentUser::whereIn('curp', $dto->curps)->get(['id', 'name', 'last_name', 'curp']);
-        } else {
-            return [];
-        }
-        if ($users->isEmpty()) {
-            return [];
-        }
-
-        $usersGroupedByRole = $users->flatMap(function($user) {
-            return $user->roles->map(fn($role) => ['role' => $role->name, 'user' => $user]);
-        })->groupBy('role')
-        ->map(fn($items) => $items->pluck('user'));
-
-
-        DB::transaction(function () use ($usersGroupedByRole, $dto) {
-            foreach ($usersGroupedByRole as $role => $usersOfRole) {
-
-            $userIds = $usersOfRole->pluck('id')->toArray();
-            $permissionsToAddIds = !empty($dto->permissionsToAdd)
-                ? Permission::whereIn('name', $dto->permissionsToAdd)
-                    ->where(function($q) use ($role) {
-                        $q->where('belongs_to', $role)
-                          ->orWhere('belongs_to', 'global');
-                    })
-                    ->pluck('id')
-                    ->toArray()
-                : [];
-
-            $permissionsToRemoveIds = !empty($dto->permissionsToRemove)
-                ? Permission::whereIn('name', $dto->permissionsToRemove)
-                    ->where(function($q) use ($role) {
-                        $q->where('belongs_to', $role)
-                          ->orWhere('belongs_to', 'global');
-                    })
-                    ->pluck('id')
-                    ->toArray()
-                : [];
-
-            if (!empty($permissionsToRemoveIds)) {
-                DB::table('model_has_permissions')
-                    ->whereIn('model_id', $userIds)
-                    ->whereIn('permission_id', $permissionsToRemoveIds)
-                    ->where('model_type', EloquentUser::class)
-                    ->delete();
-            }
-
-            if (!empty($permissionsToAddIds)) {
-                $rows = collect($userIds)->crossJoin($permissionsToAddIds)->map(fn($pair) => [
-                    'model_id' => $pair[0],
-                    'permission_id' => $pair[1],
-                    'model_type' => EloquentUser::class,
-                ])->toArray();
-
-                DB::table('model_has_permissions')->insertOrIgnore($rows);
-            }
-        }
-
-    });
-    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
-        $permissions =[
-            'added' => $dto->permissionsToAdd ?? [],
-            'removed' => $dto->permissionsToRemove ?? [],
-        ];
-        $totalUpdated = $users->count();
-        if (!empty($dto->role)) {
-            return [AppUserMapper::toUserUpdatedPermissionsResponse(permissions:$permissions, role:$dto->role, totalUpdated:$totalUpdated)];
-        }
-
-        return $users->map(fn($user) =>AppUserMapper::toUserUpdatedPermissionsResponse(user:$user, permissions:$permissions ,totalUpdated:$totalUpdated))->toArray();
-    }
-
-    public function updateRoleToMany(UpdateUserRoleDTO $dto): UserWithUpdatedRoleResponse
-    {
-        if(empty($dto->curps))
-        {
-            return new UserWithUpdatedRoleResponse([], [], ['added' => [], 'removed' => []], 0);
-        }
-        if (empty($dto->rolesToAdd) && empty($dto->rolesToRemove)) {
-            return new UserWithUpdatedRoleResponse([], [], ['added' => [], 'removed' => []], 0);
-        }
-        $users =EloquentUser::whereIn('curp', $dto->curps)->get(['id', 'name', 'last_name', 'curp']);
-
-        $rolesToAddIds=[];
-        $rolesToRemoveIds=[];
-        if(!empty($dto->rolesToAdd)){
-            $rolesToAddIds = Role::whereIn('name', $dto->rolesToAdd)->pluck('id')->toArray();
-        }
-        if(!empty($dto->rolesToRemove))
-        {
-            $rolesToRemoveIds = Role::whereIn('name', $dto->rolesToRemove)->pluck('id')->toArray();
-        }
-        if (empty($rolesToAddIds) && empty($rolesToRemoveIds)) {
-            return new UserWithUpdatedRoleResponse([], [], ['added' => [], 'removed' => []], 0);
-        }
-
-        DB::transaction(function () use ($users, $rolesToAddIds, $rolesToRemoveIds) {
-            $userIds = $users->pluck('id')->toArray();
-            if (!empty($rolesToRemoveIds)) {
-                DB::table('model_has_roles')
-                    ->whereIn('model_id', $userIds)
-                    ->whereIn('role_id', $rolesToRemoveIds)
-                    ->where('model_type', EloquentUser::class)
-                    ->delete();
-            }
-
-            if (!empty($rolesToAddIds)) {
-                $rows = [];
-                foreach ($userIds as $userId) {
-                    foreach ($rolesToAddIds as $roleId) {
-                        $rows[] = [
-                            'role_id' => $roleId,
-                            'model_type' => EloquentUser::class,
-                            'model_id' => $userId,
-                        ];
-                    }
-                }
-
-            DB::table('model_has_roles')->insertOrIgnore($rows);
-        }
-
-
-    });
-        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
-        $data =[
-            'names' => $users->map(fn($user) => "{$user->name} {$user->last_name}")->toArray(),
-            'curps' => $users->pluck('curp')->toArray(),
-            'roles' => [
-                'added' => $dto->rolesToAdd ?? [],
-                'removed' => $dto->rolesToRemove ?? [],
-            ],
-            'totalUpdated' => $users->count()
-        ];
-
-        return AppUserMapper::toUserWithUptadedRoleResponse($data);
-    }
-
-    public function deletionInvalidTokens(): int
-    {
-        $now = Carbon::now();
-        $deleted = DB::table('personal_access_tokens')
-            ->whereNotNull('expires_at')
-            ->where('expires_at', '<', $now)
-            ->delete();
-        return $deleted;
     }
 
     public function deletionEliminateUsers(): int
