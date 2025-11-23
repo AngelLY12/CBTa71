@@ -18,48 +18,51 @@ class RestoreDatabaseUseCase
 
     public function execute(): bool
     {
-        try{
-            $check=$this->rep->checkDBStatus();
-            if($check)
-            {
-                Log::info('La base de datos está activa, no es necesario restaurar.');
+        try {
+            $check = $this->rep->checkDBStatus();
+            if ($check) {
+                Log::channel('stderr')->info('La base de datos está activa, no es necesario restaurar.');
                 return true;
             }
-        }catch (\Exception $e) {
-            Log::warn('No se pudo conectar a la base de datos: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            Log::channel('stderr')->warning('No se pudo conectar a la base de datos: ' . $e->getMessage());
         }
-        Log::warn('Restaurando la última copia de seguridad...');
-       $files = collect(Storage::disk('google')->files())
+
+        Log::channel('stderr')->warning('Restaurando la última copia de seguridad...');
+
+        $files = collect(Storage::disk('google')->files())
             ->filter(fn($f) => str_ends_with($f, '.zip'))
             ->sortDesc()
             ->values();
 
         if ($files->isEmpty()) {
-            Log::error('No hay respaldos disponibles en Google Drive.');
+            Log::channel('stderr')->error('No hay respaldos disponibles en Google Drive.');
             return false;
         }
 
         $latestBackup = $files->first();
-        Log::info("Descargando respaldo: {$latestBackup}");
+        Log::channel('stderr')->info("Descargando respaldo: {$latestBackup}");
 
         $localPath = storage_path('app/restore.zip');
-         try {
-            $content=Storage::disk('google')->get($latestBackup);
+        try {
+            $content = Storage::disk('google')->get($latestBackup);
             file_put_contents($localPath, $content);
         } catch (\Exception $e) {
-            Log::error('Error al descargar el respaldo: ' . $e->getMessage());
+            Log::channel('stderr')->error('Error al descargar el respaldo: ' . $e->getMessage());
             return false;
         }
+
         $restoreDir = storage_path('app/restore');
         if (!file_exists($restoreDir)) {
             mkdir($restoreDir, 0755, true);
         }
+
         $zip = new ZipArchive();
         if ($zip->open($localPath) === true) {
             $zip->extractTo($restoreDir);
             $zip->close();
         } else {
-            Log::error('No se pudo abrir el archivo ZIP');
+            Log::channel('stderr')->error('No se pudo abrir el archivo ZIP');
             return false;
         }
 
@@ -74,7 +77,7 @@ class RestoreDatabaseUseCase
         }
 
         if (empty($sqlFiles)) {
-            Log::error('No se encontró un archivo SQL para restaurar.');
+            Log::channel('stderr')->error('No se encontró un archivo SQL para restaurar.');
             return false;
         }
 
@@ -83,9 +86,9 @@ class RestoreDatabaseUseCase
         try {
             $sqlContent = file_get_contents($sqlFile);
             DB::unprepared($sqlContent);
-            Log::info('Base de datos restaurada correctamente.');
+            Log::channel('stderr')->info('Base de datos restaurada correctamente.');
         } catch (\Exception $e) {
-            Log::error('Error al ejecutar el SQL: ' . $e->getMessage());
+            Log::channel('stderr')->error('Error al ejecutar el SQL: ' . $e->getMessage());
             return false;
         }
 
