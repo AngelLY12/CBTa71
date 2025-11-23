@@ -6,6 +6,8 @@ use App\Core\Domain\Repositories\Command\DBRepInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use ZipArchive;
 
 class RestoreDatabaseUseCase
@@ -61,7 +63,16 @@ class RestoreDatabaseUseCase
             return false;
         }
 
-        $sqlFiles = glob($restoreDir . '/**/*.sql',GLOB_BRACE);
+        $directory = new RecursiveDirectoryIterator($restoreDir);
+        $iterator  = new RecursiveIteratorIterator($directory);
+        $sqlFiles  = [];
+
+        foreach ($iterator as $file) {
+            if ($file->isFile() && pathinfo($file->getFilename(), PATHINFO_EXTENSION) === 'sql') {
+                $sqlFiles[] = $file->getPathname();
+            }
+        }
+
         if (empty($sqlFiles)) {
             Log::error('No se encontró un archivo SQL para restaurar.');
             return false;
