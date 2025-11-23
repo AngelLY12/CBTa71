@@ -33,7 +33,7 @@
                 "description": "Crea un nuevo usuario en el sistema con los datos proporcionados.",
                 "operationId": "adminRegisterUser",
                 "requestBody": {
-                    "description": "Datos necesarios para el registro del usuario",
+                    "description": "Datos necesarios para el registro del usuario. Nota: La contraseña no debe ser incluida en la request, se genera para cada usuario desde el sistema",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -381,7 +381,7 @@
                 ]
             }
         },
-        "/api/v1/admin-actions/users": {
+        "/api/v1/admin-actions/showUsers": {
             "get": {
                 "tags": [
                     "Admin"
@@ -748,23 +748,26 @@
                 "operationId": "showAllPermissions",
                 "parameters": [
                     {
-                        "name": "forceRefresh",
+                        "name": "curps",
                         "in": "query",
-                        "description": "Forzar actualización del caché (true o false).",
+                        "description": "Curps de los usuarios",
                         "required": false,
                         "schema": {
-                            "type": "boolean",
-                            "example": false
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "example": "GAAA900101HDFRRN05"
+                            }
                         }
                     },
                     {
-                        "name": "page",
+                        "name": "role",
                         "in": "query",
-                        "description": "Número de página a mostrar",
+                        "description": "Role de los usuarios a los que aplican los permisos.",
                         "required": false,
                         "schema": {
-                            "type": "integer",
-                            "default": 1
+                            "type": "string",
+                            "example": "student"
                         }
                     }
                 ],
@@ -784,11 +787,45 @@
                                                 "permissions": {
                                                     "allOf": [
                                                         {
-                                                            "$ref": "#/components/schemas/PaginatedResponse"
+                                                            "$ref": "#/components/schemas/PermissionsByUsers"
                                                         },
                                                         {
                                                             "properties": {
-                                                                "items": {
+                                                                "role": {
+                                                                    "type": "string",
+                                                                    "example": "student"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        {
+                                                            "properties": {
+                                                                "users": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer",
+                                                                                "example": 1
+                                                                            },
+                                                                            "fullName": {
+                                                                                "type": "string",
+                                                                                "example": "Ana García"
+                                                                            },
+                                                                            "curp": {
+                                                                                "type": "string",
+                                                                                "example": "GAAA900101HDFRRN05"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        {
+                                                            "properties": {
+                                                                "permissions": {
                                                                     "type": "array",
                                                                     "items": {
                                                                         "$ref": "#/components/schemas/Permission"
@@ -979,6 +1016,209 @@
                 ]
             }
         },
+        "/api/email/verification-notification": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Enviar enlace de verificación de correo",
+                "description": "Envía un correo con el enlace de verificación si el usuario aún no ha verificado su email.",
+                "operationId": "sendEmailVerificationNotification",
+                "responses": {
+                    "200": {
+                        "description": "Enlace de verificación enviado exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "verification-link-sent"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "302": {
+                        "description": "Redirección al dashboard si el email ya está verificado"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reset-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Actualizar contraseña usando token",
+                "description": "Permite que un usuario actualice su contraseña usando el token enviado por correo.",
+                "operationId": "resetPassword",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "token_generado_por_correo"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "usuario@mail.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "nuevaContrasena123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "nuevaContrasena123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Contraseña actualizada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "passwords.reset"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validación fallida o token inválido"
+                    }
+                }
+            }
+        },
+        "/api/forgot-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Enviar link para restablecer contraseña",
+                "description": "Envía un correo con el enlace de restablecimiento de contraseña al email proporcionado.",
+                "operationId": "sendPasswordResetLink",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "usuario@mail.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Enlace de restablecimiento enviado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "passwords.sent"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Email no válido o usuario no encontrado"
+                    }
+                }
+            }
+        },
+        "/api/verify-email/{id}/{hash}": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verificar email del usuario",
+                "description": "Marca el correo del usuario como verificado si el hash es correcto.",
+                "operationId": "verifyEmail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del usuario",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "hash",
+                        "in": "path",
+                        "description": "Hash de verificación enviado por correo",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "hash_generado_por_laravel"
+                        }
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirige al frontend con ?verified=1"
+                    },
+                    "401": {
+                        "description": "No autenticado"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/careers": {
             "get": {
                 "tags": [
@@ -1031,15 +1271,62 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "Careers"
+                ],
+                "summary": "Crear una nueva carrera",
+                "operationId": "eb383ead6afe15e4cf80f9da7e255228",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DomainCareer"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Carrera creada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "career": {
+                                                    "$ref": "#/components/schemas/DomainCareer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Carrera creada."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
-        "/api/v1//careers/{id}": {
+        "/api/v1/careers/{id}": {
             "get": {
                 "tags": [
                     "Careers"
                 ],
                 "summary": "Obtener una carrera por ID",
-                "operationId": "1da3b0431b893f26ba50522ac3fb75db",
+                "operationId": "5a91175ff610265abd4134c013d76acd",
                 "parameters": [
                     {
                         "name": "id",
@@ -1093,53 +1380,12 @@
                     }
                 }
             },
-            "delete": {
-                "tags": [
-                    "Careers"
-                ],
-                "summary": "Eliminar una carrera",
-                "operationId": "c9604f40880663bcf210b1cd508ea16c",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID de la carrera a eliminar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Carrera eliminada exitosamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Carrera eliminada con éxito."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             "patch": {
                 "tags": [
                     "Careers"
                 ],
                 "summary": "Actualizar una carrera existente",
-                "operationId": "4dab81598c9454d2d4242a634e909705",
+                "operationId": "8203dfe26a4a6ecdf9597343a6c0bfe6",
                 "parameters": [
                     {
                         "name": "id",
@@ -1200,26 +1446,28 @@
                 }
             }
         },
-        "/api/v1//careers": {
-            "post": {
+        "/api/v1//careers/{id}": {
+            "delete": {
                 "tags": [
                     "Careers"
                 ],
-                "summary": "Crear una nueva carrera",
-                "operationId": "87edb3b595b3cb81cc8d693a736c3042",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/DomainCareer"
-                            }
+                "summary": "Eliminar una carrera",
+                "operationId": "c9604f40880663bcf210b1cd508ea16c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la carrera a eliminar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
                         }
                     }
-                },
+                ],
                 "responses": {
-                    "201": {
-                        "description": "Carrera creada exitosamente",
+                    "200": {
+                        "description": "Carrera eliminada exitosamente",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1228,17 +1476,9 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "data": {
-                                            "properties": {
-                                                "career": {
-                                                    "$ref": "#/components/schemas/DomainCareer"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Carrera creada."
+                                            "example": "Carrera eliminada con éxito."
                                         }
                                     },
                                     "type": "object"
@@ -4458,13 +4698,13 @@
                 ]
             }
         },
-        "/api/v1/users/{id}": {
+        "/api/v1/users/{userId}": {
             "patch": {
                 "tags": [
                     "Users"
                 ],
                 "summary": "Actualizar los datos generales de un usuario",
-                "operationId": "3cc4803b4b6d7fc974e8fb21b3b6b46b",
+                "operationId": "63e6d1eb7e990a2e4aaa60d93695fc0d",
                 "parameters": [
                     {
                         "name": "id",
@@ -4519,13 +4759,13 @@
                 }
             }
         },
-        "/api/v1/users/{id}/password": {
+        "/api/v1/users/{userId}/password": {
             "patch": {
                 "tags": [
                     "Users"
                 ],
                 "summary": "Actualizar la contraseña de un usuario",
-                "operationId": "2c04cec480a17c40c24162582ac82c29",
+                "operationId": "ab93a7065400ecae6bebda7b16a0fb66",
                 "parameters": [
                     {
                         "name": "id",
@@ -4544,16 +4784,16 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "password",
-                                    "password_confirmation"
+                                    "newPassword",
+                                    "currentPassword"
                                 ],
                                 "properties": {
-                                    "password": {
+                                    "newPassword": {
                                         "type": "string",
                                         "minLength": 8,
-                                        "example": "newpassword123"
+                                        "example": "oldPassword123"
                                     },
-                                    "password_confirmation": {
+                                    "currentPassword": {
                                         "type": "string",
                                         "example": "newpassword123"
                                     }
@@ -4633,8 +4873,7 @@
                         "example": "1500.00"
                     },
                     "status": {
-                        "type": "string",
-                        "example": "activo"
+                        "$ref": "#/components/schemas/PaymentConceptStatus"
                     },
                     "start_date": {
                         "type": "string",
@@ -4653,8 +4892,7 @@
                         "example": true
                     },
                     "appliesTo": {
-                        "type": "string",
-                        "example": "todos"
+                        "$ref": "#/components/schemas/PaymentConceptAppliesTo"
                     },
                     "semesters": {
                         "description": "Semestres asociados al concepto",
@@ -4755,10 +4993,14 @@
                         "nullable": true
                     },
                     "appliesTo": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentConceptAppliesTo"
+                            }
+                        ],
+                        "nullable": true,
                         "description": "A quién aplica el concepto",
-                        "type": "string",
-                        "example": "todos",
-                        "nullable": true
+                        "example": "todos"
                     },
                     "replaceRelations": {
                         "description": "Si es true, reemplaza las relaciones existentes con las nuevas",
@@ -4856,10 +5098,14 @@
                         "nullable": true
                     },
                     "gender": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserGender"
+                            }
+                        ],
+                        "nullable": true,
                         "description": "Género del usuario",
-                        "type": "string",
-                        "example": "male",
-                        "nullable": true
+                        "example": "male"
                     },
                     "curp": {
                         "description": "CURP del usuario",
@@ -4875,10 +5121,14 @@
                         "nullable": true
                     },
                     "blood_type": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserBloodType"
+                            }
+                        ],
+                        "nullable": true,
                         "description": "Tipo de sangre",
-                        "type": "string",
-                        "example": "O+",
-                        "nullable": true
+                        "example": "O+"
                     },
                     "registration_date": {
                         "description": "Fecha de registro",
@@ -4888,10 +5138,14 @@
                         "nullable": true
                     },
                     "status": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserStatus"
+                            }
+                        ],
+                        "nullable": true,
                         "description": "Estado del usuario",
-                        "type": "string",
-                        "example": "activo",
-                        "nullable": true
+                        "example": "activo"
                     }
                 },
                 "type": "object"
@@ -5086,6 +5340,31 @@
                     "nextPage": {
                         "type": "integer",
                         "example": 2
+                    }
+                },
+                "type": "object"
+            },
+            "PermissionsByUsers": {
+                "properties": {
+                    "role": {
+                        "type": "string",
+                        "example": "student"
+                    },
+                    "users": {
+                        "description": "Lista de usuarios a los que aplican los permisos",
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        },
+                        "nullable": true
+                    },
+                    "permissions": {
+                        "description": "Lista de permisos de los usuarios",
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        },
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -5825,8 +6104,7 @@
                         "nullable": true
                     },
                     "status": {
-                        "type": "string",
-                        "example": "pendiente"
+                        "$ref": "#/components/schemas/PaymentStatus"
                     },
                     "payment_intent_id": {
                         "type": "string",
@@ -5864,8 +6142,7 @@
                         "nullable": true
                     },
                     "status": {
-                        "type": "string",
-                        "example": "activo"
+                        "$ref": "#/components/schemas/PaymentConceptStatus"
                     },
                     "start_date": {
                         "type": "string",
@@ -5883,8 +6160,7 @@
                         "example": "1500.00"
                     },
                     "applies_to": {
-                        "type": "string",
-                        "example": "todos"
+                        "$ref": "#/components/schemas/PaymentConceptAppliesTo"
                     },
                     "is_global": {
                         "type": "boolean",
@@ -6106,9 +6382,13 @@
                         "nullable": true
                     },
                     "gender": {
-                        "type": "string",
-                        "example": "male",
-                        "nullable": true
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserGender"
+                            }
+                        ],
+                        "nullable": true,
+                        "example": "male"
                     },
                     "curp": {
                         "type": "string",
@@ -6131,9 +6411,13 @@
                         "nullable": true
                     },
                     "blood_type": {
-                        "type": "string",
-                        "example": "O+",
-                        "nullable": true
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserBloodType"
+                            }
+                        ],
+                        "nullable": true,
+                        "example": "O+"
                     },
                     "registration_date": {
                         "type": "string",
@@ -6142,9 +6426,13 @@
                         "nullable": true
                     },
                     "status": {
-                        "type": "string",
-                        "example": "activo",
-                        "nullable": true
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserStatus"
+                            }
+                        ],
+                        "nullable": true,
+                        "example": "activo"
                     },
                     "studentDetail": {
                         "oneOf": [
@@ -6156,6 +6444,69 @@
                     }
                 },
                 "type": "object"
+            },
+            "PaymentConceptAppliesTo": {
+                "description": "A quien aplica el concepto de pago",
+                "type": "string",
+                "enum": [
+                    "todos",
+                    "carrera",
+                    "semestre",
+                    "carrera_semestre",
+                    "estudiantes"
+                ]
+            },
+            "PaymentConceptStatus": {
+                "description": "Estatus válidos de un concepto de pago",
+                "type": "string",
+                "enum": [
+                    "activo",
+                    "finalizado",
+                    "desactivado",
+                    "eliminado"
+                ]
+            },
+            "PaymentStatus": {
+                "description": "Estatus válidos de un pago",
+                "type": "string",
+                "enum": [
+                    "succeeded",
+                    "requires_action",
+                    "paid",
+                    "unpaid",
+                    "pending"
+                ]
+            },
+            "UserBloodType": {
+                "description": "Tipos de sangre válidos de un usuario",
+                "type": "string",
+                "enum": [
+                    "O+",
+                    "O-",
+                    "A+",
+                    "A-",
+                    "B+",
+                    "B-",
+                    "AB+",
+                    "AB-"
+                ]
+            },
+            "UserGender": {
+                "description": "Generos válidos de un usuario",
+                "type": "string",
+                "enum": [
+                    "hombre",
+                    "mujer"
+                ]
+            },
+            "UserStatus": {
+                "description": "Estatus valido de un usuario",
+                "type": "string",
+                "enum": [
+                    "activo",
+                    "baja",
+                    "eliminado"
+                ]
             }
         }
     },
@@ -6174,7 +6525,7 @@
         },
         {
             "name": "Auth",
-            "description": "Endpoints de autenticación: renovación y cierre de sesión"
+            "description": "Endpoints relacionados con la autenticación de usuarios, tokens de acceso, contraseñas y verificación"
         },
         {
             "name": "Payment Concepts",
