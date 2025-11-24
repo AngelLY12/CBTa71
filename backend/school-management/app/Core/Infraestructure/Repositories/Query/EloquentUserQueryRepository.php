@@ -9,6 +9,7 @@ use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Infraestructure\Traits\HasPendingQuery;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -49,7 +50,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
     public function getUserIdsByControlNumbers(array $controlNumbers): UserIdListDTO
     {
         $ids = EloquentUser::whereHas('studentDetail', fn($q) => $q->whereIn('n_control', $controlNumbers))
-        ->where('status', 'activo')
+        ->where('status', UserStatus::ACTIVO)
         ->pluck('id')
         ->toArray();
 
@@ -58,7 +59,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
     public function countStudents(bool $onlyThisYear): int
     {
-        $students = EloquentUser::role('student')->where('status','activo');
+        $students = EloquentUser::role('student')->where('status', UserStatus::ACTIVO);
         if($onlyThisYear){
             $students->whereYear('created_at',now()->year);
         }
@@ -83,7 +84,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
     public function findActiveStudents(?string $search, int $perPage, int $page): LengthAwarePaginator
     {
        $studentsQuery = EloquentUser::role('student')->select('id','name','last_name','email')
-        ->where('status','activo')
+        ->where('status', UserStatus::ACTIVO)
         ->with('studentDetail:user_id,semestre,career_id');
 
         if ($search) {
@@ -100,7 +101,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
     public function getRecipients(PaymentConcept $concept, string $appliesTo): array
     {
-        $usersQuery = EloquentUser::query()->where('status', 'activo')->select('id', 'name', 'last_name', 'email');
+        $usersQuery = EloquentUser::query()->where('status', UserStatus::ACTIVO)->select('id', 'name', 'last_name', 'email');
 
         $usersQuery = match($appliesTo) {
             'carrera' => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {

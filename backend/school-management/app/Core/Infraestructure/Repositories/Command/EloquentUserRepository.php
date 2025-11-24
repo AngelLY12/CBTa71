@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
+use App\Core\Domain\Enum\User\UserStatus;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
 
@@ -93,7 +94,7 @@ class EloquentUserRepository implements UserRepInterface{
                     'password' => Hash::make($tempPassword),
                     'phone_number' => $row[3],
                     'birthdate' => !empty($row[4]) ? Carbon::parse($row[4]) : null,
-                    'gender' => $row[5],
+                    'gender' => $row[5] ?? null,
                     'curp' => $row[6],
                     'address' => [
                         'street' => $row[7] ?? null,
@@ -104,7 +105,7 @@ class EloquentUserRepository implements UserRepInterface{
                     'stripe_customer_id' => $row[11] ?? null,
                     'blood_type' => $row[12] ?? null,
                     'registration_date' => !empty($row[13]) ? Carbon::parse($row[13]) : now(),
-                    'status' => $row[14] ?? 'activo',
+                    'status' => $row[14] ?? UserStatus::ACTIVO,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -170,7 +171,7 @@ class EloquentUserRepository implements UserRepInterface{
         $thresholdDate = Carbon::now()->subDays(30);
 
         return DB::table('users')
-            ->where('status', '=', 'eliminado')
+            ->where('status', '=', UserStatus::ELIMINADO)
             ->where('updated_at', '<', $thresholdDate)
             ->delete();
     }

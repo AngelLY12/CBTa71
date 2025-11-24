@@ -135,7 +135,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $thresholdDate = Carbon::now()->subDays(30);
         return DB::table('payment_concepts')
-            ->where('status', 'eliminado')
+            ->where('status', PaymentConceptStatus::ELIMINADO)
             ->where('updated_at', '<', $thresholdDate)
             ->delete();
     }

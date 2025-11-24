@@ -5,6 +5,7 @@ namespace App\Core\Infraestructure\Repositories\Query\Payments;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Application\Mappers\PaymentMapper as MappersPaymentMapper;
 use App\Core\Domain\Entities\Payment;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Infraestructure\Mappers\PaymentMapper;
 use App\Models\Payment as EloquentPayment;
 use Generator;
@@ -103,7 +104,7 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
      */
     public function getPaidWithinLastMonthCursor(): Generator
     {
-        foreach (EloquentPayment::where('status', 'paid')
+        foreach (EloquentPayment::where('status', PaymentStatus::PAID)
                 ->where('created_at', '>=', now()->subMonths(1))
                 ->cursor() as $model) {
             yield PaymentMapper::toDomain($model);

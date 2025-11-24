@@ -7,6 +7,7 @@ use App\Core\Application\Mappers\PaymentConceptMapper as MappersPaymentConceptMa
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper;
 use App\Core\Infraestructure\Traits\HasPendingQuery;
 use App\Models\PaymentConcept as EloquentPaymentConcept;
@@ -43,12 +44,12 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     public function countOverduePayments(User $user): int
     {
-        return $this->basePaymentConcept($user, onlyActive: false, status: 'finalizado')->count();
+        return $this->basePaymentConcept($user, onlyActive: false, status: PaymentConceptStatus::FINALIZADO)->count();
     }
 
     public function getOverduePayments(User $user): array
     {
-        $rows = $this->basePaymentConcept($user, onlyActive: false, status: 'finalizado')
+        $rows = $this->basePaymentConcept($user, onlyActive: false, status: PaymentConceptStatus::FINALIZADO)
             ->addSelect(['payment_concepts.concept_name', 'payment_concepts.description', 'payment_concepts.amount', 'payment_concepts.start_date', 'payment_concepts.end_date'])
             ->get();
 
@@ -118,13 +119,13 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     {
         $today = Carbon::today();
 
-        EloquentPaymentConcept::where('status', 'activo')
+        EloquentPaymentConcept::where('status', PaymentConceptStatus::ACTIVO)
         ->whereDate('end_date', '<', $today)
-        ->update(['status' => 'finalizado']);
+        ->update(['status' => PaymentConceptStatus::FINALIZADO]);
 
     }
 
-     private function basePaymentConcept(?User $user = null, $onlyActive=true, ?string $status=null): Builder
+     private function basePaymentConcept(?User $user = null, $onlyActive=true, ?PaymentConceptStatus $status=null): Builder
     {
         $now = now();
 
