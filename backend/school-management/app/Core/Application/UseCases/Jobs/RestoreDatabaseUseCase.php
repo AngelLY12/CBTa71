@@ -83,15 +83,22 @@ class RestoreDatabaseUseCase
         }
 
         $sqlFile = $sqlFiles[0];
+        Log::channel('stderr')->info("Archivo SQL encontrado: {$sqlFile}");
+        $database = env('DB_DATABASE');
+        $user     = env('DB_USERNAME');
+        $password = env('DB_PASSWORD');
+        $host     = env('DB_HOST', '127.0.0.1');
 
-        try {
-            $sqlContent = file_get_contents($sqlFile);
-            DB::unprepared($sqlContent);
-            Log::channel('stderr')->info('Base de datos restaurada correctamente.');
-        } catch (\Exception $e) {
-            Log::channel('stderr')->error('Error al ejecutar el SQL: ' . $e->getMessage());
+        $command = "mysql -h {$host} -u {$user} -p{$password} {$database} < {$sqlFile}";
+
+        exec($command, $output, $returnVar);
+
+        if ($returnVar !== 0) {
+            Log::channel('stderr')->error('Error restaurando la base de datos con MySQL nativo.');
             return false;
         }
+
+        Log::channel('stderr')->info('Base de datos restaurada correctamente con MySQL nativo.');
 
         return true;
 
