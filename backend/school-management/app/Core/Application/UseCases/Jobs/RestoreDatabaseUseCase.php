@@ -30,11 +30,12 @@ class RestoreDatabaseUseCase
 
         Log::channel('stderr')->warning('Restaurando la última copia de seguridad...');
 
-        $files = collect(Storage::disk('google')->files())
-            ->filter(fn($f) => str_ends_with($f, '.zip'))
-            ->sortDesc()
-            ->values();
+        $files = collect(Storage::disk('google')->allFiles())
+        ->filter(fn($f) => str_ends_with(strtolower($f), '.zip'))
+        ->sortDesc()
+        ->values();
 
+        Log::channel('stderr')->info('Archivos en Google Drive:', $files->toArray());
         if ($files->isEmpty()) {
             Log::channel('stderr')->error('No hay respaldos disponibles en Google Drive.');
             return false;
