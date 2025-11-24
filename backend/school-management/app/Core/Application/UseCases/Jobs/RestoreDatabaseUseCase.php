@@ -89,10 +89,7 @@ class RestoreDatabaseUseCase
         $password = env('DB_PASSWORD');
         $host     = env('DB_HOST', '127.0.0.1');
 
-        $command = "mysql -h {$host} -u {$user} -p{$password} --ssl-mode=DISABLED {$database} < {$sqlFile}";
-        exec("mysql --version 2>&1", $ver, $r);
-        Log::channel('stderr')->info("Versión de mysql: " . implode(" ", $ver));
-
+        $command = "mysql -h {$host} -u {$user} -p{$password} --skip-ssl {$database} < {$sqlFile}";
         exec($command, $output, $returnVar);
 
         if ($returnVar !== 0) {
