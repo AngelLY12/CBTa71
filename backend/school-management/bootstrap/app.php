@@ -50,7 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule){
         $schedule->command('backup:dispatch-create-backup-job')->dailyAt('02:00');
         $schedule->command('backup:clean')->dailyAt('02:30');
-        $schedule->command('db:auto-restore')->everyMinute();
+        $schedule->command('db:auto-restore')->dailyAt('03:00');
         $schedule->command('concepts:dispatch-finalize-job')->daily();
         $schedule->command('tokens:dispatch-clean-expired-tokens')->everyFourHours();
         $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('03:00');
