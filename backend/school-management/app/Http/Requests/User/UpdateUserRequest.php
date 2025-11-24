@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\User;
 
+use App\Core\Domain\Enum\User\UserBloodType;
+use App\Core\Domain\Enum\User\UserGender;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateUserRequest extends FormRequest
@@ -28,22 +30,37 @@ class UpdateUserRequest extends FormRequest
             'email'         => 'sometimes|required|email|unique:users,email,' . $userId,
             'phone_number'  => 'sometimes|required|string',
             'birthdate'     => 'sometimes|required|date|date_format:Y-m-d',
-            'gender'        => 'sometimes|required|string',
+            'gender'       => [
+                'sometimes',
+                'required',
+                'string',
+                'in:' . implode(',', array_map(fn($case) => $case->value, UserGender::cases())),
+            ],
             'address'       => 'sometimes|required|array',
-            'blood_type'    => 'sometimes|required|string',
+            'blood_type'   => [
+                'sometimes',
+                'required',
+                'string',
+                'in:' . implode(',', array_map(fn($case) => $case->value, UserBloodType::cases())),
+            ],
         ];
     }
 
     public function messages(): array
     {
         return [
-        'email.unique' => 'El correo ya está registrado por otro usuario.',
-        'email.email' => 'El correo no tiene un formato válido.',
-        'name.required' => 'El nombre es obligatorio.',
-        'last_name.required' => 'El apellido es obligatorio.',
-        'birthdate.date' => 'La fecha de nacimiento debe ser una fecha válida.',
-        'birthdate.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
-        'phone_number.required' => 'El número de teléfono es obligatorio.',
-        'address.array' => 'La dirección debe ser un arreglo válido.',        ];
+            'email.unique' => 'El correo ya está registrado por otro usuario.',
+            'email.email' => 'El correo no tiene un formato válido.',
+            'name.required' => 'El nombre es obligatorio.',
+            'gender.required' => 'El género es obligatorio.',
+            'gender.in'          => 'El género no es válido.',
+            'last_name.required' => 'El apellido es obligatorio.',
+            'birthdate.date' => 'La fecha de nacimiento debe ser una fecha válida.',
+            'birthdate.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
+            'phone_number.required' => 'El número de teléfono es obligatorio.',
+            'blood_type.required' => 'El tipo de sangre es obligatorio.',
+            'blood_type.in'      => 'El tipo de sangre no es válido.',
+            'address.array' => 'La dirección debe ser un arreglo válido.',
+        ];
     }
 }
