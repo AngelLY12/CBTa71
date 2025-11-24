@@ -25,4 +25,13 @@ class ImportUsersRequest extends FormRequest
             'file' => 'required|file|mimes:xlsx,xls,csv',
         ];
     }
+
+     public function messages(): array
+    {
+        return [
+            'file.required' => 'El archivo es obligatorio.',
+            'file.file'     => 'Debe proporcionar un archivo válido.',
+            'file.mimes'    => 'El archivo debe ser de tipo XLSX, XLS o CSV.',
+        ];
+    }
 }

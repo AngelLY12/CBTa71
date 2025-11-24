@@ -73,5 +73,16 @@ class UpdatePaymentConceptRequest extends FormRequest
                 'replaceRelations' => filter_var($this->replaceRelations, FILTER_VALIDATE_BOOLEAN),
             ]);
         }
+
+        if ($this->has('status')) {
+            $this->merge([
+                'status' => strtolower($this->status),
+            ]);
+        }
+        if ($this->has('applies_to')) {
+            $this->merge([
+                'applies_to' => strtolower($this->status),
+            ]);
+        }
     }
 }

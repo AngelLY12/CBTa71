@@ -54,6 +54,28 @@ class RegisterRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation()
+    {
+        if ($this->has('gender')) {
+            $this->merge([
+                'gender' => strtolower($this->gender),
+            ]);
+        }
+
+        if($this->has('blood_type'))
+        {
+            $this->merge([
+                'blood_type' => strtoupper($this->blood_type)
+            ]);
+        }
+
+        if ($this->has('status')) {
+            $this->merge([
+                'status' => strtolower($this->status),
+            ]);
+        }
+    }
+
     public function messages(): array
     {
         return [

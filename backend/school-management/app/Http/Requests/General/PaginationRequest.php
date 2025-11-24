@@ -28,6 +28,15 @@ class PaginationRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation()
+    {
+        if ($this->has('forceRefresh')) {
+            $this->merge([
+                'forceRefresh' => filter_var($this->forceRefresh, FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
+    }
+
     public function messages(): array
     {
         return [

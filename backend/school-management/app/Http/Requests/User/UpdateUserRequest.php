@@ -46,6 +46,22 @@ class UpdateUserRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation()
+    {
+        if ($this->has('gender')) {
+            $this->merge([
+                'gender' => strtolower($this->gender),
+            ]);
+        }
+
+        if($this->has('blood_type'))
+        {
+            $this->merge([
+                'blood_type' => strtoupper($this->blood_type)
+            ]);
+        }
+    }
+
     public function messages(): array
     {
         return [

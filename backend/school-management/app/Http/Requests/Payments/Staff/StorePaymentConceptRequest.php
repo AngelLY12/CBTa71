@@ -38,6 +38,26 @@ class StorePaymentConceptRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation()
+    {
+        if ($this->has('is_global')) {
+            $this->merge([
+                'is_global' => filter_var($this->is_global, FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
+
+        if ($this->has('status')) {
+            $this->merge([
+                'status' => strtolower($this->status),
+            ]);
+        }
+        if ($this->has('applies_to')) {
+            $this->merge([
+                'applies_to' => strtolower($this->status),
+            ]);
+        }
+    }
+
     public function messages(): array
     {
         return [
@@ -59,13 +79,6 @@ class StorePaymentConceptRequest extends FormRequest
         ];
     }
 
-    public function prepareForValidation()
-    {
-        if ($this->has('is_global')) {
-            $this->merge([
-                'is_global' => filter_var($this->is_global, FILTER_VALIDATE_BOOLEAN),
-            ]);
-        }
-    }
+
 
 }
