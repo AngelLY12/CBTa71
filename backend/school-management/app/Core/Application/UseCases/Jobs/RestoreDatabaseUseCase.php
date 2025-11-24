@@ -89,12 +89,15 @@ class RestoreDatabaseUseCase
         $password = env('DB_PASSWORD');
         $host     = env('DB_HOST', '127.0.0.1');
 
-        $command = "mysql -h {$host} -u {$user} -p{$password} --ssl-mode=REQUIRED {$database} < {$sqlFile}";
+        $command = "mysql -h {$host} -u {$user} -p{$password} --ssl {$database} < {$sqlFile}";
+        exec("mysql --version 2>&1", $ver, $r);
+        Log::channel('stderr')->info("Versión de mysql: " . implode(" ", $ver));
 
         exec($command, $output, $returnVar);
 
         if ($returnVar !== 0) {
             Log::channel('stderr')->error('Error restaurando la base de datos con MySQL nativo.');
+            Log::channel('stderr')->error('Output: ' . implode("\n", $output));
             return false;
         }
 
