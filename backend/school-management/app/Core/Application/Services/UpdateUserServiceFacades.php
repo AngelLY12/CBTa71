@@ -6,6 +6,7 @@ use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\UpdateUserUseCase;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Utils\Validators\UserValidator;
 use App\Core\Infraestructure\Cache\CacheService;
 use App\Exceptions\NotAllowed\InvalidCurrentPasswordException;
 use Illuminate\Support\Facades\Hash;
@@ -25,6 +26,8 @@ class UpdateUserServiceFacades
 
     public function updateUser(int $userId, array $fields): User
     {
+        $user = $this->userRepo->findById($userId);
+        UserValidator::ensureUserIsValidToUpdate($user);
         $updatedUser = $this->update->execute($userId, $fields);
         $this->service->forget("$this->prefix:$userId");
         return $updatedUser;
@@ -33,7 +36,7 @@ class UpdateUserServiceFacades
     public function updatePassword(int $userId, string $currentPassword, string $newPassword): User
     {
         $user = $this->userRepo->findById($userId);
-
+        UserValidator::ensureUserIsValidToUpdate($user);
         if (!Hash::check($currentPassword, $user->password)) {
             throw new InvalidCurrentPasswordException();
         }

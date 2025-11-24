@@ -17,15 +17,21 @@ enum PaymentConceptStatus: string
     case DESACTIVADO = 'desactivado';
     case ELIMINADO = 'eliminado';
 
-     public function canTransitionTo(self $new): bool
+    public function allowedTransitions(): array
     {
         return match ($this) {
-            self::ACTIVO       => in_array($new, [self::FINALIZADO, self::ELIMINADO, self::DESACTIVADO], true),
-            self::FINALIZADO   => in_array($new, [self::ACTIVO, self::ELIMINADO], true),
-            self::ELIMINADO    => $new === self::ACTIVO,
-            self::DESACTIVADO  => in_array($new, [self::ACTIVO, self::ELIMINADO], true),
+            self::ACTIVO => [self::FINALIZADO, self::DESACTIVADO, self::ELIMINADO,],
+            self::FINALIZADO => [self::ACTIVO, self::ELIMINADO,],
+            self::DESACTIVADO => [self::ACTIVO, self::ELIMINADO,],
+            self::ELIMINADO => [self::ACTIVO,],
         };
     }
+
+    public function canTransitionTo(self $newStatus): bool
+    {
+        return in_array($newStatus, $this->allowedTransitions(), true);
+    }
+
 
     public function isUpdatable(): bool
     {

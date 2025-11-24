@@ -30,8 +30,6 @@ class CreatePaymentConceptUseCase
 
     public function execute(CreatePaymentConceptDTO $dto): PaymentConcept {
         return DB::transaction(function() use ($dto) {
-            PaymentConceptValidator::ensureAppliesToIsValid($dto->appliesTo->value);
-            PaymentConceptValidator::ensureValidStatus($dto->status->value);
             $dto->is_global = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
             if ($dto->is_global && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
                 throw new ConceptAppliesToConflictException();

@@ -32,7 +32,6 @@ class UpdatePaymentConceptUseCase
     {}
      public function execute(UpdatePaymentConceptDTO $dto): PaymentConcept {
         return DB::transaction(function() use ($dto) {
-            PaymentConceptValidator::ensureAppliesToIsValid($dto->appliesTo->value);
             if (isset($dto->appliesTo)) {
                 $dto->fieldsToUpdate['is_global'] = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
             } else if (isset($dto->fieldsToUpdate['is_global']) && $dto->fieldsToUpdate['is_global'] === true) {

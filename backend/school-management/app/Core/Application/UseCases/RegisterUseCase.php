@@ -20,7 +20,6 @@ class RegisterUseCase
 
     public function execute(CreateUserDTO $create, ?string $password= null): User
     {
-        UserValidator::ensureUserDataIsValid($create);
         $user= DB::transaction(function () use ($create) {
             return $this->userRepo->create($create);
         });
