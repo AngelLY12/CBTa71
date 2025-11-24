@@ -26,6 +26,7 @@ class RestoreDatabaseUseCase
             }
         } catch (\Exception $e) {
             Log::channel('stderr')->warning('No se pudo conectar a la base de datos: ' . $e->getMessage());
+            return false;
         }
 
         Log::channel('stderr')->warning('Restaurando la última copia de seguridad...');
@@ -41,7 +42,7 @@ class RestoreDatabaseUseCase
         }
 
         $latestBackup = $files->first();
-        Log::channel('stderr')->info("Descargando respaldo: {$latestBackup}");
+        Log::channel('stderr')->info("Descargando respaldo");
 
         $localPath = storage_path('app/restore.zip');
         try {
