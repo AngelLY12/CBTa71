@@ -35,7 +35,6 @@ class RestoreDatabaseUseCase
         ->sortDesc()
         ->values();
 
-        Log::channel('stderr')->info('Archivos en Google Drive:', $files->toArray());
         if ($files->isEmpty()) {
             Log::channel('stderr')->error('No hay respaldos disponibles en Google Drive.');
             return false;
