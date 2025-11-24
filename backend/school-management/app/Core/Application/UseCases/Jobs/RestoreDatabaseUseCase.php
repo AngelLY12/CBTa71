@@ -89,7 +89,7 @@ class RestoreDatabaseUseCase
         $password = env('DB_PASSWORD');
         $host     = env('DB_HOST', '127.0.0.1');
 
-        $command = "mysql -h {$host} -u {$user} -p{$password} {$database} < {$sqlFile}";
+        $command = "mysql -h {$host} -u {$user} -p{$password} --ssl-mode=REQUIRED {$database} < {$sqlFile}";
 
         exec($command, $output, $returnVar);
 
