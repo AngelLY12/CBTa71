@@ -26,6 +26,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $pc = $this->findOrFail($conceptId);
         $pc->update($data);
+        $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
     }
 

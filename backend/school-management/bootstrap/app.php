@@ -56,6 +56,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('03:00');
         $schedule->command('users:dispatch-delete-users')->weekly()->at('00:00');
         $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('00:00');
+        $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('02:00');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Core\Domain\Repositories\Command\AccessTokenRepInterface;
 use App\Core\Domain\Repositories\Command\CareerRepInterface;
 use App\Core\Domain\Repositories\Command\DBRepInterface;
+use App\Core\Domain\Repositories\Command\ParentInviteRepInterface;
+use App\Core\Domain\Repositories\Command\ParentStudentRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
@@ -14,6 +16,8 @@ use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Command\StudentDetailReInterface;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\CareerQueryRepInterface;
+use App\Core\Domain\Repositories\Query\ParentInviteQueryRepInterface;
+use App\Core\Domain\Repositories\Query\ParentStudentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
@@ -23,6 +27,8 @@ use App\Core\Infraestructure\Cache\CacheService;
 use App\Core\Infraestructure\Repositories\Command\EloquentAccessTokenRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentCareerRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentDBRepository;
+use App\Core\Infraestructure\Repositories\Command\EloquentParentInviteRepository;
+use App\Core\Infraestructure\Repositories\Command\EloquentParentStudentRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentRefreshTokenRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentRolesAndPermissionsRepository;
 use App\Core\Infraestructure\Repositories\Command\EloquentStudentDetailRepository;
@@ -32,6 +38,8 @@ use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentMethod
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentRepository;
 use App\Core\Infraestructure\Repositories\Command\Stripe\StripeGateway;
 use App\Core\Infraestructure\Repositories\Query\EloquentCareerQueryRepository;
+use App\Core\Infraestructure\Repositories\Query\EloquentParentInviteQueryRepository;
+use App\Core\Infraestructure\Repositories\Query\EloquentParentStudentQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\EloquentRolesAndPermissionQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\EloquentUserQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentConceptQueryRepository;
@@ -69,6 +77,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(DBRepInterface::class, EloquentDBRepository::class);
         $this->app->singleton(CacheService::class, function () {return new CacheService();});
         $this->app->bind(RolesAndPermissosQueryRepInterface::class,EloquentRolesAndPermissionQueryRepository::class);
+        $this->app->bind(ParentStudentRepInterface::class, EloquentParentStudentRepository::class);
+        $this->app->bind(ParentStudentQueryRepInterface::class, EloquentParentStudentQueryRepository::class);
+        $this->app->bind(ParentInviteRepInterface::class, EloquentParentInviteRepository::class);
+        $this->app->bind(ParentInviteQueryRepInterface::class, EloquentParentInviteQueryRepository::class);
 
     }
 

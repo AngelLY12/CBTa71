@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CareerController;
 use App\Http\Controllers\FindEntityController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\Parents\ParentsController;
 use App\Http\Controllers\RefreshTokenController;
 use App\Http\Controllers\Staff\ConceptsController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
@@ -35,7 +36,12 @@ Route::prefix('v1')->middleware('throttle:5,1')->group(function () {
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::post('/logout',[RefreshTokenController::class,'logout']);
 
-    Route::prefix('dashboard')->middleware(['role:student', 'throttle:global'])->group(function (){
+    Route::prefix('parents')->middleware(['role:student', 'role:admin', 'throttle:5,1'])->group(function(){
+        Route::post('/invite',[ParentsController::class, 'sendInvitation']);
+        Route::post('/invite/accept',[ParentsController::class, 'acceptInvitation']);
+    });
+
+    Route::prefix('dashboard')->middleware(['role:student', 'role:parent', 'throttle:global'])->group(function (){
         Route::middleware('permission:view own financial overview')->get('/data',[DashboardController::class,'index']);
         Route::middleware('permission:view own pending concepts summary')->get('/pending',[DashboardController::class,'pending']);
         Route::middleware('permission:view own paid concepts summary')->get('/paid',[DashboardController::class,'paid']);
@@ -46,17 +52,17 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
 
     });
     Route::prefix('cards')->middleware('role:student')->group(function(){
-        Route::middleware(['permission:view cards', 'throttle:global'])->get('/',[CardsController::class,'index']);
+        Route::middleware(['permission:view cards', 'role:parent','throttle:global'])->get('/',[CardsController::class,'index']);
         Route::middleware(['permission:create setup', 'throttle:10,1'])->post('/',[CardsController::class,'store']);
         Route::middleware(['permission:delete card', 'throttle:10,1'])->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
-    Route::prefix('history')->middleware(['role:student', 'throttle:global'])->group(function(){
+    Route::prefix('history')->middleware(['role:student', 'role:parent','throttle:global'])->group(function(){
         Route::middleware('permission:view payment history')->get('/',[PaymentHistoryController::class,'index']);
     });
     Route::prefix('pending-payment')->middleware('role:student')->group(function(){
-        Route::middleware(['permission:view pending concepts', 'throttle:global'])->get('/',[PendingPaymentController::class,'index']);
+        Route::middleware(['permission:view pending concepts', 'role:parent','throttle:global'])->get('/',[PendingPaymentController::class,'index']);
         Route::middleware(['permission:create payment','throttle:5,1'])->post('/',[PendingPaymentController::class,'store']);
-        Route::middleware(['permission:view overdue concepts', 'throttle:global'])->get('/overdue',[PendingPaymentController::class,'overdue']);
+        Route::middleware(['permission:view overdue concepts', 'role:parent','throttle:global'])->get('/overdue',[PendingPaymentController::class,'overdue']);
 
     });
 
@@ -109,7 +115,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:view roles')->get('/roles/{id}', [AdminController::class, 'findRoleById']);
         Route::middleware('permission:create user')->post('/register',[AdminController::class,'registerUser']);
     });
-    Route::prefix('find')->middleware(['role:admin','role:student','role:financial staff','throttle:global'])->group(function(){
+    Route::prefix('find')->middleware(['role:admin','role:student','role:financial staff','role:parent','throttle:global'])->group(function(){
         Route::middleware('permission:view concept')->get('/concept/{id}',[FindEntityController::class,'findConcept']);
         Route::middleware('permission:view payment')->get('/payment/{id}',[FindEntityController::class,'findPayment']);
         Route::middleware('permission:view profile')->get('/user',[FindEntityController::class,'findUser']);

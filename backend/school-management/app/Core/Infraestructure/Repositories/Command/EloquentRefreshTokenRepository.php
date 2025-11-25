@@ -37,6 +37,7 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
     {
         $eloquentToken =  $this->findOrFail($tokenId);
         $eloquentToken->update($fields);
+        $eloquentToken->refresh();
         return RefreshTokenMapper::toDomain($eloquentToken);
 
     }

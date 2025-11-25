@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
+use App\Core\Domain\Entities\Role as EntitiesRole;
 use App\Core\Domain\Enum\User\UserStatus;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
@@ -32,6 +33,7 @@ class EloquentUserRepository implements UserRepInterface{
     {
         $eloquentUser =  $this->findOrFail($userId);
         $eloquentUser->update($fields);
+        $eloquentUser->refresh();
         return UserMapper::toDomain($eloquentUser);
     }
 
@@ -67,13 +69,25 @@ class EloquentUserRepository implements UserRepInterface{
         ]
     );
         $eloquentUser->load('studentDetail');
-        $eloquentUser->assignRole('student');
+        $eloquentUser->syncRoles(['student']);
         return UserMapper::toDomain($eloquentUser);
     }
 
     private function findOrFail(int $id):EloquentUser
     {
         return EloquentUser::findOrFail($id);
+    }
+
+    public function assignRole(int $userId, string $role): bool
+    {
+        $user = EloquentUser::find($userId);
+
+        if (! $user) {
+            return false;
+        }
+        $user->assignRole($role);
+        $user->refresh();
+        return true;
     }
 
     public function bulkInsertWithStudentDetails(array $rows): array
@@ -84,6 +98,7 @@ class EloquentUserRepository implements UserRepInterface{
             $users = [];
             $studentDetails = [];
             $roleRows = [];
+            $unverifiedRoleId = Role::where('name', 'unverified')->value('id');
             foreach ($rows as $row) {
                 $tempPassword = Str::random(12);
                 $tempPasswords[] = $tempPassword;
@@ -138,6 +153,12 @@ class EloquentUserRepository implements UserRepInterface{
                     ];
                     $roleRows[] = [
                         'role_id' => $roleId,
+                        'model_type' => EloquentUser::class,
+                        'model_id' => $user->id,
+                    ];
+                } else {
+                    $roleRows[] = [
+                        'role_id' => $unverifiedRoleId,
                         'model_type' => EloquentUser::class,
                         'model_id' => $user->id,
                     ];

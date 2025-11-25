@@ -21,6 +21,7 @@ class EloquentPaymentRepository implements PaymentRepInterface {
     {
         $eloquentPayment = EloquentPayment::findOrFail($paymentId);
         $eloquentPayment->update($fields);
+        $eloquentPayment->refresh();
         return PaymentMapper::toDomain($eloquentPayment);
 
     }

@@ -10,6 +10,7 @@ use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\User\UserStatus;
+use App\Core\Infraestructure\Mappers\RolesAndPermissionMapper;
 use App\Core\Infraestructure\Traits\HasPendingQuery;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -24,6 +25,14 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return optional(EloquentUser::find($userId),fn($eloquent)=>UserMapper::toDomain($eloquent));
     }
 
+    public function findUserRoles(int $userId): array
+    {
+        $user = EloquentUser::findOrFail($userId);
+        return $user->roles
+        ->map(fn($role) => RolesAndPermissionMapper::toRoleDomain($role))
+        ->toArray();
+
+    }
     public function getUserWithStudentDetail(int $userId): User
     {
         $eloquent = EloquentUser::findOrFail($userId);
@@ -223,6 +232,9 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         ->lazy()
         ->map(fn($user) => UserMapper::toDomain($user));
     }
-
+    public function findModelEntity(int $userId): EloquentUser
+    {
+        return EloquentUser::findOrFail($userId);
+    }
 
 }

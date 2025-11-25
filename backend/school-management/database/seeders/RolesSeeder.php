@@ -15,6 +15,8 @@ class RolesSeeder extends Seeder
     {
         $studentRole=Role::firstOrCreate(['name' => 'student']);
         $staffRole=Role::firstOrCreate(['name' => 'financial staff']);
+        $parentRole= Role::firstOrCreate(['name' => 'parent']);
+        Role::firstOrCreate(['name'=> 'unverified']);
         Role::firstOrCreate(['name' => 'admin']);
 
         $studentPermissions = Permission::where('belongs_to', 'student')->get();
@@ -23,5 +25,6 @@ class RolesSeeder extends Seeder
 
         $studentRole->syncPermissions($studentPermissions->merge($globalPermissions));
         $staffRole->syncPermissions($staffPermissions->merge($globalPermissions));
+        $parentRole->syncPermissions($studentPermissions->merge($globalPermissions));
     }
 }

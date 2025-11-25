@@ -113,7 +113,11 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
         if (empty($rolesToAddIds) && empty($rolesToRemoveIds)) {
             return new UserWithUpdatedRoleResponse([], [], ['added' => [], 'removed' => []], 0);
         }
-
+        $unverifiedRoleId = Role::where('name', 'unverified')->value('id');
+        if ($unverifiedRoleId) {
+            $rolesToRemoveIds[] = $unverifiedRoleId;
+            $rolesToRemoveIds = array_unique($rolesToRemoveIds);
+        }
         DB::transaction(function () use ($users, $rolesToAddIds, $rolesToRemoveIds) {
             $userIds = $users->pluck('id')->toArray();
             if (!empty($rolesToRemoveIds)) {

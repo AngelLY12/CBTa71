@@ -5,6 +5,7 @@ namespace App\Core\Domain\Repositories\Query;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
+use App\Models\User as ModelsUser;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 interface UserQueryRepInterface{
@@ -22,5 +23,7 @@ interface UserQueryRepInterface{
     public function findAllUsers(int $perPage, int $page): LengthAwarePaginator;
     public function findAuthUser(): ?User;
     public function findByIds(array $ids): iterable;
+    public function findUserRoles(int $userId): array;
+    public function findModelEntity(int $userId): ModelsUser;
 
 }

@@ -22,7 +22,10 @@ class RegisterUseCase
     {
         $user= DB::transaction(function () use ($create) {
             return $this->userRepo->create($create);
+            $role= $this->userRepo->assignRole($user->id, 'unverified');
+            if(!$role){ throw new \RuntimeException("Hubo un fallo al agregar el rol al usuario {$user->id}");}
         });
+
         if($password)
         {
             $this->notifyRecipients($user, $password);
