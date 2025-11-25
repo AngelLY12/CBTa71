@@ -7,6 +7,7 @@ use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentFailedMail;
 
@@ -48,6 +49,7 @@ class HandleFailedOrExpiredPaymentUseCase
             $mail = new PaymentFailedMail(MailMapper::toPaymentFailedEmailDTO($data));
             SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
             $this->paymentRepo->delete($payment->id);
+            ClearStudentCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));;
             return true;
         }
         return false;

@@ -45,7 +45,6 @@ class ReconcilePaymentUseCase
                 $newPayment=$this->updatePaymentWithStripeData($payment, $pi, $charge,$pm);
                 $this->notifyUser($newPayment);
                 $affectedUsers[] = $newPayment->user_id;
-
             } catch (DomainException $e) {
                 logger()->warning("[ReconcilePayment] {$e->getMessage()} (code: {$e->getCode()})");
             } catch (\Throwable $e) {

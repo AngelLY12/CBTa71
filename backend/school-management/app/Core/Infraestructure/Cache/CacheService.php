@@ -2,6 +2,7 @@
 
 namespace App\Core\Infraestructure\Cache;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Closure;
 use Illuminate\Support\Facades\Cache;
 
@@ -55,7 +56,7 @@ class CacheService
             "staff:dashboard:*",
             "staff:debts:*",
             "staff:payments:*",
-            "staff:students:*"
+            "staff:students:*",
         ];
         foreach($prefixes as $prefix)
         {
@@ -76,12 +77,46 @@ class CacheService
             $this->clearPrefix($prefix);
         }
     }
-    public function clearStudentConcepts(int $userId):void
+
+    public function clearCacheWhileConceptChangeStatus(int $userId, PaymentConceptStatus $conceptStatus):void
     {
-        $this->clearPrefix("student:pending:pending:$userId");
-    }
-     public function clearStudentOverdueConcepts(int $userId):void
-    {
-        $this->clearPrefix("student:pending:overdue:$userId");
+        $prefixes= match($conceptStatus){
+            PaymentConceptStatus::ACTIVO =>
+            ["student:pending:*:$userId",
+            "student:dashboard-user:pending:$userId",
+            "staff:dashboard:pending",
+            "staff:dashboard:concepts",
+            "staff:debts:pending",
+            "staff:students:*",
+            ],
+            PaymentConceptStatus::FINALIZADO =>
+            ["student:pending:*:$userId",
+            "student:dashboard-user:overdue:$userId",
+            "staff:dashboard:pending",
+            "staff:dashboard:concepts",
+            "staff:debts:pending",
+            "staff:students:*",
+            ],
+            PaymentConceptStatus::ELIMINADO =>
+            ["student:pending:*:$userId",
+            "student:dashboard-user:*:$userId",
+            "staff:dashboard:pending",
+            "staff:dashboard:concepts",
+            "staff:debts:pending",
+            "staff:students:*",
+            ],
+            PaymentConceptStatus::DESACTIVADO =>
+            ["student:pending:*:$userId",
+            "student:dashboard-user:*:$userId",
+            "staff:dashboard:pending",
+            "staff:dashboard:concepts",
+            "staff:debts:pending",
+            "staff:students:*",
+            ],
+        };
+        foreach($prefixes as $prefix)
+        {
+            $this->clearPrefix($prefix);
+        }
     }
 }

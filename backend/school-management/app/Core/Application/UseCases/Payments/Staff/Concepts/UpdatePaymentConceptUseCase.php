@@ -17,6 +17,8 @@ use App\Exceptions\NotFound\RecipientsNotFoundException;
 use App\Exceptions\NotFound\StudentsNotFoundException;
 use App\Exceptions\Validation\CareerSemesterInvalidException;
 use App\Exceptions\Validation\SemestersNotFoundException;
+use App\Jobs\ClearCacheWhileStatusChangeJob;
+use App\Jobs\ClearStaffCacheWhileNewConceptJob;
 use App\Jobs\ClearStudentConceptCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\NewConceptMail;
@@ -118,7 +120,7 @@ class UpdatePaymentConceptUseCase
     }
     private function notifyRecipients(PaymentConcept $concept, array $recipients): void {
         foreach($recipients as $user) {
-            ClearStudentConceptCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));
+            ClearCacheWhileStatusChangeJob::dispatch($user->id, $concept->status)->delay(now()->addSeconds(rand(1, 10)));
             $data = [
                 'recipientName'=>$user->name,
                 'recipientEmail' => $user->email,

@@ -18,6 +18,8 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Exceptions\NotFound\ConceptNotFoundException;
 use App\Exceptions\NotFound\PaymentMethodNotFoundException;
 use App\Exceptions\NotFound\UserNotFoundException;
+use App\Jobs\ClearStaffCacheJob;
+use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentValidatedMail;
 
@@ -45,7 +47,7 @@ class ValidatePaymentUseCase{
             }
 
             $payment=$this->pqRepo->findByIntentOrSession($student->id,$payment_intent_id);
-
+            $validated=false;
             if (!$payment) {
                     $stripe=$this->stripeRepo->getIntentAndCharge($payment_intent_id);
                     $paymentConceptId = $stripe['intent']->metadata->payment_concept_id ?? null;
@@ -73,6 +75,7 @@ class ValidatePaymentUseCase{
 
                     );
                     $payment = $this->paymentRepo->create($payment);
+                    $validated=true;
             }
             else {
                 if ($payment->status === 'paid' && empty($payment->payment_method_details)) {
@@ -81,6 +84,7 @@ class ValidatePaymentUseCase{
                     $pm = $this->pmqRepo->findByStripeId($stripe['charge']->payment_method);
                     if (!$pm) throw new PaymentMethodNotFoundException();
                     $this->updatePaymentWithStripeData($payment, $stripe['intent'], $stripe['charge'], $pm);
+                    $validated=true;
                 }
             }
             $data = [
@@ -92,7 +96,11 @@ class ValidatePaymentUseCase{
                 'url'                => $payment->url ?? null,
                 'payment_intent_id'  => $payment->payment_intent_id,
             ];
-
+            if($validated)
+            {
+                ClearStudentCacheJob::dispatch($payment->user_id)->delay(now()->addSeconds(rand(1, 10)));
+                ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
+            }
             $mail = new PaymentValidatedMail(MailMapper::toPaymentValidatedEmailDTO($data));
             SendMailJob::dispatch($mail, $student->email)->delay(now()->addSeconds(rand(1, 5)));
             return PaymentMapper::toPaymentValidateResponse(AppUserMapper::toDataResponse($student),PaymentMapper::toPaymentDataResponse($payment));

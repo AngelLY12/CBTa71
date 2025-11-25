@@ -5,6 +5,7 @@ namespace App\Core\Application\UseCases\Admin;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Domain\Repositories\Command\RolesAndPermissionsRepInterface;
+use App\Exceptions\NotFound\UsersNotFoundForUpdateException;
 
 class SyncRoleUseCase
 {
@@ -17,6 +18,11 @@ class SyncRoleUseCase
 
     public function execute(UpdateUserRoleDTO $dto): UserWithUpdatedRoleResponse
     {
-        return $this->repo->updateRoleToMany($dto);
+        $updated=$this->repo->updateRoleToMany($dto);
+        if (empty($updated))
+        {
+            throw new UsersNotFoundForUpdateException();
+        }
+        return $updated;
     }
 }

@@ -29,7 +29,7 @@ class UpdatePaymentConceptRequest extends FormRequest
             'status'           => ['sometimes','required','string','in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptStatus::cases()))],
             'start_date'       => 'sometimes|required|date|date_format:Y-m-d',
             'end_date'         => 'nullable|date|date_format:Y-m-d',
-            'amount'           => 'sometimes|required|numeric',
+            'amount'           => 'sometimes|required|numeric|min:10',
             'is_global'        => 'sometimes|required|boolean',
             'applies_to'       => ['nullable','string','in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptAppliesTo::cases()))],
             'semestres'        => 'nullable|array',
@@ -81,7 +81,7 @@ class UpdatePaymentConceptRequest extends FormRequest
         }
         if ($this->has('applies_to')) {
             $this->merge([
-                'applies_to' => strtolower($this->status),
+                'applies_to' => strtolower($this->applies_to),
             ]);
         }
     }

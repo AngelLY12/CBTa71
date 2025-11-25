@@ -4,6 +4,7 @@ namespace App\Core\Application\UseCases\Career;
 
 use App\Core\Domain\Entities\Career;
 use App\Core\Domain\Repositories\Command\CareerRepInterface;
+use Illuminate\Support\Facades\DB;
 
 class CreateCareerUseCase
 {
@@ -13,6 +14,8 @@ class CreateCareerUseCase
 
     public function execute(Career $career): Career
     {
-        return $this->careerRepo->create($career);
+        return DB::transaction(function() use ($career) {
+            return $this->careerRepo->create($career);
+        });
     }
 }

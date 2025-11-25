@@ -44,7 +44,6 @@ class PayConceptUseCase
             );
 
             $this->paymentRepo->create($payment);
-
             return $session->url;
         });
     }

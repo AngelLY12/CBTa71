@@ -41,25 +41,29 @@ class ConceptsServiceFacades{
 
      public function createPaymentConcept(CreatePaymentConceptDTO $dto): PaymentConcept {
         $concept = $this->create->execute($dto);
-        $this->service->clearPrefix($this->prefix);
+        $this->service->clearPrefix("$this->prefix:{$concept->status->value}");
         return $concept;
     }
 
     public function updatePaymentConcept(UpdatePaymentConceptDTO $dto): PaymentConcept {
         $concept = $this->update->execute($dto);
-        $this->service->clearPrefix($this->prefix);
+        $this->service->clearPrefix("$this->prefix:{$concept->status->value}");
         return $concept;
     }
 
     public function finalizePaymentConcept(PaymentConcept $concept): PaymentConcept {
+        $oldStatus = $concept->status;
         $result = $this->finalize->execute($concept);
-        $this->service->clearPrefix($this->prefix);
+        $this->service->clearPrefix("$this->prefix:{$oldStatus->value}");
+        $this->service->clearPrefix("$this->prefix:{$result->status->value}");
         return $result;
     }
 
     public function disablePaymentConcept(PaymentConcept $concept): PaymentConcept {
+        $oldStatus = $concept->status;
         $result = $this->disable->execute($concept);
-        $this->service->clearPrefix($this->prefix);
+        $this->service->clearPrefix("$this->prefix:{$oldStatus->value}");
+        $this->service->clearPrefix("$this->prefix:{$result->status->value}");
         return $result;
     }
 
@@ -70,8 +74,10 @@ class ConceptsServiceFacades{
 
     public function activatePaymentConcept(PaymentConcept $concept):PaymentConcept
     {
+        $oldStatus = $concept->status;
         $result = $this->activate->execute($concept);
-        $this->service->clearPrefix($this->prefix);
+        $this->service->clearPrefix("$this->prefix:{$oldStatus->value}");
+        $this->service->clearPrefix("$this->prefix:{$result->status->value}");
         return $result;
     }
 

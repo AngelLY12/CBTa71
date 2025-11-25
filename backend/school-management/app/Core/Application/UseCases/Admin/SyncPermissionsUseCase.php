@@ -4,6 +4,7 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Domain\Repositories\Command\RolesAndPermissionsRepInterface;
+use App\Exceptions\NotFound\UsersNotFoundForUpdateException;
 
 class SyncPermissionsUseCase
 {
@@ -16,6 +17,11 @@ class SyncPermissionsUseCase
 
     public function execute(UpdateUserPermissionsDTO $dto): array
     {
-        return $this->repo->updatePermissionToMany($dto);
+        $updated=$this->repo->updatePermissionToMany($dto);
+        if (empty($updated))
+        {
+            throw new UsersNotFoundForUpdateException();
+        }
+        return $updated;
     }
 }

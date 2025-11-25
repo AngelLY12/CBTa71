@@ -7,11 +7,13 @@ use App\Core\Application\DTO\Response\General\LoginResponse;
 use App\Core\Application\UseCases\LoginUseCase;
 use App\Core\Application\UseCases\RegisterUseCase;
 use App\Core\Domain\Entities\User;
+use App\Core\Infraestructure\Cache\CacheService;
 
 class LoginService{
     public function __construct(
         private LoginUseCase $login,
-        private RegisterUseCase $register
+        private RegisterUseCase $register,
+        private CacheService $service
     )
     {
    }
@@ -23,6 +25,8 @@ class LoginService{
 
    public function register(CreateUserDTO $user): User
    {
-        return $this->register->execute($user);
+        $user= $this->register->execute($user);
+        $this->service->clearPrefix("admin:users:all");
+        return $user;
    }
 }

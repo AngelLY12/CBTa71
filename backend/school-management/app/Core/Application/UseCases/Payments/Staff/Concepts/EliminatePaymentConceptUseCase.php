@@ -1,12 +1,12 @@
 <?php
 namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Exceptions\NotFound\ConceptNotFoundException;
-use App\Jobs\ClearStudentConceptCacheJob;
-use App\Jobs\ClearStudentConceptOverdueCacheJob;
+use App\Jobs\ClearCacheWhileStatusChangeJob;
 
 class EliminatePaymentConceptUseCase
 {
@@ -27,8 +27,7 @@ class EliminatePaymentConceptUseCase
         $users=$this->uqRepo->getRecipients($concept,$concept->applies_to->value);
         foreach ($users as $user)
         {
-            ClearStudentConceptCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));
-            ClearStudentConceptOverdueCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));
+            ClearCacheWhileStatusChangeJob::dispatch($user->id, PaymentConceptStatus::ELIMINADO)->delay(now()->addSeconds(rand(1, 10)));
         }
         $this->pcRepo->delete($conceptId);
     }

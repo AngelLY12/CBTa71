@@ -4,6 +4,7 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Jobs\ClearStaffCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\CreatedUserMail;
 
@@ -25,6 +26,7 @@ class BulkImportUsersUseCase
                 logger()->error('Error importing users: '.$e->getMessage());
             }
         }
+        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
         return $affected['affected'];
     }
 

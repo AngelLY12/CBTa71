@@ -29,7 +29,7 @@ class UpdateUserServiceFacades
         $user = $this->userRepo->findById($userId);
         UserValidator::ensureUserIsValidToUpdate($user);
         $updatedUser = $this->update->execute($userId, $fields);
-        $this->service->forget("$this->prefix:$userId");
+        $this->service->clearPrefix("$this->prefix:$userId");
         return $updatedUser;
     }
 
@@ -42,7 +42,7 @@ class UpdateUserServiceFacades
         }
         $hashed = Hash::make($newPassword);
         $updatedUser = $this->update->execute($userId, ['password' => $hashed]);
-        $this->service->forget("$this->prefix:$userId");
+        $this->service->clearPrefix("$this->prefix:$userId");
         return $updatedUser;
     }
 }

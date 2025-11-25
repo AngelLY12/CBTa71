@@ -55,7 +55,7 @@ class AdminService
     {
         $student=$this->attach->execute($create);
         $this->service->clearPrefix("$this->prefix:users:all");
-        $this->service->clearPrefix("$this->prefix:user:$student->id");
+        $this->service->clearPrefix("user:$student->id");
         return $student;
     }
 
@@ -74,7 +74,7 @@ class AdminService
     }
     public function showAllUsers(int $perPage, int $page, bool $forceRefresh): PaginatedResponse
     {
-        $key = "$this->prefix:users:page:$page:$perPage";
+        $key = "$this->prefix:users:all:page:$page:$perPage";
         return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page));
     }
     public function syncPermissions(UpdateUserPermissionsDTO $dto):array

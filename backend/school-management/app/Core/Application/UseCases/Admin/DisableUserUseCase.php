@@ -4,6 +4,7 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\Mappers\EnumMapper;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\UserValidator;
@@ -23,6 +24,6 @@ class DisableUserUseCase
         foreach($users as $user){
             UserValidator::ensureValidStatusTransition($user, EnumMapper::toUserStatus('baja'));
         }
-        return $this->userRepo->changeStatus($ids, 'baja');
+        return $this->userRepo->changeStatus($ids, UserStatus::BAJA->value);
     }
 }
