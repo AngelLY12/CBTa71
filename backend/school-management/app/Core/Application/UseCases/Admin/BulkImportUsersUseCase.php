@@ -7,6 +7,7 @@ use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Jobs\ClearStaffCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\CreatedUserMail;
+use Illuminate\Auth\Events\Registered;
 
 class BulkImportUsersUseCase
 {
@@ -41,6 +42,7 @@ class BulkImportUsersUseCase
                 'recipientEmail' => $user->email,
                 'password'       => $password
             ];
+            event(new Registered($user));
 
             SendMailJob::dispatch(
                 new CreatedUserMail(

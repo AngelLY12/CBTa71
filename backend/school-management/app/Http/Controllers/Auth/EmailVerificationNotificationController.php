@@ -39,7 +39,7 @@ class EmailVerificationNotificationController extends Controller
     public function store(Request $request): JsonResponse|RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended('/dashboard');
+            return redirect(config('app.frontend_url').'/login');
         }
 
         $request->user()->sendEmailVerificationNotification();

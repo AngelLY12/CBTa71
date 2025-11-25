@@ -9,6 +9,7 @@ use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Utils\Validators\UserValidator;
 use App\Jobs\SendMailJob;
 use App\Mail\CreatedUserMail;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 
 class RegisterUseCase
@@ -21,15 +22,17 @@ class RegisterUseCase
     public function execute(CreateUserDTO $create, ?string $password= null): User
     {
         $user= DB::transaction(function () use ($create) {
-            return $this->userRepo->create($create);
+            $user= $this->userRepo->create($create);
             $role= $this->userRepo->assignRole($user->id, 'unverified');
             if(!$role){ throw new \RuntimeException("Hubo un fallo al agregar el rol al usuario {$user->id}");}
+            return $user;
         });
 
         if($password)
         {
             $this->notifyRecipients($user, $password);
         }
+        event(new Registered($user));
         return $user;
     }
 
