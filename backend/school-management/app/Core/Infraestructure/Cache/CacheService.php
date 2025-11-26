@@ -78,6 +78,17 @@ class CacheService
         }
     }
 
+    public function clearParentCache(int $parentId):void
+    {
+        $prefixes=[
+            "parent:children:$parentId",
+        ];
+        foreach($prefixes as $prefix)
+        {
+            $this->clearPrefix($prefix);
+        }
+    }
+
     public function clearCacheWhileConceptChangeStatus(int $userId, PaymentConceptStatus $conceptStatus):void
     {
         $prefixes= match($conceptStatus){

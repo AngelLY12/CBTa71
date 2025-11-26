@@ -5,22 +5,25 @@ namespace App\Models;
 use App\Core\Domain\Enum\User\UserBloodType;
 use App\Core\Domain\Enum\User\UserGender;
 use App\Core\Domain\Enum\User\UserStatus;
+use App\Mail\SendVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\PaymentMethod;
 use App\Models\PaymentConcept;
 use App\Models\Payment;
+use App\Models\traits\ResolvesTargetUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-
+/**
+ * @method bool hasRole(string|array $roles)
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
-    use HasRoles;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser;
 
     /**
      * The attributes that are mass assignable.
@@ -76,6 +79,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ParentStudent::class, 'student_id');
     }
 
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new SendVerifyEmail());
+    }
 
 
 

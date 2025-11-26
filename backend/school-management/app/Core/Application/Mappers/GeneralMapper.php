@@ -34,12 +34,13 @@ class GeneralMapper{
         );
     }
 
-    public static function toLoginResponse(string $token, string $refresh,$token_type):LoginResponse
+    public static function toLoginResponse(string $token, string $refresh,$token_type, array $data):LoginResponse
     {
         return new LoginResponse(
             access_token:$token ?? null,
             refresh_token: $refresh ?? null,
-            token_type:$token_type ?? null
+            token_type:$token_type ?? null,
+            user_data:$data ?? []
         );
     }
 

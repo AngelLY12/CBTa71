@@ -5,6 +5,8 @@ namespace App\Core\Application\UseCases;
 use App\Core\Domain\Repositories\Command\AccessTokenRepInterface;
 use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
+use App\Jobs\ClearParentCacheJob;
+use App\Jobs\ClearStudentCacheJob;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -30,16 +32,17 @@ class LogoutUseCase
             }
         });
         $roles = $user->roles()->pluck('name')->toArray();
-
+        $userId = $user->id;
         if (in_array('admin', $roles)) {
             $this->service->clearPrefix("admin");
         }
 
+        if (in_array('parent', $roles)) {
+            ClearParentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
+        }
+
         if (in_array('student', $roles)) {
-            $userId = $user->id;
-            $this->service->clearPrefix("student:dashboard-user:*:$userId");
-            $this->service->clearPrefix("student:pending:*:$userId");
-            $this->service->clearPrefix("student:history:$userId");
+            ClearStudentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
             $this->service->clearPrefix("student:cards:*:$userId");
         }
 

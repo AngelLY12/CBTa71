@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\Mappers;
 
+use App\Core\Application\DTO\Response\Parents\ParentChildrenResponse;
 use App\Core\Domain\Entities\ParentStudent;
 use App\Core\Domain\Enum\User\RelationshipType;
 
@@ -17,6 +18,15 @@ class ParentStudentMapper
             relationship: isset($data['relationship'])
             ? RelationshipType::from($data['relationship'])
             : null
+        );
+    }
+
+    public static function toParentChildrenResponse(array $data): ParentChildrenResponse
+    {
+        return new ParentChildrenResponse(
+            parentId:$data['parentId'] ?? null,
+            parentName:$data['parentName'] ?? null,
+            childrenData:$data['childrenData'] ?? []
         );
     }
 }

@@ -5,6 +5,7 @@ namespace App\Core\Application\UseCases;
 use App\Core\Application\DTO\Request\General\LoginDTO;
 use App\Core\Application\DTO\Response\General\LoginResponse;
 use App\Core\Application\Mappers\GeneralMapper;
+use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use App\Core\Infraestructure\Repositories\Command\Stripe\StripeGateway;
@@ -36,8 +37,19 @@ class LoginUseCase
                 $user->stripe_customer_id = $stripeCustomerId;
             });
         }
+        $userRoles= $this->uqRepo->findUserRoles($user->id);
+        $userData=$this->formatUserData($userRoles, $user->fullName());
         $token = $this->userRepo->createToken($user->id,'api-token');
         $refreshToken = $this->userRepo->createRefreshToken($user->id, 'refresh-token');
-        return GeneralMapper::toLoginResponse($token,$refreshToken,'Bearer');
+        return GeneralMapper::toLoginResponse($token,$refreshToken,'Bearer', $userData);
+   }
+
+   private function formatUserData(array $roles, string $fullName): array
+   {
+        $rolesName = collect($roles)->pluck('name');
+        return [
+            'fullName' => $fullName,
+            'roles' => $rolesName->toArray()
+        ];
    }
 }

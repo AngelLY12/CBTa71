@@ -36,33 +36,34 @@ Route::prefix('v1')->middleware('throttle:5,1')->group(function () {
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::post('/logout',[RefreshTokenController::class,'logout']);
 
-    Route::prefix('parents')->middleware(['role:student', 'role:admin', 'throttle:5,1'])->group(function(){
-        Route::post('/invite',[ParentsController::class, 'sendInvitation']);
-        Route::post('/invite/accept',[ParentsController::class, 'acceptInvitation']);
+    Route::prefix('parents')->middleware(['throttle:5,1'])->group(function(){
+        Route::middleware(['role:student', 'role:admin',])->post('/invite',[ParentsController::class, 'sendInvitation']);
+        Route::middleware(['role:parent'])->post('/invite/accept',[ParentsController::class, 'acceptInvitation']);
+        Route::middleware(['role:parent'])->get('/get-children',[ParentsController::class,'getParetChildren']);
     });
 
     Route::prefix('dashboard')->middleware(['role:student', 'role:parent', 'throttle:global'])->group(function (){
-        Route::middleware('permission:view own financial overview')->get('/data',[DashboardController::class,'index']);
-        Route::middleware('permission:view own pending concepts summary')->get('/pending',[DashboardController::class,'pending']);
-        Route::middleware('permission:view own paid concepts summary')->get('/paid',[DashboardController::class,'paid']);
-        Route::middleware('permission:view own overdue concepts summary')->get('/overdue',[DashboardController::class,'overdue']);
-        Route::middleware('permission:view payments history')->get('/history',[DashboardController::class,'history']);
+        Route::middleware('permission:view own financial overview')->get('/data/{id}',[DashboardController::class,'index']);
+        Route::middleware('permission:view own pending concepts summary')->get('/pending/{id}',[DashboardController::class,'pending']);
+        Route::middleware('permission:view own paid concepts summary')->get('/paid/{id}',[DashboardController::class,'paid']);
+        Route::middleware('permission:view own overdue concepts summary')->get('/overdue/{id}',[DashboardController::class,'overdue']);
+        Route::middleware('permission:view payments history')->get('/history/{id}',[DashboardController::class,'history']);
         Route::middleware('permission:refresh all dashboard')->post('/refresh',[DashboardController::class,'refreshDashboard']);
 
 
     });
     Route::prefix('cards')->middleware('role:student')->group(function(){
-        Route::middleware(['permission:view cards', 'role:parent','throttle:global'])->get('/',[CardsController::class,'index']);
+        Route::middleware(['permission:view cards', 'role:parent','throttle:global'])->get('/{id}',[CardsController::class,'index']);
         Route::middleware(['permission:create setup', 'throttle:10,1'])->post('/',[CardsController::class,'store']);
         Route::middleware(['permission:delete card', 'throttle:10,1'])->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
     Route::prefix('history')->middleware(['role:student', 'role:parent','throttle:global'])->group(function(){
-        Route::middleware('permission:view payment history')->get('/',[PaymentHistoryController::class,'index']);
+        Route::middleware('permission:view payment history')->get('/{id}',[PaymentHistoryController::class,'index']);
     });
     Route::prefix('pending-payment')->middleware('role:student')->group(function(){
-        Route::middleware(['permission:view pending concepts', 'role:parent','throttle:global'])->get('/',[PendingPaymentController::class,'index']);
+        Route::middleware(['permission:view pending concepts', 'role:parent','throttle:global'])->get('/{id}',[PendingPaymentController::class,'index']);
         Route::middleware(['permission:create payment','throttle:5,1'])->post('/',[PendingPaymentController::class,'store']);
-        Route::middleware(['permission:view overdue concepts', 'role:parent','throttle:global'])->get('/overdue',[PendingPaymentController::class,'overdue']);
+        Route::middleware(['permission:view overdue concepts', 'role:parent','throttle:global'])->get('/overdue/{id}',[PendingPaymentController::class,'overdue']);
 
     });
 
