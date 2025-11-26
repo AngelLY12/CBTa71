@@ -589,7 +589,7 @@ class AdminController extends Controller
     }
 
     /**
-     * @OA\Get(
+     * @OA\Post(
      *     path="/api/v1/admin-actions/find-permissions",
      *     summary="Mostrar permisos existentes",
      *     description="Permite al administrador ver todos los permisos registrados.",
@@ -598,26 +598,11 @@ class AdminController extends Controller
      *     security={{"bearerAuth": {}}},
      *
      *
-     *     @OA\Parameter(
-     *         name="curps",
-     *         in="query",
-     *         description="Curps de los usuarios",
-     *         required=false,
-     *         @OA\Schema(
-     *           type="array",
-     *           @OA\Items(
-     *               type="string",
-     *               example="GAAA900101HDFRRN05"
-     *           )
-     *       )
-     *     ),
-     *
-     *      @OA\Parameter(
-     *         name="role",
-     *         in="query",
-     *         description="Role de los usuarios a los que aplican los permisos.",
-     *         required=false,
-     *         @OA\Schema(type="string", example="student")
+     *      @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             ref="#/components/schemas/FindPermissionsRequest"
+     *         )
      *     ),
      *
      *     @OA\Response(

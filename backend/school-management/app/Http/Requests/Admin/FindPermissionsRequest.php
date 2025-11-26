@@ -48,6 +48,7 @@ class FindPermissionsRequest extends FormRequest
         return [
             'curps' => ['nullable', 'array'],
             'curps.*' => ['string', 'exists:users,curp'],
+            'curps.*' => ['string', 'size:18'],
             'role' => ['nullable', 'string', 'exists:roles,name'],
         ];
     }
@@ -89,6 +90,7 @@ class FindPermissionsRequest extends FormRequest
         return [
             'curps.array' => 'El campo curps debe ser un array.',
             'curps.*.exists' => 'Una o más CURPs no existen en el sistema.',
+            'curps.*.size' => 'Las CURPs deben ser de 18 caracteres',
             'role.exists' => 'El rol proporcionado no existe.',
         ];
     }

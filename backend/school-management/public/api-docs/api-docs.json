@@ -691,38 +691,23 @@
             }
         },
         "/api/v1/admin-actions/find-permissions": {
-            "get": {
+            "post": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Mostrar permisos existentes",
                 "description": "Permite al administrador ver todos los permisos registrados.",
                 "operationId": "showAllPermissions",
-                "parameters": [
-                    {
-                        "name": "curps",
-                        "in": "query",
-                        "description": "Curps de los usuarios",
-                        "required": false,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "example": "GAAA900101HDFRRN05"
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FindPermissionsRequest"
                             }
                         }
-                    },
-                    {
-                        "name": "role",
-                        "in": "query",
-                        "description": "Role de los usuarios a los que aplican los permisos.",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "student"
-                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Permisos obtenidos correctamente.",

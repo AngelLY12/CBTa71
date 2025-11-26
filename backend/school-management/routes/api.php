@@ -110,7 +110,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:activate users')->post('/activate-users', [AdminController::class, 'activateUsers']);
         Route::middleware('permission:disable users')->post('/disable-users', [AdminController::class, 'disableUsers']);
         Route::middleware('permission:delete users')->post('/delete-users', [AdminController::class, 'deleteUsers']);
-        Route::middleware('permission:view permissions')->get('/find-permissions', [AdminController::class, 'findAllPermissions']);
+        Route::middleware('permission:view permissions')->post('/find-permissions', [AdminController::class, 'findAllPermissions']);
         Route::middleware('permission:view permissions')->get('/permissions/{id}', [AdminController::class, 'findPermissionById']);
         Route::middleware('permission:view roles')->get('/find-roles', [AdminController::class, 'findAllRoles']);
         Route::middleware('permission:view roles')->get('/roles/{id}', [AdminController::class, 'findRoleById']);
