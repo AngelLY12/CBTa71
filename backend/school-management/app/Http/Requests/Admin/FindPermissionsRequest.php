@@ -4,6 +4,30 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="FindPermissionsRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="curps",
+ *         type="array",
+ *         description="Array de CURPs de los usuarios a consultar permisos (opcional, no enviar si se usa role)",
+ *         example={"LOPA800101HDFRNL09", "MARA900202MDFRTN05"},
+ *         @OA\Items(
+ *             type="string",
+ *             example="LOPA800101HDFRNL09",
+ *             description="CURP de un usuario existente"
+ *         )
+ *     ),
+ *     @OA\Property(
+ *         property="role",
+ *         type="string",
+ *        description="Nombre del rol para consultar permisos (opcional, no enviar si se usan curps)",
+ *        example="admin"
+ *     )
+ * )
+ */
+
 class FindPermissionsRequest extends FormRequest
 {
     /**

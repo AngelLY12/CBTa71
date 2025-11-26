@@ -111,9 +111,7 @@ class DebtsController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"search","payment_intent_id"},
-     *             @OA\Property(property="search", type="string", example="LOYA030504HMSPXNA8"),
-     *             @OA\Property(property="payment_intent_id", type="string", example="pi_3Q3u9YBvLxeAQs9T1zUzr3YH")
+     *            ref="#/components/schemas/ValidatePaymentRequest"
      *         )
      *     ),
      *     @OA\Response(
@@ -172,9 +170,9 @@ class DebtsController extends Controller
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Stripe customer id del usuario",
+     *         description="Email, CURP o n_control",
      *         required=true,
-     *         @OA\Schema(type="string", example="cu..")
+     *         @OA\Schema(type="string", example="25687290")
      *     ),
      *     @OA\Parameter(
      *         name="year",

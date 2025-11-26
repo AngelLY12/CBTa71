@@ -34,7 +34,7 @@ class LoginController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         description="Datos necesarios para el registro del usuario",
-     *         @OA\JsonContent(ref="#/components/schemas/CreateUserDTO")
+     *         @OA\JsonContent(ref="#/components/schemas/RegisterRequest")
      *     ),
      *
      *     @OA\Response(
@@ -106,7 +106,7 @@ class LoginController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         description="Credenciales del usuario para iniciar sesión",
-     *         @OA\JsonContent(ref="#/components/schemas/LoginDTO")
+     *         @OA\JsonContent(ref="#/components/schemas/LoginRequest")
      *     ),
      *
      *     @OA\Response(

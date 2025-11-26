@@ -4,6 +4,25 @@ namespace App\Http\Requests\Payments\Staff;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="ValidatePaymentRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="search",
+ *         type="string",
+ *         description="Término de búsqueda para validar el pago",
+ *         example="user@example.com"
+ *     ),
+ *     @OA\Property(
+ *         property="payment_intent_id",
+ *         type="string",
+ *         description="ID del intento de pago a validar",
+ *         example="pi_1Hh1XYZ1234567890"
+ *     )
+ * )
+ */
+
 class ValidatePaymentRequest extends FormRequest
 {
     /**

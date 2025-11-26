@@ -4,6 +4,33 @@ namespace App\Http\Requests\General;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="PaginationRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="forceRefresh",
+ *         type="boolean",
+ *         description="Indica si se debe forzar la actualización (opcional)"
+ *     ),
+ *     @OA\Property(
+ *         property="perPage",
+ *         type="integer",
+ *         minimum=1,
+ *         maximum=200,
+ *         description="Número de elementos por página (opcional, entre 1 y 200)",
+ *         example=20
+ *     ),
+ *     @OA\Property(
+ *         property="page",
+ *         type="integer",
+ *         minimum=1,
+ *         description="Número de página (opcional, mínimo 1)",
+ *         example=1
+ *     )
+ * )
+ */
+
 class PaginationRequest extends FormRequest
 {
     /**

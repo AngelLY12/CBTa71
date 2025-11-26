@@ -6,6 +6,96 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="StorePaymentConceptRequest",
+ *     type="object",
+ *     required={"concept_name","start_date","amount","is_global","applies_to"},
+ *
+ *     @OA\Property(
+ *         property="concept_name",
+ *         type="string",
+ *         maxLength=50,
+ *         description="Nombre del concepto de pago",
+ *         example="Inscripción 2025"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="description",
+ *         type="string",
+ *         maxLength=100,
+ *         description="Descripción opcional del concepto",
+ *         example="Pago correspondiente al proceso de inscripción del ciclo 2025"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="status",
+ *         ref="#/components/schemas/PaymentConceptStatus",
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="start_date",
+ *         type="string",
+ *         format="date",
+ *         description="Fecha de inicio (YYYY-MM-DD)",
+ *         example="2025-01-15"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="end_date",
+ *         type="string",
+ *         format="date",
+ *         description="Fecha de fin (opcional, YYYY-MM-DD)",
+ *         example="2025-03-01"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="amount",
+ *         type="number",
+ *         minimum=10,
+ *         description="Monto del concepto",
+ *         example=1500.50
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="is_global",
+ *         type="boolean",
+ *         description="Indica si aplica globalmente",
+ *         example=true
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="applies_to",
+ *         ref="#/components/schemas/PaymentConceptAppliesTo",
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="semestres",
+ *         type="array",
+ *         description="Array de semestres a los que aplica (opcional)",
+ *         @OA\Items(type="integer"),
+ *         example={1,2,3}
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="careers",
+ *         type="array",
+ *         description="Array de IDs de carreras a los que aplica (opcional)",
+ *         @OA\Items(type="integer"),
+ *         example={4,7}
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="students",
+ *         type="array",
+ *         description="Array de CURPs de estudiantes a los que aplica (opcional)",
+ *         @OA\Items(type="string"),
+ *         example={"12","55","89"}
+ *     )
+ * )
+ */
+
+
 class StorePaymentConceptRequest extends FormRequest
 {
     /**

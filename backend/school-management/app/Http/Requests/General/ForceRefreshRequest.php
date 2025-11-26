@@ -4,6 +4,18 @@ namespace App\Http\Requests\General;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="ForceRefreshRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="forceRefresh",
+ *         type="boolean",
+ *         description="Indica si se debe forzar la actualización (opcional)"
+ *     )
+ * )
+ */
+
 class ForceRefreshRequest extends FormRequest
 {
     /**

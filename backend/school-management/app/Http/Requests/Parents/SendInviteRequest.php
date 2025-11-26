@@ -4,6 +4,30 @@ namespace App\Http\Requests\Parents;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+
+/**
+ * @OA\Schema(
+ *     schema="SendInviteRequest",
+ *     type="object",
+ *     required={"student_id","parent_email"},
+ *
+ *     @OA\Property(
+ *         property="student_id",
+ *         type="integer",
+ *         description="ID del estudiante existente",
+ *         example=42
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="parent_email",
+ *         type="string",
+ *         format="email",
+ *         description="Correo electrónico del padre",
+ *         example="parent@example.com"
+ *     )
+ * )
+ */
+
 class SendInviteRequest extends FormRequest
 {
     /**

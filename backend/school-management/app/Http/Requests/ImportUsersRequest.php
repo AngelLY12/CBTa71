@@ -4,6 +4,18 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="ImportUsersRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="file",
+ *         type="string",
+ *         format="binary",
+ *         description="Archivo con los usuarios a importar (XLSX, XLS o CSV)"
+ *     )
+ * )
+ */
 class ImportUsersRequest extends FormRequest
 {
     /**

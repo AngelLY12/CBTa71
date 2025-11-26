@@ -6,6 +6,90 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="UpdatePaymentConceptRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="concept_name",
+ *         type="string",
+ *         maxLength=50,
+ *         description="Nombre del concepto de pago",
+ *         example="Inscripción Semestral"
+ *     ),
+ *     @OA\Property(
+ *         property="description",
+ *         type="string",
+ *         maxLength=100,
+ *         description="Descripción opcional del concepto",
+ *         example="Pago correspondiente al semestre agosto-diciembre"
+ *     ),
+ *     @OA\Property(
+ *         property="status",
+ *         ref="#/components/schemas/PaymentConceptStatus",
+ *     ),
+ *     @OA\Property(
+ *         property="start_date",
+ *         type="string",
+ *         format="date",
+ *         description="Fecha de inicio (YYYY-MM-DD)",
+ *         example="2025-01-15"
+ *     ),
+ *     @OA\Property(
+ *         property="end_date",
+ *         type="string",
+ *         format="date",
+ *         description="Fecha de fin (opcional, YYYY-MM-DD)",
+ *         example="2025-06-30"
+ *     ),
+ *     @OA\Property(
+ *         property="amount",
+ *         type="number",
+ *         minimum=10,
+ *         description="Monto del concepto",
+ *         example=1800.50
+ *     ),
+ *     @OA\Property(
+ *         property="is_global",
+ *         type="boolean",
+ *         description="Indica si aplica globalmente",
+ *         example=false
+ *     ),
+ *     @OA\Property(
+ *         property="applies_to",
+ *         ref="#/components/schemas/PaymentConceptAppliesTo",
+ *     ),
+ *     @OA\Property(
+ *         property="semestres",
+ *         type="array",
+ *         @OA\Items(type="integer"),
+ *         description="Array de semestres a los que aplica (opcional)",
+ *         example={1,2,3}
+ *     ),
+ *     @OA\Property(
+ *         property="careers",
+ *         type="array",
+ *         @OA\Items(type="integer"),
+ *         description="Array de IDs de carreras a los que aplica (opcional)",
+ *         example={3,5}
+ *     ),
+ *     @OA\Property(
+ *         property="students",
+ *         type="array",
+ *         @OA\Items(type="string"),
+ *         description="Array de IDs de estudiantes a los que aplica (opcional)",
+ *         example={"21","22","23"}
+ *     ),
+ *     @OA\Property(
+ *         property="replaceRelations",
+ *         type="boolean",
+ *         description="Indica si se deben reemplazar las relaciones existentes",
+ *         example=true
+ *     )
+ * )
+ */
+
+
 class UpdatePaymentConceptRequest extends FormRequest
 {
     /**

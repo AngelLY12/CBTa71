@@ -4,6 +4,40 @@ namespace App\Http\Requests\Payments\Staff;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="PaginationWithSearchRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="search",
+ *         type="string",
+ *         description="Término de búsqueda opcional, CURP, email o N_control",
+ *         example="25789045"
+ *     ),
+ *     @OA\Property(
+ *         property="perPage",
+ *         type="integer",
+ *         minimum=1,
+ *         maximum=200,
+ *         description="Número de elementos por página (opcional, entre 1 y 200)",
+ *         example=10
+ *     ),
+ *     @OA\Property(
+ *         property="page",
+ *         type="integer",
+ *         minimum=1,
+ *         description="Número de página (opcional, mínimo 1)",
+ *         example=2
+ *     ),
+ *     @OA\Property(
+ *         property="forceRefresh",
+ *         type="boolean",
+ *         description="Indica si se debe forzar la actualización (opcional)",
+ *         example=true
+ *     )
+ * )
+ */
+
 class PaginationWithSearchRequest extends FormRequest
 {
     /**

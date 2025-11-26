@@ -24,7 +24,7 @@ class PaymentHistoryController extends Controller
 
         /**
      * @OA\Get(
-     *     path="/api/v1/history",
+     *     path="/api/v1/history/{id}",
      *     tags={"Payment History"},
      *     summary="Obtener historial de pagos del usuario autenticado",
      *     description="Devuelve el historial de pagos del usuario logueado, con soporte para paginación y cacheo.",
@@ -52,7 +52,13 @@ class PaymentHistoryController extends Controller
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
      *     ),
-     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Historial de pagos obtenido correctamente.",
@@ -98,13 +104,19 @@ class PaymentHistoryController extends Controller
      *     )
      * )
      */
-    public function index(PaginationRequest $request)
+    public function index(PaginationRequest $request, ?int $id)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
-        $forceRefresh = $request->boolean('forceRefresh');
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
+
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+        }
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
-        $history=$this->paymentHistoryService->paymentHistory(UserMapper::toDomain($user), $perPage, $page, $forceRefresh);
+        $history=$this->paymentHistoryService->paymentHistory(UserMapper::toDomain($targetUser), $perPage, $page, $forceRefresh);
         return response()->json([
             'success' => true,
             'data' => ['payment_history'=>$history],

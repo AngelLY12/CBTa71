@@ -5,6 +5,43 @@ namespace App\Http\Requests\Payments\Staff;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Illuminate\Foundation\Http\FormRequest;
 
+
+/**
+ * @OA\Schema(
+ *     schema="ConceptsIndexRequest",
+ *     type="object",
+ *
+ *     @OA\Property(
+ *         property="status",
+ *         ref="#/components/schemas/PaymentConceptStatus"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="forceRefresh",
+ *         type="boolean",
+ *         description="Indica si se debe forzar la actualización (opcional)",
+ *         example=false
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="perPage",
+ *         type="integer",
+ *         minimum=1,
+ *         maximum=200,
+ *         description="Número de elementos por página (opcional, entre 1 y 200)",
+ *         example=20
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="page",
+ *         type="integer",
+ *         minimum=1,
+ *         description="Número de página (opcional, mínimo 1)",
+ *         example=1
+ *     )
+ * )
+ */
+
 class ConceptsIndexRequest extends FormRequest
 {
     /**

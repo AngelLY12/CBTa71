@@ -29,7 +29,7 @@ class DashboardController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/dashboard",
+     *     path="/api/v1/dashboard/{id}",
      *     tags={"Dashboard"},
      *     summary="Obtener estadísticas generales del dashboard del usuario",
      *     description="Devuelve información resumida de los conceptos, pagos y deudas del usuario autenticado.",
@@ -41,6 +41,13 @@ class DashboardController extends Controller
      *         description="Forzar actualización de caché (true o false)",
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -70,12 +77,17 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function index(ForceRefreshRequest $request)
+    public function index(ForceRefreshRequest $request, ?int $id=null)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
 
-        $data = $this->dashboardService->getDashboardData(UserMapper::toDomain($user), $forceRefresh);
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+        }
+        $data = $this->dashboardService->getDashboardData(UserMapper::toDomain($targetUser), $forceRefresh);
 
         return response()->json([
             'success' => true,
@@ -85,7 +97,7 @@ class DashboardController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/dashboard/pending",
+     *     path="/api/v1/dashboard/pending/{id}",
      *     tags={"Dashboard"},
      *     summary="Obtener total de pagos pendientes del usuario",
      *     description="Devuelve la cantidad y monto total de los pagos pendientes del usuario autenticado.",
@@ -97,6 +109,13 @@ class DashboardController extends Controller
      *         description="Forzar actualización de caché (true o false)",
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
      *     ),
      *      @OA\Response(
      *         response=200,
@@ -127,12 +146,17 @@ class DashboardController extends Controller
      * )
      */
 
-    public function pending(ForceRefreshRequest $request)
+    public function pending(ForceRefreshRequest $request, ?int $id=null)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
 
-        $data = $this->dashboardService->pendingPaymentAmount(UserMapper::toDomain($user), $forceRefresh);
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+        }
+        $data = $this->dashboardService->pendingPaymentAmount(UserMapper::toDomain($targetUser), $forceRefresh);
 
         return response()->json([
             'success' => true,
@@ -142,7 +166,7 @@ class DashboardController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/dashboard/paid",
+     *     path="/api/v1/dashboard/paid/{id}",
      *     tags={"Dashboard"},
      *     summary="Obtener total de pagos realizados por el usuario",
      *     description="Devuelve el monto total de pagos completados por el usuario autenticado.",
@@ -154,6 +178,13 @@ class DashboardController extends Controller
      *         description="Forzar actualización de caché (true o false)",
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -168,12 +199,18 @@ class DashboardController extends Controller
      * )
      */
 
-    public function paid(ForceRefreshRequest $request)
+    public function paid(ForceRefreshRequest $request, ?int $id=null)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
 
-        $data = $this->dashboardService->paymentsMade(UserMapper::toDomain($user), $forceRefresh);
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+        }
+
+        $data = $this->dashboardService->paymentsMade(UserMapper::toDomain($targetUser), $forceRefresh);
 
         return response()->json([
             'success' => true,
@@ -183,7 +220,7 @@ class DashboardController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/dashboard/overdue",
+     *     path="/api/v1/dashboard/overdue/{id}",
      *     tags={"Dashboard"},
      *     summary="Obtener total de pagos vencidos del usuario",
      *     description="Devuelve el monto total de los pagos vencidos asociados al usuario autenticado.",
@@ -195,6 +232,13 @@ class DashboardController extends Controller
      *         description="Forzar actualización de caché (true o false)",
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -208,10 +252,16 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function overdue(ForceRefreshRequest $request)
+    public function overdue(ForceRefreshRequest $request, ?int $id)
     {
+       /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
+
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+        }
 
         $data = $this->dashboardService->overduePayments(UserMapper::toDomain($user), $forceRefresh);
 
@@ -222,7 +272,7 @@ class DashboardController extends Controller
     }
     /**
      * @OA\Get(
-     *     path="/api/v1/dashboard/history",
+     *     path="/api/v1/dashboard/history/{id}",
      *     tags={"Dashboard"},
      *     summary="Obtener historial de pagos del usuario autenticado",
      *     description="Devuelve una lista paginada con el historial de pagos realizados por el usuario autenticado. Permite forzar la actualización del caché.",
@@ -250,7 +300,13 @@ class DashboardController extends Controller
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
      *     ),
-     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Historial de pagos obtenido correctamente",
@@ -288,13 +344,19 @@ class DashboardController extends Controller
      *     )
      * )
      */
-    public function history(PaginationRequest $request)
+    public function history(PaginationRequest $request, ?int $id=null)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
-        $forceRefresh = $request->boolean('forceRefresh');
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
+
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+        }
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
-        $data = $this->dashboardService->paymentHistory(UserMapper::toDomain($user), $perPage, $page, $forceRefresh);
+        $data = $this->dashboardService->paymentHistory(UserMapper::toDomain($targetUser), $perPage, $page, $forceRefresh);
 
         return response()->json([
             'success' => true,

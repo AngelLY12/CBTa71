@@ -4,6 +4,20 @@ namespace App\Http\Requests\Career;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="UpdateCareerRequest",
+ *     type="object",
+ *     required={"career_name"},
+ *     @OA\Property(
+ *         property="career_name",
+ *         type="string",
+ *         maxLength=50,
+ *         description="Nombre de la carrera",
+ *         example="Contabilidad"
+ *     )
+ * )
+ */
 class UpdateCareerRequest extends FormRequest
 {
     /**

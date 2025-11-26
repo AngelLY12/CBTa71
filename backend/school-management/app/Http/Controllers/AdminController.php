@@ -46,7 +46,7 @@ class AdminController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         description="Datos necesarios para el registro del usuario. Nota: La contraseña no debe ser incluida en la request, se genera para cada usuario desde el sistema",
-     *         @OA\JsonContent(ref="#/components/schemas/CreateUserDTO")
+     *         @OA\JsonContent(ref="#/components/schemas/RegisterUserRequest")
      *     ),
      *
      *     @OA\Response(
@@ -118,7 +118,7 @@ class AdminController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         description="Datos necesarios para asociar un detalle de estudiante al usuario.",
-     *         @OA\JsonContent(ref="#/components/schemas/CreateStudentDetailDTO")
+     *         @OA\JsonContent(ref="#/components/schemas/AttachStudentRequest")
      *     ),
      *
      *     @OA\Response(
@@ -277,7 +277,7 @@ class AdminController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         description="Datos necesarios para actualizar permisos de usuario.",
-     *         @OA\JsonContent(ref="#/components/schemas/UpdateUserPermissionsDTO")
+     *         @OA\JsonContent(ref="#/components/schemas/UpdatePermissionsRequest")
      *     ),
      *
      *     @OA\Response(
@@ -436,7 +436,7 @@ class AdminController extends Controller
      *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *        required=true,
-     *        @OA\JsonContent(ref="#/components/schemas/UpdateUserRoleDTO")
+     *        @OA\JsonContent(ref="#/components/schemas/UpdateRolesRequest")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -474,11 +474,7 @@ class AdminController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *        required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-     *             required={"ids"},
-     *             @OA\Property(property="ids", type="array", @OA\Items(type="integer"), example={4, 5, 6})
-     *         )
+     *        @OA\JsonContent(ref="#/components/schemas/ChangeUserStatusRequest")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -519,11 +515,7 @@ class AdminController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *        required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-     *             required={"ids"},
-     *             @OA\Property(property="ids", type="array", @OA\Items(type="integer"), example={4, 5, 6})
-     *         )
+     *        @OA\JsonContent(ref="#/components/schemas/ChangeUserStatusRequest")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -564,11 +556,7 @@ class AdminController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *        required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-     *             required={"ids"},
-     *             @OA\Property(property="ids", type="array", @OA\Items(type="integer"), example={4, 5, 6})
-     *         )
+     *        @OA\JsonContent(ref="#/components/schemas/ChangeUserStatusRequest")
      *     ),
      *     @OA\Response(
      *         response=200,

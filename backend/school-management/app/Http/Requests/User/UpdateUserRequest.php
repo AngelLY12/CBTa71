@@ -6,6 +6,59 @@ use App\Core\Domain\Enum\User\UserBloodType;
 use App\Core\Domain\Enum\User\UserGender;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="UpdateUserRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="name",
+ *         type="string",
+ *         description="Nombre del usuario",
+ *         example="Juan"
+ *     ),
+ *     @OA\Property(
+ *         property="last_name",
+ *         type="string",
+ *         description="Apellido del usuario",
+ *         example="Pérez"
+ *     ),
+ *     @OA\Property(
+ *         property="email",
+ *         type="string",
+ *         format="email",
+ *         description="Correo electrónico del usuario, debe ser único",
+ *         example="juan.perez@example.com"
+ *     ),
+ *     @OA\Property(
+ *         property="phone_number",
+ *         type="string",
+ *         description="Número de teléfono del usuario",
+ *         example="+5215512345678"
+ *     ),
+ *     @OA\Property(
+ *         property="birthdate",
+ *         type="string",
+ *         format="date",
+ *         description="Fecha de nacimiento del usuario en formato AAAA-MM-DD",
+ *         example="1990-05-15"
+ *     ),
+ *     @OA\Property(
+ *         property="gender",
+ *         ref="#/components/schemas/UserGender"
+ *     ),
+ *     @OA\Property(
+ *         property="address",
+ *         type="array",
+ *         description="Dirección del usuario",
+ *         @OA\Items(type="string")
+ *     ),
+ *     @OA\Property(
+ *         property="blood_type",
+ *         ref="#/components/schemas/UserBloodType"
+ *     )
+ * )
+ */
+
 class UpdateUserRequest extends FormRequest
 {
     /**

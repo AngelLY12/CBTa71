@@ -38,9 +38,7 @@ class ConceptsController extends Controller
      *     @OA\Parameter(
      *         name="status",
      *         in="query",
-     *         description="Filtra por estado (ej. 'activo', 'todos', etc)",
-     *         required=false,
-     *         @OA\Schema(type="string", example="activo")
+     *         ref="#/components/schemas/PaymentConceptStatus"
      *     ),
      *     @OA\Parameter(
      *         name="perPage",
@@ -115,7 +113,7 @@ class ConceptsController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/CreatePaymentConceptDTO")
+     *         @OA\JsonContent(ref="#/components/schemas/StorePaymentConceptRequest")
      *     ),
      *     @OA\Response(
      *         response=201,
@@ -191,7 +189,7 @@ class ConceptsController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/UpdatePaymentConceptDTO")
+     *         @OA\JsonContent(ref="#/components/schemas/UpdatePaymentConceptRequest")
      *     ),
      *     @OA\Response(
      *         response=200,

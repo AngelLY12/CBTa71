@@ -4,6 +4,25 @@ namespace App\Http\Requests\Payments\Staff;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="DashboardRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="only_this_year",
+ *         type="boolean",
+ *         description="Filtrar datos solo del año actual (opcional)",
+ *         example=true
+ *     ),
+ *     @OA\Property(
+ *         property="forceRefresh",
+ *         type="boolean",
+ *         description="Indica si se debe forzar la actualización (opcional)",
+ *         example=true
+ *     )
+ * )
+ */
+
 class DashboardRequest extends FormRequest
 {
     /**

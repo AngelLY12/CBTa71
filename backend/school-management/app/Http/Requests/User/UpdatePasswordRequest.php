@@ -4,6 +4,27 @@ namespace App\Http\Requests\User;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="UpdatePasswordRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="currentPassword",
+ *         type="string",
+ *         description="Contraseña actual del usuario",
+ *         minLength=8,
+ *         example="oldPassword123"
+ *     ),
+ *     @OA\Property(
+ *         property="newPassword",
+ *         type="string",
+ *         description="Nueva contraseña que el usuario desea establecer",
+ *         minLength=8,
+ *         example="newPassword456"
+ *     )
+ * )
+ */
+
 class UpdatePasswordRequest extends FormRequest
 {
     /**

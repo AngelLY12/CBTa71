@@ -26,7 +26,7 @@ class CardsController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/cards",
+     *     path="/api/v1/cards/{id}",
      *     tags={"Cards"},
      *     summary="Listar métodos de pago del usuario autenticado",
      *     description="Obtiene la lista de tarjetas o métodos de pago asociados al usuario autenticado. Permite forzar actualización del caché.",
@@ -38,6 +38,13 @@ class CardsController extends Controller
      *         description="Si es true, fuerza la actualización del caché.",
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -73,11 +80,14 @@ class CardsController extends Controller
      *     )
      * )
      */
-    public function index(ForceRefreshRequest $request)
+    public function index(ForceRefreshRequest $request, ?int $id=null)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $cards = $this->cardsService->getUserPaymentMethods($user->id, $forceRefresh);
+        $targetId = $id && $user->hasRole('parent') ? $id : $user->id;
+        $cards = $this->cardsService->getUserPaymentMethods($targetId, $forceRefresh);
+
         return response()->json([
             'success' => true,
             'data' => ['cards'=>$cards],
@@ -111,12 +121,11 @@ class CardsController extends Controller
      *
      * )
      */
-    public function store(Request $request)
+    public function store()
     {
         $user = Auth::user();
 
         $session= $this->cardsService->setupCard(UserMapper::toDomain($user));
-
 
         return response()->json([
             'success'=>true,

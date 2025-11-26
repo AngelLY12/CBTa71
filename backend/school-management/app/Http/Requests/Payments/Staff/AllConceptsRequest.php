@@ -4,6 +4,44 @@ namespace App\Http\Requests\Payments\Staff;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="AllConceptsRequest",
+ *     type="object",
+ *
+ *     @OA\Property(
+ *         property="only_this_year",
+ *         type="boolean",
+ *         description="Filtrar conceptos solo del año actual (opcional)",
+ *         example=true
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="perPage",
+ *         type="integer",
+ *         minimum=1,
+ *         maximum=200,
+ *         description="Número de elementos por página (opcional, entre 1 y 200)",
+ *         example=25
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="page",
+ *         type="integer",
+ *         minimum=1,
+ *         description="Número de página (opcional, mínimo 1)",
+ *         example=1
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="forceRefresh",
+ *         type="boolean",
+ *         description="Indica si se debe forzar la actualización (opcional)",
+ *         example=false
+ *     )
+ * )
+ */
+
 class AllConceptsRequest extends FormRequest
 {
     /**

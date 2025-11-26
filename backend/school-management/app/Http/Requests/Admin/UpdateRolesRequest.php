@@ -4,6 +4,47 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="UpdateRolesRequest",
+ *     type="object",
+ *     required={"curps"},
+ *     @OA\Property(
+ *         property="curps",
+ *         type="array",
+ *         description="Array de CURPs de los usuarios a actualizar roles",
+ *         @OA\Items(
+ *             type="string",
+ *             description="CURP de un usuario existente",
+ *             example="GODE561231HDFABC09"
+ *         ),
+ *         example={"GODE561231HDFABC09", "PEMJ800101MDFLRS08"}
+ *     ),
+ *     @OA\Property(
+ *         property="rolesToAdd",
+ *         type="array",
+ *         description="Array de nombres de roles a agregar",
+ *         @OA\Items(
+ *             type="string",
+ *             description="Nombre de un rol existente",
+ *             example="editor"
+ *         ),
+ *         example={"editor", "supervisor"}
+ *     ),
+ *     @OA\Property(
+ *         property="rolesToRemove",
+ *         type="array",
+ *         description="Array de nombres de roles a remover",
+ *         @OA\Items(
+ *             type="string",
+ *             description="Nombre de un rol existente",
+ *             example="viewer"
+ *         ),
+ *         example={"viewer", "assistant"}
+ *     )
+ * )
+ */
+
 class UpdateRolesRequest extends FormRequest
 {
     /**

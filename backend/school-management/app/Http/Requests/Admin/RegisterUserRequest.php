@@ -7,6 +7,80 @@ use App\Core\Domain\Enum\User\UserGender;
 use App\Core\Domain\Enum\User\UserStatus;
 use Illuminate\Foundation\Http\FormRequest;
 
+
+/**
+ * @OA\Schema(
+ *     schema="RegisterUserRequest",
+ *     type="object",
+ *     required={"name","last_name","email","phone_number","curp","status"},
+ *
+ *     @OA\Property(
+ *         property="name",
+ *         type="string",
+ *         description="Nombre del usuario",
+ *         example="Juan"
+ *     ),
+ *     @OA\Property(
+ *         property="last_name",
+ *         type="string",
+ *         description="Apellido del usuario",
+ *         example="Pérez López"
+ *     ),
+ *     @OA\Property(
+ *         property="email",
+ *         type="string",
+ *         format="email",
+ *         description="Correo electrónico del usuario",
+ *         example="juan.perez@example.com"
+ *     ),
+ *     @OA\Property(
+ *         property="phone_number",
+ *         type="string",
+ *         description="Número de teléfono del usuario",
+ *         example="5512345678"
+ *     ),
+ *     @OA\Property(
+ *         property="birthdate",
+ *         type="string",
+ *         format="date",
+ *         description="Fecha de nacimiento del usuario (YYYY-MM-DD)",
+ *         example="2000-05-12"
+ *     ),
+ *     @OA\Property(
+ *         property="gender",
+ *          ref="#/components/schemas/UserGender"
+ *     ),
+ *     @OA\Property(
+ *         property="curp",
+ *         type="string",
+ *         description="CURP del usuario",
+ *         example="LOPA800101HDFRNL09"
+ *     ),
+ *     @OA\Property(
+ *         property="address",
+ *         type="array",
+ *         description="Dirección del usuario",
+ *         example={"Calle Hidalgo #123", "Col. Centro", "CDMX"},
+ *         @OA\Items(type="string")
+ *     ),
+ *     @OA\Property(
+ *         property="blood_type",
+ *         ref="#/components/schemas/UserBloodType"
+ *     ),
+ *     @OA\Property(
+ *         property="registration_date",
+ *         type="string",
+ *         format="date",
+ *         description="Fecha de registro del usuario (YYYY-MM-DD)",
+ *         example="2025-01-01"
+ *     ),
+ *     @OA\Property(
+ *         property="status",
+ *         ref="#/components/schemas/UserStatus"
+ *     )
+ * )
+ */
+
 class RegisterUserRequest extends FormRequest
 {
     /**

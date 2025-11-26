@@ -5,6 +5,24 @@ namespace App\Http\Requests\Parents;
 use App\Core\Domain\Enum\User\RelationshipType;
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="AcceptInviteRequest",
+ *     type="object",
+ *     required={"token"},
+ *     @OA\Property(
+ *         property="token",
+ *         type="string",
+ *         description="Token de la invitación",
+ *         example="abc123xyzInviteToken987"
+ *     ),
+ *     @OA\Property(
+ *         property="relationship",
+ *         ref="#/components/schemas/RelationshipType"
+ *     )
+ * )
+ */
+
 class AcceptInviteRequest extends FormRequest
 {
     /**

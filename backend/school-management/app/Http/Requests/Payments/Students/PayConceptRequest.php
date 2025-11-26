@@ -4,6 +4,19 @@ namespace App\Http\Requests\Payments\Students;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="PayConceptRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="concept_id",
+ *         type="integer",
+ *         description="ID del concepto que se desea pagar",
+ *         example=123
+ *     )
+ * )
+ */
+
 class PayConceptRequest extends FormRequest
 {
     /**

@@ -29,7 +29,7 @@ class PendingPaymentController extends Controller
 
         /**
      * @OA\Get(
-     *     path="/api/v1/pending-payments",
+     *     path="/api/v1/pending-payments/{id}",
      *     tags={"Pending Payment"},
      *     summary="Obtener pagos pendientes del usuario autenticado",
      *     description="Devuelve todos los conceptos pendientes de pago del usuario logueado.",
@@ -43,7 +43,13 @@ class PendingPaymentController extends Controller
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
      *     ),
-     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Pagos pendientes obtenidos correctamente.",
@@ -81,11 +87,17 @@ class PendingPaymentController extends Controller
      *     )
      * )
      */
-    public function index(ForceRefreshRequest $request)
+    public function index(ForceRefreshRequest $request, ?int $id=null)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $pending=$this->pendingPaymentService->showPendingPayments(UserMapper::toDomain($user), $forceRefresh);
+        $targetUser = $user->resolveTargetUser($id);
+
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+        }
+        $pending=$this->pendingPaymentService->showPendingPayments(UserMapper::toDomain($targetUser), $forceRefresh);
         return response()->json([
             'success' => true,
             'data' => ['pending_payments'=>$pending],
@@ -96,7 +108,7 @@ class PendingPaymentController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/pending-payments/overdue",
+     *     path="/api/v1/pending-payments/overdue/{id}",
      *     summary="Obtener pagos vencidos del usuario autenticado",
      *     description="Devuelve los pagos que ya están vencidos para el usuario autenticado.",
      *     operationId="getUserOverduePayments",
@@ -110,7 +122,13 @@ class PendingPaymentController extends Controller
      *         required=false,
      *         @OA\Schema(type="boolean", example=false)
      *     ),
-     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del children",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=3)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Pagos vencidos obtenidos correctamente.",
@@ -148,11 +166,17 @@ class PendingPaymentController extends Controller
      *     )
      * )
      */
-    public function overdue(ForceRefreshRequest $request)
+    public function overdue(ForceRefreshRequest $request, ?int $id=null)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $pending=$this->pendingPaymentService->showOverduePayments(UserMapper::toDomain($user), $forceRefresh);
+        $targetUser = $user->resolveTargetUser($id);
+
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+        }
+        $pending=$this->pendingPaymentService->showOverduePayments(UserMapper::toDomain($targetUser), $forceRefresh);
         return response()->json([
             'success' => true,
             'data' => ['overdue_payments'=>$pending],
@@ -174,13 +198,7 @@ class PendingPaymentController extends Controller
      *         required=true,
      *         description="Datos necesarios para generar el intento de pago",
      *         @OA\JsonContent(
-     *             required={"concept_id"},
-     *             @OA\Property(
-     *                 property="concept_id",
-     *                 type="integer",
-     *                 description="ID del concepto pendiente a pagar",
-     *                 example=12
-     *             )
+     *            ref="#/components/schemas/PayConceptRequest"
      *         )
      *     ),
      *

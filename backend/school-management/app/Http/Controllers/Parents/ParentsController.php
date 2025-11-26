@@ -24,16 +24,12 @@ class ParentsController extends Controller
      * Enviar invitación a un padre para asociarlo con un estudiante
      *
      * @OA\Post(
-     *     path="/parents/invite",
+     *     path="/api/parents/invite",
      *     summary="Enviar invitación a un padre",
      *     tags={"Parents"},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"student_id","parent_email"},
-     *             @OA\Property(property="student_id", type="integer", example=123),
-     *             @OA\Property(property="parent_email", type="string", format="email", example="parent@example.com")
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/SendInviteRequest")
      *     ),
      *     @OA\Response(
      *         response=201,
@@ -84,16 +80,12 @@ class ParentsController extends Controller
      * Aceptar invitación de un padre
      *
      * @OA\Post(
-     *     path="/parents/invite/accept",
+     *     path="/api/parents/invite/accept",
      *     summary="Aceptar invitación de un padre",
      *     tags={"Parents"},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"token"},
-     *             @OA\Property(property="token", type="string", example="uuid-token"),
-     *             @OA\Property(property="relationship", type="string", enum={"padre","madre","tutor","tutor_legal"}, nullable=true, example="tutor")
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/AcceptInviteRequest")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -115,15 +107,62 @@ class ParentsController extends Controller
      */
     public function acceptInvitation(AcceptInviteRequest $request)
     {
+        $user=Auth::user();
         $this->parentsFacade->acceptInvitation(
             token: $request->validated()['token'],
             relationship: $request->validated()['relationship'] ?? null,
+            userId:$user->id
         );
 
         return response()->json([
             'success' => true,
             'message' => 'La invitación ha sido aceptada'
         ], 200);
+    }
 
+    /**
+     * Aceptar invitación de un padre
+     *
+     * @OA\Get(
+     *     path="/api/parents/get-children",
+     *     summary="Obtiene los hijos del parent",
+     *     tags={"Parents"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID del parent",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="cards",
+     *                     type="array",
+     *                     description="Lista de métodos de pago del usuario",
+     *                     @OA\Items(ref="#/components/schemas/ParentChildrenResponse")
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Datos obtenidos")
+     *         )
+     *     ),
+     *
+     * )
+     */
+    public function getParetChildren(int $id)
+    {
+        $childrenData=$this->parentsFacade->getParentChildren($id);
+        return response()->json([
+            'success' => true,
+            'data' => ['children' => $childrenData],
+            'message' => 'Datos obtenidos'
+        ], 200);
     }
 }

@@ -4,6 +4,32 @@ namespace App\Http\Requests\Payments\Staff;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="GetStripePaymentsRequest",
+ *     type="object",
+ *     required={"search"},
+ *     @OA\Property(
+ *         property="search",
+ *         type="string",
+ *         description="CURP, email o n_control de usuario",
+ *         example="25187109"
+ *     ),
+ *     @OA\Property(
+ *         property="year",
+ *         type="integer",
+ *         description="Año de los pagos (opcional)",
+ *         example=2023
+ *     ),
+ *     @OA\Property(
+ *         property="forceRefresh",
+ *         type="boolean",
+ *         description="Indica si se debe forzar la actualización (opcional)",
+ *         example=true
+ *     )
+ * )
+ */
+
 class GetStripePaymentsRequest extends FormRequest
 {
     /**

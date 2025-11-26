@@ -33,7 +33,7 @@ class UpdateUserController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/DomainUser")
+     *         @OA\JsonContent(ref="#/components/schemas/UpdateUserRequest")
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -75,9 +75,7 @@ class UpdateUserController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"newPassword", "currentPassword"},
-     *             @OA\Property(property="newPassword", type="string", minLength=8, example="oldPassword123"),
-     *             @OA\Property(property="currentPassword", type="string", example="newpassword123")
+     *             ref="#/components/schemas/UpdatePasswordRequest"
      *         )
      *     ),
      *     @OA\Response(

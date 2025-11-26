@@ -107,7 +107,7 @@ class CareerController extends Controller
      *     summary="Crear una nueva carrera",
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/DomainCareer")
+     *         @OA\JsonContent(ref="#/components/schemas/CreateCareerRequest")
      *     ),
      *     @OA\Response(
      *         response=201,
@@ -148,9 +148,7 @@ class CareerController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="career_name", type="string", example="Ingeniería en Software")
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/UpdateCareerRequest")
      *     ),
      *     @OA\Response(
      *         response=200,

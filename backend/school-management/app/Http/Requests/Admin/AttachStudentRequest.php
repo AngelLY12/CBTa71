@@ -4,6 +4,49 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="AttachStudentRequest",
+ *     type="object",
+ *     required={"user_id","career_id","n_control","semestre","group","workshop"},
+ *     @OA\Property(
+ *         property="user_id",
+ *         type="integer",
+ *         description="ID del usuario",
+ *         example=4
+ *     ),
+ *     @OA\Property(
+ *         property="career_id",
+ *         type="integer",
+ *         description="ID de la carrera",
+ *         example=1
+ *     ),
+ *     @OA\Property(
+ *         property="n_control",
+ *         type="string",
+ *         description="Número de control del estudiante",
+ *         example="2578900"
+ *     ),
+ *     @OA\Property(
+ *         property="semestre",
+ *         type="integer",
+ *         description="Semestre actual del estudiante",
+ *         example=1
+ *     ),
+ *     @OA\Property(
+ *         property="group",
+ *         type="string",
+ *         description="Grupo del estudiante",
+ *         example="A"
+ *     ),
+ *     @OA\Property(
+ *         property="workshop",
+ *         type="string",
+ *         description="Taller asignado al estudiante",
+ *         example="Dibujo"
+ *     )
+ * )
+ */
 class AttachStudentRequest extends FormRequest
 {
     /**

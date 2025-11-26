@@ -4,6 +4,52 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="UpdatePermissionsRequest",
+ *     type="object",
+ *     @OA\Property(
+ *         property="curps",
+ *         type="array",
+ *         description="Array de CURPs de los usuarios a actualizar permisos (opcional, no enviar si se usa role)",
+ *         @OA\Items(
+ *             type="string",
+ *             description="CURP de un usuario existente",
+ *             example="GODE561231HDFABC09"
+ *         ),
+ *         example={"GODE561231HDFABC09", "PEMJ800101MDFLRS08"}
+ *     ),
+ *     @OA\Property(
+ *         property="role",
+ *         type="string",
+ *         description="Nombre del rol cuyos permisos se actualizarán (opcional, no enviar si se usan curps)",
+ *         example="admin"
+ *     ),
+ *     @OA\Property(
+ *         property="permissionsToAdd",
+ *         type="array",
+ *         description="Array de nombres de permisos a agregar",
+ *         @OA\Items(
+ *             type="string",
+ *             description="Nombre de un permiso existente",
+ *             example="users.create"
+ *         ),
+ *         example={"users.create", "reports.view"}
+ *     ),
+ *     @OA\Property(
+ *         property="permissionsToRemove",
+ *         type="array",
+ *         description="Array de nombres de permisos a remover",
+ *         @OA\Items(
+ *             type="string",
+ *             description="Nombre de un permiso existente",
+ *             example="users.delete"
+ *         ),
+ *         example={"users.delete", "settings.update"}
+ *     )
+ * )
+ */
+
 class UpdatePermissionsRequest extends FormRequest
 {
     /**

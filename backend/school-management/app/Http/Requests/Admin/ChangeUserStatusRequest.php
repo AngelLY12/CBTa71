@@ -4,6 +4,25 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @OA\Schema(
+ *     schema="ChangeUserStatusRequest",
+ *     type="object",
+ *     required={"ids"},
+ *     @OA\Property(
+ *         property="ids",
+ *         type="array",
+ *         description="Array de IDs de los usuarios a cambiar de estado",
+ *         example={1,2,3},
+ *         @OA\Items(
+ *             type="integer",
+ *             description="ID de un usuario existente",
+ *             example=1
+ *         )
+ *     )
+ * )
+ */
+
 class ChangeUserStatusRequest extends FormRequest
 {
     /**
