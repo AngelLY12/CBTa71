@@ -7,7 +7,8 @@ namespace App\Core\Domain\Enum\User;
  *     schema="UserGender",
  *     type="string",
  *     description="Generos válidos de un usuario",
- *     enum={"hombre", "mujer"}
+ *     enum={"hombre", "mujer"},
+ *     example="hombre"
  * )
  */
 enum UserGender : string

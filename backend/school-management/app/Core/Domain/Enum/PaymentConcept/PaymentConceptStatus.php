@@ -7,7 +7,8 @@ namespace App\Core\Domain\Enum\PaymentConcept;
  *     schema="PaymentConceptStatus",
  *     type="string",
  *     description="Estatus válidos de un concepto de pago",
- *     enum={"activo", "finalizado", "desactivado", "eliminado"}
+ *     enum={"activo", "finalizado", "desactivado", "eliminado"},
+ *     example="activo"
  * )
  */
 enum PaymentConceptStatus: string

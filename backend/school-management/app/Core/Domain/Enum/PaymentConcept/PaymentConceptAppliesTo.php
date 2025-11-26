@@ -7,7 +7,8 @@ namespace App\Core\Domain\Enum\PaymentConcept;
  *     schema="PaymentConceptAppliesTo",
  *     type="string",
  *     description="A quien aplica el concepto de pago",
- *     enum={"todos", "carrera", "semestre", "carrera_semestre", "estudiantes"}
+ *     enum={"todos", "carrera", "semestre", "carrera_semestre", "estudiantes"},
+ *     example="todos"
  * )
  */
 enum PaymentConceptAppliesTo: string

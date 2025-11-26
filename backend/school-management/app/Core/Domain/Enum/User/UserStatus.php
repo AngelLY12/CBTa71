@@ -7,7 +7,8 @@ namespace App\Core\Domain\Enum\User;
  *     schema="UserStatus",
  *     type="string",
  *     description="Estatus valido de un usuario",
- *     enum={"activo", "baja", "eliminado"}
+ *     enum={"activo", "baja", "eliminado"},
+ *     example="activo"
  * )
  */
 enum UserStatus: string

@@ -8,7 +8,8 @@ namespace App\Core\Domain\Enum\User;
  *     schema="RelationshipType",
  *     type="string",
  *     enum={"padre","madre","tutor","tutor_legal"},
- *     description="Tipo de relación entre padre y estudiante"
+ *     description="Tipo de relación entre padre y estudiante",
+ *     example="padre"
  * )
  */
 enum RelationshipType: string

@@ -38,7 +38,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreateUserDTO"
+                                "$ref": "#/components/schemas/RegisterUserRequest"
                             }
                         }
                     }
@@ -141,7 +141,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreateStudentDetailDTO"
+                                "$ref": "#/components/schemas/AttachStudentRequest"
                             }
                         }
                     }
@@ -315,7 +315,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/UpdateUserPermissionsDTO"
+                                "$ref": "#/components/schemas/UpdatePermissionsRequest"
                             }
                         }
                     }
@@ -471,7 +471,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/UpdateUserRoleDTO"
+                                "$ref": "#/components/schemas/UpdateRolesRequest"
                             }
                         }
                     }
@@ -529,23 +529,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "ids"
-                                ],
-                                "properties": {
-                                    "ids": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        },
-                                        "example": [
-                                            4,
-                                            5,
-                                            6
-                                        ]
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/ChangeUserStatusRequest"
                             }
                         }
                     }
@@ -603,23 +587,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "ids"
-                                ],
-                                "properties": {
-                                    "ids": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        },
-                                        "example": [
-                                            4,
-                                            5,
-                                            6
-                                        ]
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/ChangeUserStatusRequest"
                             }
                         }
                     }
@@ -677,23 +645,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "ids"
-                                ],
-                                "properties": {
-                                    "ids": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        },
-                                        "example": [
-                                            4,
-                                            5,
-                                            6
-                                        ]
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/ChangeUserStatusRequest"
                             }
                         }
                     }
@@ -1283,7 +1235,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/DomainCareer"
+                                "$ref": "#/components/schemas/CreateCareerRequest"
                             }
                         }
                     }
@@ -1403,13 +1355,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "properties": {
-                                    "career_name": {
-                                        "type": "string",
-                                        "example": "Ingeniería en Software"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/UpdateCareerRequest"
                             }
                         }
                     }
@@ -1761,7 +1707,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreateUserDTO"
+                                "$ref": "#/components/schemas/RegisterRequest"
                             }
                         }
                     }
@@ -1864,7 +1810,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/LoginDTO"
+                                "$ref": "#/components/schemas/LoginRequest"
                             }
                         }
                     }
@@ -1963,6 +1909,200 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Ocurrió un error inesperado."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/parents/invite": {
+            "post": {
+                "tags": [
+                    "Parents"
+                ],
+                "summary": "Enviar invitación a un padre",
+                "description": "Enviar invitación a un padre para asociarlo con un estudiante",
+                "operationId": "f248c4a87c85e8569312568f7210a0d1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendInviteRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invitación enviada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invitation enviada con exito"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "uuid-token"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-11-27T12:34:56Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El correo es obligatorio"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/parents/invite/accept": {
+            "post": {
+                "tags": [
+                    "Parents"
+                ],
+                "summary": "Aceptar invitación de un padre",
+                "description": "Aceptar invitación de un padre",
+                "operationId": "d02d1525af88532c231897f3115b0222",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AcceptInviteRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Invitación aceptada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "La invitación ha sido aceptada"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "El token es obligatorio"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/parents/get-children": {
+            "get": {
+                "tags": [
+                    "Parents"
+                ],
+                "summary": "Obtiene los hijos del parent",
+                "description": "Aceptar invitación de un padre",
+                "operationId": "58676064745b43bc3b5cf956858d6359",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del parent",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "cards": {
+                                                    "description": "Lista de métodos de pago del usuario",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/ParentChildrenResponse"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Datos obtenidos"
                                         }
                                     },
                                     "type": "object"
@@ -2212,14 +2352,7 @@
                 "operationId": "f9d62ceeda29d557b295b481705f8256",
                 "parameters": [
                     {
-                        "name": "status",
-                        "in": "query",
-                        "description": "Filtra por estado (ej. 'activo', 'todos', etc)",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "activo"
-                        }
+                        "$ref": "#/components/schemas/PaymentConceptStatus"
                     },
                     {
                         "name": "perPage",
@@ -2315,7 +2448,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreatePaymentConceptDTO"
+                                "$ref": "#/components/schemas/StorePaymentConceptRequest"
                             }
                         }
                     }
@@ -2446,7 +2579,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/UpdatePaymentConceptDTO"
+                                "$ref": "#/components/schemas/UpdatePaymentConceptRequest"
                             }
                         }
                     }
@@ -3405,21 +3538,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "search",
-                                    "payment_intent_id"
-                                ],
-                                "properties": {
-                                    "search": {
-                                        "type": "string",
-                                        "example": "LOYA030504HMSPXNA8"
-                                    },
-                                    "payment_intent_id": {
-                                        "type": "string",
-                                        "example": "pi_3Q3u9YBvLxeAQs9T1zUzr3YH"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/ValidatePaymentRequest"
                             }
                         }
                     }
@@ -3482,11 +3601,11 @@
                     {
                         "name": "search",
                         "in": "query",
-                        "description": "Stripe customer id del usuario",
+                        "description": "Email, CURP o n_control",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "example": "cu.."
+                            "example": "25687290"
                         }
                     },
                     {
@@ -3783,7 +3902,7 @@
                 ]
             }
         },
-        "/api/v1/cards": {
+        "/api/v1/cards/{id}": {
             "get": {
                 "tags": [
                     "Cards"
@@ -3800,6 +3919,16 @@
                         "schema": {
                             "type": "boolean",
                             "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -3849,7 +3978,9 @@
                         "bearerAuth": []
                     }
                 ]
-            },
+            }
+        },
+        "/api/v1/cards": {
             "post": {
                 "tags": [
                     "Cards"
@@ -3946,7 +4077,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard": {
+        "/api/v1/dashboard/{id}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -3963,6 +4094,16 @@
                         "schema": {
                             "type": "boolean",
                             "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -4039,7 +4180,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/pending": {
+        "/api/v1/dashboard/pending/{id}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -4056,6 +4197,16 @@
                         "schema": {
                             "type": "boolean",
                             "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -4132,7 +4283,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/paid": {
+        "/api/v1/dashboard/paid/{id}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -4149,6 +4300,16 @@
                         "schema": {
                             "type": "boolean",
                             "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -4186,7 +4347,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/overdue": {
+        "/api/v1/dashboard/overdue/{id}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -4203,6 +4364,16 @@
                         "schema": {
                             "type": "boolean",
                             "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -4240,7 +4411,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/history": {
+        "/api/v1/dashboard/history/{id}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -4277,6 +4448,16 @@
                         "schema": {
                             "type": "boolean",
                             "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -4379,7 +4560,7 @@
                 ]
             }
         },
-        "/api/v1/history": {
+        "/api/v1/history/{id}": {
             "get": {
                 "tags": [
                     "Payment History"
@@ -4416,6 +4597,16 @@
                         "schema": {
                             "type": "boolean",
                             "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -4481,7 +4672,7 @@
                 ]
             }
         },
-        "/api/v1/pending-payments": {
+        "/api/v1/pending-payments/{id}": {
             "get": {
                 "tags": [
                     "Pending Payment"
@@ -4498,6 +4689,16 @@
                         "schema": {
                             "type": "boolean",
                             "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -4549,7 +4750,89 @@
                         "bearerAuth": []
                     }
                 ]
-            },
+            }
+        },
+        "/api/v1/pending-payments/overdue/{id}": {
+            "get": {
+                "tags": [
+                    "Pending Payment"
+                ],
+                "summary": "Obtener pagos vencidos del usuario autenticado",
+                "description": "Devuelve los pagos que ya están vencidos para el usuario autenticado.",
+                "operationId": "getUserOverduePayments",
+                "parameters": [
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true/false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pagos vencidos obtenidos correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "pending_payments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/PendingPaymentConceptsResponse"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No hay pagos vencidos para el usuario.",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado - Token inválido o ausente."
+                    },
+                    "422": {
+                        "description": "Error de validación en los parámetros enviados."
+                    },
+                    "500": {
+                        "description": "Error interno del servidor."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/pending-payments": {
             "post": {
                 "tags": [
                     "Pending Payment"
@@ -4563,17 +4846,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "concept_id"
-                                ],
-                                "properties": {
-                                    "concept_id": {
-                                        "description": "ID del concepto pendiente a pagar",
-                                        "type": "integer",
-                                        "example": 12
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/PayConceptRequest"
                             }
                         }
                     }
@@ -4628,76 +4901,6 @@
                 ]
             }
         },
-        "/api/v1/pending-payments/overdue": {
-            "get": {
-                "tags": [
-                    "Pending Payment"
-                ],
-                "summary": "Obtener pagos vencidos del usuario autenticado",
-                "description": "Devuelve los pagos que ya están vencidos para el usuario autenticado.",
-                "operationId": "getUserOverduePayments",
-                "parameters": [
-                    {
-                        "name": "forceRefresh",
-                        "in": "query",
-                        "description": "Forzar actualización del caché (true/false)",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean",
-                            "example": false
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Pagos vencidos obtenidos correctamente.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "pending_payments": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/PendingPaymentConceptsResponse"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "No hay pagos vencidos para el usuario.",
-                                            "nullable": true
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado - Token inválido o ausente."
-                    },
-                    "422": {
-                        "description": "Error de validación en los parámetros enviados."
-                    },
-                    "500": {
-                        "description": "Error interno del servidor."
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/v1/users/{userId}": {
             "patch": {
                 "tags": [
@@ -4722,7 +4925,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/DomainUser"
+                                "$ref": "#/components/schemas/UpdateUserRequest"
                             }
                         }
                     }
@@ -4783,22 +4986,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "newPassword",
-                                    "currentPassword"
-                                ],
-                                "properties": {
-                                    "newPassword": {
-                                        "type": "string",
-                                        "minLength": 8,
-                                        "example": "oldPassword123"
-                                    },
-                                    "currentPassword": {
-                                        "type": "string",
-                                        "example": "newpassword123"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/UpdatePasswordRequest"
                             }
                         }
                     }
@@ -5406,6 +5594,39 @@
                         "type": "string",
                         "example": "2025-11-04T18:30:00Z",
                         "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ParentChildrenResponse": {
+                "description": "Respuesta del get que muestra los hijos del padre",
+                "properties": {
+                    "parentId": {
+                        "description": "Id del parent",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "parentName": {
+                        "description": "Nombre del parent",
+                        "type": "string",
+                        "example": "Juan Perez"
+                    },
+                    "childrenData": {
+                        "description": "Usuarios que han cambiado su estado",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 3
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "example": "Jesus Perez"
+                                }
+                            },
+                            "type": "object"
+                        }
                     }
                 },
                 "type": "object"
@@ -6054,6 +6275,75 @@
                 },
                 "type": "object"
             },
+            "ParentInvite": {
+                "required": [
+                    "studentId",
+                    "email",
+                    "token",
+                    "expiresAt",
+                    "createdBy"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "studentId": {
+                        "type": "integer"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "token": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "usedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "createdBy": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "ParentStudent": {
+                "required": [
+                    "parentId",
+                    "studentId",
+                    "parentRoleId",
+                    "studentRoleId"
+                ],
+                "properties": {
+                    "parentId": {
+                        "type": "integer"
+                    },
+                    "studentId": {
+                        "type": "integer"
+                    },
+                    "parentRoleId": {
+                        "type": "integer"
+                    },
+                    "studentRoleId": {
+                        "type": "integer"
+                    },
+                    "relationship": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RelationshipType"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "DomainPayment": {
                 "description": "Representa un pago realizado por un usuario",
                 "properties": {
@@ -6454,7 +6744,8 @@
                     "semestre",
                     "carrera_semestre",
                     "estudiantes"
-                ]
+                ],
+                "example": "todos"
             },
             "PaymentConceptStatus": {
                 "description": "Estatus válidos de un concepto de pago",
@@ -6464,7 +6755,8 @@
                     "finalizado",
                     "desactivado",
                     "eliminado"
-                ]
+                ],
+                "example": "activo"
             },
             "PaymentStatus": {
                 "description": "Estatus válidos de un pago",
@@ -6475,7 +6767,19 @@
                     "paid",
                     "unpaid",
                     "pending"
-                ]
+                ],
+                "example": "paid"
+            },
+            "RelationshipType": {
+                "description": "Tipo de relación entre padre y estudiante",
+                "type": "string",
+                "enum": [
+                    "padre",
+                    "madre",
+                    "tutor",
+                    "tutor_legal"
+                ],
+                "example": "padre"
             },
             "UserBloodType": {
                 "description": "Tipos de sangre válidos de un usuario",
@@ -6489,7 +6793,8 @@
                     "B-",
                     "AB+",
                     "AB-"
-                ]
+                ],
+                "example": "O+"
             },
             "UserGender": {
                 "description": "Generos válidos de un usuario",
@@ -6497,7 +6802,8 @@
                 "enum": [
                     "hombre",
                     "mujer"
-                ]
+                ],
+                "example": "hombre"
             },
             "UserStatus": {
                 "description": "Estatus valido de un usuario",
@@ -6506,7 +6812,848 @@
                     "activo",
                     "baja",
                     "eliminado"
-                ]
+                ],
+                "example": "activo"
+            },
+            "AttachStudentRequest": {
+                "required": [
+                    "user_id",
+                    "career_id",
+                    "n_control",
+                    "semestre",
+                    "group",
+                    "workshop"
+                ],
+                "properties": {
+                    "user_id": {
+                        "description": "ID del usuario",
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "career_id": {
+                        "description": "ID de la carrera",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "n_control": {
+                        "description": "Número de control del estudiante",
+                        "type": "string",
+                        "example": "2578900"
+                    },
+                    "semestre": {
+                        "description": "Semestre actual del estudiante",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "group": {
+                        "description": "Grupo del estudiante",
+                        "type": "string",
+                        "example": "A"
+                    },
+                    "workshop": {
+                        "description": "Taller asignado al estudiante",
+                        "type": "string",
+                        "example": "Dibujo"
+                    }
+                },
+                "type": "object"
+            },
+            "ChangeUserStatusRequest": {
+                "required": [
+                    "ids"
+                ],
+                "properties": {
+                    "ids": {
+                        "description": "Array de IDs de los usuarios a cambiar de estado",
+                        "type": "array",
+                        "items": {
+                            "description": "ID de un usuario existente",
+                            "type": "integer",
+                            "example": 1
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "FindPermissionsRequest": {
+                "properties": {
+                    "curps": {
+                        "description": "Array de CURPs de los usuarios a consultar permisos (opcional, no enviar si se usa role)",
+                        "type": "array",
+                        "items": {
+                            "description": "CURP de un usuario existente",
+                            "type": "string",
+                            "example": "LOPA800101HDFRNL09"
+                        },
+                        "example": [
+                            "LOPA800101HDFRNL09",
+                            "MARA900202MDFRTN05"
+                        ]
+                    },
+                    "role": {
+                        "description": "Nombre del rol para consultar permisos (opcional, no enviar si se usan curps)",
+                        "type": "string",
+                        "example": "admin"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterUserRequest": {
+                "required": [
+                    "name",
+                    "last_name",
+                    "email",
+                    "phone_number",
+                    "curp",
+                    "status"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "Nombre del usuario",
+                        "type": "string",
+                        "example": "Juan"
+                    },
+                    "last_name": {
+                        "description": "Apellido del usuario",
+                        "type": "string",
+                        "example": "Pérez López"
+                    },
+                    "email": {
+                        "description": "Correo electrónico del usuario",
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan.perez@example.com"
+                    },
+                    "phone_number": {
+                        "description": "Número de teléfono del usuario",
+                        "type": "string",
+                        "example": "5512345678"
+                    },
+                    "birthdate": {
+                        "description": "Fecha de nacimiento del usuario (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2000-05-12"
+                    },
+                    "gender": {
+                        "$ref": "#/components/schemas/UserGender"
+                    },
+                    "curp": {
+                        "description": "CURP del usuario",
+                        "type": "string",
+                        "example": "LOPA800101HDFRNL09"
+                    },
+                    "address": {
+                        "description": "Dirección del usuario",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Calle Hidalgo #123",
+                            "Col. Centro",
+                            "CDMX"
+                        ]
+                    },
+                    "blood_type": {
+                        "$ref": "#/components/schemas/UserBloodType"
+                    },
+                    "registration_date": {
+                        "description": "Fecha de registro del usuario (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-01"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/UserStatus"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdatePermissionsRequest": {
+                "properties": {
+                    "curps": {
+                        "description": "Array de CURPs de los usuarios a actualizar permisos (opcional, no enviar si se usa role)",
+                        "type": "array",
+                        "items": {
+                            "description": "CURP de un usuario existente",
+                            "type": "string",
+                            "example": "GODE561231HDFABC09"
+                        },
+                        "example": [
+                            "GODE561231HDFABC09",
+                            "PEMJ800101MDFLRS08"
+                        ]
+                    },
+                    "role": {
+                        "description": "Nombre del rol cuyos permisos se actualizarán (opcional, no enviar si se usan curps)",
+                        "type": "string",
+                        "example": "admin"
+                    },
+                    "permissionsToAdd": {
+                        "description": "Array de nombres de permisos a agregar",
+                        "type": "array",
+                        "items": {
+                            "description": "Nombre de un permiso existente",
+                            "type": "string",
+                            "example": "users.create"
+                        },
+                        "example": [
+                            "users.create",
+                            "reports.view"
+                        ]
+                    },
+                    "permissionsToRemove": {
+                        "description": "Array de nombres de permisos a remover",
+                        "type": "array",
+                        "items": {
+                            "description": "Nombre de un permiso existente",
+                            "type": "string",
+                            "example": "users.delete"
+                        },
+                        "example": [
+                            "users.delete",
+                            "settings.update"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateRolesRequest": {
+                "required": [
+                    "curps"
+                ],
+                "properties": {
+                    "curps": {
+                        "description": "Array de CURPs de los usuarios a actualizar roles",
+                        "type": "array",
+                        "items": {
+                            "description": "CURP de un usuario existente",
+                            "type": "string",
+                            "example": "GODE561231HDFABC09"
+                        },
+                        "example": [
+                            "GODE561231HDFABC09",
+                            "PEMJ800101MDFLRS08"
+                        ]
+                    },
+                    "rolesToAdd": {
+                        "description": "Array de nombres de roles a agregar",
+                        "type": "array",
+                        "items": {
+                            "description": "Nombre de un rol existente",
+                            "type": "string",
+                            "example": "editor"
+                        },
+                        "example": [
+                            "editor",
+                            "supervisor"
+                        ]
+                    },
+                    "rolesToRemove": {
+                        "description": "Array de nombres de roles a remover",
+                        "type": "array",
+                        "items": {
+                            "description": "Nombre de un rol existente",
+                            "type": "string",
+                            "example": "viewer"
+                        },
+                        "example": [
+                            "viewer",
+                            "assistant"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequest": {
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "usuario@dominio.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "secret123"
+                    }
+                },
+                "type": "object"
+            },
+            "RegisterRequest": {
+                "required": [
+                    "name",
+                    "last_name",
+                    "email",
+                    "password",
+                    "phone_number",
+                    "curp",
+                    "status"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "Nombre del usuario",
+                        "type": "string",
+                        "example": "Juan"
+                    },
+                    "last_name": {
+                        "description": "Apellido del usuario",
+                        "type": "string",
+                        "example": "Pérez López"
+                    },
+                    "email": {
+                        "description": "Correo electrónico del usuario",
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan.perez@example.com"
+                    },
+                    "password": {
+                        "description": "Contraseña del usuario",
+                        "type": "string",
+                        "example": "SecretPass123"
+                    },
+                    "phone_number": {
+                        "description": "Número de teléfono del usuario",
+                        "type": "string",
+                        "example": "+52 5512345678"
+                    },
+                    "birthdate": {
+                        "description": "Fecha de nacimiento del usuario (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-05-12"
+                    },
+                    "gender": {
+                        "$ref": "#/components/schemas/UserGender"
+                    },
+                    "curp": {
+                        "description": "CURP del usuario",
+                        "type": "string",
+                        "example": "GODE561231HDFABC09"
+                    },
+                    "address": {
+                        "description": "Dirección del usuario",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "Calle Falsa 123, Col. Centro, CDMX"
+                        },
+                        "example": [
+                            "Calle Falsa 123",
+                            "Col. Centro",
+                            "Ciudad de México"
+                        ]
+                    },
+                    "blood_type": {
+                        "$ref": "#/components/schemas/UserBloodType"
+                    },
+                    "registration_date": {
+                        "description": "Fecha de registro del usuario (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-15"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/UserStatus"
+                    }
+                },
+                "type": "object"
+            },
+            "CreateCareerRequest": {
+                "required": [
+                    "career_name"
+                ],
+                "properties": {
+                    "career_name": {
+                        "description": "Nombre de la carrera",
+                        "type": "string",
+                        "maxLength": 50,
+                        "example": "Ofimatica"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateCareerRequest": {
+                "required": [
+                    "career_name"
+                ],
+                "properties": {
+                    "career_name": {
+                        "description": "Nombre de la carrera",
+                        "type": "string",
+                        "maxLength": 50,
+                        "example": "Contabilidad"
+                    }
+                },
+                "type": "object"
+            },
+            "ForceRefreshRequest": {
+                "properties": {
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationRequest": {
+                "properties": {
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean"
+                    },
+                    "perPage": {
+                        "description": "Número de elementos por página (opcional, entre 1 y 200)",
+                        "type": "integer",
+                        "maximum": 200,
+                        "minimum": 1,
+                        "example": 20
+                    },
+                    "page": {
+                        "description": "Número de página (opcional, mínimo 1)",
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "ImportUsersRequest": {
+                "properties": {
+                    "file": {
+                        "description": "Archivo con los usuarios a importar (XLSX, XLS o CSV)",
+                        "type": "string",
+                        "format": "binary"
+                    }
+                },
+                "type": "object"
+            },
+            "AcceptInviteRequest": {
+                "required": [
+                    "token"
+                ],
+                "properties": {
+                    "token": {
+                        "description": "Token de la invitación",
+                        "type": "string",
+                        "example": "abc123xyzInviteToken987"
+                    },
+                    "relationship": {
+                        "$ref": "#/components/schemas/RelationshipType"
+                    }
+                },
+                "type": "object"
+            },
+            "SendInviteRequest": {
+                "required": [
+                    "student_id",
+                    "parent_email"
+                ],
+                "properties": {
+                    "student_id": {
+                        "description": "ID del estudiante existente",
+                        "type": "integer",
+                        "example": 42
+                    },
+                    "parent_email": {
+                        "description": "Correo electrónico del padre",
+                        "type": "string",
+                        "format": "email",
+                        "example": "parent@example.com"
+                    }
+                },
+                "type": "object"
+            },
+            "AllConceptsRequest": {
+                "properties": {
+                    "only_this_year": {
+                        "description": "Filtrar conceptos solo del año actual (opcional)",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "perPage": {
+                        "description": "Número de elementos por página (opcional, entre 1 y 200)",
+                        "type": "integer",
+                        "maximum": 200,
+                        "minimum": 1,
+                        "example": 25
+                    },
+                    "page": {
+                        "description": "Número de página (opcional, mínimo 1)",
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 1
+                    },
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "ConceptsIndexRequest": {
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentConceptStatus"
+                    },
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "perPage": {
+                        "description": "Número de elementos por página (opcional, entre 1 y 200)",
+                        "type": "integer",
+                        "maximum": 200,
+                        "minimum": 1,
+                        "example": 20
+                    },
+                    "page": {
+                        "description": "Número de página (opcional, mínimo 1)",
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "DashboardRequest": {
+                "properties": {
+                    "only_this_year": {
+                        "description": "Filtrar datos solo del año actual (opcional)",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "GetStripePaymentsRequest": {
+                "required": [
+                    "search"
+                ],
+                "properties": {
+                    "search": {
+                        "description": "CURP, email o n_control de usuario",
+                        "type": "string",
+                        "example": "25187109"
+                    },
+                    "year": {
+                        "description": "Año de los pagos (opcional)",
+                        "type": "integer",
+                        "example": 2023
+                    },
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaginationWithSearchRequest": {
+                "properties": {
+                    "search": {
+                        "description": "Término de búsqueda opcional, CURP, email o N_control",
+                        "type": "string",
+                        "example": "25789045"
+                    },
+                    "perPage": {
+                        "description": "Número de elementos por página (opcional, entre 1 y 200)",
+                        "type": "integer",
+                        "maximum": 200,
+                        "minimum": 1,
+                        "example": 10
+                    },
+                    "page": {
+                        "description": "Número de página (opcional, mínimo 1)",
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 2
+                    },
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "StorePaymentConceptRequest": {
+                "required": [
+                    "concept_name",
+                    "start_date",
+                    "amount",
+                    "is_global",
+                    "applies_to"
+                ],
+                "properties": {
+                    "concept_name": {
+                        "description": "Nombre del concepto de pago",
+                        "type": "string",
+                        "maxLength": 50,
+                        "example": "Inscripción 2025"
+                    },
+                    "description": {
+                        "description": "Descripción opcional del concepto",
+                        "type": "string",
+                        "maxLength": 100,
+                        "example": "Pago correspondiente al proceso de inscripción del ciclo 2025"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentConceptStatus"
+                    },
+                    "start_date": {
+                        "description": "Fecha de inicio (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-15"
+                    },
+                    "end_date": {
+                        "description": "Fecha de fin (opcional, YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-03-01"
+                    },
+                    "amount": {
+                        "description": "Monto del concepto",
+                        "type": "number",
+                        "minimum": 10,
+                        "example": 1500.5
+                    },
+                    "is_global": {
+                        "description": "Indica si aplica globalmente",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "applies_to": {
+                        "$ref": "#/components/schemas/PaymentConceptAppliesTo"
+                    },
+                    "semestres": {
+                        "description": "Array de semestres a los que aplica (opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    "careers": {
+                        "description": "Array de IDs de carreras a los que aplica (opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            4,
+                            7
+                        ]
+                    },
+                    "students": {
+                        "description": "Array de CURPs de estudiantes a los que aplica (opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "12",
+                            "55",
+                            "89"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UpdatePaymentConceptRequest": {
+                "properties": {
+                    "concept_name": {
+                        "description": "Nombre del concepto de pago",
+                        "type": "string",
+                        "maxLength": 50,
+                        "example": "Inscripción Semestral"
+                    },
+                    "description": {
+                        "description": "Descripción opcional del concepto",
+                        "type": "string",
+                        "maxLength": 100,
+                        "example": "Pago correspondiente al semestre agosto-diciembre"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentConceptStatus"
+                    },
+                    "start_date": {
+                        "description": "Fecha de inicio (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-15"
+                    },
+                    "end_date": {
+                        "description": "Fecha de fin (opcional, YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-06-30"
+                    },
+                    "amount": {
+                        "description": "Monto del concepto",
+                        "type": "number",
+                        "minimum": 10,
+                        "example": 1800.5
+                    },
+                    "is_global": {
+                        "description": "Indica si aplica globalmente",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "applies_to": {
+                        "$ref": "#/components/schemas/PaymentConceptAppliesTo"
+                    },
+                    "semestres": {
+                        "description": "Array de semestres a los que aplica (opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    "careers": {
+                        "description": "Array de IDs de carreras a los que aplica (opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            3,
+                            5
+                        ]
+                    },
+                    "students": {
+                        "description": "Array de IDs de estudiantes a los que aplica (opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "21",
+                            "22",
+                            "23"
+                        ]
+                    },
+                    "replaceRelations": {
+                        "description": "Indica si se deben reemplazar las relaciones existentes",
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "ValidatePaymentRequest": {
+                "properties": {
+                    "search": {
+                        "description": "Término de búsqueda para validar el pago",
+                        "type": "string",
+                        "example": "user@example.com"
+                    },
+                    "payment_intent_id": {
+                        "description": "ID del intento de pago a validar",
+                        "type": "string",
+                        "example": "pi_1Hh1XYZ1234567890"
+                    }
+                },
+                "type": "object"
+            },
+            "PayConceptRequest": {
+                "properties": {
+                    "concept_id": {
+                        "description": "ID del concepto que se desea pagar",
+                        "type": "integer",
+                        "example": 123
+                    }
+                },
+                "type": "object"
+            },
+            "UpdatePasswordRequest": {
+                "properties": {
+                    "currentPassword": {
+                        "description": "Contraseña actual del usuario",
+                        "type": "string",
+                        "minLength": 8,
+                        "example": "oldPassword123"
+                    },
+                    "newPassword": {
+                        "description": "Nueva contraseña que el usuario desea establecer",
+                        "type": "string",
+                        "minLength": 8,
+                        "example": "newPassword456"
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateUserRequest": {
+                "properties": {
+                    "name": {
+                        "description": "Nombre del usuario",
+                        "type": "string",
+                        "example": "Juan"
+                    },
+                    "last_name": {
+                        "description": "Apellido del usuario",
+                        "type": "string",
+                        "example": "Pérez"
+                    },
+                    "email": {
+                        "description": "Correo electrónico del usuario, debe ser único",
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan.perez@example.com"
+                    },
+                    "phone_number": {
+                        "description": "Número de teléfono del usuario",
+                        "type": "string",
+                        "example": "+5215512345678"
+                    },
+                    "birthdate": {
+                        "description": "Fecha de nacimiento del usuario en formato AAAA-MM-DD",
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-05-15"
+                    },
+                    "gender": {
+                        "$ref": "#/components/schemas/UserGender"
+                    },
+                    "address": {
+                        "description": "Dirección del usuario",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "blood_type": {
+                        "$ref": "#/components/schemas/UserBloodType"
+                    }
+                },
+                "type": "object"
             }
         }
     },
@@ -6526,6 +7673,10 @@
         {
             "name": "Auth",
             "description": "Endpoints relacionados con la autenticación de usuarios, tokens de acceso, contraseñas y verificación"
+        },
+        {
+            "name": "Parents",
+            "description": "Endpoints para invitar y aceptar padres de alumnos"
         },
         {
             "name": "Payment Concepts",

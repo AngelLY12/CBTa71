@@ -7,7 +7,8 @@ namespace App\Core\Domain\Enum\User;
  *     schema="UserBloodType",
  *     type="string",
  *     description="Tipos de sangre válidos de un usuario",
- *     enum={"O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"}
+ *     enum={"O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"},
+ *     example="O+"
  * )
  */
 enum UserBloodType: string

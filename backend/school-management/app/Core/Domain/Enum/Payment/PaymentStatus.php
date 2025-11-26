@@ -7,7 +7,8 @@ namespace App\Core\Domain\Enum\Payment;
  *     schema="PaymentStatus",
  *     type="string",
  *     description="Estatus válidos de un pago",
- *     enum={"succeeded", "requires_action", "paid", "unpaid", "pending"}
+ *     enum={"succeeded", "requires_action", "paid", "unpaid", "pending"},
+ *     example="paid"
  * )
  */
 enum PaymentStatus: string
