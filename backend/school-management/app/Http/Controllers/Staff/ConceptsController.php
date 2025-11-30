@@ -10,6 +10,7 @@ use App\Http\Requests\Payments\Staff\ConceptsIndexRequest;
 use App\Http\Requests\Payments\Staff\StorePaymentConceptRequest;
 use App\Http\Requests\Payments\Staff\UpdatePaymentConceptRequest;
 use App\Models\PaymentConcept;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -96,11 +97,10 @@ class ConceptsController extends Controller
             $validated['page'] ?? 1,
             $validated['forceRefresh'] ?? false
         );
-        return response()->json([
-                'success' => true,
-                'data' => ['concepts'=>$paginatedData],
-                'message'=>empty($paginatedData) ? 'No hay conceptos de pago creados' : null
-            ]);
+        return Response::success(
+            ['concepts' => $paginatedData],
+            empty($paginatedData->items) ? 'No hay conceptos de pago creados' : null
+        );
 
     }
 
@@ -165,11 +165,11 @@ class ConceptsController extends Controller
 
         $createdConcept=$this->conceptsService->createPaymentConcept($dto);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['concept' => $createdConcept],
-            'message' => 'Concepto de pago creado con éxito.',
-        ], 201);
+        return Response::success(
+            ['concept' => $createdConcept],
+            'Concepto de pago creado con éxito.',
+            201
+        );
 
     }
 
@@ -219,11 +219,10 @@ class ConceptsController extends Controller
 
         $updatedConcept = $this->conceptsService->updatePaymentConcept($dto);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['concept'=>$updatedConcept],
-            'message' => 'Concepto de pago actualizado correctamente.'
-        ]);
+        return Response::success(
+            ['concept' => $updatedConcept],
+            'Concepto de pago actualizado correctamente.'
+        );
     }
 
 
@@ -257,11 +256,10 @@ class ConceptsController extends Controller
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
         $finalized = $this->conceptsService->finalizePaymentConcept($domainConcept);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['concept'=>$finalized],
-            'message' => 'Concepto de pago finalizado correctamente.'
-        ]);
+        return Response::success(
+            ['concept' => $finalized],
+            'Concepto de pago finalizado correctamente.'
+        );
     }
 
     /**
@@ -294,11 +292,10 @@ class ConceptsController extends Controller
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
         $disable = $this->conceptsService->disablePaymentConcept($domainConcept);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['concept'=>$disable],
-            'message' => 'Concepto de pago deshabilitado correctamente.'
-        ]);
+        return Response::success(
+            ['concept' => $disable],
+            'Concepto de pago deshabilitado correctamente.'
+        );
     }
 
     /**
@@ -331,11 +328,10 @@ class ConceptsController extends Controller
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
         $activate = $this->conceptsService->activatePaymentConcept($domainConcept);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['concept'=>$activate],
-            'message' => 'Concepto de pago habilitado correctamente.'
-        ]);
+        return Response::success(
+            ['concept' => $activate],
+            'Concepto de pago habilitado correctamente.'
+        );
     }
 
     /**
@@ -352,10 +348,10 @@ class ConceptsController extends Controller
     {
         $this->conceptsService->eliminatePaymentConcept($conceptId);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Concepto de pago eliminado correctamente.'
-        ]);
+         return Response::success(
+            null,
+            'Concepto de pago eliminado correctamente.'
+        );
     }
 
     /**
@@ -387,10 +383,9 @@ class ConceptsController extends Controller
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
         $eliminate = $this->conceptsService->eliminateLogicalPaymentConcept($domainConcept);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['concept'=>$eliminate],
-            'message' => 'Concepto de pago eliminado correctamente.'
-        ]);
+        return Response::success(
+            ['concept' => $eliminate],
+            'Concepto de pago eliminado correctamente.'
+        );
     }
 }

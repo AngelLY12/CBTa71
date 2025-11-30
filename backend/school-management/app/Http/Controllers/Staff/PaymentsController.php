@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Staff;
 use App\Core\Application\Services\Payments\Staff\PaymentsService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Payments\Staff\PaginationWithSearchRequest;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -108,10 +109,9 @@ class PaymentsController extends Controller
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $payments = $this->paymentsService->showAllPayments($search, $perPage, $page, $forceRefresh);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['payments'=>$payments],
-            'message' => empty($payments) ? 'No hay pagos registrados.':null
-        ]);
+        return Response::success(
+            ['payments' => $payments],
+            empty($payments->items) ? 'No hay pagos registrados.' : null
+        );
     }
 }

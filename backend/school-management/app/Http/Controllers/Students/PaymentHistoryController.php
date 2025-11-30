@@ -7,6 +7,7 @@ use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\General\PaginationRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -112,16 +113,15 @@ class PaymentHistoryController extends Controller
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
-            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+            return Response::error('Acceso no permitido', 403);
         }
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
         $history=$this->paymentHistoryService->paymentHistory(UserMapper::toDomain($targetUser), $perPage, $page, $forceRefresh);
-        return response()->json([
-            'success' => true,
-            'data' => ['payment_history'=>$history],
-            'message' => empty($history) ? 'No hay historial de pagos para este usuario.':null
-        ]);
+        return Response::success(
+            ['payment_history' => $history],
+            empty($history->items) ? 'No hay historial de pagos para este usuario.' : null
+        );
 
     }
 }

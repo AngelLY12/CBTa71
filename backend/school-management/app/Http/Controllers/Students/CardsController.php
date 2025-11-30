@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\General\ForceRefreshRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -85,14 +86,17 @@ class CardsController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $targetId = $id && $user->hasRole('parent') ? $id : $user->id;
-        $cards = $this->cardsService->getUserPaymentMethods($targetId, $forceRefresh);
+        $targetUser = $user->resolveTargetUser($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['cards'=>$cards],
-            'message' => empty($cards) ? 'No se encontraron métodos de pago.':null
-        ]);
+        if (!$targetUser) {
+            return Response::error('Acceso no permitido', 403);
+        }
+        $cards = $this->cardsService->getUserPaymentMethods($targetUser->id, $forceRefresh);
+
+        return Response::success(
+            ['cards' => $cards],
+            empty($cards) ? 'No se encontraron métodos de pago.' : null
+        );
     }
 
     /**
@@ -127,10 +131,11 @@ class CardsController extends Controller
 
         $session= $this->cardsService->setupCard(UserMapper::toDomain($user));
 
-        return response()->json([
-            'success'=>true,
-            'data' => ['url_checkout'=>$session->url],
-        ], 201);
+        return Response::success(
+            ['url_checkout' => $session->url],
+            null,
+            201
+        );
 
     }
 
@@ -169,9 +174,9 @@ class CardsController extends Controller
         $user = Auth::user();
         $this->cardsService->deletePaymentMethod(UserMapper::toDomain($user),$paymentMethodId);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Método de pago eliminado correctamente'
-            ]);
+        return Response::success(
+            null,
+            'Método de pago eliminado correctamente'
+        );
     }
 }

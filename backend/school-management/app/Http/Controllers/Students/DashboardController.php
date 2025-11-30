@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\General\PaginationRequest;
-
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -85,14 +85,12 @@ class DashboardController extends Controller
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
-            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+            return Response::error('Acceso no permitido', 403);
         }
         $data = $this->dashboardService->getDashboardData(UserMapper::toDomain($targetUser), $forceRefresh);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['statistics'=>$data]
-        ]);
+        return Response::success(['statistics' => $data]);
+
     }
 
     /**
@@ -154,14 +152,12 @@ class DashboardController extends Controller
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
-            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+            return Response::error('Acceso no permitido', 403);
         }
         $data = $this->dashboardService->pendingPaymentAmount(UserMapper::toDomain($targetUser), $forceRefresh);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['total_pending'=>$data]
-        ]);
+        return Response::success(['total_pending' => $data]);
+
     }
 
     /**
@@ -207,15 +203,13 @@ class DashboardController extends Controller
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
-            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+            return Response::error('Acceso no permitido', 403);
         }
 
         $data = $this->dashboardService->paymentsMade(UserMapper::toDomain($targetUser), $forceRefresh);
 
-        return response()->json([
-            'success' => true,
-            'paid' => ['total_paid'=>$data]
-        ]);
+        return Response::success(['total_paid' => $data]);
+
     }
 
     /**
@@ -260,15 +254,13 @@ class DashboardController extends Controller
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
-            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+            return Response::error('Acceso no permitido', 403);
         }
 
         $data = $this->dashboardService->overduePayments(UserMapper::toDomain($user), $forceRefresh);
 
-        return response()->json([
-            'success' => true,
-            'overdue' => ['total_overdue'=>$data]
-        ]);
+        return Response::success(['total_overdue' => $data]);
+
     }
     /**
      * @OA\Get(
@@ -352,18 +344,16 @@ class DashboardController extends Controller
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
-            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+            return Response::error('Acceso no permitido', 403);
         }
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
         $data = $this->dashboardService->paymentHistory(UserMapper::toDomain($targetUser), $perPage, $page, $forceRefresh);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['payment_history'=>$data],
-            'message' => empty($data)?'No hay pagos registrados en el historial':null
-
-        ]);
+        return Response::success(
+            ['payment_history' => $data],
+            empty($data->items) ? 'No hay pagos registrados en el historial' : null
+        );
     }
 
     /**
@@ -387,9 +377,7 @@ class DashboardController extends Controller
     public function refreshDashboard()
     {
         $this->dashboardService->refreshAll();
-        return response()->json([
-            'success' => true,
-            'message' => 'Dashboard cache limpiado con éxito'
-        ]);
+        return Response::success(null, 'Dashboard cache limpiado con éxito');
+
     }
 }

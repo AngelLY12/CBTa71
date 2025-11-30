@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Services\UpdateUserServiceFacades;
+use App\Core\Application\Services\User\UpdateUserServiceFacades;
 use App\Http\Requests\User\UpdatePasswordRequest;
 use App\Http\Requests\User\UpdateUserRequest;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -15,22 +16,17 @@ use App\Http\Requests\User\UpdateUserRequest;
  */
 class UpdateUserController extends Controller
 {
-    public function __construct(private UpdateUserServiceFacades $service)
+    private UpdateUserServiceFacades $service;
+    public function __construct( UpdateUserServiceFacades $service)
     {
+        $this->service=$service;
     }
 
      /**
      * @OA\Patch(
-     *     path="/api/v1/users/{userId}",
+     *     path="/api/v1/users/update",
      *     tags={"Users"},
      *     summary="Actualizar los datos generales de un usuario",
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID del usuario",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(ref="#/components/schemas/UpdateUserRequest")
@@ -48,30 +44,21 @@ class UpdateUserController extends Controller
      *     )
      * )
      */
-    public function update(UpdateUserRequest $request, int $userId)
+    public function update(UpdateUserRequest $request)
     {
+        $userId=Auth::id();
         $data=$request->validated();
         $updated=$this->service->updateUser($userId,$data);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['user'=>$updated],
-            'message' => 'El usuario ha sido actualizado con éxito.',
-        ]);
+        return Response::success(['user' => $updated], 'El usuario ha sido actualizado con éxito.');
+
     }
 
     /**
      * @OA\Patch(
-     *     path="/api/v1/users/{userId}/password",
+     *     path="/api/v1/users/update/password",
      *     tags={"Users"},
      *     summary="Actualizar la contraseña de un usuario",
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID del usuario",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -88,20 +75,17 @@ class UpdateUserController extends Controller
      *     )
      * )
      */
-    public function updatePassword(UpdatePasswordRequest $request, int $userId)
+    public function updatePassword(UpdatePasswordRequest $request)
     {
         $data = $request->validated();
-
+        $userId=Auth::id();
         $updated = $this->service->updatePassword(
             $userId,
             $data['currentPassword'],
             $data['newPassword']
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => $updated,
-            'message' => 'Password actualizada con éxito',
-        ]);
+        return Response::success(['user'=>$updated], 'Password actualizada con éxito');
+
     }
 }

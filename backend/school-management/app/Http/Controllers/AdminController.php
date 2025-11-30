@@ -4,17 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Core\Application\Mappers\StudentDetailMapper;
 use App\Core\Application\Mappers\UserMapper;
-use App\Core\Application\Services\Admin\AdminService;
+use App\Core\Application\Services\Admin\AdminServiceFacades;
 use App\Http\Requests\Admin\AttachStudentRequest;
 use App\Http\Requests\Admin\ChangeUserStatusRequest;
 use App\Http\Requests\Admin\FindPermissionsRequest;
 use App\Http\Requests\Admin\RegisterUserRequest;
 use App\Http\Requests\Admin\UpdatePermissionsRequest;
 use App\Http\Requests\Admin\UpdateRolesRequest;
+use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\General\PaginationRequest;
 use App\Http\Requests\ImportUsersRequest;
 use App\Imports\UsersImport;
+use Illuminate\Support\Facades\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 
@@ -27,15 +29,15 @@ use Illuminate\Support\Str;
  */
 class AdminController extends Controller
 {
-    private AdminService $service;
+    private AdminServiceFacades $service;
 
-    public function __construct(AdminService $service)
+    public function __construct(AdminServiceFacades $service)
     {
         $this->service= $service;
     }
 
 
-        /**
+    /**
      * @OA\Post(
      *     path="/api/v1/admin-actions/register",
      *     summary="Registrar un nuevo usuario",
@@ -100,11 +102,69 @@ class AdminController extends Controller
 
         $user = $this->service->registerUser($createUser, $password);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['user'=>$user],
-            'message' => 'El usuario ha sido creado con éxito.',
-        ]);
+        return Response::success(['user' => $user], 'El usuario ha sido creado con éxito.');
+
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/admin-actions/promotion",
+     *     summary="Incrementa el semestre de los alumnos y da de baja a quienes sobrepasan",
+     *     description="Se hace un incremento en el semestre de todos los alumnos sin importar status y da de baja a quienes sobrepasan el semestre 12.",
+     *     operationId="promotionStudents",
+     *     tags={"Admin"},
+     *
+     *
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Usuarios promovidos con exito",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="affected", type="object",
+     *                    @OA\Property(property="usuarios_promovidos", type="integer", example=27),
+     *                    @OA\Property(property="usuarios_baja", type="integer", example=5)
+     *                )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="El usuario ha sido creado con éxito.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error en la validación de datos",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 description="Listado de errores de validación",
+     *                 example={
+     *                     "email": {"No se puede promover alumnos en este mes."},
+     *                 }
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error inesperado en el servidor",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
+     *         )
+     *     )
+     * )
+     */
+    public function promotionStudents()
+    {
+        $promotion=$this->service->promoteStudentes();
+        return Response::success(['affected' => $promotion], 'Se ejecutó la promoción de usuarios correctamente.');
+
     }
     /**
      * @OA\Post(
@@ -180,11 +240,139 @@ class AdminController extends Controller
 
         $user = $this->service->attachStudentDetail($attachUser);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['user'=>$user],
-            'message' => 'Se asociarón correctamente los datos al estudiante.',
-        ]);
+        return Response::success(['user' => $user], 'Se asociaron correctamente los datos al estudiante.');
+
+
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/admin-actions/get-student/{id}",
+     *     tags={"Admin"},
+     *     summary="Obtener detalles de estudiante a un usuario existente",
+     *     description="Permite obtener información académica (carrera, grupo, taller) a un usuario ya registrado.",
+     *     operationId="getStudentDetailToUser",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="query",
+     *         description="ID del estudiante del que se quieren los detalles.",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detalles de estudiante encontrados correctamente.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="user",
+     *                     ref="#/components/schemas/DomainStudentDetail"
+     *                 )
+     *             ),
+     *
+     *         )
+     *     ),
+     *
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="No autorizado para realizar esta acción."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Usuario o recurso no encontrado."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor."
+     *     )
+     * )
+     */
+    public function findStudentDetail(int $id)
+    {
+        $details= $this->service->findStudentDetail($id);
+        return Response::success(['student_details' => $details]);
+    }
+
+    /**
+     * @OA\Patch(
+     *     path="/api/v1/admin-actions/update-student/{id}",
+     *     tags={"Admin"},
+     *     summary="Actualizar detalles de estudiante a un usuario existente",
+     *     description="Permite actualizar información académica (carrera, grupo, taller) a un usuario ya registrado.",
+     *     operationId="updateStudentDetailToUser",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="Datos necesarios para actualizar un detalle de estudiante al usuario.",
+     *         @OA\JsonContent(ref="#/components/schemas/UpdateStudentRequest")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Usuario actualizado correctamente con detalle de estudiante.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="user",
+     *                     ref="#/components/schemas/DomainUser"
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Se actualizaron correctamente los detalles de estudiante."
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error en la validación de datos.",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Error en la validación de datos."),
+     *             @OA\Property(property="errors", type="object",
+     *                 @OA\Property(
+     *                     property="user_id",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="El campo career_id es obligatorio.")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="No autorizado para realizar esta acción."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Usuario o recurso no encontrado."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error interno del servidor."
+     *     )
+     * )
+     */
+
+    public function updateStudentDetail(UpdateStudentRequest $request, int $id)
+    {
+        $data=$request->validated();
+        $userUpdate= $this->service->updateStudentDetail($id,$data);
+        return Response::success(['user' => $userUpdate], 'Se actualizaron correctamente los detalles de estudiante.');
 
     }
 
@@ -257,10 +445,8 @@ class AdminController extends Controller
 
         Excel::import(new UsersImport($this->service),$file);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Usuarios importados correctamente.'
-        ]);
+        return Response::success(null, 'Usuarios importados correctamente.');
+
 
     }
 
@@ -323,11 +509,8 @@ class AdminController extends Controller
         $dto = UserMapper::toUpdateUserPermissionsDTO($validated);
         $updated=$this->service->syncPermissions($dto);
 
-        return response()->json([
-            'success' => true,
-            'data' =>['users_permissions'=> $updated],
-            'message' => 'Permisos actualizados correctamente.',
-        ], 200);
+        return Response::success(['users_permissions' => $updated], 'Permisos actualizados correctamente.');
+
     }
 
     /**
@@ -419,11 +602,8 @@ class AdminController extends Controller
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
         $users=$this->service->showAllUsers($perPage, $page,$forceRefresh);
-        return response()->json([
-            'success' => true,
-            'data' =>['users'=> $users],
-            'message' => 'Usuarios encontrados.',
-        ], 200);
+        return Response::success(['users' => $users], 'Usuarios encontrados.');
+
     }
 
     /**
@@ -458,11 +638,8 @@ class AdminController extends Controller
         $dto = UserMapper::toUpdateUserRoleDTO($validated);
         $updated=$this->service->syncRoles($dto);
 
-        return response()->json([
-            'success' => true,
-            'data' =>['users_roles'=> $updated],
-            'message' => 'Roles actualizados correctamente.',
-        ], 200);
+        return Response::success(['users_roles' => $updated], 'Roles actualizados correctamente.');
+
     }
 
     /**
@@ -499,11 +676,8 @@ class AdminController extends Controller
         $ids = $request->validated()['ids'];
         $updated=$this->service->activateUsers($ids);
 
-        return response()->json([
-            'success' => true,
-            'data' =>['activate_users'=> $updated],
-            'message' => 'Estatus de usuarios actualizados correctamente.',
-        ], 200);
+        return Response::success(['activate_users' => $updated], 'Estatus de usuarios actualizados correctamente.');
+
     }
 
     /**
@@ -540,11 +714,8 @@ class AdminController extends Controller
         $ids = $request->validated()['ids'];
         $updated=$this->service->deleteUsers($ids);
 
-        return response()->json([
-            'success' => true,
-            'data' =>['delete_users'=> $updated],
-            'message' => 'Estatus de usuarios actualizados correctamente.',
-        ], 200);
+        return Response::success(['delete_users' => $updated], 'Estatus de usuarios actualizados correctamente.');
+
     }
 
     /**
@@ -581,11 +752,8 @@ class AdminController extends Controller
         $ids = $request->validated()['ids'];
         $updated=$this->service->disableUsers($ids);
 
-        return response()->json([
-            'success' => true,
-            'data' =>['disable_users'=> $updated],
-            'message' => 'Estatus de usuarios actualizados correctamente.',
-        ], 200);
+        return Response::success(['disable_users' => $updated], 'Estatus de usuarios actualizados correctamente.');
+
     }
 
     /**
@@ -657,10 +825,8 @@ class AdminController extends Controller
         $curps = $validated['curps'] ?? [];
         $role  = $validated['role'] ?? null;
         $permissions= $this->service->findAllPermissions($curps, $role);
-        return response()->json([
-            'success' => true,
-            'data' =>['permissions'=> $permissions],
-        ], 200);
+        return Response::success(['permissions' => $permissions]);
+
     }
 
     /**
@@ -703,10 +869,8 @@ class AdminController extends Controller
     {
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $roles= $this->service->findAllRoles($forceRefresh);
-        return response()->json([
-            'success' => true,
-            'data' =>['roles'=> $roles],
-        ], 200);
+        return Response::success(['roles' => $roles]);
+
     }
 
     /**
@@ -744,10 +908,8 @@ class AdminController extends Controller
     public function findRoleById(int $id)
     {
         $role= $this->service->findRolById($id);
-        return response()->json([
-            'success' => true,
-            'data' =>['role'=> $role],
-        ], 200);
+        return Response::success(['role' => $role]);
+
     }
 
     /**
@@ -785,10 +947,8 @@ class AdminController extends Controller
     public function findPermissionById(int $id)
     {
         $permission= $this->service->findPermissionById($id);
-        return response()->json([
-            'success' => true,
-            'data' =>['permission'=> $permission],
-        ], 200);
+        return Response::success(['permission' => $permission]);
+
     }
 
 }

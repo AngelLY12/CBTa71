@@ -8,6 +8,7 @@ use Stripe\Webhook;
 use App\Http\Controllers\Controller;
 use App\Jobs\ReconcilePayments;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Response;
 use Stripe\Stripe;
 
 class WebhookController extends Controller
@@ -43,41 +44,41 @@ class WebhookController extends Controller
                     if($obj->payment_status==='paid'){
                         ReconcilePayments::dispatch();
                     }
-                    return response()->json(['success' => true,'message'=>'Se completo la sesión']);
+                    return Response::success(null, 'Se completó la sesión');
                     break;
                 case 'payment_intent.payment_failed':
                 case 'payment_intent.canceled':
                 case 'checkout.session.expired':
                     $this->webhookService->handleFailedOrExpiredPayment($obj,$eventType);
-                    return response()->json(['success' => true,'message'=>$messageMap[$eventType] ?? 'Evento procesado']);
+                    return Response::success(null, $messageMap[$eventType] ?? 'Evento procesado');
                     break;
                 case 'payment_method.attached':
                     $result = $this->webhookService->paymentMethodAttached($obj);
                     if ($result === false) {
-                        return response()->json(['success' => true, 'message' => 'El método de pago ya existe']);
+                        return Response::success(null, 'El método de pago ya existe');
                     }
-                    return response()->json(['success' => true, 'message' => 'Se creó el método de pago']);
+                    return Response::success(null, 'Se creó el método de pago');
                     break;
                 case 'checkout.session.async_payment_succeeded':
                     $this->webhookService->sessionAsync($obj);
                     ReconcilePayments::dispatch();
-                    return response()->json(['success' => true,'message'=>'Se actualizo el estado del pago']);
+                    return Response::success(null, 'Se actualizó el estado del pago');
                     break;
                 case 'payment_intent.requires_action':
                     $this->webhookService->requiresAction($obj);
-                    return response()->json(['success' => true,'message'=>'Se notifico correctamente al usuario']);
+                    return Response::success(null, 'Se notificó correctamente al usuario');
                     break;
                 default:
-                    return response()->json(['success' => true, 'message' => 'Evento no manejado']);
+                    return Response::success(null, 'Evento no manejado');
             }
 
         }  catch (ModelNotFoundException $e) {
             logger()->warning("Recurso no encontrado en webhook: " . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Recurso no encontrado'], 404);
+            return Response::error('Recurso no encontrado', 404);
 
         } catch (\Exception $e) {
             logger()->error('Stripe Webhook Error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Error interno'], 500);
+            return Response::error('Error interno', 500);
         }
     }
 }

@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Application\Mappers\UserMapper;
-use App\Core\Application\Services\LoginService;
+use App\Core\Application\Services\Auth\LoginServiceFacades;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -17,9 +18,9 @@ use App\Http\Requests\Auth\RegisterRequest;
 class LoginController extends Controller
 {
 
-    protected LoginService $loginService;
+    protected LoginServiceFacades $loginService;
 
-    public function __construct(LoginService $loginService)
+    public function __construct(LoginServiceFacades $loginService)
     {
         $this->loginService=$loginService;
     }
@@ -87,11 +88,8 @@ class LoginController extends Controller
 
         $user = $this->loginService->register($createUser);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['user'=>$user],
-            'message' => 'El usuario ha sido creado con éxito.',
-        ]);
+        return Response::success(['user' => $user], 'El usuario ha sido creado con éxito.');
+
 
     }
 
@@ -170,10 +168,7 @@ class LoginController extends Controller
 
         $userToken = $this->loginService->login($loginRequest);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['user_tokens'=>$userToken],
-            'message' => 'Inicio de sesión exitoso.',
-        ]);
+        return Response::success(['user_tokens' => $userToken], 'Inicio de sesión exitoso.');
+
    }
 }

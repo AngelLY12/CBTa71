@@ -8,6 +8,7 @@ use App\Http\Requests\Parents\AcceptInviteRequest;
 use App\Http\Requests\Parents\SendInviteRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -64,16 +65,10 @@ class ParentsController extends Controller
             createdBy: $user->id
         );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Invitation enviada con exito',
-            'data' => [
-                'token' => $invite->token,
-                'expires_at' => $invite->expiresAt,
-            ]
-        ], 201);
-
-
+        return Response::success([
+            'token' => $invite->token,
+            'expires_at' => $invite->expiresAt,
+        ], 'Invitation enviada con éxito', 201);
     }
 
     /**
@@ -114,10 +109,7 @@ class ParentsController extends Controller
             userId:$user->id
         );
 
-        return response()->json([
-            'success' => true,
-            'message' => 'La invitación ha sido aceptada'
-        ], 200);
+        return Response::success(null, 'La invitación ha sido aceptada', 200);
     }
 
     /**
@@ -144,9 +136,9 @@ class ParentsController extends Controller
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(
-     *                     property="cards",
+     *                     property="children",
      *                     type="array",
-     *                     description="Lista de métodos de pago del usuario",
+     *                     description="Lista de hijos del usuario",
      *                     @OA\Items(ref="#/components/schemas/ParentChildrenResponse")
      *                 )
      *             ),
@@ -159,10 +151,8 @@ class ParentsController extends Controller
     public function getParetChildren(int $id)
     {
         $childrenData=$this->parentsFacade->getParentChildren($id);
-        return response()->json([
-            'success' => true,
-            'data' => ['children' => $childrenData],
-            'message' => 'Datos obtenidos'
-        ], 200);
+        return Response::success([
+            'children' => $childrenData
+        ], 'Datos obtenidos', 200);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Staff;
 use App\Core\Application\Services\Payments\Staff\StudentsService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Payments\Staff\PaginationWithSearchRequest;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -107,10 +108,9 @@ class StudentsController extends Controller
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $students = $this->studentsService->showAllStudents($search, $perPage, $page, $forceRefresh);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['students'=>$students],
-            'message' => empty($students) ? 'No hay estudiantes registrados.':null
-        ]);
+        return Response::success(
+            ['students' => $students],
+            empty($students->items) ? 'No hay estudiantes registrados.' : null
+        );
     }
 }

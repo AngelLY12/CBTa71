@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Payments\Staff\GetStripePaymentsRequest;
 use App\Http\Requests\Payments\Staff\PaginationWithSearchRequest;
 use App\Http\Requests\Payments\Staff\ValidatePaymentRequest;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -94,11 +95,10 @@ class DebtsController extends Controller
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $pendingPayments = $this->debtsService->showAllpendingPayments($search, $perPage, $page, $forceRefresh);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['pending_payments'=>$pendingPayments],
-            'message' => empty($pendingPayments) ? 'No hay pagos pendientes registrados.':null
-        ]);
+        return Response::success(
+            ['pending_payments' => $pendingPayments],
+            empty($pendingPayments->items) ? 'No hay pagos pendientes registrados.' : null
+        );
     }
 
     /**
@@ -153,11 +153,10 @@ class DebtsController extends Controller
             $data['payment_intent_id']
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => ['validated_payment'=>$validatedPayment],
-            'message' => 'Pago validado correctamente.'
-        ]);
+        return Response::success(
+            ['validated_payment' => $validatedPayment],
+            'Pago validado correctamente.'
+        );
     }
 
     /**
@@ -229,11 +228,10 @@ class DebtsController extends Controller
             $data['forceRefresh'] ?? false
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => ['payments'=>$payments],
-            'message' => 'Pagos obtenidos correctamente.'
-        ]);
+        return Response::success(
+            ['payments' => $payments],
+            empty($payments) ? 'No hay pagos registrados.' : null
+        );
     }
 
 }

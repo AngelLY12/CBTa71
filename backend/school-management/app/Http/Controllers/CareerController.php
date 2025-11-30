@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Core\Application\Mappers\CareerMapper;
-use App\Core\Application\Services\CareerServiceFacades;
+use App\Core\Application\Services\Misc\CareerServiceFacades;
 use App\Http\Requests\Career\CreateCareerRequest;
 use App\Http\Requests\Career\UpdateCareerRequest;
 use App\Http\Requests\General\ForceRefreshRequest;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -16,8 +17,10 @@ use App\Http\Requests\General\ForceRefreshRequest;
  */
 class CareerController extends Controller
 {
-    public function __construct(private CareerServiceFacades $service)
+    private CareerServiceFacades $service;
+    public function __construct(CareerServiceFacades $service)
     {
+        $this->service=$service;
     }
 
     /**
@@ -49,11 +52,8 @@ class CareerController extends Controller
     {
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $careers=$this->service->findAllCareers($forceRefresh);
-        return response()->json([
-            'success' => true,
-            'data' => ['careers'=>$careers],
-            'message' => 'Carreras encontradas.',
-        ]);
+        return Response::success(['careers' => $careers], 'Carreras encontradas.');
+
     }
 
     /**
@@ -92,11 +92,8 @@ class CareerController extends Controller
     {
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $career = $this->service->findById($id, $forceRefresh);
-        return response()->json([
-            'success' => true,
-            'data' => ['career'=>$career],
-            'message' => 'Carrera encontrada.',
-        ]);
+        return Response::success(['career' => $career], 'Carrera encontrada.');
+
     }
 
 
@@ -127,11 +124,8 @@ class CareerController extends Controller
         $career = CareerMapper::toDomain($request->validated());
 
         $created = $this->service->createCareer($career);
-        return response()->json([
-            'success' => true,
-            'data' => ['career'=>$created],
-            'message' => 'Carrera creada.',
-        ],201);
+        return Response::success(['career' => $created], 'Carrera creada.', 201);
+
     }
 
     /**
@@ -166,12 +160,8 @@ class CareerController extends Controller
     public function update(UpdateCareerRequest $request, int $id)
     {
         $updated = $this->service->updateCareer($id, $request->validated());
+        return Response::success(['updated' => $updated], 'Carrera actualizada.');
 
-        return response()->json([
-            'success' => true,
-            'data' => ['updated'=>$updated],
-            'message' => 'Carrera actualizada.',
-        ]);
     }
 
      /**
@@ -199,10 +189,6 @@ class CareerController extends Controller
     public function destroy(int $id)
     {
         $this->service->deleteCareer($id);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Carrera eliminada con éxito.',
-        ]);
+        return Response::success(null, 'Carrera eliminada con éxito.');
     }
 }

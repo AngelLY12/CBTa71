@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Services\FindEntityService;
+use App\Core\Application\Services\Misc\FindEntityServiceFacades;
 use App\Http\Requests\General\ForceRefreshRequest;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -13,10 +14,12 @@ use App\Http\Requests\General\ForceRefreshRequest;
  */
 class FindEntityController extends Controller
 {
+    private FindEntityServiceFacades $service;
     public function __construct(
-        private FindEntityService $service
+        FindEntityServiceFacades $service
     )
     {
+        $this->service=$service;
     }
 
         /**
@@ -63,11 +66,8 @@ class FindEntityController extends Controller
     public function findConcept(int $id)
     {
         $concept=$this->service->findConcept($id);
-         return response()->json([
-            'success' => true,
-            'data' =>['concept'=> $concept],
-            'message' => 'Concepto encontrado.',
-        ], 200);
+        return Response::success(['concept' => $concept], 'Concepto encontrado.');
+
     }
 
     /**
@@ -114,19 +114,16 @@ class FindEntityController extends Controller
     public function findPayment(int $id)
     {
         $payment=$this->service->findPayment($id);
-        return response()->json([
-            'success' => true,
-            'data' =>['payment'=> $payment],
-            'message' => 'Pago encontrado.',
-        ], 200);
+        return Response::success(['payment' => $payment], 'Pago encontrado.');
+
     }
 
      /**
      * @OA\Get(
-     *     path="/api/v1/find/user",
+     *     path="/api/v1/users/user",
      *     summary="Obtener usuario autenticado",
      *     description="Devuelve la información del usuario autenticado en el sistema.",
-     *     tags={"FindEntity"},
+     *     tags={"Users"},
      *     security={{"bearerAuth":{}}},
      *
      *      @OA\Parameter(
@@ -167,10 +164,7 @@ class FindEntityController extends Controller
     {
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $user=$this->service->findUser($forceRefresh);
-        return response()->json([
-            'success' => true,
-            'data' =>['user'=> $user],
-            'message' => 'Usuario encontrado.',
-        ], 200);
+        return Response::success(['user' => $user], 'Usuario encontrado.');
+
     }
 }

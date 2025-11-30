@@ -6,6 +6,7 @@ use App\Core\Application\Services\Payments\Staff\DashboardServiceFacades;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Payments\Staff\AllConceptsRequest;
 use App\Http\Requests\Payments\Staff\DashboardRequest;
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -80,10 +81,9 @@ class DashboardController extends Controller
             $request->validated()['forceRefresh'] ?? false
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => ['statistics'=>$data]
-        ]);
+        return Response::success(
+            ['statistics' => $data]
+        );
     }
 
     /**
@@ -140,10 +140,9 @@ class DashboardController extends Controller
         $data = $this->dashboardService->pendingPaymentAmount($request->validated()['only_this_year'] ?? false,
             $request->validated()['forceRefresh'] ?? false);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['total_pending'=>$data]
-        ]);
+        return Response::success(
+            ['total_pending' => $data]
+        );
     }
 
     /**
@@ -198,10 +197,9 @@ class DashboardController extends Controller
         $count = $this->dashboardService->getAllStudents($request->validated()['only_this_year'] ?? false,
             $request->validated()['forceRefresh'] ?? false);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['total_students'=>$count]
-        ]);
+        return Response::success(
+            ['total_students' => $count]
+        );
     }
 
     /**
@@ -256,10 +254,9 @@ class DashboardController extends Controller
         $total = $this->dashboardService->paymentsMade($request->validated()['only_this_year'] ?? false,
             $request->validated()['forceRefresh'] ?? false);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['total_earning'=>$total]
-        ]);
+        return Response::success(
+            ['total_earning' => $total]
+        );
     }
 
     /**
@@ -335,10 +332,9 @@ class DashboardController extends Controller
             $validated['forceRefresh'] ?? false
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => ['concepts'=>$concepts]
-        ]);
+        return Response::success(
+            ['concepts' => $concepts]
+        );
     }
     /**
      * @OA\Post(
@@ -360,10 +356,10 @@ class DashboardController extends Controller
     public function refreshDashboard()
     {
         $this->dashboardService->refreshAll();
-        return response()->json([
-            'success' => true,
-            'message' => 'Dashboard cache limpiado con éxito'
-        ]);
+        return Response::success(
+            null,
+            'Dashboard cache limpiado con éxito'
+        );
     }
 
 

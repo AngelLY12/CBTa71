@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Services\RefreshTokenService;
+use App\Core\Application\Services\Auth\RefreshTokenServiceFacades;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 class RefreshTokenController extends Controller
 {
-    private RefreshTokenService $service;
+    private RefreshTokenServiceFacades $service;
     public function __construct(
-        RefreshTokenService $service
+        RefreshTokenServiceFacades $service
     )
     {
         $this->service= $service;
@@ -86,11 +87,8 @@ class RefreshTokenController extends Controller
         $request->validate(['refresh_token' => 'required|string']);
         $newToken =$this->service->refreshToken($request->refresh_token);
 
-        return response()->json([
-            'success'=>true,
-            'data' => ['user_tokens'=>$newToken],
-            'token_type' => 'Bearer'
-        ]);
+        return Response::success(['user_tokens' => $newToken], 'Tokens renovados');
+
     }
 
     /**

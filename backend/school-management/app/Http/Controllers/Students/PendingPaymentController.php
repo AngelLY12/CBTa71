@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\Payments\Students\PayConceptRequest;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Response;
 
 /**
  * @OA\Tag(
@@ -95,14 +95,13 @@ class PendingPaymentController extends Controller
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
-            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+            return Response::error('Acceso no permitido', 403);
         }
         $pending=$this->pendingPaymentService->showPendingPayments(UserMapper::toDomain($targetUser), $forceRefresh);
-        return response()->json([
-            'success' => true,
-            'data' => ['pending_payments'=>$pending],
-            'message' => empty($pending) ? 'No hay pagos pendientes para el usuario.':null
-        ]);
+         return Response::success(
+            ['pending_payments' => $pending],
+            empty($pending) ? 'No hay pagos pendientes para el usuario.' : null
+        );
 
     }
 
@@ -174,14 +173,13 @@ class PendingPaymentController extends Controller
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
-            return response()->json(['success' => false, 'message' => 'Acceso no permitido'], 403);
+            return Response::error('Acceso no permitido', 403);
         }
         $pending=$this->pendingPaymentService->showOverduePayments(UserMapper::toDomain($targetUser), $forceRefresh);
-        return response()->json([
-            'success' => true,
-            'data' => ['overdue_payments'=>$pending],
-            'message' => empty($pending) ? 'No hay pagos vencidos para el usuario.':null
-        ]);
+        return Response::success(
+            ['overdue_payments' => $pending],
+            empty($pending) ? 'No hay pagos vencidos para el usuario.' : null
+        );
 
     }
 
@@ -249,10 +247,10 @@ class PendingPaymentController extends Controller
             UserMapper::toDomain($user),
             $request->validated()['concept_id']
         );
-        return response()->json([
-            'success'=>true,
-            'data'=>['url_checkout'=>$payment],
-            'message' => 'El intento de pago se genero con exito.',
-        ], 201);
+        return Response::success(
+            ['url_checkout' => $payment],
+            'El intento de pago se generó con éxito.',
+            201
+        );
     }
 }
