@@ -10,6 +10,7 @@ use App\Exceptions\Conflict\UserAlreadyDisabledException;
 use App\Exceptions\Conflict\UserCannotBeDisabledException;
 use App\Exceptions\Conflict\UserCannotBeUpdatedException;
 use App\Exceptions\Conflict\UserConflictStatusException;
+use App\Exceptions\NotAllowed\UserNotAllowedException;
 
 class UserValidator
 {
@@ -36,6 +37,14 @@ class UserValidator
     public static function ensureUserIsValidToUpdate(User $user){
         if (!$user->status->isUpdatable()) {
             throw new UserCannotBeUpdatedException();
+        }
+    }
+
+    public static function ensureUserIsActive(User $user)
+    {
+        if(!$user->isActive())
+        {
+            throw new UserNotAllowedException();
         }
     }
 
