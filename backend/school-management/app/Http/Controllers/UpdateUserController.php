@@ -22,28 +22,6 @@ class UpdateUserController extends Controller
         $this->service=$service;
     }
 
-     /**
-     * @OA\Patch(
-     *     path="/api/v1/users/update",
-     *     tags={"Users"},
-     *     summary="Actualizar los datos generales de un usuario",
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(ref="#/components/schemas/UpdateUserRequest")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Usuario actualizado correctamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="user", ref="#/components/schemas/DomainUser")
-     *             ),
-     *             @OA\Property(property="message", type="string", example="El usuario ha sido actualizado con éxito.")
-     *         )
-     *     )
-     * )
-     */
     public function update(UpdateUserRequest $request)
     {
         $userId=Auth::id();
@@ -54,27 +32,6 @@ class UpdateUserController extends Controller
 
     }
 
-    /**
-     * @OA\Patch(
-     *     path="/api/v1/users/update/password",
-     *     tags={"Users"},
-     *     summary="Actualizar la contraseña de un usuario",
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             ref="#/components/schemas/UpdatePasswordRequest"
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Contraseña actualizada correctamente",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Password actualizada con éxito")
-     *         )
-     *     )
-     * )
-     */
     public function updatePassword(UpdatePasswordRequest $request)
     {
         $data = $request->validated();

@@ -10,32 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 class PasswordResetLinkController extends Controller
 {
-    /**
-    * Handle an incoming password reset link request.
-    *
-    * @throws \Illuminate\Validation\ValidationException
-    *
-    * @OA\Post(
-    *     path="/api/forgot-password",
-    *     tags={"Auth"},
-    *     summary="Enviar link para restablecer contraseña",
-    *     description="Envía un correo con el enlace de restablecimiento de contraseña al email proporcionado.",
-    *     operationId="sendPasswordResetLink",
-    *     @OA\RequestBody(
-    *         required=true,
-    *         @OA\JsonContent(
-    *             required={"email"},
-    *             @OA\Property(property="email", type="string", format="email", example="usuario@mail.com")
-    *         )
-    *     ),
-    *     @OA\Response(
-    *         response=200,
-    *         description="Enlace de restablecimiento enviado correctamente",
-    *         @OA\JsonContent(@OA\Property(property="status", type="string", example="passwords.sent"))
-    *     ),
-    *     @OA\Response(response=422, description="Email no válido o usuario no encontrado")
-    * )
-    */
+    
     public function store(Request $request): JsonResponse
     {
         $request->validate([
