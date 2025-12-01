@@ -2,6 +2,10 @@
 
 namespace App\Core\Infraestructure\Cache;
 
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\Cache\ParentCacheSufix;
+use App\Core\Domain\Enum\Cache\StaffCacheSufix;
+use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Closure;
 use Illuminate\Support\Facades\Cache;
@@ -13,29 +17,12 @@ class CacheService
         return Cache::rememberForever($key, $callback);
     }
 
-    public function put(string $key, mixed $value, ?int $ttl = null): void
+    public function makeKey(string $prefixKey, string $suffix): string
     {
-        if ($ttl) {
-            Cache::put($key, $value, $ttl);
-        } else {
-            Cache::forever($key, $value);
-        }
+        $prefix = config("cache-prefixes.$prefixKey");
+        return "$prefix:$suffix";
     }
 
-    public function get(string $key, mixed $default = null)
-    {
-        return Cache::get($key, $default);
-    }
-
-    public function forget(string $key): void
-    {
-        Cache::forget($key);
-    }
-
-    public function has(string $key): bool
-    {
-        return Cache::has($key);
-    }
 
     public function clearPrefix(string $prefix): void
     {
@@ -50,84 +37,83 @@ class CacheService
         } while ($cursor != 0);
     }
 
-    public function clearStaffCache():void
+    public function clearKey(string $prefixKey, string $suffix): void
     {
-        $prefixes=[
-            "staff:dashboard:*",
-            "staff:debts:*",
-            "staff:payments:*",
-            "staff:students:*",
-        ];
-        foreach($prefixes as $prefix)
-        {
-            $this->clearPrefix($prefix);
-        }
+        $prefix = config("cache-prefixes.$prefixKey");
+        $this->clearPrefix("$prefix:$suffix");
+    }
 
+    public function clearStaffCache(): void
+    {
+        
+        $suffixes = [
+            StaffCacheSufix::DASHBOARD->value . ":*",
+            StaffCacheSufix::DEBTS->value . ":*",
+            StaffCacheSufix::PAYMENTS->value . ":*",
+            StaffCacheSufix::STUDENTS->value . ":*",
+        ];
+
+        foreach ($suffixes as $suffix) {
+            $this->clearKey(CachePrefix::STAFF->value, $suffix);
+        }
     }
 
     public function clearStudentCache(int $userId):void
     {
-        $prefixes=[
-            "student:dashboard-user:*:$userId",
-            "student:pending:*:$userId",
-            "student:history:$userId"
+        $suffixes = [
+            StudentCacheSufix::DASHBOARD_USER->value . ":*:$userId",
+            StudentCacheSufix::PENDING->value . ":*:$userId",
+            StudentCacheSufix::HISTORY->value . ":$userId"
         ];
-        foreach($prefixes as $prefix)
-        {
-            $this->clearPrefix($prefix);
+
+        foreach ($suffixes as $suffix) {
+            $this->clearKey(CachePrefix::STAFF->value, $suffix);
         }
     }
 
     public function clearParentCache(int $parentId):void
     {
-        $prefixes=[
-            "parent:children:$parentId",
+        $suffixes=[
+            ParentCacheSufix::CHILDREN->value . ":$parentId",
         ];
-        foreach($prefixes as $prefix)
+        foreach($suffixes as $suffix)
         {
-            $this->clearPrefix($prefix);
+            $this->clearKey(CachePrefix::PARENT->value, $suffix);
         }
     }
 
-    public function clearCacheWhileConceptChangeStatus(int $userId, PaymentConceptStatus $conceptStatus):void
+    public function clearCacheWhileConceptChangeStatus(int $userId, PaymentConceptStatus $conceptStatus): void
     {
-        $prefixes= match($conceptStatus){
-            PaymentConceptStatus::ACTIVO =>
-            ["student:pending:*:$userId",
-            "student:dashboard-user:pending:$userId",
-            "staff:dashboard:pending",
-            "staff:dashboard:concepts",
-            "staff:debts:pending",
-            "staff:students:*",
+        $studentSuffixes = match($conceptStatus) {
+            PaymentConceptStatus::ACTIVO => [
+                StudentCacheSufix::PENDING->value . ":*:$userId",
+                StudentCacheSufix::DASHBOARD_USER->value . ":pending:$userId",
             ],
-            PaymentConceptStatus::FINALIZADO =>
-            ["student:pending:*:$userId",
-            "student:dashboard-user:overdue:$userId",
-            "staff:dashboard:pending",
-            "staff:dashboard:concepts",
-            "staff:debts:pending",
-            "staff:students:*",
+            PaymentConceptStatus::FINALIZADO => [
+                StudentCacheSufix::PENDING->value . ":*:$userId",
+                StudentCacheSufix::DASHBOARD_USER->value . ":overdue:$userId",
             ],
-            PaymentConceptStatus::ELIMINADO =>
-            ["student:pending:*:$userId",
-            "student:dashboard-user:*:$userId",
-            "staff:dashboard:pending",
-            "staff:dashboard:concepts",
-            "staff:debts:pending",
-            "staff:students:*",
-            ],
-            PaymentConceptStatus::DESACTIVADO =>
-            ["student:pending:*:$userId",
-            "student:dashboard-user:*:$userId",
-            "staff:dashboard:pending",
-            "staff:dashboard:concepts",
-            "staff:debts:pending",
-            "staff:students:*",
+            PaymentConceptStatus::ELIMINADO,
+            PaymentConceptStatus::DESACTIVADO => [
+                StudentCacheSufix::PENDING->value . ":*:$userId",
+                StudentCacheSufix::DASHBOARD_USER->value . ":*:$userId",
             ],
         };
-        foreach($prefixes as $prefix)
-        {
-            $this->clearPrefix($prefix);
+
+        foreach ($studentSuffixes as $suffix) {
+            $this->clearKey(CachePrefix::STUDENT->value, $suffix);
+        }
+
+        
+        $staffSuffixes = [
+            StaffCacheSufix::DASHBOARD->value . ":pending",
+            StaffCacheSufix::DASHBOARD->value . ":concepts",
+            StaffCacheSufix::DEBTS->value . ":pending",
+            StaffCacheSufix::STUDENTS->value . ":*",
+        ];
+
+        foreach ($staffSuffixes as $suffix) {
+            $this->clearKey(CachePrefix::STAFF->value, $suffix);
         }
     }
 }
