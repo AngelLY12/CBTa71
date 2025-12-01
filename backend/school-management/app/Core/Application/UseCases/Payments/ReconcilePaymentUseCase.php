@@ -3,29 +3,34 @@
 namespace App\Core\Application\UseCases\Payments;
 
 use App\Core\Application\Mappers\MailMapper;
+use App\Core\Application\Traits\HasPaymentStripe;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\DomainException;
-use App\Exceptions\PaymentMethodNotFoundException;
-use App\Exceptions\PaymentNotificationException;
-use App\Exceptions\PaymentReconciliationException;
+use App\Exceptions\NotFound\PaymentMethodNotFoundException;
+use App\Exceptions\ServerError\PaymentNotificationException;
+use App\Exceptions\ServerError\PaymentReconciliationException;
+use App\Jobs\ClearStaffCacheJob;
+use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentValidatedMail;
 
 class ReconcilePaymentUseCase
 {
+    use HasPaymentStripe;
     public function __construct(
         private PaymentQueryRepInterface $pqRepo,
         private StripeGatewayInterface $stripe,
-        private UserRepInterface $userRepo,
-        private PaymentMethodRepInterface $pmRepo
+        private UserQueryRepInterface $userRepo,
+        private PaymentMethodQueryRepInterface $pmRepo,
     )
     {}
     public function execute():void
     {
+        $affectedUsers = [];
         foreach ($this->pqRepo->getPaidWithinLastMonthCursor() as $payment) {
             try {
                 [$pi, $charge] = $this->stripe->getIntentAndCharge($payment->payment_intent_id);
@@ -37,14 +42,18 @@ class ReconcilePaymentUseCase
                 if (!$pm) {
                     throw new PaymentMethodNotFoundException();
                 }
-                $this->pqRepo->updatePaymentWithStripeData($payment, $pi, $charge,$pm);
-                $this->notifyUser($payment);
-
+                $newPayment=$this->updatePaymentWithStripeData($payment, $pi, $charge,$pm);
+                $this->notifyUser($newPayment);
+                $affectedUsers[] = $newPayment->user_id;
             } catch (DomainException $e) {
                 logger()->warning("[ReconcilePayment] {$e->getMessage()} (code: {$e->getCode()})");
             } catch (\Throwable $e) {
                 logger()->error("Error al reconciliar el pago {$payment->id}: {$e->getMessage()}");
             }
+        }
+        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
+        foreach (array_unique($affectedUsers) as $userId) {
+            ClearStudentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
         }
 
     }
@@ -69,7 +78,7 @@ class ReconcilePaymentUseCase
             ];
 
             $mail = new PaymentValidatedMail(MailMapper::toPaymentValidatedEmailDTO($data));
-            SendMailJob::dispatch($mail, $user->email);
+            SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
 
         }catch (DomainException $e) {
             logger()->warning("[ReconcilePayment] {$e->getMessage()} (code: {$e->getCode()})");

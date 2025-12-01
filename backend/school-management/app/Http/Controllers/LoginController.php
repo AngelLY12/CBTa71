@@ -3,53 +3,50 @@
 namespace App\Http\Controllers;
 
 use App\Core\Application\Mappers\GeneralMapper;
-use App\Core\Application\Services\LoginService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
+use App\Core\Application\Mappers\UserMapper;
+use App\Core\Application\Services\Auth\LoginServiceFacades;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use Illuminate\Support\Facades\Response;
 
+/**
+ * @OA\Tag(
+ *     name="Auth",
+ *     description="Endpoints relacionados con la autenticación de usuarios, tokens de acceso, contraseñas y verificación"
+ * )
+ */
 class LoginController extends Controller
 {
 
-    protected LoginService $loginService;
+    protected LoginServiceFacades $loginService;
 
-    public function __construct(LoginService $loginService)
+    public function __construct(LoginServiceFacades $loginService)
     {
         $this->loginService=$loginService;
     }
-    /**
-     * Display a listing of the resource.
-     */
-   public function login(Request $request){
+    
+    public function register(RegisterRequest $request)
+    {
+        $data = $request->validated();
 
-        $data = $request->only([
-            'email',
-            'password'
-        ]);
-        $rules = [
-            'email'=>'required|email',
-            'password'=>'required'
+        $createUser = UserMapper::toCreateUserDTO($data);
 
-        ];
+        $user = $this->loginService->register($createUser);
 
-        $validator = Validator::make($data,$rules);
-        if($validator->fails()){
-            return response()->json([
-                'success' => false,
-                'errors'  => $validator->errors(),
-                'message' => 'Error en la validación de datos.'
-            ], 422);
+        return Response::success(['user' => $user], 'El usuario ha sido creado con éxito.', 201);
 
-        }
+
+    }
+
+    public function login(LoginRequest $request){
+
+        $request->authenticate();
+        $data = $request->validated();
         $loginRequest = GeneralMapper::toLoginDTO($data);
 
         $userToken = $this->loginService->login($loginRequest);
 
-        return response()->json([
-            'success' => true,
-            'data' => ['user_token'=>$userToken],
-            'message' => 'Inicio de sesión exitoso.',
-        ]);
+        return Response::success(['user_tokens' => $userToken], 'Inicio de sesión exitoso.');
 
    }
 }

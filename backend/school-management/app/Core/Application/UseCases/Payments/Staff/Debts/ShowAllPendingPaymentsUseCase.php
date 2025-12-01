@@ -5,9 +5,7 @@ namespace App\Core\Application\UseCases\Payments\Staff\Debts;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
-use App\Core\Infraestructure\Mappers\UserMapper;
-use App\Core\Application\Mappers\UserMapper as AppUserMapper;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
 class ShowAllPendingPaymentsUseCase
 {
@@ -18,9 +16,9 @@ class ShowAllPendingPaymentsUseCase
     )
     {
     }
-    public function execute(?string $search=null, int $perPage = 15): PaginatedResponse
+    public function execute(?string $search, int $perPage, $page): PaginatedResponse
     {
-        $paginatedStudents = $this->uqRepo->findActiveStudents($search, $perPage);
+        $paginatedStudents = $this->uqRepo->findActiveStudents($search, $perPage, $page);
         $studentIds = $paginatedStudents->getCollection()->pluck('id')->toArray();
         $items = $this->pcqRepo->getPendingWithDetailsForStudents($studentIds);
         return GeneralMapper::toPaginatedResponse($items, $paginatedStudents);

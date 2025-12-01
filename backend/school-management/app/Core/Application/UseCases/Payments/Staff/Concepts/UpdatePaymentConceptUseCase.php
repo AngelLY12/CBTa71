@@ -4,24 +4,23 @@ namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\Mappers\MailMapper;
-use App\Core\Application\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
-use App\Exceptions\CareerSemesterInvalidException;
-use App\Exceptions\CareersNotFoundException;
-use App\Exceptions\ConceptAppliesToConflictException;
-use App\Exceptions\ConceptNotFoundException;
-use App\Exceptions\RecipientsNotFoundException;
-use App\Exceptions\SemestersNotFoundException;
-use App\Exceptions\StudentsNotFoundException;
+use App\Exceptions\Conflict\ConceptAppliesToConflictException;
+use App\Exceptions\NotFound\CareersNotFoundException;
+use App\Exceptions\NotFound\ConceptNotFoundException;
+use App\Exceptions\NotFound\RecipientsNotFoundException;
+use App\Exceptions\NotFound\StudentsNotFoundException;
+use App\Exceptions\Validation\CareerSemesterInvalidException;
+use App\Exceptions\Validation\SemestersNotFoundException;
+use App\Jobs\ClearCacheWhileStatusChangeJob;
 use App\Jobs\SendMailJob;
 use App\Mail\NewConceptMail;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
 
 class UpdatePaymentConceptUseCase
 {
@@ -34,45 +33,45 @@ class UpdatePaymentConceptUseCase
      public function execute(UpdatePaymentConceptDTO $dto): PaymentConcept {
         return DB::transaction(function() use ($dto) {
             if (isset($dto->appliesTo)) {
-                $dto->fieldsToUpdate['is_global'] = $dto->appliesTo === 'todos';
+                $dto->fieldsToUpdate['is_global'] = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
             } else if (isset($dto->fieldsToUpdate['is_global']) && $dto->fieldsToUpdate['is_global'] === true) {
-                $dto->appliesTo = 'todos';
+                $dto->appliesTo = PaymentConceptAppliesTo::TODOS;
             }
             if (($dto->fieldsToUpdate['is_global'] ?? false) && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
                 throw new ConceptAppliesToConflictException();
             }
 
-            $existingConcept = $this->pcRepo->findById($dto->id);
+            $existingConcept = $this->pcqRepo->findById($dto->id);
 
             if (!$existingConcept) {
                 throw new ConceptNotFoundException();
             }
             PaymentConceptValidator::ensureConceptIsValidToUpdate($existingConcept);
-            $paymentConcept = $this->pcRepo->update($existingConcept, $dto->fieldsToUpdate);
+            $paymentConcept = $this->pcRepo->update($existingConcept->id, $dto->fieldsToUpdate);
             PaymentConceptValidator::ensureConceptHasRequiredFields($paymentConcept);
             $detachCareer = $detachSemester = $detachUsers = false;
 
             if ($dto->appliesTo) {
                 switch($dto->appliesTo) {
-                    case 'carrera':
+                    case PaymentConceptAppliesTo::CARRERA:
                         $detachSemester = true;
                         $detachUsers = true;
                         if ($dto->careers) {
-                            $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept, $dto->careers,$dto->replaceRelations);
+                            $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers,$dto->replaceRelations);
                         } else {
                              throw new CareersNotFoundException();
                         }
                         break;
-                    case 'semestre':
+                    case PaymentConceptAppliesTo::SEMESTRE:
                         $detachCareer = true;
                         $detachUsers = true;
                         if ($dto->semesters) {
-                            $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept, $dto->semesters);
+                            $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters);
                         }else{
                             throw new SemestersNotFoundException();
                         }
                         break;
-                    case 'estudiantes':
+                    case PaymentConceptAppliesTo::ESTUDIANTES:
                         $detachCareer = true;
                         $detachSemester = true;
                         if ($dto->students) {
@@ -81,22 +80,22 @@ class UpdatePaymentConceptUseCase
                                 throw new StudentsNotFoundException();
 
                             }
-                            $paymentConcept=$this->pcRepo->attachToUsers($paymentConcept, $userIdListDTO, $dto->replaceRelations);
+                            $paymentConcept=$this->pcRepo->attachToUsers($paymentConcept->id, $userIdListDTO, $dto->replaceRelations);
 
                         }else{
                             throw new StudentsNotFoundException();
                         }
                         break;
-                    case 'carrera_semestre':
+                    case PaymentConceptAppliesTo::CARRERA_SEMESTRE:
                         $detachUsers = true;
                         if($dto->careers && $dto->semesters){
-                            $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept, $dto->careers);
-                            $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept, $dto->semesters);
+                            $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers);
+                            $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters);
                         }else {
                             throw new CareerSemesterInvalidException();
                         }
                         break;
-                    case 'todos':
+                    case PaymentConceptAppliesTo::TODOS:
                         $detachCareer = $detachSemester = $detachUsers = true;
                         $paymentConcept->is_global = true;
                         break;
@@ -105,9 +104,9 @@ class UpdatePaymentConceptUseCase
                         break;
                 }
             }
-            if ($detachCareer) $this->pcRepo->detachFromCareer($paymentConcept);
-            if ($detachSemester) $this->pcRepo->detachFromSemester($paymentConcept);
-            if ($detachUsers) $this->pcRepo->detachFromUsers($paymentConcept);
+            if ($detachCareer) $this->pcRepo->detachFromCareer($paymentConcept->id);
+            if ($detachSemester) $this->pcRepo->detachFromSemester($paymentConcept->id);
+            if ($detachUsers) $this->pcRepo->detachFromUsers($paymentConcept->id);
 
             $recipients = $this->uqRepo->getRecipients($paymentConcept, $dto->appliesTo ?? 'todos');
             if(empty($recipientsArray)){
@@ -119,6 +118,7 @@ class UpdatePaymentConceptUseCase
     }
     private function notifyRecipients(PaymentConcept $concept, array $recipients): void {
         foreach($recipients as $user) {
+            ClearCacheWhileStatusChangeJob::dispatch($user->id, $concept->status)->delay(now()->addSeconds(rand(1, 10)));
             $data = [
                 'recipientName'=>$user->name,
                 'recipientEmail' => $user->email,
@@ -126,7 +126,7 @@ class UpdatePaymentConceptUseCase
                 'amount' => $concept->amount,
                 'end_date' => $concept->end_date
             ];
-            SendMailJob::dispatch(new NewConceptMail(MailMapper::toNewPaymentConceptEmailDTO($data)));
+            SendMailJob::dispatch(new NewConceptMail(MailMapper::toNewPaymentConceptEmailDTO($data)), $user->email)->delay(now()->addSeconds(rand(1, 5)));
         }
     }
 }

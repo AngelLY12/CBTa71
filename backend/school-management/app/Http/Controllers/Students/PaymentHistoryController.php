@@ -5,8 +5,16 @@ namespace App\Http\Controllers\Students;
 use App\Core\Application\Services\Payments\Student\PaymentHistoryService;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\General\PaginationRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
+/**
+ * @OA\Tag(
+ *     name="Payment history",
+ *     description="Endpoints relacionados con el historial de pagos del usuario"
+ * )
+ */
 class PaymentHistoryController extends Controller
 {
     protected PaymentHistoryService $paymentHistoryService;
@@ -15,18 +23,24 @@ class PaymentHistoryController extends Controller
 
     }
 
-
-    public function index()
+    
+    public function index(PaginationRequest $request, ?int $id)
     {
-       $user = Auth::user();
-            $history=$this->paymentHistoryService->paymentHistory(UserMapper::toDomain($user));
-            return response()->json([
-                'success' => true,
-                'data' => ['payment_history'=>$history],
-                'message' => empty($history) ? 'No hay historial de pagos para este usuario.':null
-            ]);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
+
+        if (!$targetUser) {
+            return Response::error('Acceso no permitido', 403);
+        }
+        $perPage = $request->integer('perPage', 15);
+        $page = $request->integer('page', 1);
+        $history=$this->paymentHistoryService->paymentHistory(UserMapper::toDomain($targetUser), $perPage, $page, $forceRefresh);
+        return Response::success(
+            ['payment_history' => $history],
+            empty($history->items) ? 'No hay historial de pagos para este usuario.' : null
+        );
 
     }
-
-
 }

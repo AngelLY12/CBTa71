@@ -4,8 +4,17 @@ namespace App\Http\Controllers\Staff;
 
 use App\Core\Application\Services\Payments\Staff\DebtsServiceFacades;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Payments\Staff\GetStripePaymentsRequest;
+use App\Http\Requests\Payments\Staff\PaginationWithSearchRequest;
+use App\Http\Requests\Payments\Staff\ValidatePaymentRequest;
+use Illuminate\Support\Facades\Response;
 
+/**
+ * @OA\Tag(
+ *     name="Debts",
+ *     description="Endpoints para la gestión y consulta de pagos pendinetes y validación de los mismos cuando haya un error de registro"
+ * )
+ */
 class DebtsController extends Controller
 {
 
@@ -16,60 +25,52 @@ class DebtsController extends Controller
         $this->debtsService=$debtsService;
 
     }
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+
+    public function index(PaginationWithSearchRequest $request)
     {
-        $search = $request->query('search', null);
+        $search = $request->validated()['search'] ?? null;
+        $perPage = $request->validated()['perPage'] ?? 15;
+        $page = $request->validated()['page'] ?? 1;
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $pendingPayments = $this->debtsService->showAllpendingPayments($search, $perPage, $page, $forceRefresh);
 
-        $pendingPayments = $this->debtsService->showAllpendingPayments($search);
-
-        return response()->json([
-            'success' => true,
-            'data' => ['pending_payments'=>$pendingPayments],
-            'message' => empty($pendingPayments) ? 'No hay pagos pendientes registrados.':null
-        ]);
+        return Response::success(
+            ['pending_payments' => $pendingPayments],
+            empty($pendingPayments->items) ? 'No hay pagos pendientes registrados.' : null
+        );
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-   public function validatePayment(Request $request)
-    {
-        $request->validate([
-            'search' => 'required|string',
-            'payment_intent_id' => 'required|string',
-        ]);
 
-        $data = $this->debtsService->validatePayment(
-            $request->input('search'),
-            $request->input('payment_intent_id')
+   public function validatePayment(ValidatePaymentRequest $request)
+    {
+        $data = $request->validated();
+
+        $validatedPayment = $this->debtsService->validatePayment(
+            $data['search'],
+            $data['payment_intent_id']
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => ['validated_payment'=>$data],
-            'message' => 'Pago validado correctamente.'
-        ]);
+        return Response::success(
+            ['validated_payment' => $validatedPayment],
+            'Pago validado correctamente.'
+        );
     }
-    public function getStripePayments(Request $request)
+
+    
+    public function getStripePayments(GetStripePaymentsRequest $request)
     {
-        $request->validate([
-            'search' => 'required|string',
-            'year' => 'nullable|integer',
-        ]);
+        $data = $request->validated();
 
         $payments = $this->debtsService->getPaymentsFromStripe(
-            $request->input('search'),
-            $request->integer('year')
+            $data['search'],
+            $data['year'] ?? null,
+            $data['forceRefresh'] ?? false
         );
 
-        return response()->json([
-            'success' => true,
-            'data' => ['payments'=>$payments],
-            'message' => 'Pagos obtenidos correctamente.'
-        ]);
+        return Response::success(
+            ['payments' => $payments],
+            empty($payments) ? 'No hay pagos registrados.' : null
+        );
     }
 
 }

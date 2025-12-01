@@ -8,7 +8,7 @@ class NewPaymentConceptEmailDTO
         public readonly string $recipientName,
         public readonly string $recipientEmail,
         public readonly string $concept_name,
-        public readonly int $amount,
+        public readonly string $amount,
         public readonly string $end_date
     )
     {

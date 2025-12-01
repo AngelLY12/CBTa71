@@ -3,19 +3,18 @@
 namespace App\Core\Application\UseCases\Payments\Student\Cards;
 
 use App\Core\Application\Mappers\PaymentMethodMapper;
-use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 
 class GetUserPaymentMethodsUseCase
 {
     public function __construct(
-        private PaymentMethodRepInterface $pmRepo,
+        private PaymentMethodQueryRepInterface $pmqRepo,
     )
     {
     }
-    public function execute(User $user): array
+    public function execute(int $userId): array
     {
-         $methods = $this->pmRepo->getByUserId($user);
+         $methods = $this->pmqRepo->getByUserId($userId);
 
         return array_map(
             fn($method) => PaymentMethodMapper::toDisplayPaymentMethodResponse($method),

@@ -17,29 +17,18 @@ class EloquentPaymentRepository implements PaymentRepInterface {
 
     }
 
-    public function findBySessionId(string $sessionId): ?Payment
+    public function update(int $paymentId, array $fields): Payment
     {
-        $payment= EloquentPayment::where('stripe_session_id', $sessionId)->first();
-        return $payment ? PaymentMapper::toDomain($payment) : null;
-    }
-
-    public function findByIntentId(string $intentId): ?Payment
-    {
-        $payment=EloquentPayment::where('payment_intent_id', $intentId)->first();
-        return $payment ? PaymentMapper::toDomain($payment) : null;
-    }
-
-    public function update(Payment $payment, array $fields): Payment
-    {
-        $eloquentPayment = EloquentPayment::findOrFail($payment->id);
+        $eloquentPayment = EloquentPayment::findOrFail($paymentId);
         $eloquentPayment->update($fields);
+        $eloquentPayment->refresh();
         return PaymentMapper::toDomain($eloquentPayment);
 
     }
 
-    public function delete(Payment $payment): void
+    public function delete(int $paymentId): void
     {
-        EloquentPayment::findOrFail($payment->id)->delete();
+        EloquentPayment::findOrFail($paymentId)->delete();
     }
 
 }

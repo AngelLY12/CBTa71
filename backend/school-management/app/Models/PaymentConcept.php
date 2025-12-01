@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Career;
 use App\Models\User;
 use App\Models\Payment;
 use App\Models\PaymentConceptSemester;
-
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class PaymentConcept extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $fillable = [
         'concept_name',
         'description',
@@ -28,7 +31,10 @@ class PaymentConcept extends Model
     {
         return [
             'start_date' => 'date',
-            'end_date' =>  'date'
+            'end_date' =>  'date',
+            'amount' => 'decimal:2',
+            'status' => PaymentConceptStatus::class,
+            'applies_to' => PaymentConceptAppliesTo::class
         ];
     }
 
@@ -46,6 +52,14 @@ class PaymentConcept extends Model
 
     public function paymentConceptSemesters(){
         return $this->hasMany(PaymentConceptSemester::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['concept_name', 'description' ,'status', 'amount'])
+            ->logOnlyDirty()
+            ->useLogName('paymentConcept');
     }
 
 }

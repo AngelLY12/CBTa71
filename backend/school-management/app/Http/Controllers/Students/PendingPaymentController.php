@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Students;
 
 use App\Core\Application\Services\Payments\Student\PendingPaymentServiceFacades;
 use App\Core\Infraestructure\Mappers\UserMapper;
-use App\Exceptions\ConceptNotFoundException;
-use App\Exceptions\StripeCheckoutSessionException;
 use App\Http\Controllers\Controller;
-use Http\Client\Exception\HttpException;
-use Illuminate\Http\Request;
+use App\Http\Requests\General\ForceRefreshRequest;
+use App\Http\Requests\Payments\Students\PayConceptRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
-
+/**
+ * @OA\Tag(
+ *     name="Pending payment",
+ *     description="Endpoints relacionados con el pago de conceptos pendientes y visualización"
+ * )
+ */
 class PendingPaymentController extends Controller
 {
 
@@ -23,42 +27,53 @@ class PendingPaymentController extends Controller
 
     }
 
-    public function index()
+    public function index(ForceRefreshRequest $request, ?int $id=null)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
+
+        if (!$targetUser) {
+            return Response::error('Acceso no permitido', 403);
+        }
+        $pending=$this->pendingPaymentService->showPendingPayments(UserMapper::toDomain($targetUser), $forceRefresh);
+         return Response::success(
+            ['pending_payments' => $pending],
+            empty($pending) ? 'No hay pagos pendientes para el usuario.' : null
+        );
+
+    }
+
+    public function overdue(ForceRefreshRequest $request, ?int $id=null)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $targetUser = $user->resolveTargetUser($id);
+
+        if (!$targetUser) {
+            return Response::error('Acceso no permitido', 403);
+        }
+        $pending=$this->pendingPaymentService->showOverduePayments(UserMapper::toDomain($targetUser), $forceRefresh);
+        return Response::success(
+            ['overdue_payments' => $pending],
+            empty($pending) ? 'No hay pagos vencidos para el usuario.' : null
+        );
+
+    }
+
+    public function store(PayConceptRequest $request)
     {
         $user = Auth::user();
-        $pending=$this->pendingPaymentService->showPendingPayments(UserMapper::toDomain($user));
-        return response()->json([
-            'success' => true,
-            'data' => ['pending_payments'=>$pending],
-            'message' => empty($pending) ? 'No hay pagos pendientes para el usuario.':null
-        ]);
-
+        $payment= $this->pendingPaymentService->payConcept(
+            UserMapper::toDomain($user),
+            $request->validated()['concept_id']
+        );
+        return Response::success(
+            ['url_checkout' => $payment],
+            'El intento de pago se generó con éxito.',
+            201
+        );
     }
-
-    public function overdue()
-    {
-        $user = Auth::user();
-        $pending=$this->pendingPaymentService->showOverduePayments(UserMapper::toDomain($user));
-        return response()->json([
-            'success' => true,
-            'data' => ['overdue_payments'=>$pending],
-            'message' => empty($pending) ? 'No hay pagos vencidos para el usuario.':null
-        ]);
-
-    }
-
-    public function store(Request $request)
-    {
-             $user = Auth::user();
-            $payment= $this->pendingPaymentService->payConcept(
-                    UserMapper::toDomain($user),
-                    $request->integer('concept_id')
-                );
-        return response()->json([
-            'success'=>true,
-            'data'=>['url_checkout'=>$payment],
-            'message' => 'El intento de pago se genero con exito.',
-        ], 201);
-    }
-
 }

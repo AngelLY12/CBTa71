@@ -105,7 +105,7 @@ class StripeGateway implements StripeGatewayInterface
                 'price_data' => [
                     'currency' => 'mxn',
                     'product_data' => ['name' => $concept->concept_name],
-                    'unit_amount' => intval($concept->amount * 100),
+                    'unit_amount' =>(int) round($concept->amount * 100),
                 ],
                 'quantity' => 1,
             ]],
@@ -188,7 +188,7 @@ class StripeGateway implements StripeGatewayInterface
     }
 
 
-    public function getStudentPaymentsFromStripe(User $user, ?int $year = null): array
+    public function getStudentPaymentsFromStripe(User $user, ?int $year): array
     {
         $params = [
             'limit' => 100,
@@ -202,8 +202,22 @@ class StripeGateway implements StripeGatewayInterface
             ];
         }
         try {
-            $sessions = Session::all($params);
-            return $sessions->data;
+            $allSessions = [];
+            $lastId = null;
+            do {
+                if ($lastId) {
+                    $params['starting_after'] = $lastId;
+                }
+
+                $sessions = Session::all($params);
+
+                $allSessions = array_merge($allSessions, $sessions->data);
+
+                $lastId = end($sessions->data)->id ?? null;
+
+            } while ($lastId && count($sessions->data) === $params['limit']);
+
+            return $allSessions;
         } catch (ApiErrorException $e) {
             logger()->error("Stripe error fetching sessions: " . $e->getMessage());
             throw new StripeGatewayException("Error obteniendo los pagos del estudiante", 500);

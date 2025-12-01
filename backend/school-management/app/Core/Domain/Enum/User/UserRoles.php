@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Core\Domain\Enum\User;
+
+enum UserRoles: string
+{
+    case STUDENT = 'student';
+    case FINANCIAL_STAFF = 'financial-staff';
+    case PARENT = 'parent';
+    case UNVERIFIED = 'unverified';
+    case ADMIN = 'admin';
+    case SUPERVISOR = 'supervisor';
+    
+    public static function values(): array
+    {
+        return array_map(fn($role) => $role->value, self::cases());
+    }
+}

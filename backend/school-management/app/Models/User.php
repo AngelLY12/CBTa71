@@ -2,23 +2,31 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Core\Domain\Enum\User\UserBloodType;
+use App\Core\Domain\Enum\User\UserGender;
+use App\Core\Domain\Enum\User\UserStatus;
+use App\Mail\SendVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Career;
 use App\Models\PaymentMethod;
 use App\Models\PaymentConcept;
 use App\Models\Payment;
+use App\Models\traits\ResolvesTargetUser;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
-
-class User extends Authenticatable
+/**
+ * @method bool hasRole(string|array $roles)
+ */
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
-    use HasRoles;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser, LogsActivity;
+    
 
     /**
      * The attributes that are mass assignable.
@@ -50,6 +58,12 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class);
     }
 
+    public function refreshTokens()
+    {
+        return $this->hasMany(RefreshToken::class);
+
+    }
+
     public function paymentMethods(){
         return $this->hasMany(PaymentMethod::class);
     }
@@ -58,8 +72,38 @@ class User extends Authenticatable
         return $this->hasOne(StudentDetail::class);
     }
 
+    public function children()
+    {
+        return $this->hasMany(ParentStudent::class, 'parent_id');
+    }
 
+    public function parents()
+    {
+        return $this->hasMany(ParentStudent::class, 'student_id');
+    }
 
+    public function invitesAsStudent()
+    {
+        return $this->hasMany(ParentInvite::class, 'student_id');
+    }
+
+    public function invitesCreated()
+    {
+        return $this->hasMany(ParentInvite::class, 'created_by');
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new SendVerifyEmail());
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'last_name' ,'email', 'status'])
+            ->logOnlyDirty()
+            ->useLogName('user');
+    }
 
 
     /**
@@ -86,6 +130,9 @@ class User extends Authenticatable
             'address' => 'array',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'gender' => UserGender::class,
+            'blood_type' => UserBloodType::class,
+            'status' => UserStatus::class
         ];
     }
 

@@ -5,16 +5,19 @@ use App\Core\Application\DTO\Response\PaymentMethod\DisplayPaymentMethodResponse
 use App\Core\Application\Mappers\PaymentMethodMapper;
 use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
-use App\Core\Domain\Repositories\Command\Payments\StripeGatewayInterface;
+use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
+use App\Core\Infraestructure\Cache\CacheService;
 use Illuminate\Support\Facades\DB;
-use Stripe\Stripe;
 
 class FinalizeSetupSessionUseCase
 {
     public function __construct(
         private PaymentMethodRepInterface $pmRepo,
-        private StripeGatewayInterface $stripe
+        private StripeGatewayInterface $stripe,
+        private CacheService $service
     ) {
 
     }
@@ -35,6 +38,7 @@ class FinalizeSetupSessionUseCase
             $pm= DB::transaction(function() use ($paymentMethod) {
                 return $this->pmRepo->create($paymentMethod);
             });
+            $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
         return PaymentMethodMapper::toDisplayPaymentMethodResponse($pm);
     }
 

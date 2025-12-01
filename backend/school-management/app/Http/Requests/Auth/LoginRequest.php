@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @OA\Schema(
+ *     schema="LoginRequest",
+ *     type="object",
+ *     required={"email","password"},
+ *     @OA\Property(property="email", type="string", format="email", example="usuario@dominio.com"),
+ *     @OA\Property(property="password", type="string", format="password", example="secret123")
+ * )
+ */
 class LoginRequest extends FormRequest
 {
     /**
@@ -29,6 +38,15 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'El correo es obligatorio.',
+            'email.email' => 'El correo no tiene un formato válido.',
+            'password.required' => 'La contraseña es obligatoria.',
         ];
     }
 

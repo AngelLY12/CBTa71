@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Core\Domain\Utils\Validators\UserValidator;
+use App\Core\Infraestructure\Cache\CacheService;
+use App\Core\Infraestructure\Mappers\UserMapper;
+use App\Exceptions\NotAllowed\UserNotAllowedException;
+use App\Jobs\CheckUserStatusJob;
+use App\Jobs\ClearStudentCacheJob;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckUserStatus
+{
+    public function __construct(
+        private CacheService $cache
+    )
+    {
+    }
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        $user=$request->user();
+        try {
+            UserValidator::ensureUserIsActive(UserMapper::toDomain($user));
+        } catch (UserNotAllowedException $e) {
+            CheckUserStatusJob::dispatch($user);
+            ClearStudentCacheJob::dispatch($user->id);
+
+            return response()->json(['message' => 'Usuario inactivo'], 403);
+
+        }
+
+        return $next($request);
+
+    }
+}

@@ -5,56 +5,66 @@ namespace App\Core\Infraestructure\Repositories\Query\Payments;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Application\Mappers\PaymentMapper as MappersPaymentMapper;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Entities\PaymentMethod;
-use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Infraestructure\Mappers\PaymentMapper;
 use App\Models\Payment as EloquentPayment;
 use Generator;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-
 class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
 {
-    public function sumPaymentsByUserYear(User $user): int {
-        return EloquentPayment::where('user_id', $user->id)
+
+    public function findById(int $id): ?Payment
+    {
+        return optional(EloquentPayment::find($id), fn($pc) => PaymentMapper::toDomain($pc));
+    }
+
+    public function findBySessionId(string $sessionId): ?Payment
+    {
+        $payment= EloquentPayment::where('stripe_session_id', $sessionId)->first();
+        return $payment ? PaymentMapper::toDomain($payment) : null;
+    }
+
+    public function findByIntentId(string $intentId): ?Payment
+    {
+        $payment=EloquentPayment::where('payment_intent_id', $intentId)->first();
+        return $payment ? PaymentMapper::toDomain($payment) : null;
+    }
+
+    public function sumPaymentsByUserYear(int $userId): string {
+        $total = EloquentPayment::where('user_id', $userId)
         ->whereYear('created_at', now()->year)
         ->sum('amount');
+
+        return number_format($total, 2, '.', '');
     }
 
-    public function getConceptNameFromPayment(string $paymentIntentId): ?string
+    public function getPaymentHistory(int $userId, int $perPage, int $page): LengthAwarePaginator
     {
-        $conceptName = EloquentPayment::where('payment_intent_id', $paymentIntentId)
-        ->value('concept_name');
-        return $conceptName;
-    }
-
-
-    public function getPaymentHistory(User $user): array {
-        return EloquentPayment::where('user_id', $user->id)
+         return EloquentPayment::where('user_id', $userId)
         ->select('id', 'concept_name', 'amount', 'created_at')
         ->orderBy('created_at','desc')
-        ->get()
-        ->map(fn($p) => MappersPaymentMapper::toHistoryResponse($p->toArray()))
-        ->toArray();
-
+        ->paginate($perPage, ['*'], 'page', $page)
+        ->through(fn($p) => MappersPaymentMapper::toHistoryResponse($p));
     }
 
-    public function getPaymentHistoryWithDetails(User $user): array {
-        return EloquentPayment::where('user_id', $user->id)
-        ->select('id', 'concept_name', 'amount', 'status','payment_intent_id','url','payment_method_details', 'created_at')
-        ->orderBy('created_at', 'desc')
-        ->get()
-        ->map(fn($p) => MappersPaymentMapper::toDetailResponse($p))
-        ->toArray();
+    public function getPaymentHistoryWithDetails(int $userId, int $perPage, int $page): LengthAwarePaginator
+    {
+        return EloquentPayment::where('user_id', $userId)
+            ->select('id', 'concept_name', 'amount', 'status','payment_intent_id','url','payment_method_details', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(fn($p) => MappersPaymentMapper::toDetailResponse($p));
     }
 
-    public function getAllPaymentsMade(bool $onlyThisYear = false): int
+
+    public function getAllPaymentsMade(bool $onlyThisYear): string
     {
        $query = EloquentPayment::query();
         if ($onlyThisYear) {
             $query->whereYear('created_at', now()->year);
         }
-        return $query->sum('amount');
+        return number_format($query->sum('amount'), 2, '.', '');
     }
 
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment
@@ -69,7 +79,7 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         return $payment ? PaymentMapper::toDomain($payment):null;
     }
 
-    public function getAllWithSearchEager(?string $search = null, int $perPage = 15): LengthAwarePaginator
+    public function getAllWithSearchEager(?string $search, int $perPage, int $page): LengthAwarePaginator
     {
         return EloquentPayment::with([
             'user:id,name,last_name',
@@ -84,56 +94,20 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
                 $sub->where('concept_name', 'like', "%$search%")
             );
         })
-        ->paginate($perPage);
+        ->paginate($perPage, ['*'], 'page', $page)
+        ->through(fn($p) => MappersPaymentMapper::toListItemResponse($p));
     }
 
 
+     /**
+     * @return Generator<int, Payment>
+     */
     public function getPaidWithinLastMonthCursor(): Generator
     {
-        foreach (EloquentPayment::where('status', 'paid')
+        foreach (EloquentPayment::where('status', PaymentStatus::PAID)
                 ->where('created_at', '>=', now()->subMonths(1))
                 ->cursor() as $model) {
             yield PaymentMapper::toDomain($model);
         }
     }
-
-
-    public function updatePaymentWithStripeData(Payment $payment, $pi, $charge, PaymentMethod $savedPaymentMethod): void
-    {
-        if (!$payment->id) {
-            logger()->warning("El pago no tiene ID, no se puede actualizar.");
-            return;
-        }
-
-        $eloquent= EloquentPayment::findOrFail($payment->id);
-
-        if (!$eloquent) {
-            logger()->warning("No se encontró el pago con ID {$payment->id}");
-            return;
-        }
-        $paymentMethodDetails = $this->formatPaymentMethodDetails($charge->payment_method_details);
-        $eloquent->update([
-            'payment_method_id' => $savedPaymentMethod?->id,
-            'stripe_payment_method_id' => $charge?->payment_method,
-            'status' => $pi->status,
-            'payment_method_details'=>$paymentMethodDetails,
-            'url' => $charge?->receipt_url ?? $payment->url,
-        ]);
-        logger()->info("Pago {$payment->id} actualizado correctamente.");
-
-    }
-    private function formatPaymentMethodDetails($details): array
-    {
-        if ($details->type === 'card' && isset($details->card)) {
-            return [
-                'type' => $details->type,
-                'brand' => $details->card->brand,
-                'last4' => $details->card->last4,
-                'funding' => $details->card->funding,
-            ];
-        }
-
-        return (array) $details;
-    }
-
 }

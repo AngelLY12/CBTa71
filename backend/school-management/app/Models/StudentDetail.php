@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class StudentDetail extends Model
 {
+    use LogsActivity;
     protected $table = 'student_details';
     protected $fillable = [
         'user_id',
@@ -22,5 +25,13 @@ class StudentDetail extends Model
 
     public function career(){
         return $this->belongsTo(Career::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['career_id', 'n_control' ,'semestre'])
+            ->logOnlyDirty()
+            ->useLogName('studentDetail');
     }
 }

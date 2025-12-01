@@ -15,7 +15,7 @@ class GetPaymentsFromStripeUseCase
     )
     {
     }
-    public function execute(string $search, ?int $year=null):array
+    public function execute(string $search, ?int $year):array
     {
         if ($year !== null && ($year < 2024 || $year > (int)date('Y'))) {
             throw new ValidationException("El año especificado no es válido.");

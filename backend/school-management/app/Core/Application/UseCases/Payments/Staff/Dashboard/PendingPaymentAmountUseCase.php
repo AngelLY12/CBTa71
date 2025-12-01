@@ -3,7 +3,6 @@
 namespace App\Core\Application\UseCases\Payments\Staff\Dashboard;
 
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
-use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 
 class PendingPaymentAmountUseCase{
@@ -12,7 +11,7 @@ class PendingPaymentAmountUseCase{
     )
     {
     }
-    public function execute(bool $onlyThisYear=false): PendingSummaryResponse
+    public function execute(bool $onlyThisYear): PendingSummaryResponse
     {
         return $this->pcqRepo->getAllPendingPaymentAmount($onlyThisYear);
     }

@@ -36,7 +36,7 @@ class NewConceptMail extends Mailable
         ];
 
         return $this->mailersend(
-                     template_id:'yzkq340odxk4d796',
+                     template_id:'o65qngkm0n8lwr12',
                      personalization: $personalization
                  );
 

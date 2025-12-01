@@ -3,10 +3,12 @@
 namespace App\Core\Application\Mappers;
 
 use App\Core\Application\DTO\Request\Mail\NewPaymentConceptEmailDTO;
+use App\Core\Application\DTO\Request\Mail\NewUserCreatedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\PaymentCreatedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\PaymentFailedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\PaymentValidatedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\RequiresActionEmailDTO;
+use App\Core\Application\DTO\Request\Mail\SendParentInviteEmailDTO;
 use App\Core\Domain\Entities\Payment;
 use Carbon\Carbon;
 
@@ -69,6 +71,23 @@ class MailMapper
             amount: $data['amount'],
             next_action: $data['next_action'],
             payment_method_options: $data['payment_method_options']
+        );
+    }
+    public static function toNewUserCreatedEmailDTO(array $data): NewUserCreatedEmailDTO
+    {
+        return new NewUserCreatedEmailDTO(
+            recipientName: $data['recipientName'],
+            recipientEmail:$data['recipientEmail'],
+            password:$data['password']
+        );
+    }
+
+    public static function toSendParentInviteEmail(array $data): SendParentInviteEmailDTO
+    {
+        return new SendParentInviteEmailDTO(
+            recipientName: $data['recipientName'],
+            recipientEmail:$data['recipientEmail'],
+            token:$data['token']
         );
     }
 

@@ -2,8 +2,6 @@
 
 namespace App\Core\Application\DTO\Response\User;
 
-use Carbon\Carbon;
-
 class UserWithStudentDetailResponse{
  public function __construct(
         public readonly ?int $id,

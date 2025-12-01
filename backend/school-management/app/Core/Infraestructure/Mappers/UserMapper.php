@@ -2,10 +2,7 @@
 
 namespace App\Core\Infraestructure\Mappers;
 
-use App\Core\Application\DTO\User\UserDataDTO;
-use App\Core\Application\DTO\User\UserPaymentDTO;
-use App\Core\Application\DTO\User\UserRecipientDTO;
-use App\Core\Application\DTO\User\UserWithStudentDetail;
+use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
 use Carbon\Carbon;
@@ -20,14 +17,14 @@ class UserMapper{
             name: $user->name,
             last_name: $user->last_name,
             email: $user->email,
-            password: $user->password ?? '',
-            phone_number: $user->phone_number ?? '',
+            password: $user->password,
+            phone_number: $user->phone_number,
             birthdate: $user->birthdate ?? null,
-            gender: $user->gender ?? '',
-            curp: $user->curp ?? '',
+            gender: $user->gender,
+            curp: $user->curp,
             address: $user->address ?? [],
             stripe_customer_id: $user->stripe_customer_id ?? null,
-            blood_type: $user->blood_type ?? '',
+            blood_type: $user->blood_type ?? null,
             registration_date: $user->registration_date ?? null,
             status: $user->status
         );
@@ -37,7 +34,7 @@ class UserMapper{
         return $domainUser;
 
     }
-    public static function toPersistence(DomainUser $user): array
+    public static function toPersistence(CreateUserDTO $user): array
     {
         return [
             'name' => $user->name,
@@ -51,7 +48,7 @@ class UserMapper{
             'address' => $user->address,
             'stripe_customer_id' => $user->stripe_customer_id ?? null,
             'blood_type' => $user->blood_type,
-            'registration_date' => $user->registration_date,
+            'registration_date' => $user->registration_date ?? Carbon::now() ,
             'status' => $user->status,
         ];
     }

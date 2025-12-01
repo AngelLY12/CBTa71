@@ -15,7 +15,7 @@ interface StripeGatewayInterface{
     public function retrievePaymentMethod(string $paymentMethodId);
     public function deletePaymentMethod(string $paymentMethodId):bool;
     public function getIntentAndCharge(string $paymentIntentId): array;
-    public function getStudentPaymentsFromStripe(User $user): array;
+    public function getStudentPaymentsFromStripe(User $user, ?int $year): array;
     public function getPaymentIntentFromSession(string $sessionId): PaymentIntent;
 
 

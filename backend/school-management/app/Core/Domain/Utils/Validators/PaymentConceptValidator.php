@@ -2,32 +2,30 @@
 
 namespace App\Core\Domain\Utils\Validators;
 use Carbon\Carbon;
-use InvalidArgumentException;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
-use App\Exceptions\ConceptAlreadyActiveException;
-use App\Exceptions\ConceptAlreadyDeletedException;
-use App\Exceptions\ConceptAlreadyDisabledException;
-use App\Exceptions\ConceptAlreadyFinalizedException;
-use App\Exceptions\ConceptCannotBeDisabledException;
-use App\Exceptions\ConceptCannotBeFinalizedException;
-use App\Exceptions\ConceptCannotBeUpdatedException;
-use App\Exceptions\ConceptEndDateBeforeStartException;
-use App\Exceptions\ConceptEndDateBeforeTodayException;
-use App\Exceptions\ConceptEndDateTooFarException;
-use App\Exceptions\ConceptExpiredException;
-use App\Exceptions\PaymentAlreadyExistsException;
-use App\Exceptions\ConceptInactiveException;
-use App\Exceptions\ConceptInvalidAmountException;
-use App\Exceptions\ConceptInvalidEndDateException;
-use App\Exceptions\ConceptInvalidStartDateException;
-use App\Exceptions\ConceptInvalidStatusException;
-use App\Exceptions\ConceptMissingNameException;
-use App\Exceptions\ConceptNotStartedException;
-use App\Exceptions\ConceptStartDateTooEarlyException;
-use App\Exceptions\ConceptStartDateTooFarException;
-use App\Exceptions\UserNotAllowedException;
-use App\Exceptions\ValidationException;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
+use App\Exceptions\Conflict\ConceptAlreadyActiveException;
+use App\Exceptions\Conflict\ConceptAlreadyDeletedException;
+use App\Exceptions\Conflict\ConceptAlreadyDisabledException;
+use App\Exceptions\Conflict\ConceptAlreadyFinalizedException;
+use App\Exceptions\Conflict\ConceptCannotBeDisabledException;
+use App\Exceptions\Conflict\ConceptCannotBeFinalizedException;
+use App\Exceptions\Conflict\ConceptCannotBeUpdatedException;
+use App\Exceptions\Conflict\ConceptConflictStatusException;
+use App\Exceptions\NotAllowed\UserNotAllowedException;
+use App\Exceptions\Validation\ConceptEndDateBeforeStartException;
+use App\Exceptions\Validation\ConceptEndDateBeforeTodayException;
+use App\Exceptions\Validation\ConceptEndDateTooFarException;
+use App\Exceptions\Validation\ConceptExpiredException;
+use App\Exceptions\Validation\ConceptInactiveException;
+use App\Exceptions\Validation\ConceptInvalidAmountException;
+use App\Exceptions\Validation\ConceptInvalidEndDateException;
+use App\Exceptions\Validation\ConceptInvalidStartDateException;
+use App\Exceptions\Validation\ConceptMissingNameException;
+use App\Exceptions\Validation\ConceptNotStartedException;
+use App\Exceptions\Validation\ConceptStartDateTooEarlyException;
+use App\Exceptions\Validation\ConceptStartDateTooFarException;
 
 class PaymentConceptValidator{
 
@@ -41,9 +39,12 @@ class PaymentConceptValidator{
             throw new ConceptExpiredException();
         }
 
-        $allowed = $concept->is_global
-            || ($user->studentDetail && in_array($user->studentDetail->career_id, $concept->getCareerIds()))
-            || ($user->studentDetail && in_array($user->studentDetail->semestre, $concept->getSemesters()))
+        $student = $user->studentDetail;
+
+        $allowed =
+            $concept->is_global
+            || ($student && in_array($student->career_id, $concept->getCareerIds()))
+            || ($student && in_array($student->semestre, $concept->getSemesters()))
             || in_array($user->id, $concept->getUserIds())
             || $user->isActive();
 
@@ -59,54 +60,36 @@ class PaymentConceptValidator{
         }
     }
 
-    public static function ensureValidStatus(string $status)
+    public static function ensureValidStatusTransition(PaymentConcept $concept, PaymentConceptStatus $newStatus)
     {
-        $arrayStatus = ['activo','finalizado','desactivado','eliminado'];
-        if(!in_array($status,$arrayStatus,true)){
-            throw new ValidationException("Estado inválido: {$status}");
+
+        $current = $concept->status;
+        if ($current === $newStatus) {
+           throw match ($newStatus) {
+                PaymentConceptStatus::ACTIVO       => new ConceptAlreadyActiveException(),
+                PaymentConceptStatus::FINALIZADO   => new ConceptAlreadyFinalizedException(),
+                PaymentConceptStatus::DESACTIVADO  => new ConceptAlreadyDisabledException(),
+                PaymentConceptStatus::ELIMINADO    => new ConceptAlreadyDeletedException(),
+            };
         }
-    }
 
-    public static function ensureValidStatusTransition(PaymentConcept $concept, string $newStatus)
-    {
-
-        switch ($newStatus) {
-            case 'activo':
-                if ($concept->isActive()) {
-                    throw new ConceptAlreadyActiveException();
-                }
-                break;
-
-            case 'desactivado':
-                if ($concept->isDisable()) {
-                    throw new ConceptAlreadyDisabledException();
-                }
-                if ($concept->isFinalize()) {
-                    throw new ConceptCannotBeDisabledException();
-                }
-                break;
-
-            case 'finalizado':
-                if ($concept->isFinalize()) {
-                    throw new ConceptAlreadyFinalizedException();
-                }
-                if ($concept->isDelete()) {
-                    throw new ConceptCannotBeFinalizedException();
-                }
-                break;
-            case 'eliminado':
-                if($concept->isDelete()){
-                    throw new ConceptAlreadyDeletedException();
-                }
-                break;
-
-            default:
-                throw new ConceptInvalidStatusException();
+        if (!$current->canTransitionTo($newStatus)) {
+            throw match (true) {
+                $current === PaymentConceptStatus::FINALIZADO
+                    && $newStatus === PaymentConceptStatus::DESACTIVADO
+                    => new ConceptCannotBeDisabledException(),
+                $current === PaymentConceptStatus::ELIMINADO
+                    && $newStatus === PaymentConceptStatus::FINALIZADO
+                    => new ConceptCannotBeFinalizedException(),
+                default => new ConceptConflictStatusException(
+                    "No se puede cambiar el estado de {$current->value} a {$newStatus->value}."
+                ),
+            };
         }
     }
 
     public static function ensureConceptIsValidToUpdate(PaymentConcept $concept){
-        if(!in_array($concept->status,['activo','desactivado'])){
+        if (!$concept->status->isUpdatable()) {
             throw new ConceptCannotBeUpdatedException();
         }
     }
@@ -117,15 +100,17 @@ class PaymentConceptValidator{
             throw new ConceptMissingNameException();
         }
 
-        if (is_null($concept->amount) || $concept->amount < 10) {
+        if ($concept->amount === null || $concept->amount < 10) {
             throw new ConceptInvalidAmountException();
         }
+
         if (!$concept->start_date instanceof \Carbon\Carbon) {
             throw new ConceptInvalidStartDateException();
         }
-        $today = Carbon::today();
-        $oneMonthBefore = $today->copy()->subMonth();
-        $oneMonthAfter = $today->copy()->addMonth();
+
+        $today = today();
+        $oneMonthBefore = $today->clone()->subMonth();
+        $oneMonthAfter  = $today->clone()->addMonth();
 
         if ($concept->start_date->gt($oneMonthAfter)) {
             throw new ConceptStartDateTooFarException();
@@ -135,23 +120,24 @@ class PaymentConceptValidator{
             throw new ConceptStartDateTooEarlyException();
         }
 
+        if ($concept->end_date === null) {
+            return;
+        }
 
-        if ($concept->end_date !== null) {
-            if (!$concept->end_date instanceof \Carbon\Carbon) {
-                throw new ConceptInvalidEndDateException();
-            }
+        if (!$concept->end_date instanceof \Carbon\Carbon) {
+            throw new ConceptInvalidEndDateException();
+        }
 
-            if ($concept->end_date->lt($concept->start_date)) {
-                throw new ConceptEndDateBeforeStartException();
-            }
+        if ($concept->end_date->lt($concept->start_date)) {
+            throw new ConceptEndDateBeforeStartException();
+        }
 
-            if ($concept->end_date->lt(\Carbon\Carbon::today())) {
-                throw new ConceptEndDateBeforeTodayException();
-            }
+        if ($concept->end_date->lt($today)) {
+            throw new ConceptEndDateBeforeTodayException();
+        }
 
-            if ($concept->end_date->gt($concept->start_date->copy()->addYears(5))) {
-                throw new ConceptEndDateTooFarException();
-            }
+        if ($concept->end_date->gt($concept->start_date->clone()->addYears(5))) {
+            throw new ConceptEndDateTooFarException();
         }
     }
 }

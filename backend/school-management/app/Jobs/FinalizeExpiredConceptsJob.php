@@ -15,14 +15,9 @@ class FinalizeExpiredConceptsJob implements ShouldQueue
     public function __construct()
     {
     }
-    public function retryUntil()
-    {
-        return now()->addMinutes(5);
-    }
 
     public function handle(FinalizePaymentConceptsUseCase $finalize)
     {
         $finalize->execute();
-        #\Log::info('FinalizeExpiredConceptsJob: '.$concepts->count().' conceptos finalizados.');
     }
 }

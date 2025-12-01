@@ -2,7 +2,8 @@
 
 namespace App\Core\Application\UseCases\Payments\Staff\Dashboard;
 
-use App\Core\Application\Mappers\PaymentConceptMapper;
+use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 
 class GetAllConceptsUseCase
@@ -12,9 +13,9 @@ class GetAllConceptsUseCase
     )
     {
     }
-    public function execute(bool $onlyThisYear = false):array
+    public function execute(bool $onlyThisYear, int $perPage, int $page):PaginatedResponse
     {
-        $conceptsArray= $this->pcqRepo->getConceptsToDashboard($onlyThisYear);
-        return $conceptsArray;
+        $conceptsPaginated= $this->pcqRepo->getConceptsToDashboard($onlyThisYear, $perPage, $page);
+        return GeneralMapper::toPaginatedResponse($conceptsPaginated->items(),$conceptsPaginated);
     }
 }

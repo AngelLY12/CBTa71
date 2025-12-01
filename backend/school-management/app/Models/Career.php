@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\PaymentConcept;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Career extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $fillable = ['career_name'];
 
     //Relaciones
@@ -27,6 +29,14 @@ class Career extends Model
     public function students()
     {
         return $this->hasManyThrough(User::class, StudentDetail::class, 'career_id', 'id', 'id', 'user_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['career_name'])
+            ->logOnlyDirty()
+            ->useLogName('career');
     }
 
 }

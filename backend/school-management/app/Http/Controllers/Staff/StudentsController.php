@@ -4,8 +4,15 @@ namespace App\Http\Controllers\Staff;
 
 use App\Core\Application\Services\Payments\Staff\StudentsService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Payments\Staff\PaginationWithSearchRequest;
+use Illuminate\Support\Facades\Response;
 
+/**
+ * @OA\Tag(
+ *     name="Students",
+ *     description="Endpoints para la gestión y consulta de estudiantes registrados"
+ * )
+ */
 class StudentsController extends Controller
 {
     protected StudentsService $studentsService;
@@ -15,19 +22,18 @@ class StudentsController extends Controller
         $this->studentsService= $studentsService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
+    
+    public function index(PaginationWithSearchRequest $request)
     {
-        $search = $request->query('search');
+        $search = $request->validated()['search'] ?? null;
+        $perPage = $request->validated()['perPage'] ?? 15;
+        $page = $request->validated()['page'] ?? 1;
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $students = $this->studentsService->showAllStudents($search, $perPage, $page, $forceRefresh);
 
-        $students = $this->studentsService->showAllStudents($search);
-
-        return response()->json([
-            'success' => true,
-            'data' => ['students'=>$students],
-            'message' => empty($students) ? 'No hay estudiantes registrados.':null
-        ]);
+        return Response::success(
+            ['students' => $students],
+            empty($students->items) ? 'No hay estudiantes registrados.' : null
+        );
     }
 }

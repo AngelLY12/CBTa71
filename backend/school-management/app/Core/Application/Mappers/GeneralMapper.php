@@ -7,6 +7,7 @@ use App\Core\Application\DTO\Response\General\DashboardDataResponse;
 use App\Core\Application\DTO\Response\General\DashboardDataUserResponse;
 use App\Core\Application\DTO\Response\General\LoginResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\General\StripePaymentsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -20,6 +21,8 @@ class GeneralMapper{
             lastPage: $paginated->lastPage() ?? null,
             perPage: $paginated->perPage() ?? null,
             total: $paginated->total() ?? null,
+            hasMorePages: $paginated->hasMorePages(),
+            nextPage: $paginated->currentPage() < $paginated->lastPage() ? $paginated->currentPage() + 1 : null
         );
     }
 
@@ -31,11 +34,13 @@ class GeneralMapper{
         );
     }
 
-    public static function toLoginResponse(string $token, $token_type):LoginResponse
+    public static function toLoginResponse(string $token, string $refresh,$token_type, array $data):LoginResponse
     {
         return new LoginResponse(
             access_token:$token ?? null,
-            token_type:$token_type ?? null
+            refresh_token: $refresh ?? null,
+            token_type:$token_type ?? null,
+            user_data:$data ?? []
         );
     }
 
@@ -66,6 +71,15 @@ class GeneralMapper{
             completed:$realizados ?? null,
             pending:$pendientes ?? null,
             overdue:$vencidos ?? null
+        );
+    }
+
+    public static function toPermissionsByUsers(array $data): PermissionsByUsers
+    {
+        return new PermissionsByUsers(
+            role: $data['role'],
+            users: $data['users'],
+            permissions: $data['permissions']
         );
     }
 }

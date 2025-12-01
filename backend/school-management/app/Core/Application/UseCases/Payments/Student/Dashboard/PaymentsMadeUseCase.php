@@ -2,7 +2,6 @@
 
 namespace App\Core\Application\UseCases\Payments\Student\Dashboard;
 
-use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 
 class PaymentsMadeUseCase
@@ -11,7 +10,7 @@ class PaymentsMadeUseCase
         private PaymentQueryRepInterface $pqRepo,
 
     ) {}
-    public function execute(User $user): int {
-        return $this->pqRepo->sumPaymentsByUserYear($user);
+    public function execute(int $userId): string {
+        return $this->pqRepo->sumPaymentsByUserYear($userId);
     }
 }

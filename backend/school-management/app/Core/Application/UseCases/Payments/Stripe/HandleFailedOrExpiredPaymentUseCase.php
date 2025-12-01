@@ -3,21 +3,21 @@
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
 use App\Core\Application\Mappers\MailMapper;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentFailedMail;
-use Stripe\Stripe;
 
 class HandleFailedOrExpiredPaymentUseCase
 {
     public function __construct(
-        private UserRepInterface $userRepo,
+        private UserQueryRepInterface $uqRepo,
         private PaymentRepInterface $paymentRepo,
         private PaymentQueryRepInterface $pqRepo,
     ) {
-        Stripe::setApiKey(config('services.stripe.secret'));
 
     }
     public function execute($obj, string $eventType)
@@ -26,16 +26,16 @@ class HandleFailedOrExpiredPaymentUseCase
         $error = null;
 
         if (in_array($eventType, ['payment_intent.payment_failed', 'payment_intent.canceled'])) {
-            $payment =$this->paymentRepo->findByIntentId($obj->id);
+            $payment =$this->pqRepo->findByIntentId($obj->id);
             $error = $obj->last_payment_error->message ?? 'Error desconocido';
         } elseif ($eventType === 'checkout.session.expired') {
-            $payment = $this->paymentRepo->findBySessionId($obj->id);
+            $payment = $this->pqRepo->findBySessionId($obj->id);
             $error = "La sesión de pago expiró";
         }
 
-        $user = $this->userRepo->getUserByStripeCustomer($obj->customer);
+        $user = $this->uqRepo->getUserByStripeCustomer($obj->customer);
 
-        if ($payment && $payment->status !== 'succeeded') {
+        if ($payment && $payment->status !== PaymentStatus::SUCCEEDED->value) {
             logger()->info("Pago fallido eliminado: payment_id={$obj->id}");
             logger()->info("Motivo: {$error}");
             $data = [
@@ -47,8 +47,9 @@ class HandleFailedOrExpiredPaymentUseCase
             ];
 
             $mail = new PaymentFailedMail(MailMapper::toPaymentFailedEmailDTO($data));
-            SendMailJob::dispatch($mail, $user->email);
-            $this->paymentRepo->delete($payment);
+            SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
+            $this->paymentRepo->delete($payment->id);
+            ClearStudentCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));;
             return true;
         }
         return false;

@@ -4,8 +4,16 @@ namespace App\Http\Controllers\Staff;
 
 use App\Core\Application\Services\Payments\Staff\DashboardServiceFacades;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Payments\Staff\AllConceptsRequest;
+use App\Http\Requests\Payments\Staff\DashboardRequest;
+use Illuminate\Support\Facades\Response;
 
+/**
+ * @OA\Tag(
+ *     name="Dashboard staff",
+ *     description="Endpoints para la consulta de pagos, pendientes, conceptos y estudiantes"
+ * )
+ */
 class DashboardController extends Controller
 {
     protected DashboardServiceFacades $dashboardService;
@@ -16,78 +24,78 @@ class DashboardController extends Controller
 
 
     }
-    /**
-     * Display a listing of the resource.
-     */
-    public function getData(Request $request)
+
+
+    public function getData(DashboardRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $data = $this->dashboardService->getData(
+            $request->validated()['only_this_year'] ?? false,
+            $request->validated()['forceRefresh'] ?? false
+        );
 
-        $data = $this->dashboardService->getData($onlyThisYear);
-
-        return response()->json([
-            'success' => true,
-            'data' => ['statistics'=>$data]
-        ]);
+        return Response::success(
+            ['statistics' => $data]
+        );
     }
 
-    /**
-     * Obtener la cantidad y monto de pagos pendientes
-     */
-    public function pendingPayments(Request $request)
+
+    public function pendingPayments(DashboardRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $data = $this->dashboardService->pendingPaymentAmount($request->validated()['only_this_year'] ?? false,
+            $request->validated()['forceRefresh'] ?? false);
 
-        $data = $this->dashboardService->pendingPaymentAmount($onlyThisYear);
-
-        return response()->json([
-            'success' => true,
-            'data' => ['total_pending'=>$data]
-        ]);
+        return Response::success(
+            ['total_pending' => $data]
+        );
     }
 
-    /**
-     * Obtener total de estudiantes
-     */
-    public function allStudents(Request $request)
+
+    public function allStudents(DashboardRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $count = $this->dashboardService->getAllStudents($request->validated()['only_this_year'] ?? false,
+            $request->validated()['forceRefresh'] ?? false);
 
-        $count = $this->dashboardService->getAllStudents($onlyThisYear);
-
-        return response()->json([
-            'success' => true,
-            'data' => ['total_students'=>$count]
-        ]);
+        return Response::success(
+            ['total_students' => $count]
+        );
     }
 
-    /**
-     * Obtener monto total de pagos realizados
-     */
-    public function paymentsMade(Request $request)
+
+    public function paymentsMade(DashboardRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $total = $this->dashboardService->paymentsMade($request->validated()['only_this_year'] ?? false,
+            $request->validated()['forceRefresh'] ?? false);
 
-        $total = $this->dashboardService->paymentsMade($onlyThisYear);
-
-        return response()->json([
-            'success' => true,
-            'data' => ['total_earning'=>$total]
-        ]);
+        return Response::success(
+            ['total_earning' => $total]
+        );
     }
 
-    /**
-     * Obtener todos los conceptos de pago
-     */
-    public function allConcepts(Request $request)
+
+    public function allConcepts(AllConceptsRequest $request)
     {
-        $onlyThisYear = filter_var($request->query('only_this_year', false), FILTER_VALIDATE_BOOLEAN);
+        $validated = $request->validated();
 
-        $concepts = $this->dashboardService->getAllConcepts($onlyThisYear);
+        $concepts = $this->dashboardService->getAllConcepts(
+            $validated['only_this_year'] ?? false,
+            $validated['perPage'] ?? 15,
+            $validated['page'] ?? 1,
+            $validated['forceRefresh'] ?? false
+        );
 
-        return response()->json([
-            'success' => true,
-            'data' => ['concepts'=>$concepts]
-        ]);
+        return Response::success(
+            ['concepts' => $concepts]
+        );
     }
+    
+    public function refreshDashboard()
+    {
+        $this->dashboardService->refreshAll();
+        return Response::success(
+            null,
+            'Dashboard cache limpiado con éxito'
+        );
+    }
+
+
 }

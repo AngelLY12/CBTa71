@@ -2,30 +2,30 @@
 
 namespace App\Core\Application\UseCases\Payments\Student\PendingPayment;
 
+use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
-use App\Exceptions\ConceptNotFoundException;
+use App\Exceptions\NotFound\ConceptNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 class PayConceptUseCase
 {
     public function __construct(
-        private PaymentConceptRepInterface $pcRepo,
+        private PaymentConceptQueryRepInterface $pcqRepo,
         private PaymentRepInterface $paymentRepo,
         private StripeGatewayInterface $stripe,
-        private UserRepInterface $userRepo
+        private UserQueryRepInterface $uqRepo
     ) {}
-    public function execute(User $user, int $conceptId): string {
-        return DB::transaction(function() use ($user, $conceptId) {
+    public function execute(int $userId, int $conceptId): string {
+        return DB::transaction(function() use ($userId, $conceptId) {
 
-            $concept = $this->pcRepo->findById($conceptId);
+            $concept = $this->pcqRepo->findById($conceptId);
             if (!$concept) throw new ConceptNotFoundException();
-            $user = $this->userRepo->getUserWithStudentDetail($user);
+            $user = $this->uqRepo->getUserWithStudentDetail($userId);
             PaymentConceptValidator::ensureConceptIsActiveAndValid($concept, $user);
             $session = $this->stripe->createCheckoutSession($user, $concept);
             $payment = new Payment(
@@ -38,13 +38,12 @@ class PayConceptUseCase
                 concept_name:$concept->concept_name,
                 amount:$concept->amount,
                 payment_method_details: [],
-                status: $session->payment_status,
+                status: EnumMapper::fromStripe($session->payment_status),
                 url: $session->url ?? null,
                 stripe_session_id: $session->id ?? null
             );
 
             $this->paymentRepo->create($payment);
-
             return $session->url;
         });
     }

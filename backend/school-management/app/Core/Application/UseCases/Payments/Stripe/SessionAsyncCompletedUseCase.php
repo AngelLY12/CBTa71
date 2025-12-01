@@ -2,20 +2,17 @@
 
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
-use Stripe\Stripe;
+use App\Core\Application\Mappers\EnumMapper;
+use App\Core\Application\Traits\HasPaymentSession;
 
 class SessionAsyncCompletedUseCase
 {
-    public function __construct(
-        private HandlePaymentSessionUseCase $handle
-    ) {
-        Stripe::setApiKey(config('services.stripe.secret'));
-
-    }
+   use HasPaymentSession;
 
     public function execute($obj) {
-        return $this->handle->execute($obj, [
-        'status' => $obj->payment_status,
+        $status=EnumMapper::fromStripe($obj->payment_status);
+        return $this->handlePaymentSession($obj, [
+        'status' => $status,
         ]);
 
     }

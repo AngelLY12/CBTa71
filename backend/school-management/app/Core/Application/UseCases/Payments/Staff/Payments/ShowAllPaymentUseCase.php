@@ -13,14 +13,9 @@ class ShowAllPaymentUseCase{
     )
     {
     }
-    public function execute(?string $search = null, int $perPage = 15): PaginatedResponse
+    public function execute(?string $search, int $perPage, $page): PaginatedResponse
     {
-        $paginated = $this->pqRepo->getAllWithSearchEager($search, $perPage);
-
-        $items = $paginated->getCollection()
-            ->map(fn($payment) => PaymentMapper::toListItemResponse($payment))
-            ->toArray();
-
-        return GeneralMapper::toPaginatedResponse($items,$paginated);
+        $paginated = $this->pqRepo->getAllWithSearchEager($search, $perPage, $page);
+        return GeneralMapper::toPaginatedResponse($paginated->items(),$paginated);
     }
 }

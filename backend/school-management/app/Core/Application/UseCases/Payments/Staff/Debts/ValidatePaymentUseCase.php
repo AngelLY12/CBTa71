@@ -6,29 +6,34 @@ use App\Core\Application\DTO\Response\Payment\PaymentValidateResponse;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Mappers\PaymentMapper;
 use App\Core\Domain\Entities\Payment;
-use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
-use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
 use Illuminate\Support\Facades\DB;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
-use App\Exceptions\ConceptNotFoundException;
-use App\Exceptions\PaymentMethodNotFoundException;
-use App\Exceptions\UserNotFoundException;
+use App\Core\Application\Traits\HasPaymentStripe;
+use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Exceptions\NotFound\ConceptNotFoundException;
+use App\Exceptions\NotFound\PaymentMethodNotFoundException;
+use App\Exceptions\NotFound\UserNotFoundException;
+use App\Jobs\ClearStaffCacheJob;
+use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentValidatedMail;
 
 class ValidatePaymentUseCase{
+
+    use HasPaymentStripe;
 
     public function __construct(
         public UserQueryRepInterface $uqRepo,
         public PaymentRepInterface $paymentRepo,
         public PaymentQueryRepInterface $pqRepo,
         public StripeGatewayInterface $stripeRepo,
-        public PaymentMethodRepInterface $pmRepo,
-        public PaymentConceptRepInterface $pcRepo,
+        public PaymentMethodQueryRepInterface $pmqRepo,
+        public PaymentConceptQueryRepInterface $pcqRepo,
     )
     {
     }
@@ -42,12 +47,12 @@ class ValidatePaymentUseCase{
             }
 
             $payment=$this->pqRepo->findByIntentOrSession($student->id,$payment_intent_id);
-
+            $validated=false;
             if (!$payment) {
                     $stripe=$this->stripeRepo->getIntentAndCharge($payment_intent_id);
                     $paymentConceptId = $stripe['intent']->metadata->payment_concept_id ?? null;
-                    $pc= $this->pcRepo->findById($paymentConceptId) ?? null;
-                    $pm = $this->pmRepo->findByStripeId($stripe['charge']->payment_method);
+                    $pc= $this->pcqRepo->findById($paymentConceptId) ?? null;
+                    $pm = $this->pmqRepo->findByStripeId($stripe['charge']->payment_method);
                     $paymentMethodDetails=null;
                     if (!$pc) throw new ConceptNotFoundException();
                     if (!$pm) throw new PaymentMethodNotFoundException();
@@ -70,14 +75,16 @@ class ValidatePaymentUseCase{
 
                     );
                     $payment = $this->paymentRepo->create($payment);
+                    $validated=true;
             }
             else {
                 if ($payment->status === 'paid' && empty($payment->payment_method_details)) {
                     logger()->info("Reconciling existing payment ID={$payment->id}");
                     $stripe=$this->stripeRepo->getIntentAndCharge($payment_intent_id);
-                    $pm = $this->pmRepo->findByStripeId($stripe['charge']->payment_method);
+                    $pm = $this->pmqRepo->findByStripeId($stripe['charge']->payment_method);
                     if (!$pm) throw new PaymentMethodNotFoundException();
-                    $this->pqRepo->updatePaymentWithStripeData($payment, $stripe['intent'], $stripe['charge'], $pm);
+                    $this->updatePaymentWithStripeData($payment, $stripe['intent'], $stripe['charge'], $pm);
+                    $validated=true;
                 }
             }
             $data = [
@@ -89,26 +96,15 @@ class ValidatePaymentUseCase{
                 'url'                => $payment->url ?? null,
                 'payment_intent_id'  => $payment->payment_intent_id,
             ];
-
+            if($validated)
+            {
+                ClearStudentCacheJob::dispatch($payment->user_id)->delay(now()->addSeconds(rand(1, 10)));
+                ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
+            }
             $mail = new PaymentValidatedMail(MailMapper::toPaymentValidatedEmailDTO($data));
-            SendMailJob::dispatch($mail, $student->email);
-            //SendMailJob::dispatch(new PaymentValidatedMail($data, $user->name, $user->email), $user->email);
+            SendMailJob::dispatch($mail, $student->email)->delay(now()->addSeconds(rand(1, 5)));
             return PaymentMapper::toPaymentValidateResponse(AppUserMapper::toDataResponse($student),PaymentMapper::toPaymentDataResponse($payment));
         });
 
-    }
-
-    private function formatPaymentMethodDetails($details): array
-    {
-        if ($details->type === 'card' && isset($details->card)) {
-            return [
-                'type' => $details->type,
-                'brand' => $details->card->brand,
-                'last4' => $details->card->last4,
-                'funding' => $details->card->funding,
-            ];
-        }
-
-        return (array) $details;
     }
 }
