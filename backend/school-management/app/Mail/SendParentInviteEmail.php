@@ -27,7 +27,7 @@ class SendParentInviteEmail extends Mailable
     public function build()
     {
        try {
-            $acceptUrl = env('FRONTEND_URL') . '/parent/accept-invite?token=' . $this->data->token;
+            $acceptUrl = config('app.frontend_url') . '/parent/accept-invite?token=' . $this->data->token;
 
             $messageDetails = "
                 <p>Has sido invitado a vincular tu cuenta como <strong>padre/madre o tutor</strong>.</p>
