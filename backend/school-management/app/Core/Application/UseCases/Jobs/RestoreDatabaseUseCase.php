@@ -84,10 +84,10 @@ class RestoreDatabaseUseCase
 
         $sqlFile = $sqlFiles[0];
         Log::channel('stderr')->info("Archivo SQL encontrado: {$sqlFile}");
-        $database = env('DB_DATABASE');
-        $user     = env('DB_USERNAME');
-        $password = env('DB_PASSWORD');
-        $host     = env('DB_HOST', '127.0.0.1');
+        $database = config('database.connections.mysql.database');
+        $user     = config('database.connections.mysql.username');
+        $password = config('database.connections.mysql.password');
+        $host     = config('database.connections.mysql.host');
 
         $command = "mysql -h {$host} -u {$user} -p{$password} --skip-ssl {$database} < {$sqlFile}";
         exec($command, $output, $returnVar);
