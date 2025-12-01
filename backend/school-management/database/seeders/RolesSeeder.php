@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Core\Domain\Enum\User\UserRoles;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -13,18 +14,36 @@ class RolesSeeder extends Seeder
      */
     public function run(): void
     {
-        $studentRole=Role::firstOrCreate(['name' => 'student']);
-        $staffRole=Role::firstOrCreate(['name' => 'financial staff']);
-        $parentRole= Role::firstOrCreate(['name' => 'parent']);
-        Role::firstOrCreate(['name'=> 'unverified']);
-        Role::firstOrCreate(['name' => 'admin']);
+        $createdRoles = [];
 
-        $studentPermissions = Permission::where('belongs_to', 'student')->get();
-        $staffPermissions = Permission::where('belongs_to', 'financial staff')->get();
-        $globalPermissions = Permission::where('belongs_to','global')->get();
+        foreach (UserRoles::values() as $roleName) {
+            $attributes = ['name' => $roleName];
+            
+            if ($roleName === UserRoles::ADMIN->value) {
+                $attributes['hidden'] = true;
+            }
 
-        $studentRole->syncPermissions($studentPermissions->merge($globalPermissions));
-        $staffRole->syncPermissions($staffPermissions->merge($globalPermissions));
-        $parentRole->syncPermissions($studentPermissions->merge($globalPermissions));
+            $createdRoles[$roleName] = Role::firstOrCreate($attributes);
+        }
+        $studentPermissions = Permission::where('belongs_to', UserRoles::STUDENT->value)
+            ->where('type', 'role')
+            ->get();
+
+        $staffPermissions = Permission::where('belongs_to', UserRoles::FINANCIAL_STAFF->value)
+            ->where('type', 'role')
+            ->get();
+
+        $globalPermissions = Permission::where('belongs_to', 'global-payment')
+            ->where('type', 'role')
+            ->get();
+
+        $adminPermissions = Permission::where('belongs_to', 'administration')
+            ->where('type', 'model')
+            ->get();
+
+        $createdRoles[UserRoles::STUDENT->value]->syncPermissions($studentPermissions->merge($globalPermissions));
+        $createdRoles[UserRoles::FINANCIAL_STAFF->value]->syncPermissions($staffPermissions->merge($globalPermissions));
+        $createdRoles[UserRoles::PARENT->value]->syncPermissions($studentPermissions->merge($globalPermissions));
+        $createdRoles[UserRoles::ADMIN->value]->syncPermissions($adminPermissions);
     }
 }

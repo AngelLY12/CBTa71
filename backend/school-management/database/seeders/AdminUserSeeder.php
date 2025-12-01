@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Core\Domain\Enum\User\UserBloodType;
 use App\Core\Domain\Enum\User\UserGender;
+use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Enum\User\UserStatus;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -41,20 +42,7 @@ class AdminUserSeeder extends Seeder
             ]
         );
 
-        $admin->assignRole('admin');
-        $admin->givePermissionTo([
-            'attach student',
-            'import users',
-            'sync permissions',
-            'view users',
-            'sync roles',
-            'activate users',
-            'disable users',
-            'delete users',
-            'view permissions',
-            'view roles',
-            'view profile',
-            'create user'
-        ]);
+        $admin->assignRole(UserRoles::ADMIN->value);
+
     }
 }

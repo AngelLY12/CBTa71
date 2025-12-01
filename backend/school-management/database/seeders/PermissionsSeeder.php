@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Core\Domain\Enum\User\UserRoles;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -71,17 +72,19 @@ class PermissionsSeeder extends Seeder
             'delete users',
             'view permissions',
             'view roles',
-            'create user'
+            'create user',
+            'view student',
+            'update student',
+            'promote student'
         ];
 
-        $global=[
+        $globalPayment=[
             'refresh all dashboard',
             'view concept',
             'view payment',
-            'view profile',
         ];
 
-         $insertPermissions = function (array $permissions, string $type='role', ?string $belongsTo=null) {
+        $insertPermissions = function (array $permissions, string $type='role', ?string $belongsTo=null) {
             $now = now();
             $existing = Permission::whereIn('name', $permissions)->pluck('name')->toArray();
 
@@ -99,14 +102,14 @@ class PermissionsSeeder extends Seeder
             DB::table('permissions')->insert($data);
         };
 
-        $insertPermissions(array_merge($permissionsStudent['role']), 'role', 'student');
-        $insertPermissions(array_merge($permissionsStudent['model']), 'model', 'student');
+        $insertPermissions(array_merge($permissionsStudent['role']), 'role', UserRoles::STUDENT->value);
+        $insertPermissions(array_merge($permissionsStudent['model']), 'model', UserRoles::STUDENT->value);
 
-        $insertPermissions(array_merge($permissionsStaff['role']), 'role', 'financial staff');
-        $insertPermissions(array_merge($permissionsStaff['model']), 'model', 'financial staff');
+        $insertPermissions(array_merge($permissionsStaff['role']), 'role', UserRoles::FINANCIAL_STAFF->value);
+        $insertPermissions(array_merge($permissionsStaff['model']), 'model', UserRoles::FINANCIAL_STAFF->value);
 
-        $insertPermissions($global, 'role', 'global');
+        $insertPermissions($globalPayment, 'role', 'global-payment');
 
-        $insertPermissions($permissionsAdmin, 'model', 'admin');
+        $insertPermissions($permissionsAdmin, 'model', 'administration');
     }
 }
