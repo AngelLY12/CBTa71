@@ -3,9 +3,11 @@
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
 use App\Core\Domain\Entities\PaymentMethod;
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
 use Illuminate\Support\Facades\DB;
 
@@ -45,7 +47,7 @@ class PaymentMethodAttachedUseCase
             $this->pmRepo->create($pmDomain);
 
         });
-        $this->service->clearPrefix("student:cards:show:$user->id");
+        $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
         return true;
     }
 }

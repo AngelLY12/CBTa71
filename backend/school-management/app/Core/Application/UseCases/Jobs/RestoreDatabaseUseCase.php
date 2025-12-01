@@ -2,7 +2,7 @@
 
 namespace App\Core\Application\UseCases\Jobs;
 
-use App\Core\Domain\Repositories\Command\DBRepInterface;
+use App\Core\Domain\Repositories\Command\Misc\DBRepInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;

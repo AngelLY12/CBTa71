@@ -3,7 +3,7 @@
 namespace App\Core\Application\UseCases\Payments\Student\Dashboard;
 
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
 class OverduePaymentsUseCase
 {

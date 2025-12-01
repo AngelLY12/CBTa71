@@ -6,7 +6,7 @@ use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\RequiresActionMail;

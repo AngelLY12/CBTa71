@@ -2,7 +2,7 @@
 
 namespace App\Core\Application\UseCases\Career;
 
-use App\Core\Domain\Repositories\Query\CareerQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Misc\CareerQueryRepInterface;
 
 class FindAllCareersUseCase
 {

@@ -2,7 +2,7 @@
 
 namespace App\Core\Application\UseCases\Jobs;
 
-use App\Core\Domain\Repositories\Command\ParentInviteRepInterface;
+use App\Core\Domain\Repositories\Command\Misc\ParentInviteRepInterface;
 
 class CleanExpiredInvitesUseCase
 {

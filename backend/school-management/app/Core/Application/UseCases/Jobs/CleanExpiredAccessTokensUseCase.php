@@ -2,7 +2,7 @@
 
 namespace App\Core\Application\UseCases\Jobs;
 
-use App\Core\Domain\Repositories\Command\AccessTokenRepInterface;
+use App\Core\Domain\Repositories\Command\Auth\AccessTokenRepInterface;
 
 class CleanExpiredAccessTokensUseCase
 {

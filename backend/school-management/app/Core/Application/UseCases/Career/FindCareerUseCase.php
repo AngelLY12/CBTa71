@@ -3,7 +3,7 @@
 namespace App\Core\Application\UseCases\Career;
 
 use App\Core\Domain\Entities\Career;
-use App\Core\Domain\Repositories\Query\CareerQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Misc\CareerQueryRepInterface;
 use App\Exceptions\NotFound\CareersNotFoundException;
 
 class FindCareerUseCase

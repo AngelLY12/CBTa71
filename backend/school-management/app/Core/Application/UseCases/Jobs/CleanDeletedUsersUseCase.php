@@ -2,7 +2,7 @@
 
 namespace App\Core\Application\UseCases\Jobs;
 
-use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 
 class CleanDeletedUsersUseCase
 {

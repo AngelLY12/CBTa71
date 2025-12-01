@@ -4,7 +4,7 @@ namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotFound\ConceptNotFoundException;
 use App\Jobs\ClearCacheWhileStatusChangeJob;
 

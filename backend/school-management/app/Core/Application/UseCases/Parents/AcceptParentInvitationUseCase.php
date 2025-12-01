@@ -3,12 +3,12 @@
 namespace App\Core\Application\UseCases\Parents;
 
 use App\Core\Application\Mappers\ParentStudentMapper;
-use App\Core\Domain\Repositories\Command\ParentInviteRepInterface;
-use App\Core\Domain\Repositories\Command\ParentStudentRepInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
-use App\Core\Domain\Repositories\Query\ParentInviteQueryRepInterface;
-use App\Core\Domain\Repositories\Query\ParentStudentQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Enum\User\UserRoles;
+use App\Core\Domain\Repositories\Command\Misc\ParentInviteRepInterface;
+use App\Core\Domain\Repositories\Command\User\ParentStudentRepInterface;
+use App\Core\Domain\Repositories\Command\User\UserRepInterface;
+use App\Core\Domain\Repositories\Query\Misc\ParentInviteQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotAllowed\InvalidInvitationException;
 use App\Exceptions\NotFound\UserNotFoundException;
 
@@ -36,14 +36,14 @@ class AcceptParentInvitationUseCase
         {
             throw new UserNotFoundException();
         }
-        $hasParentRole= $this->userQRepo->hasRole($parent->id,'parent');
+        $hasParentRole= $this->userQRepo->hasRole($parent->id,UserRoles::PARENT->value);
         if (!$hasParentRole) {
-            $this->userRepo->assignRole($parent->id,'parent');
+            $this->userRepo->assignRole($parent->id,UserRoles::PARENT->value);
         }
         $parentRoles= $this->userQRepo->findUserRoles($parent->id);
         $studentRoles= $this->userQRepo->findUserRoles($student->id);
-        $parentRole = collect($parentRoles)->firstWhere('name', 'parent');
-        $studentRole = collect($studentRoles)->firstWhere('name', 'student');
+        $parentRole = collect($parentRoles)->firstWhere('name', UserRoles::PARENT->value);
+        $studentRole = collect($studentRoles)->firstWhere('name', UserRoles::STUDENT->value);
         $data=[
             'parentId' => $parent->id,
             'studentId' => $student->id,

@@ -3,7 +3,7 @@
 namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Domain\Entities\Permission;
-use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Auth\RolesAndPermissosQueryRepInterface;
 use App\Exceptions\NotFound\PermissionNotFoundException;
 
 class FindPermissionByIdUseCase

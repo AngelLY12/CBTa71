@@ -5,6 +5,8 @@ use App\Core\Application\DTO\Response\PaymentMethod\DisplayPaymentMethodResponse
 use App\Core\Application\Mappers\PaymentMethodMapper;
 use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Infraestructure\Cache\CacheService;
@@ -36,7 +38,7 @@ class FinalizeSetupSessionUseCase
             $pm= DB::transaction(function() use ($paymentMethod) {
                 return $this->pmRepo->create($paymentMethod);
             });
-            $this->service->clearPrefix("student:cards:show:$user->id");
+            $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
         return PaymentMethodMapper::toDisplayPaymentMethodResponse($pm);
     }
 

@@ -4,7 +4,7 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\Mappers\GeneralMapper;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
 class ShowAllUsersUseCase
 {

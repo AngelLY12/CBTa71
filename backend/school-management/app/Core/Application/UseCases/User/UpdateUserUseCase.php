@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Core\Application\UseCases;
+namespace App\Core\Application\UseCases\User;
 
-use App\Core\Domain\Repositories\Command\UserRepInterface;
+use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 
 class UpdateUserUseCase
 {

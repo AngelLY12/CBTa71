@@ -2,7 +2,7 @@
 
 namespace App\Core\Application\UseCases\Jobs;
 
-use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
+use App\Core\Domain\Repositories\Command\Auth\RefreshTokenRepInterface;
 
 class CleanExpiredRefreshTokenUseCase
 {

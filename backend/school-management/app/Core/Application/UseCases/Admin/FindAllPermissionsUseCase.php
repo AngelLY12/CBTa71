@@ -4,7 +4,7 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\Mappers\GeneralMapper;
-use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Auth\RolesAndPermissosQueryRepInterface;
 use App\Exceptions\NotFound\PermissionsByUserNotFoundException;
 
 class FindAllPermissionsUseCase

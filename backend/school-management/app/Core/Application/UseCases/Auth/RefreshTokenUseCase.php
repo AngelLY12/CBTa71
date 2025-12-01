@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Core\Application\UseCases;
+namespace App\Core\Application\UseCases\Auth;
 
 use App\Core\Application\Mappers\GeneralMapper;
-use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Command\Auth\RefreshTokenRepInterface;
+use App\Core\Domain\Repositories\Command\User\UserRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\TokenValidator;
 
 class RefreshTokenUseCase

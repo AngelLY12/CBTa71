@@ -3,8 +3,9 @@
 namespace App\Core\Application\UseCases\Parents;
 
 use App\Core\Application\DTO\Response\Parents\ParentChildrenResponse;
-use App\Core\Domain\Repositories\Query\ParentStudentQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Enum\User\UserRoles;
+use App\Core\Domain\Repositories\Query\User\ParentStudentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotAllowed\UserInvalidRoleException;
 use App\Exceptions\NotFound\ParentChildrenNotFoundException;
 use App\Exceptions\NotFound\UserNotFoundException;
@@ -23,7 +24,7 @@ class GetParentChildrenUseCase
         {
             throw new UserNotFoundException();
         }
-        if (!$this->userQRepo->hasRole($parentId, 'parent')) {
+        if (!$this->userQRepo->hasRole($parentId, UserRoles::PARENT->value)) {
             throw new UserInvalidRoleException();
         }
 

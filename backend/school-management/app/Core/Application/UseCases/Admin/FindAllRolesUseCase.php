@@ -2,7 +2,7 @@
 
 namespace App\Core\Application\UseCases\Admin;
 
-use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Auth\RolesAndPermissosQueryRepInterface;
 
 class FindAllRolesUseCase
 {

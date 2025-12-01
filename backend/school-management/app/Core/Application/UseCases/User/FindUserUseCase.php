@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Core\Application\UseCases;
+namespace App\Core\Application\UseCases\User;
 
 use App\Core\Application\Traits\HasCache;
 use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotFound\UserNotFoundException;
 
 class FindUserUseCase
 {
     use HasCache;
 
-    private string $prefix = 'user';
     public function __construct(
         private UserQueryRepInterface $uqRepo,
     )
@@ -25,7 +25,7 @@ class FindUserUseCase
         {
             throw new UserNotFoundException();
         }
-        $key = "$this->prefix:$user->id";
+        $key = CachePrefix::USER->value . ":$user->id";
         return $this->cache($key, $forceRefresh, fn() => $user);
     }
 }

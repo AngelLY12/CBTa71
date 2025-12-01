@@ -5,8 +5,8 @@ namespace App\Core\Application\UseCases\Admin;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Domain\Enum\User\UserStatus;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Command\User\UserRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\UserValidator;
 
 class ActivateUserUseCase
