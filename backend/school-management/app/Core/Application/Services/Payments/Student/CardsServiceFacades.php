@@ -8,13 +8,14 @@ use App\Core\Application\UseCases\Payments\Student\Cards\DeletePaymentMethoUseCa
 use App\Core\Application\UseCases\Payments\Student\Cards\GetUserPaymentMethodsUseCase;
 use App\Core\Application\UseCases\Payments\Student\Cards\SetupCardUseCase;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Infraestructure\Cache\CacheService;
 
 class CardsServiceFacades
 {
 
     use HasCache;
-    private string $prefix='student:cards';
     public function __construct(
         private SetupCardUseCase $setup,
         private DeletePaymentMethoUseCase $delete,
@@ -26,19 +27,19 @@ class CardsServiceFacades
     public function setupCard(User $user): SetupCardResponse
     {
         $setup= $this->setup->execute($user);
-        $this->service->clearPrefix("$this->prefix:show:$user->id");
+        $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
         return $setup;
     }
     public function deletePaymentMethod(User $user, string $paymentMethodId): bool
     {
         $delete=$this->delete->execute($paymentMethodId);
-        $this->service->clearPrefix("$this->prefix:show:$user->id");
+        $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
         return $delete;
     }
 
     public function getUserPaymentMethods(int $userId, bool $forceRefresh): array
     {
-        $key="$this->prefix:show:$userId";
+        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$userId");
         return $this->cache($key,$forceRefresh ,fn() =>$this->show->execute($userId));
     }
 }

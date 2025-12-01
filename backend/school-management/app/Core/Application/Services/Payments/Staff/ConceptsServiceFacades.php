@@ -15,11 +15,12 @@ use App\Core\Application\UseCases\Payments\Staff\Concepts\EliminatePaymentConcep
 use App\Core\Application\UseCases\Payments\Staff\Concepts\FinalizePaymentConceptUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\ShowConceptsUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\UpdatePaymentConceptUseCase;
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\Cache\StaffCacheSufix;
 use App\Core\Infraestructure\Cache\CacheService;
 
 class ConceptsServiceFacades{
     use HasCache;
-    private string $prefix = 'staff:concepts:list';
 
     public function __construct(
         private ShowConceptsUseCase $show,
@@ -35,55 +36,55 @@ class ConceptsServiceFacades{
     {}
 
     public function showConcepts(string $status, int $perPage, int $page, bool $forceRefresh): PaginatedResponse{
-        $key = "$this->prefix:$status:$perPage:$page";
+        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:$status:$perPage:$page");
         return $this->cache($key,$forceRefresh ,fn() => $this->show->execute($status, $perPage, $page));
     }
 
      public function createPaymentConcept(CreatePaymentConceptDTO $dto): PaymentConcept {
         $concept = $this->create->execute($dto);
-        $this->service->clearPrefix("$this->prefix:{$concept->status->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status->value}");
         return $concept;
     }
 
     public function updatePaymentConcept(UpdatePaymentConceptDTO $dto): PaymentConcept {
         $concept = $this->update->execute($dto);
-        $this->service->clearPrefix("$this->prefix:{$concept->status->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status->value}");
         return $concept;
     }
 
     public function finalizePaymentConcept(PaymentConcept $concept): PaymentConcept {
         $oldStatus = $concept->status;
         $result = $this->finalize->execute($concept);
-        $this->service->clearPrefix("$this->prefix:{$oldStatus->value}");
-        $this->service->clearPrefix("$this->prefix:{$result->status->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$oldStatus->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$result->status->value}");
         return $result;
     }
 
     public function disablePaymentConcept(PaymentConcept $concept): PaymentConcept {
         $oldStatus = $concept->status;
         $result = $this->disable->execute($concept);
-        $this->service->clearPrefix("$this->prefix:{$oldStatus->value}");
-        $this->service->clearPrefix("$this->prefix:{$result->status->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$oldStatus->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$result->status->value}");
         return $result;
     }
 
     public function eliminatePaymentConcept(int $conceptId): void {
         $this->eliminate->execute($conceptId);
-        $this->service->clearPrefix($this->prefix);
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list");
     }
 
     public function activatePaymentConcept(PaymentConcept $concept):PaymentConcept
     {
         $oldStatus = $concept->status;
         $result = $this->activate->execute($concept);
-        $this->service->clearPrefix("$this->prefix:{$oldStatus->value}");
-        $this->service->clearPrefix("$this->prefix:{$result->status->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$oldStatus->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$result->status->value}");
         return $result;
     }
 
     public function eliminateLogicalPaymentConcept(PaymentConcept $concept): PaymentConcept{
         $result = $this->eliminateLogical->execute($concept);
-        $this->service->clearPrefix($this->prefix);
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list");
         return $result;
     }
 }

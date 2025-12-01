@@ -20,21 +20,28 @@ use App\Core\Application\UseCases\Admin\FindAllPermissionsUseCase;
 use App\Core\Application\UseCases\Admin\FindAllRolesUseCase;
 use App\Core\Application\UseCases\Admin\FindPermissionByIdUseCase;
 use App\Core\Application\UseCases\Admin\FindRoleByIdUseCase;
+use App\Core\Application\UseCases\Admin\FindStudentDetailUseCase;
 use App\Core\Application\UseCases\Admin\ShowAllUsersUseCase;
 use App\Core\Application\UseCases\Admin\SyncPermissionsUseCase;
 use App\Core\Application\UseCases\Admin\SyncRoleUseCase;
-use App\Core\Application\UseCases\RegisterUseCase;
+use App\Core\Application\UseCases\Admin\UpdateStudentDeatilUseCase;
+use App\Core\Application\UseCases\Jobs\PromoteStudentsUseCase;
+use App\Core\Application\UseCases\User\RegisterUseCase;
 use App\Core\Domain\Entities\Permission;
 use App\Core\Domain\Entities\Role;
+use App\Core\Domain\Entities\StudentDetail;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\Cache\AdminCacheSufix;
+use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Infraestructure\Cache\CacheService;
 
-class AdminService
+class AdminServiceFacades
 {
     use HasCache;
     private array $requestCache = [];
-    private string $prefix = 'admin';
     public function __construct(
+        private FindStudentDetailUseCase $find_student,
+        private UpdateStudentDeatilUseCase $update_student,
         private AttachStudentDetailUserCase $attach,
         private RegisterUseCase $register,
         private BulkImportUsersUseCase $import,
@@ -48,65 +55,88 @@ class AdminService
         private FindRoleByIdUseCase $role,
         private FindPermissionByIdUseCase $permission,
         private SyncRoleUseCase $syncRoles,
+        private PromoteStudentsUseCase $promote,
         private CacheService $service
     )
-    {}
+    {
+
+    }
     public function attachStudentDetail(CreateStudentDetailDTO $create): User
     {
         $student=$this->attach->execute($create);
-        $this->service->clearPrefix("$this->prefix:users:all");
-        $this->service->clearPrefix("user:$student->id");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->clearKey(CachePrefix::USER->value, $student->id);
         return $student;
+    }
+
+    public function findStudentDetail(int $user_id): StudentDetail
+    {
+        return $this->find_student->execute($user_id);
+    }
+
+    public function promoteStudentes(): array
+    {
+        $promote=$this->promote->execute();
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        return $promote;
+    }
+
+    public function updateStudentDetail(int $user_id, array $fields): User
+    {
+        $sd= $this->update_student->execute($user_id,$fields);
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->clearKey(CachePrefix::USER->value, $user_id);
+        return $sd;
     }
 
     public function registerUser(CreateUserDTO $user, string $password):User
     {
         $user=$this->register->execute($user, $password);
-        $this->service->clearPrefix("$this->prefix:users:all");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $user;
     }
 
     public function importUsers(array $rows):int
     {
         $import=$this->import->execute($rows);
-        $this->service->clearPrefix("$this->prefix:users:all");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $import;
     }
     public function showAllUsers(int $perPage, int $page, bool $forceRefresh): PaginatedResponse
     {
-        $key = "$this->prefix:users:all:page:$page:$perPage";
+        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage");
         return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page));
     }
     public function syncPermissions(UpdateUserPermissionsDTO $dto):array
     {
         $permissions=$this->sync->execute($dto);
-        $this->service->clearPrefix("$this->prefix:users:all");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $permissions;
     }
 
     public function syncRoles(UpdateUserRoleDTO $dto):UserWithUpdatedRoleResponse
     {
         $roles=$this->syncRoles->execute($dto);
-        $this->service->clearPrefix("$this->prefix:users:all");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $roles;
     }
 
     public function activateUsers(array $ids): UserChangedStatusResponse
     {
         $users=$this->activate->execute($ids);
-        $this->service->clearPrefix("$this->prefix:users:all");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return$users;
     }
      public function deleteUsers(array $ids): UserChangedStatusResponse
     {
         $users=$this->delete->execute($ids);
-        $this->service->clearPrefix("$this->prefix:users:all");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $users;
     }
      public function disableUsers(array $ids): UserChangedStatusResponse
     {
         $users=$this->disable->execute($ids);
-        $this->service->clearPrefix("$this->prefix:users:all");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $users;
     }
 
@@ -124,7 +154,7 @@ class AdminService
 
     public function findAllRoles(bool $forceRefresh): array
     {
-        $key = "$this->prefix:roles";
+        $key=$this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::ROLES->value);
         return $this->cache($key, $forceRefresh, fn() => $this->roles->execute());
     }
 

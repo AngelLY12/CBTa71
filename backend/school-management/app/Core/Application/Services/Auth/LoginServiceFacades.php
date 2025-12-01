@@ -1,15 +1,16 @@
 <?php
-namespace App\Core\Application\Services;
+namespace App\Core\Application\Services\Auth;
 
 use App\Core\Application\DTO\Request\General\LoginDTO;
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Response\General\LoginResponse;
-use App\Core\Application\UseCases\LoginUseCase;
-use App\Core\Application\UseCases\RegisterUseCase;
+use App\Core\Application\UseCases\Auth\LoginUseCase;
+use App\Core\Application\UseCases\User\RegisterUseCase;
 use App\Core\Domain\Entities\User;
 use App\Core\Infraestructure\Cache\CacheService;
 
-class LoginService{
+class LoginServiceFacades
+{
     public function __construct(
         private LoginUseCase $login,
         private RegisterUseCase $register,
@@ -26,7 +27,7 @@ class LoginService{
    public function register(CreateUserDTO $user): User
    {
         $user= $this->register->execute($user);
-        $this->service->clearPrefix("admin:users:all");
+        $this->service->clearKey('admin', 'users:all');
         return $user;
    }
 }

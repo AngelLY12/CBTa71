@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Core\Application\Services;
+namespace App\Core\Application\Services\Misc;
 
-use App\Core\Application\UseCases\FindUserUseCase;
 use App\Core\Application\UseCases\Payments\FindConceptByIdUseCase;
 use App\Core\Application\UseCases\Payments\FindPaymentByIdUseCase;
+use App\Core\Application\UseCases\User\FindUserUseCase;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
 
-class FindEntityService
+class FindEntityServiceFacades
 {
     public function __construct(
         private FindConceptByIdUseCase $concept,

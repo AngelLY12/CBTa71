@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Core\Application\Services;
+namespace App\Core\Application\Services\Auth;
 
 use App\Core\Application\DTO\Response\General\LoginResponse;
-use App\Core\Application\UseCases\LogoutUseCase;
-use App\Core\Application\UseCases\RefreshTokenUseCase;
+use App\Core\Application\UseCases\Auth\LogoutUseCase;
+use App\Core\Application\UseCases\Auth\RefreshTokenUseCase;
 use App\Models\User;
 
-class RefreshTokenService
+class RefreshTokenServiceFacades
 {
     public function __construct(
         private RefreshTokenUseCase $refresh,

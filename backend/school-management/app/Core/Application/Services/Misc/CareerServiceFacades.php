@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Application\Services;
+namespace App\Core\Application\Services\Misc;
 
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Career\CreateCareerUseCase;
@@ -15,7 +15,6 @@ class CareerServiceFacades
 {
      use HasCache;
 
-    private string $prefix = 'careers';
     public function __construct(
         private CreateCareerUseCase $create,
         private DeleteCareerUseCase $delete,
@@ -30,33 +29,31 @@ class CareerServiceFacades
     public function createCareer(Career $career): Career
     {
         $career = $this->create->execute($career);
-        $this->service->forget("$this->prefix:all");
+        $this->service->clearKey('careers', 'all');
         return $career;
     }
 
     public function deleteCareer(int $careerId): void
     {
         $this->delete->execute($careerId);
-        $this->service->forget("$this->prefix:all");
-        $this->service->forget("$this->prefix:$careerId");
+        $this->service->clearKey('careers', 'all');
     }
 
     public function findAllCareers(bool $forceRefresh): array
     {
-        $key = "$this->prefix:all";
+        $key = $this->service->makeKey('careers', "all");
         return $this->cache($key, $forceRefresh, fn() => $this->all->execute());
     }
 
     public function findById(int $id, bool $forceRefresh): Career
     {
-        $key = "$this->prefix:$id";
-        return $this->cache($key, $forceRefresh, fn() => $this->find->execute($id));    }
+        return  $this->find->execute($id);
+    }
 
     public function updateCareer(int $careerId, array $fields): Career
     {
         $career = $this->update->execute($careerId, $fields);
-        $this->service->forget("$this->prefix:all");
-        $this->service->forget("$this->prefix:$careerId");
+        $this->service->clearKey('careers', 'all');
         return $career;
     }
 }

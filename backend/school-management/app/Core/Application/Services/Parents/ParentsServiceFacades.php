@@ -8,17 +8,19 @@ use App\Core\Application\UseCases\Parents\AcceptParentInvitationUseCase;
 use App\Core\Application\UseCases\Parents\GetParentChildrenUseCase;
 use App\Core\Application\UseCases\Parents\SendParentInviteUseCase;
 use App\Core\Domain\Entities\ParentInvite;
+use App\Core\Domain\Enum\Cache\AdminCacheSufix;
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\Cache\ParentCacheSufix;
 use App\Core\Infraestructure\Cache\CacheService;
 
 class ParentsServiceFacades
 {
     use HasCache;
-    private string $prefix = 'parent';
     public function __construct(
         private SendParentInviteUseCase $send,
         private AcceptParentInvitationUseCase $accept,
         private GetParentChildrenUseCase $children,
-        private CacheService $cache
+        private CacheService $service
     )
     {
     }
@@ -31,13 +33,13 @@ class ParentsServiceFacades
     public function acceptInvitation(string $token, ?string $relationship=null, int $userId): void
     {
         $this->accept->execute($token, $relationship);
-        $this->cache->clearPrefix("admin:users:all");
-        $this->cache->clearPrefix("$this->prefix:children:$userId");
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->clearKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN . ":$userId");
     }
 
     public function getParentChildren(int $parentId): ParentChildrenResponse
     {
-        $key = "$this->prefix:children:$parentId";
+        $key = $this->service->makeKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN . ":$parentId");
         return $this->cache($key, false, fn() => $this->children->execute($parentId));
     }
 }
