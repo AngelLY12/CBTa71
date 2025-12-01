@@ -2,6 +2,7 @@
 
 namespace App\Core\Domain\Entities;
 
+use App\Core\Domain\Entities\StudentDetail;
 use App\Core\Domain\Enum\User\UserBloodType;
 use App\Core\Domain\Enum\User\UserGender;
 use App\Core\Domain\Enum\User\UserStatus;
@@ -39,13 +40,17 @@ class User
         public string $password,
         public string $phone_number,
         public ?Carbon $birthdate,
+        /** @var UserGender */
         public ?UserGender $gender,
         public string $curp,
         public ?array $address,
         public ?string $stripe_customer_id,
+        /** @var UserBloodType */
         public ?UserBloodType $blood_type,
         public ?Carbon $registration_date,
+        /** @var UserStatus */
         public ?UserStatus $status,
+        /** @var StudentDetail */
         public ?StudentDetail $studentDetail=null
     ) {}
 

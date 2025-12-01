@@ -30,13 +30,17 @@ class Payment
 {
     public function __construct(
         public ?int $id = null,
+        /** @var User */
         public int $user_id,
+        /** @var PaymentConcept */
         public ?int $payment_concept_id,
+        /** @var PaymentMethod */
         public ?int $payment_method_id=null,
         public ?string $stripe_payment_method_id=null,
         public ?string $concept_name,
         public ?string $amount,
         public ?array $payment_method_details = [],
+        /** @var PaymentStatus */
         public PaymentStatus $status,
         public ?string $payment_intent_id=null,
         public ?string $url,

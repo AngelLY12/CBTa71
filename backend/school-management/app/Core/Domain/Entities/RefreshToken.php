@@ -19,6 +19,7 @@ class RefreshToken
 {
     public function __construct(
         public readonly int $id,
+        /** @var User */
         public readonly int $user_id,
         public readonly string $token,
         public readonly CarbonImmutable $expiresAt,
@@ -35,8 +36,4 @@ class RefreshToken
         return !$this->revoked && !$this->isExpired();
     }
 
-    public function revoke(): void
-    {
-        $this->revoked = true;
-    }
 }

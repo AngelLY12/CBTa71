@@ -19,10 +19,15 @@ use App\Core\Domain\Enum\User\RelationshipType;
 class ParentStudent
 {
     public function __construct(
+        /** @var User */
         public readonly int $parentId,
+        /** @var User */
         public readonly int $studentId,
+        /** @var Role */
         public readonly int $parentRoleId,
+        /** @var Role */
         public readonly int $studentRoleId,
+        /** @var RelationshipType */
         public readonly ?RelationshipType $relationship,
     ) {}
 }

@@ -31,13 +31,17 @@ class PaymentConcept
         public ?int $id=null,
         public string $concept_name,
         public ?string $description=null,
+        /** @var PaymentConceptStatus */
         public PaymentConceptStatus $status,
         public Carbon $start_date,
         public ?Carbon $end_date=null,
         public string $amount,
+        /** @var PaymentConceptAppliesTo */
         public PaymentConceptAppliesTo $applies_to,
         public bool $is_global,
+        /** @var User[] */
         private array $userIds = [],
+        /** @var Career[] */
         private array $careerIds = [],
         private array $semesters = []
     ) {}

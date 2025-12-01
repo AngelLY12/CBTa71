@@ -22,6 +22,7 @@ class ParentInvite
 {
     public function __construct(
         public ?int $id=null,
+        /** @var User */
         public int $studentId,
         public string $email,
         public string $token,

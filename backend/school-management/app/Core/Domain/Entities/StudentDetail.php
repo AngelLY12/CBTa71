@@ -19,7 +19,9 @@ namespace App\Core\Domain\Entities;
 class StudentDetail{
     public function __construct(
         public ?int $id=null,
+        /** @var User */
         public int $user_id,
+        /** @var Career */
         public ?int $career_id = null,
         public ?int $n_control = null,
         public ?int $semestre = null,
@@ -33,7 +35,4 @@ class StudentDetail{
         }
     }
 
-    public function assignGroup(string $group): void {
-        $this->group = $group;
-    }
 }

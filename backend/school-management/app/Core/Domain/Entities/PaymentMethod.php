@@ -21,6 +21,7 @@ use DateTime;
 class PaymentMethod{
 
     public function __construct(
+        /** @var User */
         public int $user_id,
         public string $stripe_payment_method_id,
         public ?string $brand = null,
