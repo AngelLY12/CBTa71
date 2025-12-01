@@ -17,7 +17,7 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
+            $table->foreignIdFor(User::class)->nullable()->constrained('users')->onDelete('set null');
             $table->foreignIdFor(PaymentConcept::class)->nullable()->constrained('payment_concepts')->onDelete('set null');
             $table->foreignIdFor(PaymentMethod::class)->nullable()->constrained('payment_methods')->onDelete('set null');
             $table->string('stripe_payment_method_id',50)->nullable()->index();
