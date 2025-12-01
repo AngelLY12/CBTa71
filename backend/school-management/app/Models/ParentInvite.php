@@ -17,6 +17,16 @@ class ParentInvite extends Model
         'created_by',
     ];
 
+    public function student()
+    {
+        return $this->belongsTo(User::class, 'student_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     protected $casts = [
         'expires_at' => 'datetime',
         'used_at' => 'datetime',

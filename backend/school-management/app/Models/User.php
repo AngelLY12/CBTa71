@@ -15,6 +15,8 @@ use App\Models\Payment;
 use App\Models\traits\ResolvesTargetUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -23,7 +25,8 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser, LogsActivity;
+    
 
     /**
      * The attributes that are mass assignable.
@@ -79,11 +82,28 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ParentStudent::class, 'student_id');
     }
 
+    public function invitesAsStudent()
+    {
+        return $this->hasMany(ParentInvite::class, 'student_id');
+    }
+
+    public function invitesCreated()
+    {
+        return $this->hasMany(ParentInvite::class, 'created_by');
+    }
+
     public function sendEmailVerificationNotification(): void
     {
         $this->notify(new SendVerifyEmail());
     }
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'last_name' ,'email', 'status'])
+            ->logOnlyDirty()
+            ->useLogName('user');
+    }
 
 
     /**

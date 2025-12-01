@@ -10,11 +10,12 @@ use App\Models\Career;
 use App\Models\User;
 use App\Models\Payment;
 use App\Models\PaymentConceptSemester;
-
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class PaymentConcept extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     protected $fillable = [
         'concept_name',
         'description',
@@ -51,6 +52,14 @@ class PaymentConcept extends Model
 
     public function paymentConceptSemesters(){
         return $this->hasMany(PaymentConceptSemester::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['concept_name', 'description' ,'status', 'amount'])
+            ->logOnlyDirty()
+            ->useLogName('paymentConcept');
     }
 
 }
