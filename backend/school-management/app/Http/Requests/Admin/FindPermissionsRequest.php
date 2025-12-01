@@ -47,8 +47,7 @@ class FindPermissionsRequest extends FormRequest
     {
         return [
             'curps' => ['nullable', 'array'],
-            'curps.*' => ['string', 'exists:users,curp'],
-            'curps.*' => ['string', 'size:18'],
+            'curps.*' => ['string', 'size:18', 'exists:users,curp'],
             'role' => ['nullable', 'string', 'exists:roles,name'],
         ];
     }

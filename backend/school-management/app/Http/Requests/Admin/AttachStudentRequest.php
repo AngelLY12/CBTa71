@@ -66,7 +66,9 @@ class AttachStudentRequest extends FormRequest
     {
         return [
             'user_id' => 'required|int',
+            'user_id.*' => ['exists:users,id'],
             'career_id' => 'required|int',
+            'career_id' => ['exists:careers,id'],
             'n_control' => 'required|string',
             'semestre' => 'required|int',
             'group' => 'required|string',
@@ -79,8 +81,10 @@ class AttachStudentRequest extends FormRequest
         return [
             'user_id.required' => 'El ID del usuario es obligatorio.',
             'user_id.int' => 'El ID del usuario debe ser un número entero.',
+            'user_id.*.exists' => 'El usuario no existe en el sistema',
             'career_id.required' => 'El ID de la carrera es obligatorio.',
             'career_id.int' => 'El ID de la carrera debe ser un número entero.',
+            'career_id.*.exists' => 'El ID de la carrera no existe',
             'n_control.required' => 'El número de control es obligatorio.',
             'semestre.required' => 'El semestre es obligatorio.',
             'semestre.int' => 'El semestre debe ser un número entero.',
