@@ -36,13 +36,13 @@ Route::prefix('v1')->middleware('throttle:5,1')->group(function () {
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::post('/logout',[RefreshTokenController::class,'logout']);
 
-    Route::prefix('parents')->middleware(['throttle:5,1'])->group(function(){
-        Route::middleware(['role:student', 'role:admin',])->post('/invite',[ParentsController::class, 'sendInvitation']);
+    Route::prefix('parents')->middleware(['throttle:5,1', 'log.action', 'user.status'])->group(function(){
+        Route::middleware(['role:student|admin',])->post('/invite',[ParentsController::class, 'sendInvitation']);
         Route::middleware(['role:parent'])->post('/invite/accept',[ParentsController::class, 'acceptInvitation']);
         Route::middleware(['role:parent'])->get('/get-children',[ParentsController::class,'getParetChildren']);
     });
 
-    Route::prefix('dashboard')->middleware(['role:student', 'role:parent', 'throttle:global'])->group(function (){
+    Route::prefix('dashboard')->middleware(['role:student|parent', 'throttle:global', 'log.action', 'user.status'])->group(function (){
         Route::middleware('permission:view own financial overview')->get('/data/{id}',[DashboardController::class,'index']);
         Route::middleware('permission:view own pending concepts summary')->get('/pending/{id}',[DashboardController::class,'pending']);
         Route::middleware('permission:view own paid concepts summary')->get('/paid/{id}',[DashboardController::class,'paid']);
@@ -52,22 +52,22 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
 
 
     });
-    Route::prefix('cards')->middleware('role:student')->group(function(){
-        Route::middleware(['permission:view cards', 'role:parent','throttle:global'])->get('/{id}',[CardsController::class,'index']);
+    Route::prefix('cards')->middleware(['role:student|parent', 'log.action', 'user.status'])->group(function(){
+        Route::middleware(['permission:view cards','throttle:global'])->get('/{id}',[CardsController::class,'index']);
         Route::middleware(['permission:create setup', 'throttle:10,1'])->post('/',[CardsController::class,'store']);
         Route::middleware(['permission:delete card', 'throttle:10,1'])->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
-    Route::prefix('history')->middleware(['role:student', 'role:parent','throttle:global'])->group(function(){
+    Route::prefix('history')->middleware(['role:student|parent','throttle:global', 'log.action', 'user.status'])->group(function(){
         Route::middleware('permission:view payment history')->get('/{id}',[PaymentHistoryController::class,'index']);
     });
-    Route::prefix('pending-payment')->middleware('role:student')->group(function(){
-        Route::middleware(['permission:view pending concepts', 'role:parent','throttle:global'])->get('/{id}',[PendingPaymentController::class,'index']);
+    Route::prefix('pending-payment')->middleware(['role:student|parent', 'log.action', 'user.status'])->group(function(){
+        Route::middleware(['permission:view pending concepts','throttle:global'])->get('/{id}',[PendingPaymentController::class,'index']);
         Route::middleware(['permission:create payment','throttle:5,1'])->post('/',[PendingPaymentController::class,'store']);
-        Route::middleware(['permission:view overdue concepts', 'role:parent','throttle:global'])->get('/overdue/{id}',[PendingPaymentController::class,'overdue']);
+        Route::middleware(['permission:view overdue concepts','throttle:global'])->get('/overdue/{id}',[PendingPaymentController::class,'overdue']);
 
     });
 
-    Route::prefix('dashboard-staff')->middleware(['role:financial staff', 'throttle:global'])->group(function(){
+    Route::prefix('dashboard-staff')->middleware(['role:financial-staff', 'throttle:global', 'log.action', 'user.status'])->group(function(){
         Route::middleware('permission:view all financial overview')->get('/data',[StaffDashboardController::class,'getData']);
         Route::middleware('permission:view all pending concepts summary')->get('/pending',[StaffDashboardController::class,'pendingPayments']);
         Route::middleware('permission:view all students summary')->get('/students',[StaffDashboardController::class,'allStudents']);
@@ -75,7 +75,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:view concepts history')->get('/concepts',[StaffDashboardController::class,'allConcepts']);
         Route::middleware('permission:refresh all dashboard')->post('/refresh',[StaffDashboardController::class,'refreshDashboard']);
     });
-    Route::prefix('concepts')->middleware('role:financial staff')->group(function(){
+    Route::prefix('concepts')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['permission:view concepts', 'throttle:global'])->get('/', [ConceptsController::class, 'index']);
         Route::middleware(['permission:create concepts', 'throttle:10,1'])->post('/', [ConceptsController::class, 'store']);
         Route::middleware(['permission:update concepts', 'throttle:10,1'])->put('/{concept}', [ConceptsController::class, 'update']);
@@ -87,21 +87,21 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:activate concept', 'throttle:10,1'])->post('/{concept}/activate',[ConceptsController::class,'activate']);
     });
 
-    Route::prefix('debts')->middleware('role:financial staff')->group(function(){
+    Route::prefix('debts')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['permission:view debts', 'throttle:global'])->get('/', [DebtsController::class, 'index']);
         Route::middleware(['permission:validate debt', 'throttle:10,1'])->post('/validate', [DebtsController::class, 'validatePayment']);
         Route::middleware(['permission:view stripe-payments', 'throttle:10,1'])->get('/stripe-payments', [DebtsController::class, 'getStripePayments']);
     });
 
-    Route::prefix('payments')->middleware(['role:financial staff', 'throttle:global'])->group(function(){
+    Route::prefix('payments')->middleware(['role:financial-staff', 'throttle:global', 'log.action', 'user.status'])->group(function(){
         Route::middleware('permission:view payments')->get('/', [PaymentsController::class, 'index']);
     });
 
-     Route::prefix('students')->middleware(['role:financial staff','throttle:global'])->group(function(){
+     Route::prefix('students')->middleware(['role:financial-staff','throttle:global','log.action', 'user.status' ])->group(function(){
         Route::middleware('permission:view students')->get('/', [StudentsController::class, 'index']);
     });
 
-    Route::prefix('admin-actions')->middleware(['role:admin', 'throttle:global'])->group(function(){
+    Route::prefix('admin-actions')->middleware(['role:admin|supervisor', 'throttle:global', 'log.action', 'user.status'])->group(function(){
         Route::middleware('permission:attach student')->post('/attach-student',[AdminController::class,'attachStudent']);
         Route::middleware('permission:import users')->post('/import-users', [AdminController::class, 'import']);
         Route::middleware('permission:sync permissions')->post('/update-permissions',[AdminController::class,'updatePermissions']);
@@ -115,14 +115,18 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:view roles')->get('/find-roles', [AdminController::class, 'findAllRoles']);
         Route::middleware('permission:view roles')->get('/roles/{id}', [AdminController::class, 'findRoleById']);
         Route::middleware('permission:create user')->post('/register',[AdminController::class,'registerUser']);
+        Route::middleware('permission:view student')->get('/get-student/{id}', [AdminController::class, 'findStudentDetail']);
+        Route::middleware('permission:update student')->patch('/update-student/{id}',[AdminController::class,'updateStudentDetail']);
+        Route::middleware('permission:promote student')->patch('/promote',[AdminController::class,'promotionStudents']);
+
+
     });
-    Route::prefix('find')->middleware(['role:admin','role:student','role:financial staff','role:parent','throttle:global'])->group(function(){
+    Route::prefix('find')->middleware(['role:student|financial-staff|parent','throttle:global', 'log.action', 'user.status'])->group(function(){
         Route::middleware('permission:view concept')->get('/concept/{id}',[FindEntityController::class,'findConcept']);
         Route::middleware('permission:view payment')->get('/payment/{id}',[FindEntityController::class,'findPayment']);
-        Route::middleware('permission:view profile')->get('/user',[FindEntityController::class,'findUser']);
     });
 
-    Route::prefix('careers')->middleware('role:admin')->group(function(){
+    Route::prefix('careers')->middleware(['role:admin|supervisor', 'log.action', 'user.status'])->group(function(){
         Route::get('/', [CareerController::class, 'index']);
         Route::get('/{id}', [CareerController::class, 'show']);
         Route::post('/', [CareerController::class, 'store']);
@@ -130,9 +134,10 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::delete('/{id}', [CareerController::class, 'destroy']);
     });
 
-    Route::prefix('users')->middleware(['role:admin','role:student','role:financial staff','throttle:10,1'])->group(function () {
-        Route::patch('/{userId}', [UpdateUserController::class, 'update']);
-        Route::patch('/{userId}/password', [UpdateUserController::class, 'updatePassword']);
+    Route::prefix('users')->middleware(['role:admin|student|financial-staff|parent|supervisor','throttle:10,1', 'log.action', 'user.status'])->group(function () {
+        Route::patch('/update', [UpdateUserController::class, 'update']);
+        Route::patch('/update/password', [UpdateUserController::class, 'updatePassword']);
+        Route::get('/user',[FindEntityController::class,'findUser']);
     });
 
 
