@@ -2,52 +2,57 @@
 
 namespace App\Providers;
 
-use App\Core\Domain\Repositories\Command\AccessTokenRepInterface;
-use App\Core\Domain\Repositories\Command\CareerRepInterface;
-use App\Core\Domain\Repositories\Command\DBRepInterface;
-use App\Core\Domain\Repositories\Command\ParentInviteRepInterface;
-use App\Core\Domain\Repositories\Command\ParentStudentRepInterface;
+use App\Core\Domain\Repositories\Command\Auth\AccessTokenRepInterface;
+use App\Core\Domain\Repositories\Command\Auth\RefreshTokenRepInterface;
+use App\Core\Domain\Repositories\Command\Auth\RolesAndPermissionsRepInterface;
+use App\Core\Domain\Repositories\Command\Misc\CareerRepInterface;
+use App\Core\Domain\Repositories\Command\Misc\DBRepInterface;
+use App\Core\Domain\Repositories\Command\Misc\ParentInviteRepInterface;
+use App\Core\Domain\Repositories\Command\Misc\SemesterPromotionsRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
-use App\Core\Domain\Repositories\Command\RefreshTokenRepInterface;
-use App\Core\Domain\Repositories\Command\RolesAndPermissionsRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
-use App\Core\Domain\Repositories\Command\StudentDetailReInterface;
-use App\Core\Domain\Repositories\Command\UserRepInterface;
-use App\Core\Domain\Repositories\Query\CareerQueryRepInterface;
-use App\Core\Domain\Repositories\Query\ParentInviteQueryRepInterface;
-use App\Core\Domain\Repositories\Query\ParentStudentQueryRepInterface;
+use App\Core\Domain\Repositories\Command\User\ParentStudentRepInterface;
+use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
+use App\Core\Domain\Repositories\Command\User\UserLogActionRepInterface;
+use App\Core\Domain\Repositories\Command\User\UserRepInterface;
+use App\Core\Domain\Repositories\Query\Auth\RolesAndPermissosQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Misc\CareerQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Misc\ParentInviteQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
-use App\Core\Domain\Repositories\Query\RolesAndPermissosQueryRepInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\ParentStudentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
-use App\Core\Infraestructure\Repositories\Command\EloquentAccessTokenRepository;
-use App\Core\Infraestructure\Repositories\Command\EloquentCareerRepository;
-use App\Core\Infraestructure\Repositories\Command\EloquentDBRepository;
-use App\Core\Infraestructure\Repositories\Command\EloquentParentInviteRepository;
-use App\Core\Infraestructure\Repositories\Command\EloquentParentStudentRepository;
-use App\Core\Infraestructure\Repositories\Command\EloquentRefreshTokenRepository;
-use App\Core\Infraestructure\Repositories\Command\EloquentRolesAndPermissionsRepository;
-use App\Core\Infraestructure\Repositories\Command\EloquentStudentDetailRepository;
-use App\Core\Infraestructure\Repositories\Command\EloquentUserRepository;
+use App\Core\Infraestructure\Repositories\Command\Auth\EloquentAccessTokenRepository;
+use App\Core\Infraestructure\Repositories\Command\Auth\EloquentRefreshTokenRepository;
+use App\Core\Infraestructure\Repositories\Command\Auth\EloquentRolesAndPermissionsRepository;
+use App\Core\Infraestructure\Repositories\Command\Misc\EloquentCareerRepository;
+use App\Core\Infraestructure\Repositories\Command\Misc\EloquentDBRepository;
+use App\Core\Infraestructure\Repositories\Command\Misc\EloquentParentInviteRepository;
+use App\Core\Infraestructure\Repositories\Command\Misc\EloquentSemesterPromotionsRepository;
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentConceptRepository;
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentMethodRepository;
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentRepository;
 use App\Core\Infraestructure\Repositories\Command\Stripe\StripeGateway;
-use App\Core\Infraestructure\Repositories\Query\EloquentCareerQueryRepository;
-use App\Core\Infraestructure\Repositories\Query\EloquentParentInviteQueryRepository;
-use App\Core\Infraestructure\Repositories\Query\EloquentParentStudentQueryRepository;
-use App\Core\Infraestructure\Repositories\Query\EloquentRolesAndPermissionQueryRepository;
-use App\Core\Infraestructure\Repositories\Query\EloquentUserQueryRepository;
+use App\Core\Infraestructure\Repositories\Command\User\EloquentParentStudentRepository;
+use App\Core\Infraestructure\Repositories\Command\User\EloquentStudentDetailRepository;
+use App\Core\Infraestructure\Repositories\Command\User\EloquentUserLogActionRepository;
+use App\Core\Infraestructure\Repositories\Command\User\EloquentUserRepository;
+use App\Core\Infraestructure\Repositories\Query\Auth\EloquentRolesAndPermissionQueryRepository;
+use App\Core\Infraestructure\Repositories\Query\Misc\EloquentCareerQueryRepository;
+use App\Core\Infraestructure\Repositories\Query\Misc\EloquentParentInviteQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentConceptQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentMethodQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentQueryRepository;
+use App\Core\Infraestructure\Repositories\Query\User\EloquentParentStudentQueryRepository;
+use App\Core\Infraestructure\Repositories\Query\User\EloquentUserQueryRepository;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Storage;
@@ -81,6 +86,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ParentStudentQueryRepInterface::class, EloquentParentStudentQueryRepository::class);
         $this->app->bind(ParentInviteRepInterface::class, EloquentParentInviteRepository::class);
         $this->app->bind(ParentInviteQueryRepInterface::class, EloquentParentInviteQueryRepository::class);
+        $this->app->bind(SemesterPromotionsRepInterface::class, EloquentSemesterPromotionsRepository::class);
+        $this->app->bind(UserLogActionRepInterface::class, EloquentUserLogActionRepository::class);
 
     }
 
@@ -126,6 +133,34 @@ class AppServiceProvider extends ServiceProvider
         });
         ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
             return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
+        });
+
+        Response::macro('success', function ($data = null, $message = null, $status = 200) {
+            $payload = ['success' => true];
+
+            if (!is_null($data)) {
+                $payload['data'] = $data;
+            }
+
+            if (!is_null($message) && $message !== '') {
+                $payload['message'] = $message;
+            }
+
+            return response()->json($payload, $status);
+        });
+
+        Response::macro('error', function ($message = null, $status = 400, $errors = null) {
+            $payload = ['success' => false];
+
+            if (!is_null($message) && $message !== '') {
+                $payload['message'] = $message;
+            }
+
+            if (!is_null($errors) && !empty($errors)) {
+                $payload['errors'] = $errors;
+            }
+
+            return response()->json($payload, $status);
         });
     }
 }
