@@ -1,4 +1,4 @@
- ---
+---
 import '../styles/global.css';
 import '../styles/tailwind.css';
 
@@ -13,6 +13,8 @@ const pageTitle = "Acceso al Sistema - Mejorado";
     <title>Acceso al Sistema - SIGE</title>
 
 
+    <link rel="icon" href="/cbta71_icon.png" type="image/png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
 
 
@@ -68,17 +70,15 @@ const pageTitle = "Acceso al Sistema - Mejorado";
     <section class="min-h-screen flex items-center justify-center p-4 relative z-20">
 
 
-        <!-- LOGO REPOSICIONADO MÁS ABAJO -->
         <div class="absolute top-8 left-1/2 transform -translate-x-1/2 translate-y-3 z-30">
-            <img src="/Logo.png"
-                 alt="Logotipo SIGE"
-                 class="w-32 h-auto select-none pointer-events-none">
+            <img src="/Logo.png" 
+                alt="Logotipo SIGE" 
+                class="w-32 h-auto select-none pointer-events-none">
         </div>
 
 
-        <!-- LOGIN MÁS PEQUEÑO -->
-        <div
-            x-data="{
+        <div 
+            x-data="{ 
                 email: '', password: '', role: 'Alumno',
                 error: '', isLoading: false, redirectTo: '/Dashboard',
 
@@ -210,5 +210,6 @@ const pageTitle = "Acceso al Sistema - Mejorado";
 
 </body>
 </html>
-
-
+-
+</div>
+</a>        

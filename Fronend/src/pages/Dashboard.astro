@@ -2,173 +2,205 @@
 // src/pages/index.astro
 import Layout from '../layouts/Layout.astro';
 import CardInfo from '../components/CardInfo.astro';
-// Asegúrate de que estos componentes existan en src/components/
 import ChartLine from '../components/ChartLine.astro';
 import ChartDonut from '../components/ChartDonut.astro';
 import ConceptsTable from '../components/ConceptsTable.astro';
 
 // ---------------------------------------------------------------------
-// 1. DATOS INICIALES Y CÁLCULOS
+// 1. FUNCIONES DE OBTENCIÓN DE DATOS
 // ---------------------------------------------------------------------
 
-// Los datos de conceptos y montos deben estar en formato numérico para calcular.
-const conceptData = [
-    { id: '2DDB', concept: 'Colegiatura', amount: 1067.00, start: '08/2024', end: '-', status: 'Activa' },
-    { id: '5FD4', concept: 'Colegiatura', amount: 3067.00, start: '02/2024', end: '03/2024', status: 'Finalizado' },
-    { id: '9A1C', concept: 'Inscripción', amount: 1500.00, start: '08/2024', end: '-', status: 'Activa' },
-    { id: 'B2E7', concept: 'Mensualidad', amount: 800.00, start: '09/2024', end: '10/2024', status: 'Finalizado' },
-    { id: 'C3F5', concept: 'Materiales', amount: 200.00, start: '10/2024', end: '10/2024', status: 'Finalizado' },
-    { id: 'D4G6', concept: 'Credencial', amount: 250.00, start: '10/2024', end: '-', status: 'Activa' },
-];
+// --- Función para formatear a moneda ---
+const formatCurrency = (value) => {
+    const num = Number(value) || 0;
+    return `$${num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+};
 
-// Cálculo de sumas
+// --- 1. Obtener y calcular datos financieros (Conceptos) ---
 let totalRecaudado = 0;
 let totalPendiente = 0;
 let conceptosPendientesCount = 0;
+let totalGeneral = 0;
+let conceptData = []; 
 
+async function fetchConceptData() {
+    try {
+        const urlConcepts = new URL('/api/concepts', Astro.url.origin);
+        const res = await fetch(urlConcepts); 
+        if (res.ok) {
+            const data = await res.json();
+            return Array.isArray(data) ? data : data.concepts || [];
+        }
+    } catch (e) {
+        console.error("Error al obtener conceptos de la API:", e);
+    }
+    return [];
+}
+conceptData = await fetchConceptData();
+
+// Cálculo de sumas basado en la data dinámica
 conceptData.forEach(item => {
-    if (item.status === 'Finalizado') {
-        totalRecaudado += item.amount;
-    } else if (item.status === 'Activa') {
-        totalPendiente += item.amount;
-        conceptosPendientesCount++;
-    }
+    const amount = Number(item.amount) || 0; 
+    if (item.status === 'Finalizado') {
+        totalRecaudado += amount;
+    } else if (item.status === 'Activa') {
+        totalPendiente += amount;
+        conceptosPendientesCount++;
+    }
 });
+totalGeneral = totalRecaudado + totalPendiente;
 
-const totalGeneral = totalRecaudado + totalPendiente;
-const percentageRecaudado = totalGeneral > 0 ? (totalRecaudado / totalGeneral) * 100 : 0;
-
-// Datos de ejemplo para el gráfico de línea (simulación de pagos mensuales)
-const chartData = {
-    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
-    ganancias: [3000, 4500, 4000, 5000, 6000, 5500, 6500, 7000], // Montos de pagos
-    estudiantes: [100, 110, 105, 120, 130, 125, 140, 150], // Número de estudiantes con pago
+// --- 2. Obtener datos para gráficos (Pagos Mensuales) ---
+let chartData = {
+    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'], // Labels completos
+    ganancias: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+    estudiantes: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
 };
 
+async function fetchChartData() {
+    try {
+        const urlPayments = new URL('/api/payments/monthly', Astro.url.origin);
+        const res = await fetch(urlPayments); 
+        if (res.ok) {
+            const data = await res.json();
+            // La API debe devolver un objeto con las claves 'labels', 'ganancias', 'estudiantes'
+            return data; 
+        }
+    } catch (e) {
+        console.warn("API de datos de gráficos no disponible.", e);
+    }
+    return null;
+}
+const apiChartData = await fetchChartData();
+if (apiChartData && Array.isArray(apiChartData.ganancias) && Array.isArray(apiChartData.estudiantes)) {
+    chartData = apiChartData;
+}
+
+// --- 3. Obtener cantidad total de estudiantes (Con Fallback) ---
+let studentsCount = 0;
+
+async function getStudentsCount() {
+    let count = 0;
+    try {
+        const urlStudents = new URL('/api/students', Astro.url.origin);
+        const res = await fetch(urlStudents);
+        if (res.ok) {
+            const list = await res.json();
+            if (Array.isArray(list)) {
+                count = list.length;
+            } else if (list && Array.isArray(list.data)) {
+                count = list.data.length;
+            }
+        }
+    } catch (e) {
+        // Falló la API, intenta la lista local
+    }
+
+    if (count === 0) {
+        try {
+            // Importa la lista local de estudiantes
+            const mod = await import('../data/estudiantes_lista.js');
+            const localList = mod.default || mod.students || [];
+            if (Array.isArray(localList)) count = localList.length;
+        } catch (e) {
+            // No existe archivo local
+        }
+    }
+    return count;
+}
+studentsCount = await getStudentsCount();
+
+
 // ---------------------------------------------------------------------
-// 2. FORMATEO DE VALORES PARA LA UI
+// 2. FORMATEO DE VALORES FINALES PARA LA UI
 // ---------------------------------------------------------------------
-const formatCurrency = (value) => `$${value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 const formattedRecaudado = formatCurrency(totalRecaudado);
 const formattedPendiente = formatCurrency(totalPendiente);
 
-// Se mapea la data de conceptos para que el amount regrese como string formateado a la tabla
 const formattedConceptData = conceptData.map(c => ({
-    ...c,
-    amount: formatCurrency(c.amount)
+    ...c,
+    amount: formatCurrency(c.amount)
 }));
 
-// -----------------------------
-// Obtener cantidad real de estudiantes
-// Intenta API (/api/students) y si no está disponible hace fallback dinámico a src/data/students.js
-// -----------------------------
-let studentsCount = 0;
-
-try {
-    const res = await fetch('/api/students');
-    if (res.ok) {
-        const list = await res.json();
-        if (Array.isArray(list)) {
-            studentsCount = list.length;
-        } else if (list && Array.isArray(list.data)) {
-            studentsCount = list.data.length;
-        }
-    }
-} catch (e) {
-    // error de red o endpoint no disponible -> se intentará fallback local
-}
-
-if (!studentsCount) {
-    try {
-        const mod = await import('../data/students.js');
-        const localList = mod.default || mod.students || [];
-        if (Array.isArray(localList)) studentsCount = localList.length;
-    } catch (e) {
-        // no existe archivo local -> queda 0
-    }
-}
-
 ---
-<Layout title="Dashboard - CBTA 71">
-    
-    <!-- CONTENEDOR DE ANCHO COMPLETO PARA ASEGURAR ESPACIO -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<Layout title="Dashboard - SIGE">
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* --- TÍTULO DE LA SECCIÓN --- */}
-        <div class="flex items-center gap-4 mb-6 md:mb-8"> 
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M4 4h8v4h-8z"></path>
-                <path d="M4 12h8v8h-8z"></path>
-                <path d="M16 4h4v8h-4z"></path>
-                <path d="M16 16h4v4h-4z"></path>
-            </svg>
-            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Resumen General</h1>
-        </div>
+        {/* --- TÍTULO DE LA SECCIÓN --- */}
+        <div class="flex items-center gap-4 mb-6 md:mb-8"> 
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 4h8v4h-8z"></path>
+                <path d="M4 12h8v8h-8z"></path>
+                <path d="M16 4h4v8h-4z"></path>
+                <path d="M16 16h4v4h-4z"></path>
+            </svg>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Resumen General</h1>
+        </div>
 
-        {/* --- SECCIÓN DE TARJETAS: DATOS DINÁMICOS --- */}
-        <div class="flex flex-row space-x-4 mb-8 overflow-x-auto pb-4">
-            
-            <CardInfo 
-                title="Total Estudiantes" 
-                value={String(studentsCount)} 
-                description="Matriculados 2024" 
-                icon="students" 
-                href="/estudiante_lista" 
-                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
-            />
-            
-            <CardInfo 
-                title="Pagos Pendientes" 
-                value={formattedPendiente} 
-                description={`${conceptosPendientesCount} conceptos`} 
-                icon="pending" 
-                href="/pagos?status=pendientes" 
-                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
-            />
-            
-            <CardInfo 
-                title="Total Recaudado" 
-                value={formattedRecaudado} 
-                description="Ganancia histórica" 
-                icon="recaudado" 
-                href="/reportes/recaudacion" 
-                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
-            />
-        </div>
+        {/* --- SECCIÓN DE TARJETAS: DATOS DINÁMICOS --- */}
+        <div class="flex flex-row space-x-4 mb-8 overflow-x-auto pb-4">
+            
+            <CardInfo 
+                title="Total Estudiantes" 
+                value={String(studentsCount)} 
+                description="Matriculados 2024" 
+                icon="students" 
+                href="/estudiante_lista" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+            
+            <CardInfo 
+                title="Pagos Pendientes" 
+                value={formattedPendiente} 
+                description={`${conceptosPendientesCount} conceptos`} 
+                icon="pending" 
+                href="/pagos?status=pendientes" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+            
+            <CardInfo 
+                title="Total Recaudado" 
+                value={formattedRecaudado} 
+                description="Ganancia histórica" 
+                icon="recaudado" 
+                href="/reportes/recaudacion" 
+                class="flex-shrink-0 w-80 md:w-1/3 min-w-0"
+            />
+        </div>
 
-        {/* --- BOTONES DE FILTRO --- */}
-        <div class="flex gap-4 mb-6 md:mb-8">
-        <button class="px-4 md:px-6 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm md:text-base shadow-md transition hover:bg-[#3b7666] duration-200">Año actual</button>
-        <button class="px-4 md:px-6 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-semibold text-sm md:text-base shadow-md transition duration-200">Todos</button>
-        </div>
+        {/* --- BOTONES DE FILTRO --- */}
+        <div class="flex gap-4 mb-6 md:mb-8">
+            <button class="px-4 md:px-6 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm md:text-base shadow-md transition hover:bg-[#3b7666] duration-200">Año actual</button>
+            <button class="px-4 md:px-6 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-semibold text-sm md:text-base shadow-md transition duration-200">Todos</button>
+        </div>
 
-        {/* --- SECCIÓN DE GRÁFICOS (LAYOUT 1x2 en desktop) --- */}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
-            
-            {/* Gráfico de Línea - 2/3 de ancho en desktop (lg:col-span-2) */}
-            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 lg:col-span-2">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Evolución de Pagos y Estudiantes (Mensual)</h2>
-                <ChartLine data={chartData} />
-            </div>
-            
-            {/* Gráfico de Donut/Anillo - 1/3 de ancho en desktop (lg:col-span-1) */}
-            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 flex flex-col justify-center items-center lg:col-span-1">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Recaudación vs. Pendiente</h2>
-                {/* Datos calculados de forma dinámica */}
-                <ChartDonut 
-                    recaudado={totalRecaudado} 
-                    pendiente={totalPendiente}
-                /> 
-                <p class="text-md md:text-lg font-semibold text-gray-700 mt-4">Meta: {formatCurrency(totalGeneral)}</p>
-            </div>
-        </div>
+        {/* --- SECCIÓN DE GRÁFICOS (LAYOUT 1x2 en desktop) --- */}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
+            
+            {/* Gráfico de Línea - 2/3 de ancho en desktop (lg:col-span-2) */}
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 lg:col-span-2">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Evolución de Pagos y Estudiantes (Mensual)</h2>
+                <ChartLine data={chartData} />
+            </div>
+            
+            {/* Gráfico de Donut/Anillo - 1/3 de ancho en desktop (lg:col-span-1) */}
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 flex flex-col justify-center items-center lg:col-span-1">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Recaudación vs. Pendiente</h2>
+                <ChartDonut 
+                    recaudado={totalRecaudado} 
+                    pendiente={totalPendiente}
+                /> 
+                <p class="text-md md:text-lg font-semibold text-gray-700 mt-4">Meta: {formatCurrency(totalGeneral)}</p>
+            </div>
+        </div>
 
-        {/* --- SECCIÓN DE TABLA DE CONCEPTOS --- */}
-        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 overflow-x-auto"> 
-            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Conceptos Activos</h2>
-            <ConceptsTable concepts={formattedConceptData} />
-        </div>
+        {/* --- SECCIÓN DE TABLA DE CONCEPTOS --- */}
+        <div class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200 overflow-x-auto"> 
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Conceptos Activos</h2>
+            <ConceptsTable concepts={formattedConceptData} />
+        </div>
 
-    </div>
+    </div>
 </Layout>

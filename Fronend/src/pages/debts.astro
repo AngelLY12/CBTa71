@@ -1,484 +1,513 @@
 ---
-import Layout from '../layouts/Layout.astro';
-// RECUERDA: Debes incluir el script de Alpine.js en tu Layout.astro para que el modal funcione.
-// Ejemplo: <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+// src/pages/pago_estado.astro
+import Layout from "../layouts/Layout.astro"; 
+
+const pageTitle = "Estado de Pagos - CBTA 71";
 ---
+<Layout title={pageTitle}>
+  <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-gray-50/50 min-h-screen">
 
-<Layout title="Adeudos">
-    <div class="bg-white p-6 rounded-2xl shadow-xl space-y-6" x-data="arrearsData()" x-init="init()" x-cloak>
-        <div class="flex items-center justify-between space-x-3 text-[#2e594d] border-b pb-4 border-[#e5e7eb]">
-            <div class="flex items-center space-x-3">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-users" width="32" height="32" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                    <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
-                    <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
-                    <path d="M16 3.161a3 3 0 1 0 3.839 3.839"></path>
-                    <path d="M16 14v-1a4 4 0 0 1 4 -4h1"></path>
-                </svg>
-                <h1 class="text-2xl font-bold">Adeudos</h1>
-            </div>
+    <header class="flex justify-between items-center mb-10 pb-4 border-b-2 border-green-700/10">
+      <div class="flex items-center">
+        <div class="p-3 bg-[#2e594d] rounded-xl shadow-lg mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 4v2m0 2v2m0 0V4m-7 8a7 7 0 1114 0 7 7 0 01-14 0z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+            Estado de Pagos
+          </h1>
+          <p class="text-sm text-gray-500 mt-1">Monitoreo y gestión de transacciones de estudiantes.</p>
+        </div>
+      </div>
 
-            <!-- Botón para abrir modal de validar pago -->
-            <div>
-                <button 
-                    class="open-validate-btn inline-flex items-center gap-2 px-4 py-2 bg-[#2e594d] text-white rounded-lg hover:bg-[#234539]"
-                    @click="openValidateModal()"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 5v14"></path><path d="M5 12h14"></path>
-                    </svg>
-                    Validar adeudo
+      <div class="flex gap-3 items-center">
+        <button id="open-pay-modal-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out flex items-center text-sm font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Registrar Pago Manual
+        </button>
+
+        <select id="method-filter" class="border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-green-500 focus:border-green-500 transition">
+          <option value="all">Todos los métodos</option>
+          <option value="tarjeta">💳 Tarjeta</option>
+          <option value="referenciado">📄 Pago referenciado</option>
+          <option value="transferencia">🏦 Transferencia</option>
+          <option value="otro">Otro / Efectivo</option>
+        </select>
+      </div>
+    </header>
+
+    <div class="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-x-auto mb-6">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-[#2e594d] sticky top-0 z-10">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Concepto</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Monto</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Método</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">N. Control</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Nombre del Alumno</th>
+            <th class="px-6 py-3 text-right text-xs font-bold text-white uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="payments-table-body" class="bg-white divide-y divide-gray-100">
+          </tbody>
+      </table>
+    </div>
+
+    <div id="pay-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 transition-opacity duration-300 ease-out opacity-0">
+      <div class="bg-white rounded-xl w-full max-w-lg p-8 shadow-2xl transform scale-95 transition-transform duration-300 ease-out">
+        <h3 class="text-xl font-bold text-gray-900 mb-6 border-b pb-2">Registrar Pago Manual ✍️</h3>
+        <form id="pay-form" class="space-y-4">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="pay-student-id" class="block text-sm font-medium text-gray-700 mb-1">Matrícula / N. Control</label>
+              <input id="pay-student-id" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm focus:ring-green-500 focus:border-green-500 placeholder-gray-400 transition" placeholder="Matrícula o N. Control" required />
+            </div>
+
+            <div>
+              <label for="pay-amount" class="block text-sm font-medium text-gray-700 mb-1">Monto (MXN)</label>
+              <input id="pay-amount" type="number" step="0.01" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm focus:ring-green-500 focus:border-green-500 transition" placeholder="Ej: 1500.00" required />
+            </div>
+          </div>
+
+          <div>
+            <label for="pay-method" class="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
+            <select id="pay-method" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm focus:ring-green-500 focus:border-green-500 bg-white transition">
+              <option value="tarjeta">💳 Tarjeta (Físico)</option>
+              <option value="referencia">📄 Referencia Bancaria (Manual)</option>
+              <option value="transferencia">🏦 Transferencia / SPEI</option>
+              <option value="efectivo">💵 Efectivo (Caja)</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          
+          <div>
+            <label for="pay-ref" class="block text-sm font-medium text-gray-700 mb-1">Referencia / Folio (opcional)</label>
+            <input id="pay-ref" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 shadow-sm focus:ring-green-500 focus:border-green-500 placeholder-gray-400 transition" placeholder="Folio de transferencia o referencia" />
+          </div>
+
+          <div class="flex justify-end gap-3 pt-6">
+            <button type="button" id="pay-cancel" class="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-100 transition font-medium">Cancelar</button>
+            <button type="submit" class="px-5 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition font-medium flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h-2v5.586l-.293-.293z" /><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm-5-8a1 1 0 011-1h8a1 1 0 011 1v1a1 1 0 01-1 1H6a1 1 0 01-1-1v-1z" /></svg>
+                Guardar Pago
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 transition-opacity duration-300 ease-out opacity-0">
+        <div class="bg-white rounded-xl w-full max-w-xl p-8 shadow-2xl transform scale-95 transition-transform duration-300 ease-out">
+            <h3 class="text-xl font-bold text-gray-900 mb-6 border-b pb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Detalle de Transacción
+            </h3>
+            
+            <div class="space-y-6">
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                    <h4 class="text-base font-bold text-blue-800 flex items-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.98 5.98 0 0010 16a5.979 5.979 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" /></svg>
+                        Datos del Estudiante
+                    </h4>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div>
+                            <dt class="text-gray-500 font-medium">Nombre Completo:</dt>
+                            <dd id="detail-student-name" class="text-gray-900 font-semibold"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 font-medium">N. Control / Matrícula:</dt>
+                            <dd id="detail-student-control" class="text-gray-900"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 font-medium">Carrera:</dt>
+                            <dd id="detail-student-carrera" class="text-gray-900"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 font-medium">Adeudo Pendiente Total:</dt>
+                            <dd id="detail-student-adeudo" class="text-2xl font-extrabold text-red-600"></dd>
+                        </div>
+                    </dl>
+                </div>
+                
+                <div class="border-t pt-4">
+                    <h4 class="text-base font-bold text-gray-800 flex items-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 4v2m0 2v2m0 0V4m-7 8a7 7 0 1114 0 7 7 0 01-14 0z" /></svg>
+                        Detalles de la Transacción
+                    </h4>
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div>
+                            <dt class="text-gray-500 font-medium">Monto Pagado:</dt>
+                            <dd id="detail-payment-amount" class="text-gray-900 font-bold text-lg"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 font-medium">Fecha de Pago:</dt>
+                            <dd id="detail-payment-date" class="text-gray-900"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 font-medium">Concepto:</dt>
+                            <dd id="detail-payment-concept" class="text-gray-900"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 font-medium">Método:</dt>
+                            <dd id="detail-payment-method" class="text-gray-900"></dd>
+                        </div>
+                        <div class="col-span-2">
+                            <dt class="text-gray-500 font-medium">Referencia/Folio:</dt>
+                            <dd id="detail-payment-reference" class="text-gray-900 italic"></dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+                        <div class="flex justify-between pt-6 border-t mt-6">
+                <button type="button" id="detail-delete-btn" class="px-5 py-2 bg-red-100 border border-red-300 text-red-700 rounded-lg shadow-sm hover:bg-red-200 transition font-medium flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Eliminar Transacción
                 </button>
-            </div>
-        </div>
+                <button type="button" id="detail-close" class="px-5 py-2 bg-gray-100 border border-gray-300 text-gray-700 rounded-lg shadow-sm hover:bg-gray-200 transition font-medium">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
-        <div class="space-y-6">
-            <div class="flex items-center space-x-3 text-lg font-semibold text-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-table" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                    <path d="M4 14m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
-                    <path d="M4 6m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
-                    <path d="M4 14h16"></path>
-                </svg>
-                <span>Registros de pagos / sesiones (pendientes y concretados)</span>
-            </div>
-            
-            <div class="flex items-center space-x-4">
-                <div class="relative flex-1">
-                    <input 
-                        type="text" 
-                        x-model="searchTerm" 
-                        placeholder="Buscar por ID, matrícula o nombre" 
-                        class="w-full h-10 pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:border-[#3b7666] focus:ring-1 focus:ring-[#3b7666] transition duration-200"
-                        @input.debounce.300ms="filterData"
-                    >
-                    <button @click="filterData" class="absolute inset-y-0 left-0 px-3 flex items-center text-gray-500 hover:text-[#2e594d]">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                            <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"></path>
-                            <path d="M21 21l-6 -6"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="overflow-x-auto rounded-xl border-t border-gray-300">
-            <table class="min-w-full">
-                <thead class="bg-white text-left">
-                    <tr>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">N. Control / Matrícula</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">NOMBRE</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">CONCEPTO</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer select-none" @click="sortBy = 'Monto', sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'">
-                            <div class="flex items-center justify-end">
-                                MONTO
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-selector ml-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                    <path d="M8 9l4 -4l4 4"></path>
-                                    <path d="M16 15l-4 4l-4 -4"></path>
-                                </svg>
-                            </div>
-                        </th>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">ESTADO</th>
-                        <th class="px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider">FECHA</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white">
-                    <template x-for="(item, index) in paginatedData" :key="item.id">
-                        <tr :class="index % 2 === 0 ? 'bg-white' : 'bg-[#f0fff4]'">
-                            <td x-text="item.id" class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-b border-gray-200"></td>
-                            <td x-text="item.control" class="px-6 py-3 whitespace-nowrap text-sm text-gray-700 border-b border-gray-200"></td>
-                            <td x-text="item.name" class="px-6 py-3 whitespace-nowrap text-sm text-gray-700 border-b border-gray-200"></td>
-                            <td x-text="item.concept" class="px-6 py-3 whitespace-nowrap text-sm text-gray-700 border-b border-gray-200"></td>
-                            <td class="px-6 py-3 whitespace-nowrap text-sm font-semibold text-gray-800 border-b border-gray-200 text-right"><span x-text="formatCurrency(item.amount)"></span></td>
-                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700 border-b border-gray-200"><span :class="item.status === 'paid' ? 'text-green-600 font-semibold' : 'text-yellow-700' " x-text="item.statusLabel"></span></td>
-                            <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-600 border-b border-gray-200" x-text="item.dateLabel"></td>
-                        </tr>
-                    </template>
-                    <tr x-show="paginatedData.length === 0">
-                        <td colspan="7" class="text-center py-6 text-gray-500">No se encontraron registros.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+  </div>
 
-        <nav class="flex items-center justify-center pt-4" aria-label="Pagination">
-            <div class="flex-1 flex justify-between sm:justify-center items-center space-x-2 text-sm">
-                <button @click="currentPage > 1 && currentPage--" :disabled="currentPage === 1" class="text-gray-500 disabled:opacity-50 hover:text-[#2e594d] transition-colors flex items-center">&larr; Previous</button>
-                
-                <div class="flex space-x-1 items-center">
-                    <template x-for="page in totalPages" :key="page">
-                        <button 
-                            x-show="shouldShowPage(page)"
-                            @click="currentPage = page" 
-                            x-text="page" 
-                            :class="{'bg-gray-800 text-white': currentPage === page, 'text-gray-700 hover:bg-gray-100': currentPage !== page, 'px-3 py-1 rounded-full text-sm font-medium transition-colors': true}"
-                        ></button>
-                    </template>
-                    <span x-show="totalPages > 5 && currentPage < totalPages - 2" class="px-1 py-1 text-gray-500">...</span>
-                </div>
-                
-                <button @click="currentPage < totalPages && currentPage++" :disabled="currentPage === totalPages" class="text-gray-500 disabled:opacity-50 hover:text-[#2e594d] transition-colors flex items-center">Next &rarr;</button>
-            </div>
-        </nav>
+  <script type="module" client:load>
+    // Mapeo de carreras (debe ser el mismo que uses en la vista de alumnos)
+    const CARRERA_MAP = {
+        'AGR': 'Agronomía',
+        'INF': 'Informática',
+        'ADM': 'Administración',
+        'TEC': 'Ofimática',
+        '': 'Sin Carrera',
+        '0': 'Sin Carrera',
+    };
 
-    </div>
+    // Variable para almacenar el ID del cargo que se está viendo/editando
+    let currentChargeId = null; 
 
-    <!-- Modal: Validar adeudo (imagen UI) -->
-    <div id="validate-modal-overlay" x-show="showValidateModal" x-cloak @click="closeValidateModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div @click.stop class="bg-white rounded-2xl w-full max-w-xl p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-800">Validar adeudo</h3>
-          <button class="close-validate-btn text-gray-500 hover:text-gray-800" @click="closeValidateModal()">&times;</button>
-        </div>
+    // --- UTILERIAS DE DATOS ---
+    const getCharges = () => { try { return JSON.parse(localStorage.getItem('chargesList') || '[]'); } catch(e){ return []; } };
+    const getStudents = () => { try { return JSON.parse(localStorage.getItem('studentsList') || '[]'); } catch(e){ return []; } };
+    const getConcepts = () => { try { return JSON.parse(localStorage.getItem('conceptsList') || '[]'); } catch(e){ return []; } };
+    const saveCharges = (arr) => { localStorage.setItem('chargesList', JSON.stringify(arr)); try{ localStorage.setItem('chargesLastUpdate', Date.now().toString()); }catch(e){} };
 
-        <div class="grid grid-cols-2 gap-4">
-          <div class="col-span-1">
-            <label class="block text-sm text-gray-600 mb-1">Alumno</label>
-            <div class="flex gap-2">
-              <input x-ref="validateInput" x-model="validateStudentInput" @keyup.enter="searchStudent()" type="text" placeholder="N.Control o CURP de alumno" class="w-full border rounded px-3 py-2" />
-              <button @click="searchStudent()" class="px-3 py-2 bg-[#2e594d] text-white rounded">Buscar</button>
-            </div>
-            <template x-if="foundStudent">
-              <div class="mt-3 flex items-center text-green-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 6L9 17l-5-5"></path>
-                </svg>
-                <span>Alumno encontrado: <strong x-text="foundStudent.name"></strong></span>
-              </div>
-            </template>
-            <template x-if="!foundStudent && validateStudentInput">
-              <div class="mt-3 text-sm text-red-600">No se encontró alumno.</div>
-            </template>
-          </div>
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const fmtCurrency = n => { const v = Number(n || 0); return '$' + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    
+    // Función mejorada para formatear la fecha
+    const parseDate = d => { 
+        try { 
+            if (!d) return '-'; 
+            const dt = new Date(d); 
+            if (isNaN(dt.getTime())) return String(d).slice(0, 16); 
+            return dt.toLocaleString('es-MX', { 
+                year: 'numeric', month: '2-digit', day: '2-digit', 
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: true
+            }); 
+        } catch(e){ return String(d); } 
+    };
+    
+    // Función NUEVA: Calcula el total de adeudo (cargos pendientes) para un estudiante
+    function getStudentAdeudo(studentId) {
+        try {
+            const charges = getCharges();
+            // Filtrar solo los cargos que NO han sido pagados (status != 'paid')
+            return charges
+              .filter(c => 
+                (String(c.studentId) === String(studentId)) && 
+                (String(c.status || 'pending').toLowerCase() !== 'paid' && String(c.status || 'pending').toLowerCase() !== 'pagado')
+              )
+              .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+        } catch (e) {
+            return 0;
+        }
+    }
 
-          <div class="col-span-1">
-            <label class="block text-sm text-gray-600 mb-1">Código</label>
-            <input x-model="validateCode" type="text" placeholder="Escribe el código generado" class="w-full border rounded px-3 py-2" />
-            <div class="text-sm text-gray-500 mt-2">Introduce el código de sesión/pago (Stripe / referencia).</div>
-          </div>
-        </div>
 
-        <div class="mt-6">
-          <div class="flex gap-3 justify-end">
-            <button class="close-validate-btn px-4 py-2 border rounded" @click="closeValidateModal()" type="button">Cancelar</button>
-            <button @click="validatePayment()" :disabled="!foundStudent || !validateCode" type="button" class="px-6 py-2 bg-green-600 text-white rounded disabled:opacity-50">
-              Validar pago
-            </button>
-          </div>
+    // --- CONSTRUCCIÓN DE LA LISTA UNIFICADA ---
+    function buildPaymentsList() {
+      const charges = getCharges();
+      const students = getStudents();
+      const concepts = getConcepts();
+      
+      if (!Array.isArray(charges) || charges.length === 0) return [];
+      
+      const list = charges.map(ch => {
+        // Buscar estudiante por ID, N. Control o matrícula
+        const student = students.find(s => 
+            String(s.id) === String(ch.studentId) || 
+            String(s.numControl) === String(ch.studentId) || 
+            String(s.matricula) === String(ch.studentId)
+        ) || {};
+        
+        // Buscar concepto por ID
+        const concept = concepts.find(c => String(c.id) === String(ch.conceptId)) || {};
+        
+        const methodRaw = (ch.method || ch.paymentMethod || ch.metodo || '').toString().toLowerCase();
 
-          <div class="mt-4">
-            <template x-if="validateMessage">
-              <div class="text-sm text-green-700" x-text="validateMessage"></div>
-            </template>
-            <template x-if="validateError">
-              <div class="text-sm text-red-600" x-text="validateError"></div>
-            </template>
-          </div>
-        </div>
-      </div>
-    </div>
+        return {
+          id: ch.id || ('chg_' + Math.random().toString(36).slice(2,8)),
+          date: ch.paidAt || ch.createdAt || ch.created || ch.date || null,
+          conceptTitle: concept.title || concept.concept || ch.conceptTitle || 'Pago Genérico',
+          amount: ch.amount ?? ch.monto ?? concept.amount ?? concept.monto ?? 0,
+          method: methodRaw,
+          reference: ch.reference || '-', // Añadir referencia al objeto
+          studentControl: student.numControl ?? student.matricula ?? ch.studentId ?? '-',
+          studentName: [student.nombre, student.apellidoP, student.apellidoM].filter(Boolean).join(' ') || student.fullName || student.name || 'Alumno Desconocido',
+          studentCarrera: student.carrera || student.career || '-', // Añadir carrera
+          studentId: student.id || ch.studentId, // Asegurar el ID del estudiante
+          status: (ch.status || 'paid').toLowerCase()
+        };
+      });
 
-    <script>
-        function arrearsData() {
-            // Helper to read various localStorage keys used across the app
-            function safeParse(key) {
-                try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { return []; }
-            }
+      // Ordenar por fecha, el más reciente primero
+      return list.sort((a,b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return db - da;
+      });
+    }
 
-            function getCharges() {
-                return safeParse('chargesList');
-            }
-            function saveCharges(arr) {
-                try { localStorage.setItem('chargesList', JSON.stringify(arr)); localStorage.setItem('chargesLastUpdate', Date.now().toString()); } catch(e) {}
-            }
-            function getStudents() {
-                return safeParse('studentsList');
-            }
-            // potential keys where minimal stripe session records could be stored
-            function getSessions() {
-                const candidates = ['paymentSessions', 'stripeSessions', 'pendingPayments', 'paymentsPending', 'payment_sessions'];
-                for (const k of candidates) {
-                    const data = safeParse(k);
-                    if (Array.isArray(data) && data.length) return data;
-                }
-                return [];
-            }
+    // --- LÓGICA DE FILTRADO (MANTENIDA) ---
+    function methodMatchesFilter(method, filter) {
+      if (!filter || filter === 'all') return true;
+      if (!method) return (filter === 'otro'); 
 
-            // find student full name / control
-            function findStudentInfo(students, sidOrCurp) {
-                if (!students || !students.length) return null;
-                const s = students.find(x => String(x.id) === String(sidOrCurp) || String(x.numControl) === String(sidOrCurp) || String(x.matricula) === String(sidOrCurp) || (x.curp && String(x.curp).toLowerCase() === String(sidOrCurp).toLowerCase()));
-                if (!s) return null;
-                const name = [s.nombre, s.apellidoP, s.apellidoM].filter(Boolean).join(' ').trim() || s.fullName || s.name || '-';
-                const control = s.numControl ?? s.matricula ?? s.id ?? '-';
-                return { name, control, raw: s };
-            }
+      const m = method.toLowerCase();
+      
+      if (filter === 'tarjeta') return m.includes('tarjeta') || m.includes('card');
+      if (filter === 'referenciado') return m.includes('referen'); 
+      if (filter === 'transferencia') return m.includes('transfer') || m.includes('spei') || m.includes('bank');
+      
+      if (filter === 'otro') {
+          return !methodMatchesFilter(method, 'tarjeta') && 
+                 !methodMatchesFilter(method, 'referenciado') && 
+                 !methodMatchesFilter(method, 'transferencia');
+      }
 
-            return {
-                items: [],
-                filteredItems: [],
-                searchTerm: '',
-                sortBy: 'Monto',
-                sortDirection: 'desc',
-                itemsPerPage: 12,
-                currentPage: 1,
+      return false;
+    }
 
-                // validate modal state
-                showValidateModal: false,
-                validateStudentInput: '',
-                validateCode: '',
-                foundStudent: null,
-                validateMessage: null,
-                validateError: null,
+    // --- RENDERIZADO DE LA TABLA ---
+    function renderPayments(filter = 'all') {
+      const tbody = document.getElementById('payments-table-body');
+      if (!tbody) return;
 
-                init() {
-                    this.loadData();
-                    // listen localStorage changes made elsewhere
-                    window.addEventListener('storage', (e) => {
-                        if (['chargesList','studentsList','paymentSessions','stripeSessions','pendingPayments','paymentsPending'].includes(e.key)) {
-                            this.loadData();
-                        }
-                    });
-                },
+      const list = buildPaymentsList();
+      const filtered = list.filter(item => methodMatchesFilter(item.method, filter));
+      
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 font-medium text-base">😔 No hay registros de pagos para el filtro seleccionado.</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = filtered.map(r => {
+        const rowClass = 'hover:bg-green-50/20'; 
+        
+        return `
+          <tr class="${rowClass} transition duration-150 ease-in-out">
+            <td class="px-6 py-4 text-sm text-gray-600">${esc(parseDate(r.date))}</td>
+            <td class="px-6 py-4 text-sm text-gray-800 font-medium">${esc(r.conceptTitle)}</td>
+            <td class="px-6 py-4 text-sm text-green-700 font-bold">${esc(fmtCurrency(r.amount))}</td>
+            <td class="px-6 py-4 text-sm text-gray-700">${esc(r.method)}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${esc(r.studentControl)}</td>
+            <td class="px-6 py-4 text-sm text-gray-800">${esc(r.studentName)}</td>
+            <td class="px-6 py-4 text-right text-sm">
+              <button data-id="${esc(r.id)}" data-student-id="${esc(r.studentId)}" class="px-3 py-1 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition view-payment">Ver Detalle</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
 
-                openValidateModal() {
-                  this.validateStudentInput = '';
-                  this.validateCode = '';
-                  this.foundStudent = null;
-                  this.validateMessage = null;
-                  this.validateError = null;
-                  this.showValidateModal = true;
-                  // focus input after modal opens
-                  this.$nextTick(() => { if (this.$refs.validateInput) this.$refs.validateInput.focus(); });
-                },
+    // --- LÓGICA DE MODALES ---
+    const payModal = document.getElementById('pay-modal');
+    const payForm = document.getElementById('pay-form');
+    
+    const detailModal = document.getElementById('detail-modal');
+    const detailDeleteBtn = document.getElementById('detail-delete-btn');
+    
+    // Función genérica para abrir modal
+    const openModal = (modalEl) => {
+        modalEl.classList.remove('hidden', 'opacity-0'); 
+        modalEl.classList.add('flex');
+        // Usamos setTimeout para asegurar que la clase 'scale-95' se remova después de que 'flex' sea aplicado.
+        setTimeout(() => {
+            modalEl.classList.remove('opacity-0');
+            modalEl.querySelector('.scale-95')?.classList.remove('scale-95');
+            modalEl.querySelector('.scale-95')?.classList.add('scale-100');
+        }, 10);
+    };
+    
+    // Función genérica para cerrar modal
+    const closeModal = (modalEl) => {
+        modalEl.querySelector('.scale-100')?.classList.remove('scale-100');
+        modalEl.querySelector('.scale-95')?.classList.add('scale-95');
+        modalEl.classList.add('opacity-0');
+        // Limpiar el ID de la transacción al cerrar el modal de detalle
+        if (modalEl === detailModal) {
+            currentChargeId = null;
+        }
+        setTimeout(() => {
+            modalEl.classList.add('hidden'); 
+            modalEl.classList.remove('flex');
+        }, 300); 
+    };
 
-                closeValidateModal() {
-                  this.showValidateModal = false;
-                  // clear modal state on close
-                  this.validateStudentInput = '';
-                  this.validateCode = '';
-                  this.foundStudent = null;
-                  this.validateMessage = null;
-                  this.validateError = null;
-                },
+    // Abre el modal de Registro de Pago
+    const openPayModal = (sid = '') => {
+        document.getElementById('pay-student-id').value = sid;
+        document.getElementById('pay-amount').value = '';
+        document.getElementById('pay-ref').value = '';
+        document.getElementById('pay-method').value = 'efectivo';
+        openModal(payModal);
+        document.getElementById('pay-student-id').focus();
+    };
 
-                searchStudent() {
-                  if (!this.validateStudentInput) {
-                    this.foundStudent = null;
-                    return;
-                  }
-                  const students = getStudents();
-                  const res = findStudentInfo(students, this.validateStudentInput.trim());
-                  this.foundStudent = res;
-                  this.validateMessage = null;
-                  this.validateError = null;
-                },
+    // Cierra el modal de Registro de Pago
+    document.getElementById('pay-cancel')?.addEventListener('click', () => closeModal(payModal));
+    
+    // Cierra el modal de Detalle
+    document.getElementById('detail-close')?.addEventListener('click', () => closeModal(detailModal));
 
-                // combine payments (charges) and pending sessions into a single list
-                loadData() {
-                    const charges = getCharges();
-                    const sessions = getSessions();
-                    const students = getStudents();
+    // Función para mostrar los detalles
+    function showDetailModal(chargeId) {
+        const list = buildPaymentsList();
+        const charge = list.find(c => c.id === chargeId);
+        
+        if (!charge) {
+            alert('Error: No se encontró el detalle de pago.');
+            return;
+        }
 
-                    const chargesBySessionId = new Set((charges || []).map(c => String(c.sessionId || c.session || c.id || '').trim()).filter(Boolean));
+        // ESTABLECER EL ID DEL PAGO ACTUAL
+        currentChargeId = chargeId;
 
-                    const sessionItems = (sessions || []).map(s => {
-                        const sid = s.id || s.sessionId || s.paymentId || s.code || ('sess_' + (s._id || Math.random().toString(36).slice(2,8)));
-                        // skip if there is a corresponding charge already recorded
-                        if (chargesBySessionId.has(String(sid))) return null;
-                        const studentInfo = (s.studentId || s.student || s.studentControl) ? (findStudentInfo(students, s.studentId || s.student || s.studentControl) || {name:'-', control: s.studentId||s.student||s.studentControl||'-'}) : {name:'-', control:'-'};
-                        return {
-                            id: String(sid),
-                            sessionId: String(sid),
-                            name: studentInfo.name,
-                            control: studentInfo.control,
-                            concept: s.conceptTitle || s.concept || s.description || 'Pago pendiente',
-                            amount: Number(s.amount || s.total || s.value || 0),
-                            status: 'pending',
-                            statusLabel: 'Pendiente',
-                            date: s.createdAt || s.created || s.date || null,
-                            dateLabel: s.createdAt ? new Date(s.createdAt).toLocaleString() : (s.date ? String(s.date) : '-')
-                        };
-                    }).filter(Boolean);
+        // Obtener datos del estudiante y el adeudo
+        const totalAdeudo = getStudentAdeudo(charge.studentId);
+        const carreraDisplay = CARRERA_MAP[charge.studentCarrera] || charge.studentCarrera;
 
-                    const chargeItems = (charges || []).map(c => {
-                        const studentInfo = (c.studentId || c.student || c.studentControl) ? (findStudentInfo(students, c.studentId || c.student || c.studentControl) || {name:'-', control: c.studentId||c.student||c.studentControl||'-'}) : {name:'-', control:'-'};
-                        const id = c.id || c.chargeId || ('chg_' + Math.random().toString(36).slice(2,8));
-                        const dateVal = c.paidAt || c.createdAt || c.created || c.date || null;
-                        return {
-                            id: String(id),
-                            sessionId: c.sessionId ? String(c.sessionId) : null,
-                            name: studentInfo.name,
-                            control: studentInfo.control,
-                            concept: c.conceptTitle || c.concept || c.description || '-',
-                            amount: Number(c.amount || c.monto || 0),
-                            status: (c.status || 'paid').toLowerCase(),
-                            statusLabel: (c.status && String(c.status).toLowerCase().includes('paid')) ? 'Pagado' : (c.status || 'Pagado'),
-                            date: dateVal,
-                            dateLabel: dateVal ? new Date(dateVal).toLocaleString() : '-'
-                        };
-                    });
+        // Rellenar datos del ESTUDIANTE y ADEUDO
+        document.getElementById('detail-student-name').textContent = esc(charge.studentName);
+        document.getElementById('detail-student-control').textContent = esc(charge.studentControl);
+        document.getElementById('detail-student-carrera').textContent = esc(carreraDisplay);
+        document.getElementById('detail-student-adeudo').textContent = fmtCurrency(totalAdeudo);
+        
+        // Rellenar datos del PAGO
+        document.getElementById('detail-payment-amount').textContent = fmtCurrency(charge.amount);
+        document.getElementById('detail-payment-date').textContent = parseDate(charge.date);
+        document.getElementById('detail-payment-concept').textContent = esc(charge.conceptTitle);
+        document.getElementById('detail-payment-method').textContent = esc(charge.method);
+        document.getElementById('detail-payment-reference').textContent = esc(charge.reference);
+        
+        openModal(detailModal);
+    }
 
-                    // Merge: sessions first (pending), then charges (completed)
-                    this.items = [...sessionItems, ...chargeItems];
-                    this.filteredItems = [...this.items];
-                    this.currentPage = 1;
-                    this.sortData();
-                },
-
-                formatCurrency(amount) {
-                    const n = Number(amount || 0);
-                    return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                },
-                
-                filterData() {
-                    const q = String(this.searchTerm || '').trim().toLowerCase();
-                    if (!q) {
-                        this.filteredItems = [...this.items];
-                    } else {
-                        this.filteredItems = this.items.filter(item => {
-                            return String(item.id || '').toLowerCase().includes(q) ||
-                                String(item.control || '').toLowerCase().includes(q) ||
-                                String(item.name || '').toLowerCase().includes(q) ||
-                                String(item.concept || '').toLowerCase().includes(q);
-                        });
-                    }
-                    this.currentPage = 1;
-                    this.sortData();
-                },
-
-                // Validate payment using code and foundStudent
-                validatePayment() {
-                  this.validateMessage = null;
-                  this.validateError = null;
-
-                  if (!this.foundStudent) { this.validateError = 'Primero busca y selecciona un alumno.'; return; }
-                  if (!this.validateCode) { this.validateError = 'Introduce el código de sesión/pago.'; return; }
-
-                  const sessions = getSessions();
-                  const charges = getCharges();
-
-                  // buscar sesión por varios campos
-                  const code = String(this.validateCode).trim();
-                  const session = (sessions || []).find(s => {
-                    return String(s.id) === code || String(s.sessionId) === code || String(s.paymentId) === code || String(s.code) === code || String(s.reference) === code;
-                  });
-
-                  // buscar cargo ya existente por sessionId o referencia
-                  const existingCharge = (charges || []).find(c => String(c.sessionId) === code || String(c.reference) === code || String(c.id) === code);
-
-                  if (!session && !existingCharge) {
-                    this.validateError = 'No se encontró sesión ni pago con ese código.';
-                    return;
-                  }
-
-                  if (existingCharge) {
-                    this.validateMessage = 'Pago ya registrado en el sistema.';
-                    // optionally mark as paid or update student adeudo reload
-                    this.loadData();
-                    return;
-                  }
-
-                  // si hay sesión y no existe cargo, crear registro mínimo en chargesList (base de datos mínima)
-                  const amount = Number(session.amount || session.total || session.value || 0);
-                  const now = new Date().toISOString();
-                  const newCharge = {
-                    id: 'chg_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
-                    sessionId: String(session.id || session.sessionId || session.paymentId || session.code || ''),
-                    studentId: this.foundStudent.control,
-                    amount,
-                    method: session.paymentMethod || session.method || session.methodType || 'referenciado',
-                    reference: code,
-                    status: 'paid',
-                    paidAt: now,
-                    createdAt: now
-                  };
-                  charges.push(newCharge);
-                  saveCharges(charges);
-
-                  this.validateMessage = 'Pago validado y registrado correctamente.';
-                  this.validateError = null;
-                  this.loadData();
-                },
-
-                sortData() {
-                    const key = this.sortBy;
-                    this.filteredItems.sort((a, b) => {
-                        let aVal = a[key === 'Monto' ? 'amount' : (key === 'Fecha' ? 'date' : key.toLowerCase())];
-                        let bVal = b[key === 'Monto' ? 'amount' : (key === 'Fecha' ? 'date' : key.toLowerCase())];
-
-                        if (key === 'Monto') {
-                            aVal = Number(aVal || 0);
-                            bVal = Number(bVal || 0);
-                        } else if (key === 'Fecha') {
-                            aVal = aVal ? new Date(aVal).getTime() : 0;
-                            bVal = bVal ? new Date(bVal).getTime() : 0;
-                        } else {
-                            aVal = String(aVal || '').toLowerCase();
-                            bVal = String(bVal || '').toLowerCase();
-                        }
-
-                        if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
-                        if (aVal > bVal) return this.sortDirection === 'asc' ? 1 : -1;
-                        return 0;
-                    });
-                },
-
-                get totalPages() {
-                    return Math.max(1, Math.ceil(this.filteredItems.length / this.itemsPerPage));
-                },
-                get paginatedData() {
-                    this.sortData();
-                    const start = (this.currentPage - 1) * this.itemsPerPage;
-                    const end = start + this.itemsPerPage;
-                    return this.filteredItems.slice(start, end);
-                },
-                
-                shouldShowPage(page) {
-                    if (this.totalPages <= 5) return true;
-                    if (page === 1 || page === this.totalPages) return true;
-                    if (page >= this.currentPage - 1 && page <= this.currentPage + 1) return true;
-                    return false;
-                }
-            }
+    // Función para manejar la eliminación de un pago
+    function handleDeleteCharge(chargeId) {
+        if (!chargeId) {
+            alert('Error: ID de pago no válido.');
+            return;
         }
 
-        // Fallback DOM listeners para asegurar que el modal se cierre aunque Alpine falle
-        document.addEventListener('DOMContentLoaded', () => {
-          const overlay = document.getElementById('validate-modal-overlay');
-          const openBtn = document.querySelector('.open-validate-btn');
-          const closeBtns = document.querySelectorAll('.close-validate-btn');
+        if (!confirm('⚠️ CONFIRMACIÓN: ¿Está seguro de que desea ELIMINAR permanentemente esta transacción de pago? Esta acción no se puede deshacer.')) {
+            return;
+        }
+        
+        let charges = getCharges();
+        const initialLength = charges.length;
+        
+        // Filtrar y eliminar el cargo con el ID correspondiente
+        charges = charges.filter(c => c.id !== chargeId);
 
-          function domClose() {
-            if (overlay) overlay.style.display = 'none';
-            const root = document.querySelector('[x-data]');
-            try {
-              if (root && root.__x && root.__x.$data) {
-                root.__x.$data.showValidateModal = false;
-                root.__x.$data.validateStudentInput = '';
-                root.__x.$data.validateCode = '';
-                root.__x.$data.foundStudent = null;
-                root.__x.$data.validateMessage = null;
-                root.__x.$data.validateError = null;
-              }
-            } catch (e) { /* ignore */ }
-          }
+        if (charges.length === initialLength) {
+             alert('Error: No se encontró la transacción para eliminar.');
+             return;
+        }
 
-          function domOpen() {
-            if (overlay) overlay.style.display = 'flex';
-            const root = document.querySelector('[x-data]');
-            try {
-              if (root && root.__x && root.__x.$data) root.__x.$data.showValidateModal = true;
-              setTimeout(() => { const ref = root ? root.querySelector('[x-ref="validateInput"]') : null; if (ref) ref.focus(); }, 80);
-            } catch (e) { /* ignore */ }
-          }
+        saveCharges(charges);
+        closeModal(detailModal); 
+        renderPayments(document.getElementById('method-filter')?.value || 'all'); 
+        alert('🗑️ Transacción eliminada con éxito.');
+    }
+    
+    // --- LISTENERS ---
 
-          if (openBtn) openBtn.addEventListener('click', domOpen);
-          closeBtns.forEach(b => b.addEventListener('click', domClose));
-          if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) domClose(); });
-        });
-    </script>
+    // 1. Filtro
+    document.getElementById('method-filter')?.addEventListener('change', (e) => renderPayments(e.target.value));
+    
+    // 2. Botón Abrir Modal (principal)
+    document.getElementById('open-pay-modal-btn')?.addEventListener('click', () => openPayModal());
+
+    // 3. Delegación para botón 'Ver Detalle' (AHORA ABRE EL NUEVO MODAL)
+    document.addEventListener('click', (ev) => {
+      const btn = ev.target.closest && ev.target.closest('.view-payment');
+      if (btn) {
+        const id = btn.getAttribute('data-id');
+        showDetailModal(id);
+      }
+    });
+
+    // 4. Botón Eliminar en el Modal de Detalle
+    detailDeleteBtn?.addEventListener('click', () => {
+        if (currentChargeId) {
+            handleDeleteCharge(currentChargeId);
+        } else {
+            alert('Error: No hay transacción seleccionada para eliminar.');
+        }
+    });
+
+
+    // 5. Submit del Formulario
+    payForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const studentId = document.getElementById('pay-student-id').value.trim();
+      const amount = parseFloat(document.getElementById('pay-amount').value) || 0;
+      const method = document.getElementById('pay-method').value || 'efectivo';
+      const reference = document.getElementById('pay-ref').value || '';
+      
+      if (!studentId || amount <= 0) { 
+          alert('⚠️ Complete Matrícula/N. Control y un Monto válido.'); 
+          return; 
+      }
+      
+      const charges = getCharges();
+      const now = new Date().toISOString();
+      
+      const newCharge = {
+        id: 'chg_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
+        studentId,
+        amount,
+        method,
+        reference,
+        status: 'paid', 
+        paidAt: now,
+        createdAt: now
+      };
+      
+      charges.push(newCharge);
+      saveCharges(charges); 
+      
+      closeModal(payModal); 
+      renderPayments(document.getElementById('method-filter')?.value || 'all'); 
+      alert('✅ Pago registrado exitosamente.');
+    });
+
+    // 6. Re-render en cambios de localStorage (para sincronizar con otras pantallas)
+    window.addEventListener('storage', (e) => {
+      if (['chargesList','studentsList','conceptsList','chargesLastUpdate'].includes(e.key)) {
+        renderPayments(document.getElementById('method-filter')?.value || 'all');
+      }
+    });
+
+    // 🏁 Inicialización
+    renderPayments(document.getElementById('method-filter')?.value || 'all');
+  </script>
 </Layout>

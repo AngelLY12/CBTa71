@@ -1,224 +1,307 @@
 ---
 import Layout from '../layouts/Layout.astro';
+// Se asume que este componente Layout proporciona la estructura base de la página.
 ---
 
-<Layout title="Roles y Usuarios">
-    {/* Alpine.js Data Store para manejar el estado de la tabla */}
-    <div x-data="rolesData" class="space-y-8">
-        
-        {/* Encabezado y Botón de Acción */}
-        <header class="flex justify-between items-center pb-4 border-b border-gray-200">
-            <h1 class="text-3xl font-extrabold text-gray-900">
-                Gestión de Roles y Usuarios
-            </h1>
-            {/* Botón "Nuevo Usuario" que abre el modal de agregar */}
-            <button 
-                @click="isAdding = true; isEditing = false; newUser = { id: null, username: '', email: '', role: 'caja', status: 'Activo' }"
-                class="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 transition duration-300"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
-                Nuevo Usuario
-            </button>
-        </header>
+<Layout title="Gestión de Personal ">
+    {/* Alpine.js Data Store para manejar el estado de la tabla */}
+    <div x-data="rolesData" class="space-y-8 p-4 md:p-10 bg-blue-50/50 min-h-screen">
+        
+        {/* 📢 Notificación Superior (Simulada) */}
+        <div x-show="notification.show" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2" class="fixed top-4 right-4 z-[60] p-4 rounded-xl shadow-2xl text-white font-semibold" :class="notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'">
+            <span x-text="notification.message"></span>
+        </div>
 
-        {/* --- */}
+        {/* 🎯 Encabezado Principal y Botón de Acción */}
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-white rounded-2xl shadow-xl border-l-4 border-blue-600">
+            <div class="mb-4 md:mb-0">
+                <h1 class="text-3xl font-extrabold text-blue-900 flex items-center space-x-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 21l-8 -4.5v-9l8 -4.5l8 4.5v9l-8 4.5"/><path d="M3.243 14.156l8.757 4.844l8.757 -4.844"/><path d="M12 12v6"/><path d="M12 12l-8 -4.5"/><path d="M12 12l8 -4.5"/><path d="M12 3l8 4.5"/></svg>
+                    Personal de la Institución CBTA 71
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">Gestión de cuentas y asignación de roles clave.</p>
+            </div>
+            {/* Botón "Nuevo Colaborador" (Verde Esmeralda) */}
+            <button 
+                @click="openPanelForAdd()"
+                class="w-full md:w-auto flex items-center justify-center space-x-2 px-6 py-2 bg-emerald-500 text-white font-bold rounded-full shadow-lg shadow-emerald-200 hover:bg-emerald-600 transition duration-300 transform hover:scale-[1.02]"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
+                Nuevo Colaborador
+            </button>
+        </header>
 
-        {/* Filtros y Búsqueda (Funcional con x-model) */}
-        <section class="flex items-center space-x-4">
-            <input 
-                x-model="searchText"
-                type="text" 
-                placeholder="Buscar por nombre, email o rol..." 
-                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-600 focus:border-green-600"
-            />
-            <select x-model="filterRole" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-600 focus:border-green-600">
-                <option value="">Todos los Roles</option>
-                <option value="Administrador">Administrador</option>
-                <option value="Caja">Caja</option>
-                <option value="Maestro">Maestro</option>
-            </select>
-        </section>
+        {/* 🔍 Filtros y Búsqueda (Barra de Control, más limpia) */}
+        <section class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4 bg-white p-4 rounded-xl shadow-md">
+            <div class="relative flex-1">
+                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+                <input 
+                    x-model.debounce.300ms="searchText"
+                    type="text" 
+                    placeholder="Buscar personal por nombre, correo o ID..." 
+                    class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-700 transition"
+                />
+            </div>
+            <select x-model="filterRole" class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-sm text-gray-700 font-medium">
+                <option value="">📜 Ver Todos</option>
+                <option value="Administrador">👑 Administrador</option>
+                <option value="Caja">💰 Personal de Caja</option>
+                <option value="Maestro">👨‍🏫 Maestro</option>
+            </select>
+        </section>
 
-        {/* --- */}
+        {/* 📋 Tabla de Roles/Usuarios (Más limpia y estética) */}
+        <section class="bg-white p-6 rounded-2xl shadow-lg overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-100">
+                <thead class="bg-blue-50/70 border-b border-blue-200">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider w-1/12">ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider w-3/12">Nombre de Usuario</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider w-3/12">Email</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider w-2/12">Rol Asignado</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider w-1/12">Estado</th>
+                        <th class="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider w-2/12">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    <template x-for="user in filteredUsers" :key="user.id">
+                        <tr class="hover:bg-blue-50/50 transition duration-150">
+                            <td x-text="user.id" class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-800"></td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700 font-medium">
+                                <span x-text="user.username"></span>
+                            </td>
+                            <td x-text="user.email" class="px-4 py-3 whitespace-nowrap text-sm text-gray-500"></td>
+                            
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                {/* Chips de Rol */}
+                                <span :class="{
+                                    'bg-purple-100 text-purple-700 ring-purple-300': user.role === 'Administrador',
+                                    'bg-blue-100 text-blue-700 ring-blue-300': user.role === 'Caja',
+                                    'bg-yellow-100 text-yellow-700 ring-yellow-300': user.role === 'Maestro',
+                                }" class="px-2 py-1 inline-flex text-xs leading-4 font-bold rounded-full border">
+                                    <span x-text="user.role"></span>
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                {/* Chips de Estado */}
+                                <span :class="{'bg-green-100 text-green-700 border-green-300': user.status === 'Activo', 'bg-red-100 text-red-700 border-red-300': user.status === 'Inactivo'}" class="px-2 py-1 inline-flex text-xs leading-4 font-bold rounded-full border">
+                                    <span x-text="user.status"></span>
+                                </span>
+                            </td>
+                            
+                            {/* Botones de acción (Íconos Limpios) */}
+                            <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium space-x-1.5">
+                                {/* Botón Editar */}
+                                <button @click="openPanelForEdit(user)" title="Editar" class="text-blue-500 hover:text-blue-700 p-1.5 rounded-full hover:bg-blue-50 transition transform hover:scale-110">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.585 8.585v4h4l8.585 -8.585z"/></svg>
+                                </button>
+                                {/* Botón Borrar */}
+                                <button @click="confirmDeleteUser(user.id, user.username)" title="Eliminar" class="text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 transition transform hover:scale-110">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
 
-        {/* Tabla de Roles/Usuarios (Iteración con x-for) */}
-        <section class="bg-gray-50 p-6 rounded-xl shadow-inner overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-300">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Nombre de Usuario</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Rol Asignado</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
-                        <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {/* El filtro y la búsqueda se aplican en la propiedad 'filteredUsers' */}
-                    <template x-for="user in filteredUsers" :key="user.id">
-                        <tr class="hover:bg-gray-50 transition duration-150">
-                            <td x-text="user.id" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"></td>
-                            <td x-text="user.username" class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"></td>
-                            <td x-text="user.email" class="px-6 py-4 whitespace-nowrap text-sm text-gray-700"></td>
-                            
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                {/* Colores dinámicos para el rol */}
-                                <span :class="{
-                                    'bg-red-100 text-red-800': user.role === 'Administrador',
-                                    'bg-blue-100 text-blue-800': user.role === 'Caja',
-                                    'bg-yellow-100 text-yellow-800': user.role === 'Maestro',
-                                }" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                    <span x-text="user.role"></span>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                {/* Colores dinámicos para el estado */}
-                                <span :class="{'bg-green-100 text-green-800': user.status === 'Activo', 'bg-red-100 text-red-800': user.status === 'Inactivo'}" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
-                                    <span x-text="user.status"></span>
-                                </span>
-                            </td>
-                            
-                            {/* Botones de acción */}
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
-                                {/* Botón Editar */}
-                                <button @click="editUser(user)" title="Editar" class="text-indigo-600 hover:text-indigo-900">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.585 8.585v4h4l8.585 -8.585z"/><path d="M16 5l3 3"/></svg>
-                                </button>
-                                {/* Botón Borrar */}
-                                <button @click="deleteUser(user.id)" title="Eliminar" class="text-red-600 hover:text-red-900">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></svg>
-                                </button>
-                            </td>
-                        </tr>
-                    </template>
-
-                    {/* Mensaje de No Resultados */}
-                    <tr x-show="filteredUsers.length === 0">
-                        <td colspan="6" class="px-6 py-4 text-center text-lg text-gray-500">
-                            No se encontraron usuarios que coincidan con los criterios.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
+                    {/* Mensaje de No Resultados */}
+                    <tr x-show="filteredUsers.length === 0">
+                        <td colspan="6" class="px-6 py-8 text-center text-lg text-gray-400 bg-gray-50/50 rounded-b-xl">
+                            🤷‍♂️ No se encontraron usuarios que coincidan con los criterios.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
 
 
-        {/* Modal de Agregar/Editar (x-show) */}
-        <div x-show="isAdding || isEditing" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-            <div @click.away="closeModal()" class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 transform transition-all">
-                <h3 class="text-xl font-bold text-gray-900" x-text="isAdding ? 'Agregar Nuevo Usuario' : 'Editar Usuario'"></h3>
-                <form @submit.prevent="saveUser()" class="space-y-4">
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
-                        <input x-model="newUser.username" id="username" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500">
-                    </div>
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input x-model="newUser.email" id="email" type="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500">
-                    </div>
-                    <div>
-                        <label for="role" class="block text-sm font-medium text-gray-700">Rol Asignado</label>
-                        <select x-model="newUser.role" id="role" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-green-500 focus:border-green-500">
-                            <option value="Administrador">Administrador</option>
-                            <option value="Caja">Caja</option>
-                            <option value="Maestro">Maestro</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-end space-x-3 pt-2">
-                        <button @click.prevent="closeModal()" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
-                            <span x-text="isAdding ? 'Guardar Usuario' : 'Actualizar Usuario'"></span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+        {/* 💡 PANEL LATERAL (Off-Canvas) para Agregar/Editar */}
+        
+        {/* Overlay de Fondo */}
+        <div x-show="isPanelOpen" x-transition.opacity.duration.300ms class="fixed inset-0 bg-blue-900 bg-opacity-30 backdrop-blur-sm z-40" @click="closePanel()"></div>
+        
+        {/* Panel Deslizante (Estético) */}
+        <div x-show="isPanelOpen"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="translate-x-full"
+            class="fixed top-0 right-0 w-full md:w-96 h-full bg-white shadow-2xl z-50 overflow-y-auto rounded-l-3xl"
+        >
+            <div class="p-8 h-full flex flex-col">
+                
+                {/* Título del Panel */}
+                <div class="flex justify-between items-center pb-4 border-b-2 border-blue-100 mb-6">
+                    <h3 class="text-2xl font-extrabold text-blue-800" x-text="isEditing ? '✍️ Editar Cuenta' : '👤 Agregar Cuenta'"></h3>
+                    <button @click="closePanel()" class="text-gray-400 hover:text-blue-700 transition p-1.5 rounded-full hover:bg-blue-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {/* Formulario (Acojedor) */}
+                <form @submit.prevent="saveUser()" class="space-y-5 flex-1 overflow-y-auto pr-2">
+                    <div>
+                        <label for="username" class="block text-sm font-semibold text-gray-600">Nombre de Usuario</label>
+                        <input x-model="newUser.username" id="username" type="text" required class="mt-1 block w-full border border-gray-300 rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm transition">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-semibold text-gray-600">Email Institucional</label>
+                        <input x-model="newUser.email" id="email" type="email" required class="mt-1 block w-full border border-gray-300 rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm transition">
+                    </div>
+                    <div>
+                        <label for="role" class="block text-sm font-semibold text-gray-600">Rol Asignado</label>
+                        <select x-model="newUser.role" id="role" class="mt-1 block w-full border border-gray-300 rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 bg-white appearance-none text-sm shadow-sm transition">
+                            <option value="Administrador">👑 Administrador</option>
+                            <option value="Caja">💰 Personal de Caja</option>
+                            <option value="Maestro">👨‍🏫 Maestro</option>
+                        </select>
+                    </div>
+                    <div x-show="isEditing">
+                        <label for="status" class="block text-sm font-semibold text-gray-600">Estado de la Cuenta</label>
+                        <select x-model="newUser.status" id="status" class="mt-1 block w-full border border-gray-300 rounded-xl p-3 focus:ring-emerald-500 focus:border-emerald-500 bg-white appearance-none text-sm shadow-sm transition">
+                            <option value="Activo">🟢 Activo</option>
+                            <option value="Inactivo">🔴 Inactivo</option>
+                        </select>
+                    </div>
+                </form>
+                
+                {/* Pie del Panel - Botones de Acción */}
+                <div class="flex justify-between space-x-4 pt-6 mt-6 border-t border-gray-100">
+                    <button @click.prevent="closePanel()" type="button" class="flex-1 py-2 text-sm font-bold text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-100 transition shadow-sm">
+                        Cancelar
+                    </button>
+                    <button @click.prevent="saveUser()" type="submit" class="flex-1 py-2 text-sm font-bold text-white bg-emerald-500 rounded-xl hover:bg-emerald-600 transition shadow-lg shadow-emerald-200">
+                        <span x-text="isEditing ? '✅ Actualizar' : '🚀 Registrar'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        {/* 🗑️ Modal de Confirmación de Borrado (Central) */}
+        <div x-show="isDeleting" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-90" class="fixed inset-0 bg-red-900 bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div @click.away="isDeleting = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 space-y-6 transform transition-all border-t-6 border-red-500 text-center">
+                <svg class="mx-auto h-12 w-12 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 9v4"/><path d="M10 16h4"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/></svg>
+                <h3 class="text-xl font-extrabold text-gray-800">Confirmar Eliminación</h3>
+                <p class="text-gray-600 text-sm">¿Seguro que deseas eliminar a <strong x-text="userToDeleteName"></strong> (ID <span x-text="userToDeleteId"></span>)?</p>
+                <div class="flex justify-center space-x-4 pt-2">
+                    <button @click="isDeleting = false" type="button" class="flex-1 py-2 text-sm font-bold text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-100 transition">
+                        Cancelar
+                    </button>
+                    <button @click="deleteUser(userToDeleteId)" type="button" class="flex-1 py-2 text-sm font-bold text-white bg-red-500 rounded-xl hover:bg-red-600 transition shadow-md shadow-red-200">
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </Layout>
 
 <script is:inline>
-    // Inicialización del objeto de datos y lógica de Alpine.js
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('rolesData', () => ({
-            // --- Estado de la aplicación ---
-            users: [
-                { id: 101, username: 'admin_sys', email: 'admin@cbta71.edu.mx', role: 'Administrador', status: 'Activo' },
-                { id: 105, username: 'martha_caja', email: 'martha@cbta71.edu.mx', role: 'Caja', status: 'Activo' },
-                { id: 110, username: 'pedro_maestro', email: 'pedro@cbta71.edu.mx', role: 'Maestro', status: 'Inactivo' },
-                { id: 115, username: 'luisa_caja', email: 'luisa@cbta71.edu.mx', role: 'Caja', status: 'Activo' },
-            ],
-            searchText: '',
-            filterRole: '',
-            isAdding: false,
-            isEditing: false,
-            newUser: { id: null, username: '', email: '', role: 'Caja', status: 'Activo' }, // Objeto para el modal
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('rolesData', () => ({
+            // --- Estado de la aplicación ---
+            users: [
+                { id: 101, username: 'admin_sys', email: 'admin@cbta71.edu.mx', role: 'Administrador', status: 'Activo' },
+                { id: 105, username: 'martha_caja', email: 'martha@cbta71.edu.mx', role: 'Caja', status: 'Activo' },
+                { id: 110, username: 'pedro_maestro', email: 'pedro@cbta71.edu.mx', role: 'Maestro', status: 'Inactivo' },
+                { id: 115, username: 'luisa_caja', email: 'luisa@cbta71.edu.mx', role: 'Caja', status: 'Activo' },
+                { id: 120, username: 'ana_maestra', email: 'ana@cbta71.edu.mx', role: 'Maestro', status: 'Activo' },
+            ],
+            searchText: '',
+            filterRole: '',
+            isPanelOpen: false, 
+            isEditing: false, 
+            isDeleting: false, 
+            userToDeleteId: null,
+            userToDeleteName: '',
+            newUser: { id: null, username: '', email: '', role: 'Caja', status: 'Activo' },
 
-            // --- Computed Property para filtros y búsqueda ---
-            get filteredUsers() {
-                let filtered = this.users;
-                
-                // 1. Filtrar por Rol
-                if (this.filterRole) {
-                    filtered = filtered.filter(user => user.role === this.filterRole);
-                }
+            // Objeto de Notificación
+            notification: { show: false, message: '', type: 'success' },
 
-                // 2. Buscar por texto
-                if (this.searchText.length > 0) {
-                    const searchLower = this.searchText.toLowerCase();
-                    filtered = filtered.filter(user => 
-                        user.username.toLowerCase().includes(searchLower) ||
-                        user.email.toLowerCase().includes(searchLower) ||
-                        user.role.toLowerCase().includes(searchLower)
-                    );
-                }
+            // Función para mostrar alertas temporales
+            showNotification(message, type = 'success') {
+                this.notification.message = message;
+                this.notification.type = type;
+                this.notification.show = true;
+                setTimeout(() => {
+                    this.notification.show = false;
+                }, 4000);
+            },
 
-                return filtered;
+            // Computed Property para filtros y búsqueda
+            get filteredUsers() {
+                let filtered = this.users;
+                if (this.filterRole) {
+                    filtered = filtered.filter(user => user.role === this.filterRole);
+                }
+                if (this.searchText.length > 0) {
+                    const searchLower = this.searchText.toLowerCase();
+                    filtered = filtered.filter(user => 
+                        user.username.toLowerCase().includes(searchLower) ||
+                        user.email.toLowerCase().includes(searchLower) ||
+                        user.id.toString().includes(searchLower)
+                    );
+                }
+                return filtered;
+            },
+
+            // --- Funciones de Panel Lateral ---
+
+            closePanel() {
+                this.isPanelOpen = false;
+                this.isEditing = false;
+                this.newUser = { id: null, username: '', email: '', role: 'Caja', status: 'Activo' };
+            },
+
+            openPanelForAdd() {
+                this.isEditing = false;
+                this.newUser = { id: null, username: '', email: '', role: 'Caja', status: 'Activo' };
+                this.isPanelOpen = true;
+            },
+
+            openPanelForEdit(user) {
+                this.isEditing = true;
+                this.newUser = { ...user }; 
+                this.isPanelOpen = true;
+            },
+
+            // 1. Agregar/Actualizar Usuario
+            saveUser() {
+                let message = '';
+                if (this.isEditing) {
+                    const index = this.users.findIndex(u => u.id === this.newUser.id);
+                    if (index !== -1) {
+                        this.users[index] = { ...this.newUser };
+                        message = `Cuenta de ${this.newUser.username} actualizada con éxito.`;
+                    }
+                } else {
+                    const maxId = this.users.length > 0 ? Math.max(...this.users.map(u => u.id)) : 100;
+                    const newId = maxId + 1;
+                    const newUserWithId = { ...this.newUser, id: newId };
+                    this.users.push(newUserWithId);
+                    message = `Nuevo colaborador ${newUserWithId.username} registrado.`;
+                }
+                this.closePanel();
+                this.showNotification(message, 'success');
+            },
+
+            // 2. Confirmar Borrado (Abre el modal de confirmación)
+            confirmDeleteUser(id, username) {
+                this.userToDeleteId = id;
+                this.userToDeleteName = username;
+                this.isDeleting = true;
             },
 
-            // --- Funciones de CRUD (Simuladas) ---
-            closeModal() {
-                this.isAdding = false;
-                this.isEditing = false;
-                this.newUser = { id: null, username: '', email: '', role: 'Caja', status: 'Activo' };
-            },
-
-            // 1. Agregar/Actualizar Usuario
-            saveUser() {
-                if (this.isEditing) {
-                    // Lógica de Edición
-                    const index = this.users.findIndex(u => u.id === this.newUser.id);
-                    if (index !== -1) {
-                        this.users[index] = { ...this.newUser }; // Actualiza el objeto
-                        alert(`Usuario ${this.newUser.username} actualizado.`);
-                    }
-                } else {
-                    // Lógica de Adición
-                    const newId = Math.max(...this.users.map(u => u.id)) + 1;
-                    const newUserWithId = { ...this.newUser, id: newId };
-                    this.users.push(newUserWithId); // Añade el nuevo usuario
-                    alert(`Usuario ${newUserWithId.username} agregado con ID ${newId}.`);
-                }
-                this.closeModal();
-            },
-
-            // 2. Editar Usuario (prepara el modal)
-            editUser(user) {
-                this.isEditing = true;
-                this.isAdding = false;
-                // Clona el objeto para evitar modificar el original directamente antes de guardar
-                this.newUser = { ...user }; 
-            },
-
-            // 3. Borrar Usuario
-            deleteUser(id) {
-                if (confirm('¿Estás seguro de que quieres eliminar este usuario? (Simulación)')) {
-                    this.users = this.users.filter(user => user.id !== id);
-                    alert(`Usuario con ID ${id} eliminado.`);
-                }
-            }
-        }));
-    });
+            // 3. Borrar Usuario
+            deleteUser(id) {
+                const username = this.userToDeleteName; 
+                this.users = this.users.filter(user => user.id !== id);
+                this.isDeleting = false; 
+                this.showNotification(`Cuenta de ${username} eliminada del sistema.`, 'error');
+            }
+        }));
+    });
 </script>

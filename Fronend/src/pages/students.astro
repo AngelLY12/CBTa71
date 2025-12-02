@@ -5,36 +5,28 @@ import Layout from '../layouts/Layout.astro';
 // Lógica de carga de datos: Intenta cargar de la API o usa datos de respaldo
 let students = [];
 try {
+  // Nota: En un proyecto real, esto sería una llamada a tu backend.
   const res = await fetch('/api/students');
   if (res.ok) {
     const json = await res.json();
     students = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
   }
 } catch (e) {
-  // Ignorar error de API y cargar datos de respaldo si están disponibles
+  // Fallback: cargar datos de respaldo
 }
 
 // Cargar datos de respaldo si la lista está vacía o hubo error
 if (!students || !students.length) {
   try {
-    // Asegúrese de que '../data/students.js' contenga un array de objetos
+    // Simulación de datos iniciales si no hay API o si el archivo está vacío
     const mod = await import('../data/students.js');
     students = mod.default || mod.students || [];
-    // Ejemplo de datos de respaldo: ¡DATOS AMPLIADOS PARA MEJOR PRUEBA DE FILTROS!
+    
+    // 💡 SE ELIMINÓ EL BLOQUE DE DATOS ESTÁTICOS
     if (students.length === 0) {
-        students = [
-            { id: '1', numControl: 'A19014', nombre: 'Fabían', apellidoP: 'Cruz', apellidoM: 'Mendoza', semestre: 5, carrera: 'AGR', correo: 'fabian.cruz@uni.edu', password: 'pass'},
-            { id: '2', numControl: 'A19015', nombre: 'Elena', apellidoP: 'Gómez', apellidoM: 'Vargas', semestre: 1, carrera: 'INF', correo: 'elena.gomez@uni.edu', password: 'pass'},
-            { id: '3', numControl: 'A19013', nombre: 'Carla', apellidoP: 'Flores', apellidoM: 'Herrera', semestre: 3, carrera: 'ADM', correo: 'carla.flores@uni.edu', password: 'pass'},
-            { id: '4', numControl: 'A19010', nombre: 'Julio', apellidoP: 'Pérez', apellidoM: 'López', semestre: 6, carrera: 'TEC', correo: 'julio.perez@uni.edu', password: 'pass'},
-            { id: '5', numControl: 'A19011', nombre: 'Sofía', apellidoP: 'Ramírez', apellidoM: 'García', semestre: 2, carrera: 'INF', correo: 'sofia.ramirez@uni.edu', password: 'pass'},
-            
-            // --- DATOS ADICIONALES PARA PROBAR FILTRO DE SEMESTRE 3 ---
-            { id: '6', numControl: 'A20001', nombre: 'David', apellidoP: 'Soto', apellidoM: 'Ramos', semestre: 3, carrera: 'ADM', correo: 'david.soto@uni.edu', password: 'pass'}, 
-            { id: '7', numControl: 'A20002', nombre: 'Laura', apellidoP: 'Ruiz', apellidoM: 'Mora', semestre: 3, carrera: 'INF', correo: 'laura.ruiz@uni.edu', password: 'pass'}, 
-            { id: '8', numControl: 'A20003', nombre: 'Miguel', apellidoP: 'Téllez', apellidoM: 'Vela', semestre: 1, carrera: 'AGR', correo: 'miguel.tellez@uni.edu', password: 'pass'},
-            { id: '9', numControl: 'A20004', nombre: 'Diana', apellidoP: 'Vega', apellidoM: 'Paz', semestre: 5, carrera: 'AGR', correo: 'diana.vega@uni.edu', password: 'pass'},
-        ];
+        // En un entorno de producción, aquí podrías considerar un log de error 
+        // o dejar la lista completamente vacía.
+        students = [];
     }
   } catch (e) {
     students = [];
@@ -52,6 +44,7 @@ students = students.map((s, i) => ({
   correo: s.correo ?? s.email ?? '', 
   password: s.password ?? s.contrasena ?? '', 
   id: s.id ?? String(i + 1), // Asegura un ID único para lógica de pagos/local storage
+  adeudo: Number(s.adeudo || 0).toFixed(2)
 }));
 
 // Pasar datos a JS de manera segura para la inicialización
@@ -60,19 +53,24 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
 <Layout title="Gestión de Estudiantes">
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" type="text/javascript" defer></script>
 
-    <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 py-10 bg-gray-50 min-h-screen"> 
-    <header class="flex items-center justify-between mb-8 pb-4 border-b border-gray-200">
-      <div>
-        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.656-.126-1.283-.356-1.857M9 20l-2.003-.594A4 4 0 003 15.25V7a4 4 0 014-4h10a4 4 0 014 4v8.25c0 .59-.234 1.157-.659 1.571L17 20m-2 1a2 2 0 100-4 2 2 0 000 4zM8 10h.01M12 10h.01M16 10h.01M9 16h.01M13 16h.01" />
-            </svg>
-            Lista de Estudiantes
-        </h1>
-        <p class="text-sm text-gray-500 mt-1 ml-10">Visualiza, filtra y exporta la lista de alumnos.</p>
+    <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 py-10 bg-white min-h-screen"> 
+    
+    <header class="flex items-center justify-between mb-10 pb-4 border-b-2 border-green-100">
+      <div class="flex items-center">
+        <div class="p-3 bg-green-700 rounded-xl shadow-lg mr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.656-.126-1.283-.356-1.857M9 20l-2.003-.594A4 4 0 003 15.25V7a4 4 0 014-4h10a4 4 0 014 4v8.25c0 .59-.234 1.157-.659 1.571L17 20m-2 1a2 2 0 100-4 2 2 0 000 4zM8 10h.01M12 10h.01M16 10h.01M9 16h.01M13 16h.01" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+            Administración de Alumnos
+          </h1>
+          <p class="text-sm text-gray-500 mt-1">Gestione la información y el estado de pagos de la matrícula.</p>
+        </div>
       </div>
       <div>
-        <a href="/Dashboard" class="text-sm font-medium text-teal-600 hover:text-teal-800 transition duration-150 ease-in-out flex items-center">
+        <a href="/Dashboard" class="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out flex items-center shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -82,33 +80,43 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
     </header>
 
     <section class="grid grid-cols-1 gap-6"> 
-        <div id="table-container" class="bg-white p-6 rounded-xl shadow-xl col-span-1 flex flex-col border border-gray-100"> 
+        <div id="table-container" class="bg-white p-6 rounded-xl shadow-2xl col-span-1 flex flex-col border border-gray-100"> 
           
-          <div class="flex items-center justify-between mb-4 flex-wrap gap-3 relative">
+          <div class="flex items-center justify-between mb-6 flex-wrap gap-4 relative">
             
-            <h2 class="font-bold text-xl text-gray-800">Lista de Estudiantes <span id="students-total" class="text-sm font-medium text-teal-600">({students.length})</span></h2>
+            <h2 class="font-bold text-xl text-gray-800">Lista de Estudiantes 
+              <span id="students-total" class="text-base font-medium text-green-700 ml-2">({students.length})</span>
+            </h2>
             
             <div class="flex flex-wrap gap-2 items-center">
                 
-                <div class="relative w-48 sm:w-56"> 
-                    <input type="text" id="search-bar" placeholder="Buscar N. Control o Nombre..." class="w-full p-2 pl-10 border border-gray-300 rounded-lg text-xs focus:ring-teal-500 focus:border-teal-500" />
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <div class="relative w-48 sm:w-64"> 
+                    <input type="text" id="search-bar" placeholder="Buscar N. Control, Nombre o Apellido..." class="w-full p-2.5 pl-10 border border-gray-300 rounded-xl text-sm placeholder-gray-400 focus:ring-green-500 focus:border-green-500 transition shadow-sm" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 </div>
                 
-                <button id="toggle-filters-btn" class="flex items-center px-3 py-2 rounded-lg bg-teal-50 border border-teal-200 text-teal-700 text-xs font-medium hover:bg-teal-100 transition">
+                <button id="toggle-filters-btn" class="flex items-center px-4 py-2.5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-medium hover:bg-green-100 transition shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v3.414l-4 4v-4.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
                     <span id="filters-status">Filtros</span>
                 </button>
                 
-                <div id="filters-popover" class="absolute z-20 top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-2xl p-4 border border-gray-200 hidden transform origin-top-right transition duration-200 ease-out scale-95 opacity-0">
-                    <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">Aplicar Filtros</h3>
-                    <div class="space-y-3">
+                <button id="export-xlsx" title="Exportar a Excel (XLSX)" class="flex items-center px-4 py-2.5 rounded-xl bg-gray-50 border text-gray-700 text-sm font-medium hover:bg-gray-100 transition shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-green-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>XLSX
+                </button>
+                <button id="export-csv" title="Exportar a CSV" class="flex items-center px-4 py-2.5 rounded-xl bg-gray-50 border text-gray-700 text-sm font-medium hover:bg-gray-100 transition shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>CSV
+                </button>
+            </div>
+                
+                <div id="filters-popover" class="absolute z-30 top-full right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl p-5 border border-gray-200 hidden transform origin-top-right transition duration-300 ease-out opacity-0 translate-y-2">
+                    <h3 class="text-base font-bold text-gray-800 mb-4 border-b pb-2">Opciones de Filtrado Avanzado</h3>
+                    <div class="space-y-4">
                         <div>
-                            <label for="filter-carrera" class="block text-xs font-medium text-gray-500 mb-1">Carrera:</label>
-                            <select id="filter-carrera" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-800 shadow-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition text-sm">
-                                <option value="">Todas</option>
+                            <label for="filter-carrera" class="block text-xs font-medium text-gray-500 mb-1">Filtrar por Carrera:</label>
+                            <select id="filter-carrera" class="w-full p-2.5 border border-gray-300 rounded-xl bg-white text-gray-800 shadow-sm focus:ring-green-500 focus:border-green-500 transition text-sm">
+                                <option value="">Todas las Carreras</option>
                                 <option value="AGR">Agronomía</option>
                                 <option value="INF">Informática</option>
                                 <option value="ADM">Administración</option>
@@ -117,9 +125,9 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
                         </div>
                         
                         <div>
-                            <label for="filter-semestre" class="block text-xs font-medium text-gray-500 mb-1">Semestre:</label>
-                            <select id="filter-semestre" class="w-full p-2 border border-gray-300 rounded-lg bg-white text-gray-800 shadow-sm focus:ring-1 focus:ring-teal-500 focus:border-teal-500 transition text-sm">
-                                <option value="">Todos</option>
+                            <label for="filter-semestre" class="block text-xs font-medium text-gray-500 mb-1">Filtrar por Semestre:</label>
+                            <select id="filter-semestre" class="w-full p-2.5 border border-gray-300 rounded-xl bg-white text-gray-800 shadow-sm focus:ring-green-500 focus:border-green-500 transition text-sm">
+                                <option value="">Todos los Semestres</option>
                                 <option value="1">1ro</option>
                                 <option value="2">2do</option>
                                 <option value="3">3ro</option>
@@ -129,37 +137,46 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
                                 <option value="0">N/A</option>
                             </select>
                         </div>
-                    </div>
-                    <button id="clear-filters-btn" class="w-full mt-4 px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg shadow-sm hover:bg-red-100 transition flex items-center justify-center text-xs">
+                        
+                        <div>
+                            <label for="filter-adeudo" class="block text-xs font-medium text-gray-500 mb-1">Status de Pago:</label>
+                            <select id="filter-adeudo" class="w-full p-2.5 border border-gray-300 rounded-xl bg-white text-gray-800 shadow-sm focus:ring-green-500 focus:border-green-500 transition text-sm">
+                                <option value="">Todos los Pagos</option>
+                                <option value="pendiente">Con Adeudo</option>
+                                <option value="corriente">Al Corriente</option>
+                            </select>
+                        </div>
+                        </div>
+                    <button id="clear-filters-btn" class="w-full mt-5 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-xl shadow-sm hover:bg-red-100 transition flex items-center justify-center text-sm font-medium">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        Limpiar Filtros
+                        Limpiar Todos los Filtros
                     </button>
                 </div>
-                
-                <button id="export-xlsx" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border text-gray-700 text-xs hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>XLSX</button>
-                <button id="export-csv" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border text-gray-700 text-xs hover:bg-gray-100 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>CSV</button>
             </div>
-            </div>
+          </div>
           
-          <div class="overflow-x-auto rounded-lg border border-gray-200">
-            <table class="min-w-full text-xs divide-y divide-gray-200">
-              <thead class="bg-gray-50 text-left sticky top-0 z-10">
+          <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-inner">
+            <table class="min-w-full text-sm divide-y divide-gray-200">
+              <thead class="bg-green-50 text-left sticky top-0 z-10 border-b border-green-200">
                 <tr>
-                    <th class="px-3 py-2 font-semibold text-gray-600 w-24">N. Control</th>
-                    <th class="px-3 py-2 font-semibold text-gray-600 w-32">Nombre</th>
-                    <th class="px-3 py-2 font-semibold text-gray-600 w-32">Apellido P.</th>
-                    <th class="px-3 py-2 font-semibold text-gray-600 w-32">Apellido M.</th>
-                    <th class="px-3 py-2 font-semibold text-gray-600 w-20 text-center">Semestre</th>
-                    <th class="px-3 py-2 font-semibold text-gray-600 w-24">Carrera</th>
-                    <th class="px-3 py-2 font-semibold text-gray-600 w-24 text-center">St. Pagos</th>
-                    <th class="px-3 py-2 font-semibold text-gray-600 w-24 text-right">Adeudo</th>
+                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-28">N. Control</th>
+                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-36">Nombre</th>
+                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-36">Apellido P.</th>
+                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-36">Apellido M.</th>
+                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-24 text-center">Semestre</th>
+                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-24">Carrera</th>
+                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-32 text-center">Status Pagos</th>
+                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-24 text-right">Adeudo</th>
                 </tr>
               </thead>
               <tbody id="students-tbody" class="bg-white divide-y divide-gray-100">
                 </tbody>
             </table>
+            <div id="no-results" class="hidden text-center text-gray-500 py-10 text-base italic">
+                <i class="fas fa-search-minus mr-2"></i> No se encontraron estudiantes con los criterios de búsqueda y/o filtrado.
+            </div>
           </div>
         </div>
     </section>
@@ -175,6 +192,7 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
     const STORAGE_KEY = 'studentsList';
     const initial = Array.isArray(window.__INITIAL_STUDENTS) ? window.__INITIAL_STUDENTS : [];
     
+    // Mapeo de carreras (ajustar según tu aplicación)
     const CARRERA_MAP = {
         'AGR': 'Agronomía',
         'INF': 'Informática',
@@ -184,11 +202,12 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
         '0': 'Sin Carrera',
     };
     
-    // Estado de los filtros, ahora incluye el término de búsqueda
+    // Estado de los filtros
     let currentFilters = {
         semestre: '',
         carrera: '',
-        searchText: ''
+        searchText: '',
+        adeudo: '' 
     };
 
 
@@ -197,11 +216,13 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
     const totalEl = document.getElementById('students-total');
     const filterCarrera = document.getElementById('filter-carrera');
     const filterSemestre = document.getElementById('filter-semestre');
+    const filterAdeudo = document.getElementById('filter-adeudo');
     const filtersPopover = document.getElementById('filters-popover');
     const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
     const filtersStatusEl = document.getElementById('filters-status');
     const clearFiltersBtn = document.getElementById('clear-filters-btn');
     const searchBar = document.getElementById('search-bar'); 
+    const noResultsEl = document.getElementById('no-results');
 
 
     // --- FUNCIONES DE UTILIDAD CLAVE ---
@@ -224,75 +245,35 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
     function escapeHtml(s) {
       if (s === undefined || s === null) return '';
       return String(s).replace(/[&<>"']/g, function (m) {
-        return ({ '&':'&amp;','<':'&amp;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m];
+        return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m];
       });
     }
     
-    // Aplicar Filtros (Incluye búsqueda de texto)
-    const applyFilters = (list) => {
-        const text = currentFilters.searchText.toLowerCase().trim();
-
-        return list.filter(s => {
-            // Filtro por Carrera y Semestre
-            const matchCarrera = !currentFilters.carrera || s.carrera === currentFilters.carrera;
-            // CORRECCIÓN: Se asegura que el semestre del estudiante sea tratado como string para la comparación
-            const matchSemestre = !currentFilters.semestre || String(s.semestre) === currentFilters.semestre; 
-            
-            // Filtro por Texto (Nombre o N. Control)
-            let matchSearch = true;
-            if (text.length > 0) {
-                const nombreCompleto = `${s.nombre} ${s.apellidoP} ${s.apellidoM}`.toLowerCase();
-                const numControl = s.numControl.toLowerCase();
-                
-                // Busca el texto en Nombre Completo o Número de Control
-                matchSearch = nombreCompleto.includes(text) || numControl.includes(text);
-            }
-            
-            return matchCarrera && matchSemestre && matchSearch;
-        });
-    };
-    
-    // Actualizar el estado de los filtros
-    const updateFiltersStatus = (filteredCount, totalCount) => {
-        // Se considera activo si hay búsqueda, o filtro de carrera/semestre aplicado
-        const isActive = currentFilters.carrera || currentFilters.semestre || currentFilters.searchText.length > 0;
-        totalEl.textContent = `(${totalCount}${isActive ? ' - Filtrados: ' + filteredCount : ''})`;
-        
-        // Muestra si hay filtros de búsqueda o selectores activos
-        let statusText = 'Filtros';
-        if (isActive) {
-            statusText = currentFilters.searchText.length > 0 ? 'Búsqueda/Filtros' : 'Filtros Activos';
-        }
-        filtersStatusEl.textContent = statusText;
-        
-        // Estilo del botón de filtros
-        toggleFiltersBtn.classList.toggle('bg-teal-50', !isActive);
-        toggleFiltersBtn.classList.toggle('bg-yellow-100', isActive);
-        toggleFiltersBtn.classList.toggle('border-teal-200', !isActive);
-        toggleFiltersBtn.classList.toggle('border-yellow-300', isActive);
-    };
-
-    // LÓGICA DE PAGOS/ADEUDOS — usar solo cargos (chargesList) para determinar estado
+    // LÓGICA DE PAGOS/ADEUDOS
     function getChargesSumForStudent(studentId) {
         try {
             const charges = JSON.parse(localStorage.getItem('chargesList') || '[]');
+            // Sumar solo los cargos que están pendientes
             return charges
-              .filter(c => String(c.studentId) === String(studentId))
+              .filter(c => 
+                String(c.studentId) === String(studentId) && 
+                (String(c.status || '').toLowerCase() === 'pending' || String(c.status || '').toLowerCase() === 'pendiente')
+              )
               .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
         } catch (e) {
             return 0;
         }
     }
 
-    // Si tiene adeudo (>0) => "Pago Pendiente", si no => "Al Corriente"
+    // Determina el estado de pago del alumno
     const getStudentPaymentStatus = (studentId) => {
-        const chargesSum = getChargesSumForStudent(studentId);
-        const total = Number(chargesSum || 0);
+        const totalPending = getChargesSumForStudent(studentId);
+        const adeudo = Number(totalPending || 0);
 
-        if (total > 0) {
+        if (adeudo > 0.01) { 
             return {
                 status: 'Pago Pendiente',
-                adeudo: total.toFixed(2),
+                adeudo: adeudo.toFixed(2),
                 isAdeudo: true
             };
         } else {
@@ -303,65 +284,117 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
             };
         }
     };
+    
+    // Aplicar Filtros (Incluye búsqueda de texto y nuevo filtro de adeudo)
+    const applyFilters = (list) => {
+        const text = currentFilters.searchText.toLowerCase().trim();
 
-    // Ajuste de badges para los dos estados usados
+        return list.filter(s => {
+            const matchCarrera = !currentFilters.carrera || s.carrera === currentFilters.carrera;
+            const matchSemestre = !currentFilters.semestre || String(s.semestre) === currentFilters.semestre; 
+            
+            // LÓGICA DE FILTRO DE ADEUDO
+            const paymentStatus = getStudentPaymentStatus(s.id);
+            let matchAdeudo = true;
+            if (currentFilters.adeudo === 'pendiente') {
+                matchAdeudo = paymentStatus.isAdeudo;
+            } else if (currentFilters.adeudo === 'corriente') {
+                matchAdeudo = !paymentStatus.isAdeudo;
+            }
+            // FIN LÓGICA DE FILTRO DE ADEUDO
+            
+            let matchSearch = true;
+            if (text.length > 0) {
+                const nombreCompleto = `${s.nombre} ${s.apellidoP} ${s.apellidoM}`.toLowerCase();
+                const numControl = (s.numControl || '').toLowerCase();
+                
+                matchSearch = nombreCompleto.includes(text) || numControl.includes(text);
+            }
+            
+            return matchCarrera && matchSemestre && matchSearch && matchAdeudo; 
+        });
+    };
+    
+    // Actualizar el estado de los filtros
+    const updateFiltersStatus = (filteredCount, totalCount) => {
+        const isActive = currentFilters.carrera || currentFilters.semestre || currentFilters.searchText.length > 0 || currentFilters.adeudo;
+        
+        totalEl.textContent = `(${filteredCount}${isActive ? ' de ' + totalCount + ' encontrados' : ''})`;
+        
+        let statusText = 'Filtros';
+        if (isActive) {
+            statusText = currentFilters.searchText.length > 0 ? 'Búsqueda Activa' : 'Filtros Activos';
+        }
+        filtersStatusEl.textContent = statusText;
+        
+        // Estilo del botón de filtros
+        const baseClasses = 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100';
+        const activeClasses = 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200';
+        
+        // Remover y añadir clases para simular un toggle de estado visual
+        toggleFiltersBtn.classList.remove(baseClasses, activeClasses);
+        toggleFiltersBtn.classList.add(isActive ? activeClasses : baseClasses);
+    };
+
+
+    // Genera el HTML de los badges
     const getStatusBadge = (statusObj) => {
         const status = statusObj.status;
         const adeudo = statusObj.adeudo;
 
-        let colorClasses = '';
+        let statusClasses = '';
+        let adeudoClasses = '';
+        let adeudoText = `$${adeudo}`;
+
         if (status === 'Pago Pendiente') {
-            colorClasses = 'bg-yellow-100 text-yellow-800';
+            statusClasses = 'bg-amber-100 text-amber-800'; 
+            adeudoClasses = 'font-bold text-red-600'; // Rojo para deuda
         } else if (status === 'Al Corriente') {
-            colorClasses = 'bg-green-100 text-green-800';
+            statusClasses = 'bg-green-100 text-green-800'; 
+            adeudoClasses = 'text-gray-500';
+            adeudoText = 'N/A';
         } else {
-            colorClasses = 'bg-gray-100 text-gray-800';
+            statusClasses = 'bg-gray-100 text-gray-800';
+            adeudoClasses = 'text-gray-500';
         }
 
-        const adeudoFormat = statusObj.isAdeudo ? `<span class="font-bold text-red-600">$${adeudo}</span>` : `<span class="text-green-600">N/A</span>`;
-
         return {
-            statusHtml: `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorClasses}">${status}</span>`,
-            adeudoHtml: adeudoFormat
+            statusHtml: `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusClasses}">${status}</span>`,
+            adeudoHtml: `<span class="${adeudoClasses}">${statusObj.isAdeudo ? `$${adeudo}` : adeudoText}</span>`
         };
     };
     
     // Función de renderizado principal
     const render = () => {
-      // 1. Leer y Filtrar - Se lee del local storage y se aplican filtros
       const rawList = readLocal(); 
       const filteredList = applyFilters(rawList); 
       
       tbody.innerHTML = '';
+      noResultsEl.classList.add('hidden');
       
-      // La tabla tiene 8 columnas
       if (filteredList.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="px-4 py-8 text-center text-gray-500 italic">
-                    No se encontraron estudiantes (${rawList.length} en total) con los filtros de búsqueda o selección aplicados.
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = '';
+        noResultsEl.classList.remove('hidden');
       } else {
-        // 2. Renderizar la lista filtrada
         filteredList.forEach((s) => {
             const paymentStatus = getStudentPaymentStatus(s.id); 
             const badges = getStatusBadge(paymentStatus); 
 
           const tr = document.createElement('tr');
-          tr.className = 'hover:bg-gray-50';
+          // Resaltado visual para deudores
+          const rowClass = paymentStatus.isAdeudo ? 'bg-amber-50/70 hover:bg-amber-100' : 'hover:bg-green-50/20';
+          tr.className = `${rowClass} transition duration-150 ease-in-out`;
           
           tr.innerHTML = `
-            <td class="px-3 py-2 font-medium text-gray-900 w-24">${escapeHtml(s.numControl)}</td>
-            <td class="px-3 py-2 w-32">${escapeHtml(s.nombre)}</td>
-            <td class="px-3 py-2 w-32">${escapeHtml(s.apellidoP)}</td>
-            <td class="px-3 py-2 w-32">${escapeHtml(s.apellidoM)}</td>
-            <td class="px-3 py-2 w-20 text-center">${s.semestre === 0 ? 'N/A' : s.semestre}</td>
-            <td class="px-3 py-2 text-teal-600 font-medium w-24">${CARRERA_MAP[s.carrera] || s.carrera}</td>
+            <td class="px-4 py-3.5 font-semibold text-gray-900 w-28">${escapeHtml(s.numControl)}</td>
+            <td class="px-4 py-3.5 text-gray-700 w-36">${escapeHtml(s.nombre)}</td>
+            <td class="px-4 py-3.5 text-gray-700 w-36">${escapeHtml(s.apellidoP)}</td>
+            <td class="px-4 py-3.5 text-gray-700 w-36">${escapeHtml(s.apellidoM)}</td>
+            <td class="px-4 py-3.5 text-gray-700 w-24 text-center">${s.semestre === 0 ? 'N/A' : s.semestre}</td>
+            <td class="px-4 py-3.5 text-green-600 font-medium w-24">${CARRERA_MAP[s.carrera] || s.carrera}</td>
             
-            <td class="px-3 py-2 w-24 text-center">${badges.statusHtml}</td>
-            <td class="px-3 py-2 w-24 text-right">${badges.adeudoHtml}</td>
+            <td class="px-4 py-3.5 w-32 text-center">${badges.statusHtml}</td>
+            <td class="px-4 py-3.5 w-24 text-right font-medium">${badges.adeudoHtml}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -372,20 +405,34 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
     
     // --- Listeners de Eventos ---
     
-    // Listener para la barra de búsqueda
     searchBar.addEventListener('input', (e) => {
         currentFilters.searchText = e.target.value;
-        render(); // Llama a render en cada cambio para actualizar la tabla
+        render(); 
     });
 
-    // Listeners de Filtros 
+    // Toggle para el popover de filtros (usa transiciones CSS)
     toggleFiltersBtn.addEventListener('click', () => {
-        filtersPopover.classList.toggle('hidden');
-        filtersPopover.classList.toggle('scale-95');
-        filtersPopover.classList.toggle('opacity-0');
-        filtersPopover.classList.toggle('scale-100');
-        filtersPopover.classList.toggle('opacity-100');
+        const isHidden = filtersPopover.classList.contains('hidden');
+        if (isHidden) {
+            filtersPopover.classList.remove('hidden', 'opacity-0', 'translate-y-2');
+            filtersPopover.classList.add('opacity-100', 'translate-y-0');
+        } else {
+            filtersPopover.classList.remove('opacity-100', 'translate-y-0');
+            filtersPopover.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => filtersPopover.classList.add('hidden'), 300);
+        }
     });
+
+    // Cierre del popover al hacer click fuera
+    document.addEventListener('click', (event) => {
+        const isButton = toggleFiltersBtn.contains(event.target) || event.target === toggleFiltersBtn;
+        if (!filtersPopover.classList.contains('hidden') && !filtersPopover.contains(event.target) && !isButton) {
+            filtersPopover.classList.remove('opacity-100', 'translate-y-0');
+            filtersPopover.classList.add('opacity-0', 'translate-y-2');
+            setTimeout(() => filtersPopover.classList.add('hidden'), 300);
+        }
+    });
+
 
     filterCarrera.addEventListener('change', (e) => {
         currentFilters.carrera = e.target.value;
@@ -396,44 +443,56 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
         currentFilters.semestre = e.target.value;
         render();
     });
+    
+    // NUEVO LISTENER PARA FILTRO DE ADEUDO
+    filterAdeudo.addEventListener('change', (e) => {
+        currentFilters.adeudo = e.target.value;
+        render();
+    });
 
     clearFiltersBtn.addEventListener('click', () => {
         filterCarrera.value = '';
         filterSemestre.value = '';
-        searchBar.value = ''; // Limpiar barra de búsqueda también
+        filterAdeudo.value = '';
+        searchBar.value = ''; 
         currentFilters.carrera = '';
         currentFilters.semestre = '';
+        currentFilters.adeudo = ''; 
         currentFilters.searchText = '';
         render();
-        // Opcional: Cerrar el popover después de limpiar
-        filtersPopover.classList.add('hidden', 'scale-95', 'opacity-0');
-        filtersPopover.classList.remove('scale-100', 'opacity-100');
+        // Cierra el popover 
+        filtersPopover.classList.remove('opacity-100', 'translate-y-0');
+        filtersPopover.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => filtersPopover.classList.add('hidden'), 300);
     });
 
     // Función de Exportación 
     const exportData = (format) => {
-        const studentsToExport = readLocal().map(s => ({
-            'Num Control': s.numControl,
-            'Nombre': s.nombre,
-            'Apellido Paterno': s.apellidoP,
-            'Apellido Materno': s.apellidoM,
-            'Semestre': s.semestre,
-            'Carrera': CARRERA_MAP[s.carrera] || s.carrera,
-            'Correo': s.correo,
-            'Status Pago': getStudentPaymentStatus(s.id).status,
-            'Adeudo': getStudentPaymentStatus(s.id).adeudo,
-        }));
+        const studentsToExport = readLocal().map(s => {
+            const statusObj = getStudentPaymentStatus(s.id);
+            return {
+                'Num Control': s.numControl,
+                'Nombre': s.nombre,
+                'Apellido Paterno': s.apellidoP,
+                'Apellido Materno': s.apellidoM,
+                'Semestre': s.semestre,
+                'Carrera': CARRERA_MAP[s.carrera] || s.carrera,
+                'Correo': s.correo,
+                'Status Pago': statusObj.status,
+                'Adeudo': statusObj.adeudo,
+            }
+        });
         
         const worksheet = XLSX.utils.json_to_sheet(studentsToExport);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Estudiantes");
-        XLSX.writeFile(workbook, `estudiantes_lista.${format}`);
+        XLSX.writeFile(workbook, `estudiantes_lista_${new Date().toISOString().slice(0,10)}.${format}`);
     };
     
     document.getElementById('export-xlsx').addEventListener('click', () => exportData('xlsx'));
     document.getElementById('export-csv').addEventListener('click', () => exportData('csv'));
 
-    // Re-render cuando cambie localStorage (por ejemplo, se asignó un concepto y se creó chargesList)
+    // Re-render cuando cambie localStorage 
     window.addEventListener('storage', (e) => {
       if (['chargesList', 'studentsList', 'chargesLastUpdate', 'studentsLastUpdate'].includes(e.key)) {
         try { render(); } catch (err) { /* silent */ }

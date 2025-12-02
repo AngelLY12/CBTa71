@@ -4,22 +4,26 @@ const pageTitle = "Conceptos de Cobro";
 ---
 
 <Layout title={pageTitle}>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">Todos los Conceptos</h1>
-      <a href="/new" class="px-4 py-2 bg-[#2e594d] text-white rounded-lg hover:bg-[#234539] transition-colors">
-        <i class="fas fa-plus mr-2"></i> Nuevo Concepto
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <div class="flex justify-between items-center mb-10 pb-4 border-b-2 border-green-100">
+      <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">
+        <i class="fas fa-file-invoice-dollar mr-3 text-green-700"></i> Gestión de Conceptos de Cobro
+      </h1>
+      <a href="/new" class="px-7 py-3 bg-green-700 text-white font-bold rounded-lg shadow-xl hover:bg-green-800 transition-all duration-300">
+        <i class="fas fa-plus-circle mr-2"></i> Crear Nuevo Concepto
       </a>
     </div>
 
-    <!-- Grid de tarjetas -->
-    <div id="concepts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Las tarjetas se renderizan en cliente -->
-    </div>
+    <div id="concepts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
+      </div>
   </div>
 
   <script type="module" client:load>
-  // Helpers para localStorage
+  // =======================================================
+  // Funciones de Ayuda (Se mantienen sin cambios)
+  // =======================================================
+  
   function getStudents() {
     return JSON.parse(localStorage.getItem('studentsList') || '[]');
   }
@@ -47,7 +51,6 @@ const pageTitle = "Conceptos de Cobro";
     try { localStorage.setItem('conceptsLastUpdate', Date.now().toString()); } catch(e) {}
   }
 
-  // Escapa HTML seguro (evita null)
   function escapeHtml(str = '') {
     return String(str).replace(/[&<>"']/g, m => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -55,51 +58,52 @@ const pageTitle = "Conceptos de Cobro";
   }
 
   function getScopeText(scope, concept) {
-    switch(scope) {
+    switch(String(scope || '').toLowerCase()) {
       case 'all': 
-        return 'Todos los estudiantes';
+      case 'todos':
+        return 'Todos los estudiantes activos';
       case 'career':
-        return `Carrera: ${concept.career}`;
+      case 'carrera':
+        return `Carrera: ${escapeHtml(concept.career)}`;
       case 'semester':
+      case 'semestre':
         return `${concept.semester}° Semestre`;
       case 'students':
-        return `${concept.selectedStudents?.length || 0} estudiantes específicos`;
+      case 'especificos':
+        return `${concept.selectedStudents?.length || 0} alumnos específicos`;
       default:
-        return 'No definido';
+        return 'Ámbito No Definido';
     }
   }
 
-  // Obtiene los alumnos que cumplen el ámbito del concepto
   function getTargetStudentsForConcept(concept) {
     const students = getStudents() || [];
     const scope = String(concept.scope || '').toLowerCase();
+    const activeStudents = students.filter(s => {
+      if (s.status) return String(s.status).toLowerCase() !== 'inactive' && String(s.status).toLowerCase() !== 'inactivo';
+      return true;
+    });
 
     switch (scope) {
       case 'all':
       case 'todos':
-        // Solo estudiantes activos si tienen campo status
-        return students.filter(s => {
-          if (s.status) return String(s.status).toLowerCase() !== 'inactive' && String(s.status).toLowerCase() !== 'inactivo';
-          return true;
-        });
+        return activeStudents;
       case 'career':
       case 'carrera':
-        return students.filter(s => String(s.carrera || s.career || '').toLowerCase() === String(concept.career || '').toLowerCase());
+        return activeStudents.filter(s => String(s.carrera || s.career || '').toLowerCase() === String(concept.career || '').toLowerCase());
       case 'semester':
       case 'semestre':
-        return students.filter(s => Number(s.semestre) === Number(concept.semester));
+        return activeStudents.filter(s => Number(s.semestre) === Number(concept.semester));
       case 'students':
       case 'especificos':
-        // selectedStudents puede ser lista de ids o de objetos {id,...}
         const sel = concept.selectedStudents || [];
         const ids = sel.map(x => (typeof x === 'object' ? String(x.id) : String(x)));
-        return students.filter(s => ids.includes(String(s.id)));
+        return activeStudents.filter(s => ids.includes(String(s.id)));
       default:
         return [];
     }
   }
 
-  // Asigna un concepto según su ámbito: crea cargos para los alumnos objetivo y actualiza adeudos
   function assignConceptToScope(concept, opts = {}) {
     const targets = getTargetStudentsForConcept(concept);
     if (!targets || targets.length === 0) {
@@ -107,7 +111,6 @@ const pageTitle = "Conceptos de Cobro";
       throw new Error('No target students for concept');
     }
 
-    // Asegurar id del concepto
     if (!concept.id) {
       concept.id = 'c_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
       const concepts = getConcepts();
@@ -120,9 +123,13 @@ const pageTitle = "Conceptos de Cobro";
     const existingCharges = getCharges();
     const nowIso = new Date().toISOString();
 
-    // Crear cargos solo para los targets que no tengan ya un cargo del mismo concepto
     const toAdd = targets.reduce((acc, s) => {
-      const exists = existingCharges.some(ec => ec.conceptId === concept.id && String(ec.studentId) === String(s.id));
+      const exists = existingCharges.some(ec => 
+        ec.conceptId === concept.id && 
+        String(ec.studentId) === String(s.id) && 
+        (String(ec.status || '').toLowerCase() === 'pending' || String(ec.status || '').toLowerCase() === 'pendiente')
+      );
+
       if (!exists) {
         acc.push({
           id: 'chg_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
@@ -138,22 +145,19 @@ const pageTitle = "Conceptos de Cobro";
     }, []);
 
     if (toAdd.length === 0) {
-      if (!opts.silent) alert('Ya existen cargos para los alumnos objetivo de este concepto.');
-      return;
+      if (!opts.silent) alert('Ya existen cargos pendientes para los alumnos objetivo de este concepto.');
+      return 0;
     }
 
-    // Guardar cargos y recalcular adeudos
     const combined = existingCharges.concat(toAdd);
     saveCharges(combined);
     recalcStudentAdeudosFromCharges();
 
-    // Actualizar marca en concepto (assignedCount/assignedScopes)
     const concepts = getConcepts();
     const idxc = concepts.findIndex(c => c.id === concept.id);
     if (idxc >= 0) {
       concepts[idxc].assignedCount = (concepts[idxc].assignedCount || 0) + toAdd.length;
       concepts[idxc].lastAssignedAt = nowIso;
-      // marcar assignedAll solo si scope es 'all'
       if ((concept.scope || '').toLowerCase() === 'all') concepts[idxc].assignedAll = true;
       saveConcepts(concepts);
     }
@@ -162,32 +166,32 @@ const pageTitle = "Conceptos de Cobro";
     return toAdd.length;
   }
 
-  // Recalcula adeudo de cada alumno usando todos los cargos actuales (chargesList)
   function recalcStudentAdeudosFromCharges() {
     const charges = getCharges();
     const students = getStudents();
-    const chargesByStudent = {};
+    const pendingChargesByStudent = {};
+    
     charges.forEach(ch => {
-      const sid = String(ch.studentId);
-      chargesByStudent[sid] = (chargesByStudent[sid] || 0) + Number(ch.amount || 0);
+      if (String(ch.status || '').toLowerCase() === 'pending' || String(ch.status || '').toLowerCase() === 'pendiente') {
+        const sid = String(ch.studentId);
+        pendingChargesByStudent[sid] = (pendingChargesByStudent[sid] || 0) + Number(ch.amount || 0);
+      }
     });
+
     const updated = students.map(s => {
-      const prev = Number(s.adeudo || 0);
-      const total = chargesByStudent[String(s.id)] || 0;
-      s.adeudo = parseFloat((total).toFixed(2));
+      const totalPending = pendingChargesByStudent[String(s.id)] || 0;
+      s.adeudo = parseFloat((totalPending).toFixed(2)); 
       return s;
     });
     saveStudents(updated);
   }
 
-  // Editar concepto: guardar en localStorage y redirigir a la interfaz /new para prellenar
   function editConcept(conceptId) {
     const concepts = getConcepts();
     const idx = concepts.findIndex(c => c.id === conceptId);
     if (idx < 0) { alert('Concepto no encontrado'); return; }
     const concept = concepts[idx];
 
-    // Guardar el concepto completo (o solo id) para que la página /new lo use y prellenar el formulario
     try {
       localStorage.setItem('editingConcept', JSON.stringify(concept));
       localStorage.setItem('editingConceptLastUpdate', Date.now().toString());
@@ -195,25 +199,20 @@ const pageTitle = "Conceptos de Cobro";
       console.error('No se pudo guardar editingConcept', e);
     }
 
-    // Redirigir a la interfaz de creación/edición. La página /new debe leer 'editingConcept' para prellenar.
     window.location.href = '/new?edit=' + encodeURIComponent(conceptId);
   }
 
-  // Eliminar concepto y sus cargos asociados, recalcular adeudos
   function deleteConcept(conceptId) {
-    if (!confirm('¿Eliminar este concepto y todos sus cargos? Esta acción no se puede deshacer.')) return;
+    if (!confirm('🚨 ¡ATENCIÓN! ¿Está seguro de eliminar este concepto y TODOS sus cargos (pendientes y pagados)? Esta acción no se puede deshacer y recalculará los adeudos de todos los alumnos.')) return;
 
-    // Eliminar concepto
     let concepts = getConcepts();
     concepts = concepts.filter(c => c.id !== conceptId);
     saveConcepts(concepts);
 
-    // Eliminar cargos asociados
     let charges = getCharges();
     charges = charges.filter(ch => ch.conceptId !== conceptId);
     saveCharges(charges);
 
-    // Recalcular adeudos
     recalcStudentAdeudosFromCharges();
 
     try { localStorage.setItem('conceptsLastUpdate', Date.now().toString()); } catch(e){}
@@ -224,66 +223,116 @@ const pageTitle = "Conceptos de Cobro";
     renderConcepts();
   }
 
-  // Render de conceptos con botón "Asignar a todos", "Editar" y "Eliminar"
+  // =======================================================
+  // Función de Render con el diseño educativo optimizado
+  // =======================================================
+
   function renderConcepts() {
     const grid = document.getElementById('concepts-grid');
     if (!grid) return;
     try {
-      const concepts = getConcepts();
+      const concepts = getConcepts().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       if (concepts.length === 0) {
         grid.innerHTML = `
-          <div class="col-span-full text-center py-12 text-gray-500">
-            <i class="fas fa-folder-open text-4xl mb-3"></i>
-            <p>No hay conceptos guardados.</p>
-            <a href="/new" class="text-[#2e594d] hover:underline mt-2 inline-block">Crear nuevo concepto</a>
+          <div class="col-span-full text-center py-20 bg-white rounded-xl shadow-lg border border-gray-200">
+            <i class="fas fa-folder-open text-6xl mb-4 text-gray-400"></i>
+            <p class="text-xl text-gray-600 font-semibold mb-3">Aún no hay conceptos de cobro creados.</p>
+            <p class="text-gray-500 mb-5">Utilice el botón "Crear Nuevo Concepto" para empezar a gestionar los cargos escolares.</p>
+            <a href="/new" class="inline-block px-5 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition-colors">
+              <i class="fas fa-plus-circle mr-2"></i> Crear Primer Concepto
+            </a>
           </div>
         `;
         return;
       }
 
-      grid.innerHTML = concepts.map(c => `
-        <div class="bg-white rounded-lg border shadow-sm hover:shadow-md transition-shadow p-5">
-          <div class="flex justify-between items-start mb-3">
-            <h3 class="font-bold text-gray-800">${escapeHtml(c.title)}</h3>
-            <span class="px-2 py-1 text-xs rounded-full ${c.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
-              ${c.status === 'active' ? 'Activo' : 'Borrador'}
-            </span>
-          </div>
+      grid.innerHTML = concepts.map(c => {
+        const amount = Number(c.amount) || 0;
+        const statusText = c.status === 'active' ? 'Activo' : 'Borrador';
+        const statusClass = c.status === 'active' 
+          ? 'bg-green-100 text-green-800 border-green-300' // Verde para Activo
+          : 'bg-yellow-100 text-yellow-800 border-yellow-300'; // Amarillo sutil para Borrador/Pendiente
+        
+        const scopeText = getScopeText(c.scope, c);
+        const assignedIndicator = c.assignedAll 
+          ? '<span class="text-xs font-medium text-green-600"><i class="fas fa-check-circle mr-1"></i> Aplicación Completa</span>' 
+          : '<span class="text-xs font-medium text-amber-600"><i class="fas fa-exclamation-triangle mr-1"></i> Pendiente de Asignación</span>';
 
-          <div class="text-2xl font-bold text-[#2e594d] mb-4">
-            $${(Number(c.amount) || 0).toFixed(2)}
-          </div>
+        const targetCount = getTargetStudentsForConcept(c).length;
 
-          <div class="space-y-2 text-sm">
-            <div class="flex items-center text-gray-600">
-              <i class="fas fa-layer-group w-5"></i>
-              <span class="ml-2">${getScopeText(c.scope, c)}</span>
-            </div>
-            ${c.description ? `<div class="flex items-start text-gray-600"><i class="fas fa-align-left w-5 mt-1"></i><span class="ml-2">${escapeHtml(c.description)}</span></div>` : ''}
-            <div class="flex items-center text-gray-400 text-xs"><i class="fas fa-clock w-4"></i><span class="ml-2">${new Date(c.createdAt).toLocaleDateString()}</span></div>
-          </div>
+        return `
+          <div class="bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-200 flex">
+            
+            <div class="p-5 flex-grow">
+              <div class="flex justify-between items-start mb-2">
+                <h3 class="text-lg font-bold text-gray-800 leading-snug">${escapeHtml(c.title)}</h3>
+                <span class="px-3 py-1 text-xs font-semibold rounded-full border ${statusClass} ml-3 flex-shrink-0">
+                  ${statusText}
+                </span>
+              </div>
 
-          <div class="mt-4 pt-4 border-t flex justify-between items-center">
-            <div class="text-xs text-gray-500">
-              ${c.assignedAll ? '<span class="text-green-600">Asignado a todos</span>' : '<span class="text-yellow-600">No asignado</span>'}
+              <div class="text-3xl font-extrabold text-amber-700 mb-4 tracking-wider">
+                $${amount.toFixed(2)}
+              </div>
+              
+              <div class="space-y-2 text-sm">
+                
+                <div class="flex items-start text-gray-700">
+                  <i class="fas fa-users w-5 pt-1 text-green-600 flex-shrink-0"></i>
+                  <div class="ml-3">
+                    <span class="font-semibold block leading-none">Ámbito:</span>
+                    <span class="text-gray-600">${scopeText}</span>
+                  </div>
+                </div>
+
+                ${c.description ? `
+                <div class="flex items-start text-gray-700">
+                  <i class="fas fa-info-circle w-5 pt-1 text-gray-500 flex-shrink-0"></i>
+                  <div class="ml-3">
+                    <span class="font-semibold block leading-none">Descripción:</span>
+                    <span class="text-gray-600">${escapeHtml(c.description.substring(0, 50) + (c.description.length > 50 ? '...' : ''))}</span>
+                  </div>
+                </div>` : ''}
+                
+                <div class="flex items-center text-gray-500 pt-1">
+                  <i class="fas fa-user-check w-5 text-gray-400"></i>
+                  <span class="ml-3 text-xs font-semibold uppercase tracking-wider">${targetCount} Alumnos Objetivo</span>
+                </div>
+              </div>
             </div>
-            <div class="flex space-x-2">
-              <button data-concept-id="${c.id || ''}" class="edit-concept px-3 py-1 text-sm border rounded hover:bg-gray-50"><i class="fas fa-edit mr-1"></i> Editar</button>
-              <button data-concept-id="${c.id || ''}" class="delete-concept px-3 py-1 text-sm bg-red-50 text-red-600 rounded hover:bg-red-100"><i class="fas fa-trash-alt mr-1"></i> Eliminar</button>
-              <button data-concept-id="${c.id || ''}" class="assign-all px-3 py-1 text-sm bg-[#2e594d] text-white rounded hover:bg-[#234539]">
-                <i class="fas fa-user-plus mr-1"></i> Asignar a todos
-              </button>
+
+            <div class="p-4 bg-gray-50 border-l border-gray-200 rounded-r-xl flex flex-col justify-between items-center space-y-3 w-28">
+                
+                <div class="text-center w-full">
+                    ${assignedIndicator}
+                </div>
+
+                <div class="flex flex-col space-y-2 w-full">
+                    <button data-concept-id="${c.id || ''}" title="Asignar cargos a los alumnos objetivo" class="assign-all px-2 py-2 text-xs font-medium bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition-colors w-full">
+                        <i class="fas fa-user-plus mr-1"></i> Asignar
+                    </button>
+                    <button data-concept-id="${c.id || ''}" title="Editar Concepto" class="edit-concept px-2 py-2 text-xs font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors w-full">
+                        <i class="fas fa-edit mr-1"></i> Editar
+                    </button>
+                    <button data-concept-id="${c.id || ''}" title="Eliminar Concepto" class="delete-concept px-2 py-2 text-xs font-medium bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors w-full">
+                        <i class="fas fa-trash-alt mr-1"></i> Eliminar
+                    </button>
+                </div>
+
+                <div class="text-xs text-gray-400 mt-auto">
+                    ${new Date(c.createdAt).toLocaleDateString()}
+                </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     } catch(e) {
       console.error(e);
-      grid.innerHTML = '<div class="text-red-500">Error cargando conceptos</div>';
+      grid.innerHTML = '<div class="col-span-full text-center text-red-500 p-10 bg-red-50 rounded-lg border border-red-200">Error cargando conceptos. Verifique la consola para detalles.</div>';
     }
   }
 
-  // Delegación de eventos para "Asignar a todos", "Editar", "Eliminar"
+  // Delegación de eventos (Se mantienen sin cambios)
   document.addEventListener('click', (ev) => {
     const assignBtn = ev.target.closest && ev.target.closest('.assign-all');
     if (assignBtn) {
@@ -291,10 +340,11 @@ const pageTitle = "Conceptos de Cobro";
       const concept = getConcepts().find(c => (c.id || '') === conceptId);
       if (!concept) { alert('Concepto no encontrado. Asegúrate de que el concepto tenga id.'); return; }
       try {
-        assignConceptToScope(concept);
-        renderConcepts();
-        // notificar students page para que se actualice si está abierta
-        try { localStorage.setItem('chargesLastUpdate', Date.now().toString()); } catch(e) {}
+        const assignedCount = assignConceptToScope(concept);
+        if (assignedCount > 0) {
+          renderConcepts();
+          try { localStorage.setItem('chargesLastUpdate', Date.now().toString()); } catch(e) {}
+        }
       } catch (err) {
         console.error(err);
       }
@@ -316,7 +366,7 @@ const pageTitle = "Conceptos de Cobro";
     }
   });
 
-  // Render inicial y re-render cuando cambie storage (concepts, charges, students)
+  // Render inicial y re-render cuando cambie storage
   renderConcepts();
   window.addEventListener('storage', (e) => {
     if (['conceptsList', 'chargesList', 'studentsList', 'chargesLastUpdate', 'studentsLastUpdate', 'conceptsLastUpdate'].includes(e.key)) {
@@ -326,7 +376,7 @@ const pageTitle = "Conceptos de Cobro";
 
   // Exponer funciones correctas y alias legacy
   window.assignConceptToScope = assignConceptToScope;
-  window.assignConceptToAll = assignConceptToScope; // alias para compatibilidad con llamadas antiguas
+  window.assignConceptToAll = assignConceptToScope; 
   window.editConcept = editConcept;
   window.deleteConcept = deleteConcept;
 </script>
