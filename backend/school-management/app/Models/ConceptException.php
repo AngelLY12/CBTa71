@@ -4,16 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\PaymentConcept;
 
-class PaymentConceptSemester extends Model
+class ConceptException extends Model
 {
-    protected $table = 'payment_concept_semester';
+    protected $table = 'concept_exceptions';
     use HasFactory;
-    protected $fillable = [
+    protected $fillable =[
         'payment_concept_id',
-        'semestre'
+        'user_id'
     ];
+
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
     public function paymentConcept(){
         return $this->belongsTo(PaymentConcept::class);
     }
