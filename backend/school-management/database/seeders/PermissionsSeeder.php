@@ -16,7 +16,6 @@ class PermissionsSeeder extends Seeder
     {
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
          $permissionsStudent = [
-            //permisos de alumnos
             'role' =>[
                 'view own financial overview',
                 'view own pending concepts summary',
@@ -86,7 +85,12 @@ class PermissionsSeeder extends Seeder
 
         $insertPermissions = function (array $permissions, string $type='role', ?string $belongsTo=null) {
             $now = now();
-            $existing = Permission::whereIn('name', $permissions)->pluck('name')->toArray();
+            $existing = Permission::whereIn('name', $permissions)
+                ->where('belongs_to', $belongsTo)
+                ->where('type', $type)
+                ->where('guard_name', 'web')
+                ->pluck('name')
+                ->toArray();
 
             $newPermissions = array_diff($permissions, $existing);
 
@@ -102,9 +106,8 @@ class PermissionsSeeder extends Seeder
             DB::table('permissions')->insert($data);
         };
 
-        $insertPermissions(array_merge($permissionsStudent['role']), 'role', UserRoles::STUDENT->value);
-        $insertPermissions(array_merge($permissionsStudent['model']), 'model', UserRoles::STUDENT->value);
-
+        $insertPermissions(array_merge($permissionsStudent['role']), 'role', UserRoles::STUDENT->value . '-payment');
+        $insertPermissions(array_merge($permissionsStudent['model']), 'model', UserRoles::STUDENT->value . '-payment');
         $insertPermissions(array_merge($permissionsStaff['role']), 'role', UserRoles::FINANCIAL_STAFF->value);
         $insertPermissions(array_merge($permissionsStaff['model']), 'model', UserRoles::FINANCIAL_STAFF->value);
 

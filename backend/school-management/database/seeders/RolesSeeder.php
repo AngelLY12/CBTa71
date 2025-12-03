@@ -18,17 +18,17 @@ class RolesSeeder extends Seeder
 
         foreach (UserRoles::values() as $roleName) {
             $attributes = ['name' => $roleName];
-            
+
             if ($roleName === UserRoles::ADMIN->value) {
                 $attributes['hidden'] = true;
             }
 
             $createdRoles[$roleName] = Role::firstOrCreate($attributes);
         }
-        $studentPermissions = Permission::where('belongs_to', UserRoles::STUDENT->value)
+
+        $studentPaymentPermissions = Permission::where('belongs_to', UserRoles::STUDENT->value . '-payment')
             ->where('type', 'role')
             ->get();
-
         $staffPermissions = Permission::where('belongs_to', UserRoles::FINANCIAL_STAFF->value)
             ->where('type', 'role')
             ->get();
@@ -41,9 +41,10 @@ class RolesSeeder extends Seeder
             ->where('type', 'model')
             ->get();
 
-        $createdRoles[UserRoles::STUDENT->value]->syncPermissions($studentPermissions->merge($globalPermissions));
+        $createdRoles[UserRoles::STUDENT->value]->syncPermissions($studentPaymentPermissions->merge($globalPermissions));
         $createdRoles[UserRoles::FINANCIAL_STAFF->value]->syncPermissions($staffPermissions->merge($globalPermissions));
-        $createdRoles[UserRoles::PARENT->value]->syncPermissions($studentPermissions->merge($globalPermissions));
+        $createdRoles[UserRoles::PARENT->value]->syncPermissions($studentPaymentPermissions->merge($globalPermissions));
         $createdRoles[UserRoles::ADMIN->value]->syncPermissions($adminPermissions);
+        $createdRoles[UserRoles::APPLICANT->value]->syncPermissions($studentPaymentPermissions->merge($globalPermissions));
     }
 }
