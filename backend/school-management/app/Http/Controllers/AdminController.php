@@ -15,6 +15,7 @@ use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\General\PaginationRequest;
 use App\Http\Requests\ImportUsersRequest;
+use App\Imports\StudentDetailsImport;
 use App\Imports\UsersImport;
 use Illuminate\Support\Facades\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -55,7 +56,7 @@ class AdminController extends Controller
         return Response::success(['affected' => $promotion], 'Se ejecutó la promoción de usuarios correctamente.');
 
     }
-    
+
     public function attachStudent(AttachStudentRequest $request)
     {
         $data= $request->validated();
@@ -85,12 +86,19 @@ class AdminController extends Controller
     public function import(ImportUsersRequest $request)
     {
         $file= $request->file('file');
+        $import=new UsersImport($this->service);
+        Excel::import($import,$file);
 
-        Excel::import(new UsersImport($this->service),$file);
+        return Response::success(['total_imported' => $import->insertedCount], 'Usuarios importados correctamente.');
 
-        return Response::success(null, 'Usuarios importados correctamente.');
+    }
 
-
+    public function importStudents(ImportUsersRequest $request)
+    {
+        $file= $request->file('file');
+        $import= new StudentDetailsImport($this->service);
+        Excel::import($import,$file);
+        return Response::success(['total_imported' => $import->insertedCount], 'Detalles de estudiantes importados correctamente.');
     }
 
     public function updatePermissions(UpdatePermissionsRequest $request)

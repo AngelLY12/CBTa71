@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Payments\Staff;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Illuminate\Foundation\Http\FormRequest;
@@ -85,7 +86,27 @@ use Illuminate\Foundation\Http\FormRequest;
  *         type="boolean",
  *         description="Indica si se deben reemplazar las relaciones existentes",
  *         example=true
- *     )
+ *     ),
+ *      @OA\Property(
+ *         property="exceptionStudents",
+ *         type="array",
+ *         description="Array de CURPs de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
+ *         @OA\Items(type="string"),
+ *         example={"11","60","90"}
+ *     ),
+ *     @OA\Property(
+ *         property="replaceExceptions",
+ *         type="boolean",
+ *         description="Indica si se deben reemplazar las relaciones de exceptions",
+ *         example=true
+ *     ),
+ *     @OA\Property(
+ *          property="applicantTags",
+ *          type="array",
+ *          description="Array de casos especiales para aplicar un concepto (opcional)",
+ *          @OA\Items(type="string"),
+ *          example={"applicants"}
+ *      ),
  * )
  */
 
@@ -116,10 +137,19 @@ class UpdatePaymentConceptRequest extends FormRequest
             'amount'           => 'sometimes|required|numeric|min:10',
             'is_global'        => 'sometimes|required|boolean',
             'applies_to'       => ['nullable','string','in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptAppliesTo::cases()))],
-            'semestres'        => 'nullable|array',
-            'careers'          => 'nullable|array',
-            'students'         => 'nullable|array',
+            'semestres'      => 'nullable|array',
+            'semestres.*'    => 'integer',
+            'careers'        => 'nullable|array',
+            'careers.*'      => 'integer',
+            'students'       => 'nullable|array',
+            'students.*'     => 'string',
+            'exceptionStudents'    => 'nullable|array',
+            'exceptionStudents.*'  => 'string',
             'replaceRelations' => 'sometimes|required|boolean',
+            'replaceExceptions' => 'sometimes|required|boolean',
+            'applicantTags' => 'nullable|array',
+            'applicantTags.*' => 'string|in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptApplicantType::cases())),
+
         ];
     }
 
@@ -137,10 +167,19 @@ class UpdatePaymentConceptRequest extends FormRequest
             'amount.numeric'        => 'El monto debe ser numérico.',
             'is_global.boolean'     => 'El campo is_global debe ser booleano.',
             'applies_to.in'         => 'El valor de applies_to no es válido.',
-            'semestres.array'       => 'Semestres debe ser un arreglo.',
-            'careers.array'         => 'Careers debe ser un arreglo.',
-            'students.array'        => 'Students debe ser un arreglo.',
+            'semestres.array'        => 'Semestres debe ser un arreglo.',
+            'semestres.*.integer'    => 'Cada semestre debe ser un número entero.',
+            'careers.array'          => 'Careers debe ser un arreglo.',
+            'careers.*.integer'      => 'Cada career debe ser un número entero.',
+            'students.array'         => 'Students debe ser un arreglo.',
+            'students.*.string'      => 'Cada student debe ser una cadena válida.',
+            'exceptionStudents.array'     => 'exceptionStudents debe ser un arreglo.',
+            'exceptionStudents.*.string'  => 'Cada exceptionStudent debe ser una cadena válida.',
             'replaceRelations.boolean' => 'replaceRelations debe ser booleano.',
+            'replaceExceptions.boolean' => 'replaceExceptions debe ser booleano.',
+            'applicantTags.array' => 'ApplicantTags debe ser un arreglo.',
+            'applicantTags.*.string' => 'Cada applicantTag debe ser una cadena válida.',
+            'applicantTags.*.in' => 'Cada applicantTag debe ser uno de los valores permitidos: ' . implode(', ', array_map(fn($case) => $case->value, PaymentConceptApplicantType::cases())),
         ];
     }
 
@@ -158,6 +197,12 @@ class UpdatePaymentConceptRequest extends FormRequest
             ]);
         }
 
+        if ($this->has('replaceExceptions')) {
+            $this->merge([
+                'replaceExceptions' => filter_var($this->replaceExceptions, FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
+
         if ($this->has('status')) {
             $this->merge([
                 'status' => strtolower($this->status),
@@ -168,5 +213,11 @@ class UpdatePaymentConceptRequest extends FormRequest
                 'applies_to' => strtolower($this->applies_to),
             ]);
         }
+        if ($this->has('applicantTags')) {
+            $this->merge([
+                'applicantTags' => array_map('strtolower', $this->applicantTags),
+            ]);
+        }
+
     }
 }
