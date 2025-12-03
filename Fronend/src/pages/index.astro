@@ -2,8 +2,7 @@
 import '../styles/global.css';
 import '../styles/tailwind.css';
 
-
-const pageTitle = "Acceso al Sistema - Mejorado";
+const pageTitle = "Acceso al Sistema - SIGE";
 ---
 <!DOCTYPE html>
 <html lang="es">
@@ -12,204 +11,199 @@ const pageTitle = "Acceso al Sistema - Mejorado";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso al Sistema - SIGE</title>
 
-
     <link rel="icon" href="/cbta71_icon.png" type="image/png">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
 
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 
-
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
-
     <style>
-        .font-inter { font-family: 'Inter', sans-serif; }
-
-
-        :root {
-            --dark-green: #1c4e3f;
-            --light-green: #4CAF50;
-            --bg-light: #f4f7fa;
-            --bg-dark-body: #17202A;
-        }
-
-
         body {
-            background-color: var(--bg-dark-body);
+            background-color: #17202A;
             background-image: radial-gradient(#2c3947 1px, transparent 0);
             background-size: 40px 40px;
         }
 
-
         .input-inset-shadow {
-            background-color: var(--bg-light);
+            background-color: #f4f7fa;
             box-shadow:
                 inset 2px 2px 5px rgba(0, 0, 0, 0.1),
                 inset -2px -2px 5px rgba(255, 255, 255, 0.7);
         }
-
 
         .btn-hover-green:hover {
             background-color: #43A047;
             transform: scale(1.01);
             box-shadow: 0 0 20px rgba(76, 175, 80, 0.7);
         }
-
-
-        .custom-dark-green { background-color: var(--dark-green); }
-        .custom-light-green { background-color: var(--light-green); }
     </style>
 </head>
 
-
 <body class="min-h-screen antialiased font-inter relative">
 
+<section class="min-h-screen flex items-center justify-center p-4 relative z-20"
+    x-data="{
+        mode: 'login',                     /* 'login' | 'recover' */
+        email: '',
+        password: '',
+        error: '',
+        message: '',
+        isLoading: false,
+        redirectTo: '/Dashboard',
 
-    <section class="min-h-screen flex items-center justify-center p-4 relative z-20">
+        handleLogin() {
+            this.error = '';
+            this.isLoading = true;
 
+            if (!this.email || !this.password) {
+                this.error = '⚠️ Por favor completa todos los campos.';
+                this.isLoading = false;
+                return;
+            }
 
-        <div class="absolute top-8 left-1/2 transform -translate-x-1/2 translate-y-3 z-30">
-            <img src="/Logo.png" 
-                alt="Logotipo SIGE" 
-                class="w-32 h-auto select-none pointer-events-none">
-        </div>
+            const validEmail = 'admin@uni.edu';
+            const validPass  = '123456';
 
+            let success = (this.email === validEmail && this.password === validPass);
 
-        <div 
-            x-data="{ 
-                email: '', password: '', role: 'Alumno',
-                error: '', isLoading: false, redirectTo: '/Dashboard',
+            setTimeout(() => {
+                this.isLoading = false;
 
-
-                handleSubmit() {
-                    this.error = '';
-                    this.isLoading = true;
-
-
-                    if (!this.email || !this.password) {
-                        this.error = '⚠️ Por favor completa todos los campos.';
-                        this.isLoading = false;
-                        return;
-                    }
-
-
-                    let success = false;
-
-
-                    if (this.role === 'Personal' && this.email === 'admin@uni.edu' && this.password === '123456') {
-                        success = true;
-                    } else if (this.role === 'Alumno' && this.email === 'student@uni.edu' && this.password === 'password') {
-                        success = true;
-                    }
-
-
-                    setTimeout(() => {
-                        this.isLoading = false;
-                        if (success) {
-                            this.error = `✅ Bienvenido, ${this.role}. Redirigiendo...`;
-                            localStorage.setItem('userRole', this.role);
-                            setTimeout(() => {
-                                window.location.href = this.redirectTo + '?role=' + this.role;
-                            }, 600);
-                        } else {
-                            this.error = `❌ Credenciales incorrectas para ${this.role}.`;
-                        }
-                    }, 1000);
+                if (success) {
+                    this.error = '✅ Bienvenido. Redirigiendo...';
+                    setTimeout(() => window.location.href = this.redirectTo, 800);
+                } else {
+                    this.error = '❌ Credenciales incorrectas.';
                 }
-            }"
+            }, 900);
+        },
 
+        handleRecovery() {
+            this.message = '';
+            this.isLoading = true;
 
-            @submit.prevent="handleSubmit"
-            class="w-full max-w-md bg-white p-0 rounded-3xl overflow-hidden transition-all duration-500 shadow-xl relative z-10 mt-28"
-        >
+            if (!this.email) {
+                this.message = '⚠️ Ingresa un correo válido.';
+                this.isLoading = false;
+                return;
+            }
 
+            setTimeout(() => {
+                this.isLoading = false;
+                this.message = '📩 Se ha enviado un enlace de recuperación a tu correo.';
+            }, 900);
+        }
+    }"
+>
 
-            <header class="space-y-4 pt-14 pb-6 border-b border-gray-100">
-                <div class="flex flex-col items-center justify-center">
-                    <h1 class="text-3xl md:text-3xl font-black text-gray-800 uppercase tracking-widest text-center">
-                        SIGE
-                    </h1>
-                    <p class="text-center text-sm text-gray-500 font-medium mt-1">Sistema Educativo</p>
-                </div>
+    <div class="absolute top-8 left-1/2 transform -translate-x-1/2 translate-y-3 z-30">
+        <img src="/Logo.png" alt="Logotipo SIGE" class="w-32 h-auto select-none pointer-events-none">
+    </div>
 
+    <div class="w-full max-w-md bg-white p-0 rounded-3xl overflow-hidden shadow-xl mt-28">
 
-                <div class="flex justify-center mx-auto max-w-sm px-6">
-                    <div class="flex bg-gray-100 p-1 rounded-full w-full shadow-inner">
+        <!-- HEADER -->
+        <header class="space-y-4 pt-14 pb-6 border-b border-gray-100">
+            <div class="flex flex-col items-center justify-center">
 
+                <template x-if="mode === 'login'">
+                    <h1 class="text-3xl font-black text-gray-800 uppercase tracking-widest">SIGE</h1>
+                </template>
 
-                        <button type="button" @click="role = 'Alumno'"
-                            :class="role === 'Alumno' ? 'custom-dark-green text-white shadow-lg font-bold' : 'text-gray-600'"
-                            class="flex-1 py-2 text-sm rounded-full uppercase tracking-wider">
-                            Alumno
-                        </button>
+                <template x-if="mode === 'recover'">
+                    <h1 class="text-2xl font-black text-gray-800 uppercase tracking-widest">Recuperar Contraseña</h1>
+                </template>
 
+                <p class="text-center text-sm text-gray-500 font-medium mt-1">Sistema Educativo</p>
+            </div>
+        </header>
 
-                        <button type="button" @click="role = 'Personal'"
-                            :class="role === 'Personal' ? 'custom-dark-green text-white shadow-lg font-bold' : 'text-gray-600'"
-                            class="flex-1 py-2 text-sm rounded-full uppercase tracking-wider">
-                            Personal
-                        </button>
+        <div class="p-8 space-y-7">
 
-
-                    </div>
-                </div>
-            </header>
-
-
-            <div class="p-8 space-y-7">
-
-
+            <!-- ALERTA LOGIN -->
+            <template x-if="mode === 'login' && error">
                 <div x-show="error"
-                    :class="error.includes('Bienvenido') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
+                    :class="error.includes('Bienvenido') ? 
+                            'bg-green-100 border-green-400 text-green-700' : 
+                            'bg-red-100 border-red-400 text-red-700'"
                     class="p-3 border rounded-xl text-xs font-medium shadow-inner">
                     <span x-text="error"></span>
                 </div>
+            </template>
 
+            <!-- ALERTA RECUPERACIÓN -->
+            <template x-if="mode === 'recover' && message">
+                <div x-show="message"
+                    :class="message.includes('enlace') ? 
+                            'bg-green-100 border-green-400 text-green-700' : 
+                            'bg-red-100 border-red-400 text-red-700'"
+                    class="p-3 border rounded-xl text-xs font-medium shadow-inner">
+                    <span x-text="message"></span>
+                </div>
+            </template>
 
-                <form class="space-y-6">
+            <!-- FORMULARIO LOGIN -->
+            <form class="space-y-6" x-show="mode === 'login'" @submit.prevent="handleLogin">
 
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="email" x-model="email" placeholder="Correo Electrónico"
+                        class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                </div>
 
-                    <div class="flex items-center rounded-xl p-3 input-inset-shadow">
-                        <input type="email" x-model="email" placeholder="Correo Electrónico"
-                            class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
-                    </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="password" x-model="password" placeholder="Contraseña"
+                        class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                </div>
 
+                <button type="submit"
+                    :disabled="isLoading"
+                    class="w-full py-3 px-4 mt-6 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
+                    <span x-text="isLoading ? 'Cargando...' : 'Entrar'"></span>
+                </button>
 
-                    <div class="flex items-center rounded-xl p-3 input-inset-shadow">
-                        <input type="password" x-model="password" placeholder="Contraseña"
-                            class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
-                    </div>
-
-
-                    <button type="submit"
-                        :disabled="isLoading"
-                        class="w-full py-3 px-4 mt-6 rounded-full shadow-xl text-base font-bold text-white custom-light-green uppercase btn-hover-green disabled:opacity-50">
-
-
-                        <span x-text="isLoading ? 'Cargando...' : 'Entrar'"></span>
+                <div class="text-center mt-4">
+                    <button type="button"
+                        @click="mode = 'recover'; error = ''; password = ''; message = '';"
+                        class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                        ¿Olvidaste tu contraseña?
                     </button>
-                </form>
+                </div>
 
+            </form>
 
-            </div>
+            <!-- FORMULARIO RECUPERAR CONTRASEÑA -->
+            <form class="space-y-6" x-show="mode === 'recover'" @submit.prevent="handleRecovery">
 
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="email" x-model="email" placeholder="Ingresa tu correo"
+                        class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                </div>
 
-            <footer class="text-center p-3 bg-gray-100 text-xs text-gray-500 border-t border-gray-200">
-                <p>2026 © SIGE</p>
-            </footer>
+                <button type="submit"
+                    :disabled="isLoading"
+                    class="w-full py-3 px-4 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
+                    <span x-text="isLoading ? 'Enviando...' : 'Enviar Enlace'"></span>
+                </button>
 
+                <div class="text-center mt-4">
+                    <button type="button"
+                        @click="mode = 'login'; message = '';"
+                        class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                        ← Volver al inicio de sesión
+                    </button>
+                </div>
+
+            </form>
 
         </div>
-    </section>
 
+        <footer class="text-center p-3 bg-gray-100 text-xs text-gray-500 border-t border-gray-200">
+            <p>2026 © SIGE</p>
+        </footer>
+    </div>
+</section>
 
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 </body>
 </html>
--
-</div>
-</a>        
