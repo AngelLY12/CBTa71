@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 
-class UsersImport implements ToCollection, ShouldQueue
+class StudentDetailsImport implements ToCollection, ShouldQueue
 {
     protected AdminServiceFacades $adminService;
     public int $insertedCount = 0;
@@ -16,6 +16,9 @@ class UsersImport implements ToCollection, ShouldQueue
     {
         $this->adminService = $adminService;
     }
+    /**
+    * @param Collection $collection
+    */
 
     public function collection(Collection $collection)
     {
