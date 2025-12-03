@@ -104,6 +104,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('admin-actions')->middleware(['role:admin|supervisor', 'throttle:global', 'log.action', 'user.status'])->group(function(){
         Route::middleware('permission:attach student')->post('/attach-student',[AdminController::class,'attachStudent']);
         Route::middleware('permission:import users')->post('/import-users', [AdminController::class, 'import']);
+        Route::middleware('permission:import users')->post('/import-students', [AdminController::class, 'importStudents']);
         Route::middleware('permission:sync permissions')->post('/update-permissions',[AdminController::class,'updatePermissions']);
         Route::middleware('permission:view users')->get('/showUsers',[AdminController::class,'index']);
         Route::middleware('permission:sync roles')->post('/updated-roles', [AdminController::class, 'syncRoles']);
