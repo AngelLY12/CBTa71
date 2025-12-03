@@ -1,0 +1,13 @@
+<?php
+
+namespace App\Exceptions\NotFound;
+
+use App\Exceptions\DomainException;
+
+class ExceptionStudentsNotFoundException extends DomainException
+{
+    public function __construct()
+    {
+        parent::__construct(404,'No se encontraron los estudiantes a los que se quiere hacer una excepción del concepto');
+    }
+}
