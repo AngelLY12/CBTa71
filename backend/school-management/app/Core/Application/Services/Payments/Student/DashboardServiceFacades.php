@@ -23,7 +23,10 @@ class DashboardServiceFacades {
         private OverduePaymentsUseCase $overdue,
         private PaymentHistoryUseCase $history,
         private CacheService $service
-    ) {}
+    ) {
+        $this->setCacheService($service);
+
+    }
 
     public function pendingPaymentAmount(User $user, bool $forceRefresh): PendingSummaryResponse {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":pending:$user->id");

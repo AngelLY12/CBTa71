@@ -5,6 +5,8 @@ namespace App\Core\Infraestructure\Repositories\Query\Payments;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
 use App\Core\Application\Mappers\PaymentConceptMapper as MappersPaymentConceptMapper;
 use App\Core\Domain\Entities\PaymentConcept;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
+use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
@@ -12,6 +14,7 @@ use App\Core\Infraestructure\Mappers\PaymentConceptMapper;
 use App\Core\Infraestructure\Traits\HasPendingQuery;
 use App\Models\PaymentConcept as EloquentPaymentConcept;
 use Carbon\Carbon;
+use Google\Service\Dfareporting\UserRole;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -145,6 +148,8 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
             $userId = $user->id;
             $careerId = $user->studentDetail?->career_id;
             $semester = $user->studentDetail?->semestre;
+            $isApplicant = $user->isApplicant();
+            $isNewStudent = $user->isNewStudent();
 
             $query->whereNotExists(function ($sub) use ($userId) {
                 $sub->select(DB::raw(1))
@@ -152,8 +157,11 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                     ->whereColumn('payments.payment_concept_id', 'payment_concepts.id')
                     ->where('payments.user_id', $userId);
             });
+            $query->whereDoesntHave('exceptions', fn($q) =>
+                $q->where('user_id', $userId)
+            );
 
-            $query->where(function ($q) use ($userId, $careerId, $semester) {
+            $query->where(function ($q) use ($userId, $careerId, $semester, $isApplicant, $isNewStudent) {
                 $q->where('is_global', true)
                 ->orWhereHas('users', fn($q) => $q->where('users.id', $userId))
                 ->when($careerId, fn($q) =>
@@ -161,6 +169,12 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 )
                 ->when($semester, fn($q) =>
                     $q->orWhereHas('paymentConceptSemesters', fn($q) => $q->where('semestre', $semester))
+                )
+                ->when($isApplicant, fn($q) =>
+                    $q->orWhereHas('applicantTypes', fn($q) => $q->where('tag', PaymentConceptApplicantType::APPLICANT->value))
+                )
+                ->when($isNewStudent, fn($q) =>
+                    $q->orWhereHas('applicantTypes', fn($q) => $q->where('tag', PaymentConceptApplicantType::NO_STUDENT_DETAILS->value))
                 );
             });
 

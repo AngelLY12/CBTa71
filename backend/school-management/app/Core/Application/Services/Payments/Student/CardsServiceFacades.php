@@ -23,6 +23,7 @@ class CardsServiceFacades
         private CacheService $service
     )
     {
+        $this->setCacheService($service);
     }
     public function setupCard(User $user): SetupCardResponse
     {

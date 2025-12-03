@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class EloquentStudentDetailRepository implements StudentDetailReInterface
 {
-    public function findStudentDetails(int $userId): StudentDetail
+    public function findStudentDetails(int $userId): ?StudentDetail
     {
         $eloquentStudentDetails = EloquentStudentDetail::where('user_id',$userId);
         return $eloquentStudentDetails ? StudentDetailMapper::toDomain($eloquentStudentDetails): null;
@@ -30,10 +30,10 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
 
     public function incrementSemesterForAll(): int
     {
-        return EloquentStudentDetail::where('semestre', '<=', 12)->increment('semestre');
+        return EloquentStudentDetail::where('semestre', '<=', 10)->increment('semestre');
     }
 
-    public function getStudentsExceedingSemesterLimit(int $maxSemester = 12): iterable
+    public function getStudentsExceedingSemesterLimit(int $maxSemester = 10): iterable
     {
         return EloquentStudentDetail::where('semestre', '>', $maxSemester)->get();
     }

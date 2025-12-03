@@ -24,7 +24,7 @@ class RefreshTokenUseCase
         TokenValidator::ensureIsTokenValid($refreshToken);
         $user = $this->uqRepo->findById($refreshToken->user_id);
         $this->refresh->revokeRefreshToken($refreshTokenValue);
-        $userRoles= $this->uqRepo->findUserRoles($user->id);
+        $userRoles= $user->getRoleNames();
         $userData=$this->formatUserData($userRoles, $user->fullName());
         $newAccessToken  = $this->userRepo->createToken($user->id, 'api-token');
         $newRefreshToken = $this->userRepo->createRefreshToken($user->id, 'refresh-token');
@@ -36,10 +36,9 @@ class RefreshTokenUseCase
 
     private function formatUserData(array $roles, string $fullName): array
    {
-        $rolesName = collect($roles)->pluck('name');
         return [
             'fullName' => $fullName,
-            'roles' => $rolesName->toArray()
+            'roles' => $roles
         ];
    }
 }

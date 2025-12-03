@@ -18,7 +18,9 @@ class PendingPaymentServiceFacades{
         private ShowOverduePaymentsUseCase $overdue,
         private PayConceptUseCase $pay,
         private CacheService $service,
-    ) {}
+    ) {
+        $this->setCacheService($service);
+    }
 
     public function showPendingPayments(User $user, bool $forceRefresh): array {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value . ":pending:$user->id");

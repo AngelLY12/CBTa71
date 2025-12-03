@@ -13,6 +13,7 @@ use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Admin\ActivateUserUseCase;
 use App\Core\Application\UseCases\Admin\AttachStudentDetailUserCase;
+use App\Core\Application\UseCases\Admin\BulkImportStudentDetailsUseCase;
 use App\Core\Application\UseCases\Admin\BulkImportUsersUseCase;
 use App\Core\Application\UseCases\Admin\DeleteLogicalUserUseCase;
 use App\Core\Application\UseCases\Admin\DisableUserUseCase;
@@ -40,26 +41,27 @@ class AdminServiceFacades
     use HasCache;
     private array $requestCache = [];
     public function __construct(
-        private FindStudentDetailUseCase $find_student,
-        private UpdateStudentDeatilUseCase $update_student,
-        private AttachStudentDetailUserCase $attach,
-        private RegisterUseCase $register,
-        private BulkImportUsersUseCase $import,
-        private SyncPermissionsUseCase $sync,
-        private ShowAllUsersUseCase $show,
-        private ActivateUserUseCase $activate,
-        private DeleteLogicalUserUseCase $delete,
-        private DisableUserUseCase $disable,
-        private FindAllRolesUseCase $roles,
-        private FindAllPermissionsUseCase $permissions,
-        private FindRoleByIdUseCase $role,
-        private FindPermissionByIdUseCase $permission,
-        private SyncRoleUseCase $syncRoles,
+        private FindStudentDetailUseCase        $find_student,
+        private UpdateStudentDeatilUseCase      $update_student,
+        private AttachStudentDetailUserCase     $attach,
+        private RegisterUseCase                 $register,
+        private BulkImportUsersUseCase          $import,
+        private BulkImportStudentDetailsUseCase $importStudentDetail,
+        private SyncPermissionsUseCase          $sync,
+        private ShowAllUsersUseCase             $show,
+        private ActivateUserUseCase             $activate,
+        private DeleteLogicalUserUseCase        $delete,
+        private DisableUserUseCase              $disable,
+        private FindAllRolesUseCase             $roles,
+        private FindAllPermissionsUseCase       $permissions,
+        private FindRoleByIdUseCase             $role,
+        private FindPermissionByIdUseCase       $permission,
+        private SyncRoleUseCase                 $syncRoles,
         private PromoteStudentsUseCase $promote,
         private CacheService $service
     )
     {
-
+        $this->setCacheService($service);
     }
     public function attachStudentDetail(CreateStudentDetailDTO $create): User
     {
@@ -99,6 +101,13 @@ class AdminServiceFacades
     public function importUsers(array $rows):int
     {
         $import=$this->import->execute($rows);
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        return $import;
+    }
+
+    public function importStudents(array $rows):int
+    {
+        $import=$this->importStudentDetail->execute($rows);
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $import;
     }

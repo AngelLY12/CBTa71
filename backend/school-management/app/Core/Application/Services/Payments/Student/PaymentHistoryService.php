@@ -14,7 +14,9 @@ class PaymentHistoryService {
     public function __construct(
         private GetPaymentHistoryUseCase $history,
         private CacheService $service
-    ) {}
+    ) {
+        $this->setCacheService($service);
+    }
 
     public function paymentHistory(User $user, int $perPage, int $page, bool $forceRefresh): PaginatedResponse {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::HISTORY->value . ":$user->id:$perPage:$page");

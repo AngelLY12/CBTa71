@@ -44,7 +44,23 @@ use Carbon\Carbon;
  *         nullable=true,
  *         example={"12345","67891"},
  *         description="Numeros de control de estudiantes asociados al concepto"
- *      )
+ *      ),
+ *     @OA\Property(
+ *          property="exceptionStudents",
+ *          type="array",
+ *          @OA\Items(type="string"),
+ *          nullable=true,
+ *          example={"12345","67891"},
+ *          description="Numeros de control de estudiantes a los que el concepto no aplica"
+ *       ),
+ *     @OA\Property(
+ *           property="applicantTags",
+ *           type="array",
+ *           @OA\Items(type="string"),
+ *           nullable=true,
+ *           example={"no_student_details","applicants"},
+ *           description="Array para aplicar conceptos a alumnos con casos especiales"
+ *        ),
  * )
  */
 
@@ -61,5 +77,7 @@ class CreatePaymentConceptDTO {
         public array|int|null $semesters = null,
         public array|int|null $careers = null,
         public array|string|null $students = null,
+        public array|string|null $exceptionStudents = null,
+        public array|string|null $applicantTags = null,
     ) {}
 }

@@ -23,6 +23,7 @@ class ParentsServiceFacades
         private CacheService $service
     )
     {
+        $this->setCacheService($service);
     }
 
     public function sendInvitation(int $studentId, string $parentEmail, int $createdBy): ParentInvite

@@ -33,7 +33,10 @@ class ConceptsServiceFacades{
         private ActivatePaymentConceptUseCase $activate,
         private CacheService $service
     )
-    {}
+    {
+        $this->setCacheService($service);
+
+    }
 
     public function showConcepts(string $status, int $perPage, int $page, bool $forceRefresh): PaginatedResponse{
         $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:$status:$perPage:$page");

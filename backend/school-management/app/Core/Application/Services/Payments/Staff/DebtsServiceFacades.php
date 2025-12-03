@@ -21,7 +21,10 @@ class DebtsServiceFacades{
         private CacheService $service
 
     )
-    {}
+    {
+        $this->setCacheService($service);
+
+    }
     public function showAllpendingPayments(?string $search, int $perPage, int $page, bool $forceRefresh): PaginatedResponse
     {
         $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value . ":pending:$search:$perPage:$page");

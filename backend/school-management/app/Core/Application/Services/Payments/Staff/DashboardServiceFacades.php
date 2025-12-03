@@ -25,6 +25,7 @@ class DashboardServiceFacades{
         private CacheService $service
     )
     {
+        $this->setCacheService($service);
     }
 
     public function pendingPaymentAmount(bool $onlyThisYear, bool $forceRefresh): PendingSummaryResponse

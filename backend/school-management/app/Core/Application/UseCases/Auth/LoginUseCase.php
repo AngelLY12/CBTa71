@@ -33,15 +33,14 @@ class LoginUseCase
         if(!$user || !Hash::check($request->password,$user->password)){
             throw new InvalidCredentialsException();
         }
-        if ($this->uqRepo->hasRole($user->id, UserRoles::STUDENT->value) && !$user->stripe_customer_id) {
+        if ($user->isStudent() && !$user->stripe_customer_id) {
             DB::transaction(function() use ($user) {
                 $stripeCustomerId = $this->stripe->createStripeUser($user);
                 $this->userRepo->update($user->id, ['stripe_customer_id' => $stripeCustomerId]);
                 $user->stripe_customer_id = $stripeCustomerId;
             });
         }
-        $userRoles= $this->uqRepo->findUserRoles($user->id);
-        $userData=$this->formatUserData($userRoles, $user->fullName(), $user->id);
+        $userData=$this->formatUserData($user->getRoleNames(), $user->fullName(), $user->id);
         $token = $this->userRepo->createToken($user->id,'api-token');
         $refreshToken = $this->userRepo->createRefreshToken($user->id, 'refresh-token');
         return GeneralMapper::toLoginResponse($token,$refreshToken,'Bearer', $userData);
@@ -49,11 +48,10 @@ class LoginUseCase
 
    private function formatUserData(array $roles, string $fullName, int $id): array
    {
-        $rolesName = collect($roles)->pluck('name');
         return [
             'id' => $id,
             'fullName' => $fullName,
-            'roles' => $rolesName->toArray()
+            'roles' => $roles
         ];
    }
 }

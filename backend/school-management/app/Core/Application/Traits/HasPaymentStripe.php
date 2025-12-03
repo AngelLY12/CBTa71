@@ -5,14 +5,16 @@ namespace App\Core\Application\Traits;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
 trait HasPaymentStripe
 {
 
-    public function __construct(
-        private PaymentRepInterface $repo,
-    )
-    {}
+    private PaymentRepInterface $repo;
+    public function setRepository(PaymentRepInterface $repo): void
+    {
+        $this->repo = $repo;
+    }
     public function updatePaymentWithStripeData(Payment $payment, $pi, $charge, PaymentMethod $savedPaymentMethod): Payment
     {
         $paymentMethodDetails = $this->formatPaymentMethodDetails($charge->payment_method_details);

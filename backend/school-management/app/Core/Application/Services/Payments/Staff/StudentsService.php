@@ -16,7 +16,10 @@ class StudentsService
         private ShowAllStudentsUseCase $show,
         private CacheService $service
     )
-    {}
+    {
+        $this->setCacheService($service);
+
+    }
 
     public function showAllStudents(?string $search, int $perPage, int $page, bool $forceRefresh):PaginatedResponse
     {

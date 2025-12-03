@@ -24,6 +24,8 @@ class CareerServiceFacades
         private CacheService $service
     )
     {
+        $this->setCacheService($service);
+
     }
 
     public function createCareer(Career $career): Career

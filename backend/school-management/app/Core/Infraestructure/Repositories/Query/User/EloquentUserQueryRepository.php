@@ -129,6 +129,11 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             'todos' => $usersQuery,
         };
 
+        $exceptionIds = $concept->getExceptionUsersIds();
+        if (!empty($exceptionIds)) {
+            $usersQuery->whereNotIn('id', $exceptionIds);
+        }
+
         $recipients = [];
         $usersQuery->chunk(100, function($users) use (&$recipients) {
             foreach ($users as $user) {

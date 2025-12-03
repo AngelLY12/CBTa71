@@ -66,6 +66,9 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
                     if ($roleName === UserRoles::SUPERVISOR->value) {
                         $q->orWhere('belongs_to', 'administration');
                     }
+                    if($roleName === UserRoles::STUDENT->value){
+                        $q->orWhere('belongs_to', $roleName . '-payment');
+                    }
                 })
                 ->select('id','name','type')
                 ->get()
@@ -93,7 +96,10 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
                   ->orWhere('belongs_to', 'global-payment');
                   if ($role === UserRoles::SUPERVISOR->value) {
                         $q->orWhere('belongs_to', 'administration');
-                    }
+                  }
+                if($role === UserRoles::STUDENT->value){
+                    $q->orWhere('belongs_to', $role . '-payment');
+                }
             })
             ->pluck('id')
             ->toArray();

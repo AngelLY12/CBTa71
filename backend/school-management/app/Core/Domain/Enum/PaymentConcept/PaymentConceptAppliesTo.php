@@ -18,4 +18,5 @@ enum PaymentConceptAppliesTo: string
     case SEMESTRE = 'semestre';
     case CARRERA_SEMESTRE = 'carrera_semestre';
     case ESTUDIANTES = 'estudiantes';
+    case TAG = 'tag';
 }

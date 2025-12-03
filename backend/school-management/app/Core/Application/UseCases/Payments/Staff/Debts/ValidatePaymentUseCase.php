@@ -36,6 +36,8 @@ class ValidatePaymentUseCase{
         public PaymentConceptQueryRepInterface $pcqRepo,
     )
     {
+        $this->setRepository($paymentRepo);
+
     }
     public function execute(string $search, string $payment_intent_id): PaymentValidateResponse
     {

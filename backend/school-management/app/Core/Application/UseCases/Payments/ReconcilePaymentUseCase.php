@@ -5,6 +5,7 @@ namespace App\Core\Application\UseCases\Payments;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Traits\HasPaymentStripe;
 use App\Core\Domain\Entities\Payment;
+use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
@@ -26,8 +27,11 @@ class ReconcilePaymentUseCase
         private StripeGatewayInterface $stripe,
         private UserQueryRepInterface $userRepo,
         private PaymentMethodQueryRepInterface $pmRepo,
+        private PaymentRepInterface $paymentRep,
     )
-    {}
+    {
+        $this->setRepository($paymentRep);
+    }
     public function execute():void
     {
         $affectedUsers = [];

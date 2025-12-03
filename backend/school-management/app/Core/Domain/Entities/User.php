@@ -5,6 +5,7 @@ namespace App\Core\Domain\Entities;
 use App\Core\Domain\Entities\StudentDetail;
 use App\Core\Domain\Enum\User\UserBloodType;
 use App\Core\Domain\Enum\User\UserGender;
+use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Enum\User\UserStatus;
 use Carbon\Carbon;
 
@@ -27,7 +28,8 @@ use Carbon\Carbon;
  *     @OA\Property(property="blood_type", ref="#/components/schemas/UserBloodType", nullable=true, example="O+"),
  *     @OA\Property(property="registration_date", type="string", format="date-time", nullable=true, example="2024-01-15T12:34:56Z"),
  *     @OA\Property(property="status", ref="#/components/schemas/UserStatus", nullable=true, example="activo"),
- *     @OA\Property(property="studentDetail", ref="#/components/schemas/DomainStudentDetail", nullable=true)
+ *     @OA\Property(property="studentDetail", ref="#/components/schemas/DomainStudentDetail", nullable=true),
+ *     @OA\Property(property="roles", type="array", nullable=true, @OA\Items(ref="#/components/schemas/DomainStudentDetail")),
  * )
  */
 class User
@@ -51,7 +53,9 @@ class User
         /** @var UserStatus */
         public ?UserStatus $status,
         /** @var StudentDetail */
-        public ?StudentDetail $studentDetail=null
+        public ?StudentDetail $studentDetail=null,
+        /** @var Role[] */
+        public array $roles=[],
     ) {}
 
     public function fullName(): string
@@ -77,4 +81,72 @@ class User
         $this->studentDetail = $detail;
     }
     public function getStudentDetail(){return $this->studentDetail;}
+    public function addRole(Role $role): void
+    {
+        foreach ($this->roles as $r) {
+            if ($r->id === $role->id) return;
+        }
+        $this->roles[] = $role;
+    }
+    public function getRoles(): array
+    {return $this->roles;}
+
+    public function getRole(string $roleName): ?Role
+    {
+        foreach ($this->roles as $role) {
+            if ($role->name === $roleName) return $role;
+        }
+        return null;
+    }
+
+
+    public function hasRole(string $roleName): bool
+    {
+        foreach ($this->roles as $role) {
+            if ($role->name === $roleName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function hasAnyRole(array $roleNames): bool
+    {
+        foreach ($this->roles as $role) {
+            if (in_array($role->name, $roleNames, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function getRoleNames(): array
+    {
+        return array_map(fn(Role $r) => $r->name, $this->roles);
+    }
+
+    public function hasNoRole(): bool
+    {
+        return empty($this->roles);
+    }
+    public function isApplicant(): bool
+    {
+        return $this->hasRole(UserRoles::APPLICANT->value);
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->hasRole(UserRoles::STUDENT->value);
+    }
+
+    public function isNewStudent(): bool
+    {
+        return $this->isStudent() && !$this->studentDetail;
+    }
+
+    public function isParent(): bool
+    {
+        return $this->hasRole(UserRoles::PARENT->value);
+    }
+
 }

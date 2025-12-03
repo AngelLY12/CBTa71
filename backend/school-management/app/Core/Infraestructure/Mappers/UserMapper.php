@@ -31,6 +31,12 @@ class UserMapper{
         if ($user->studentDetail) {
             $domainUser->setStudentDetail(StudentDetailMapper::toDomain($user->studentDetail));
         }
+        if($user->roles)
+        {
+            foreach ($user->roles as $role){
+                $domainUser->addRole(RolesAndPermissionMapper::toRoleDomain($role));
+            }
+        }
         return $domainUser;
 
     }
