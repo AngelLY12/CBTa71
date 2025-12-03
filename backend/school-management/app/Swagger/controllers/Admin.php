@@ -358,6 +358,15 @@ public function updateStudentDetails(){}
  *         description="Usuarios importados correctamente.",
  *         @OA\JsonContent(
  *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(
+ *                  property="data",
+ *                  type="object",
+ *                  @OA\Property(
+ *                      property="total_imported",
+ *                      type="integer",
+ *                      example=32
+ *                  )
+ *              ),
  *             @OA\Property(property="message", type="string", example="Usuarios importados correctamente.")
  *         )
  *     ),
@@ -372,6 +381,67 @@ public function updateStudentDetails(){}
  * )
  */
 public function import(){}
+
+
+/**
+ * @OA\Post(
+ *     path="/api/v1/admin-actions/import-students",
+ *     summary="Importar detalles estudiantiles desde un archivo Excel",
+ *      description="Permite subir un archivo Excel (.xlsx) con los detalles estudiantiles de los usuarios.
+ *      Solo se insertarán filas con CURP existente en la base de datos y con career_id, n_control y semestre definidos.
+ *      Columnas esperadas:
+ *     1. curp (CURP del usuario)
+ *     2. career_id (ID de la carrera)
+ *     3. n_control (Número de control)
+ *     4. semestre (Semestre)
+ *     5. group (opcional)
+ *     6. workshop (opcional)",
+ *     tags={"Admin"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 required={"file"},
+ *                 @OA\Property(
+ *                     property="file",
+ *                     type="string",
+ *                     format="binary",
+ *                     description="Archivo Excel (.xlsx) con las columnas en el orden especificado"
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Usuarios importados correctamente.",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(
+ *                   property="data",
+ *                   type="object",
+ *                   @OA\Property(
+ *                       property="total_imported",
+ *                       type="integer",
+ *                       example=32
+ *                   )
+ *               ),
+ *             @OA\Property(property="message", type="string", example="Usuarios importados correctamente.")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Error en la validación o formato del archivo.",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=false),
+ *             @OA\Property(property="message", type="string", example="Archivo Excel inválido o columnas incorrectas.")
+ *         )
+ *     )
+ * )
+ */
+public function importStudents(){}
+
 
 /**
  * @OA\Post(

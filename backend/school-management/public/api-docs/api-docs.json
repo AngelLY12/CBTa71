@@ -521,6 +521,101 @@
                                             "type": "boolean",
                                             "example": true
                                         },
+                                        "data": {
+                                            "properties": {
+                                                "total_imported": {
+                                                    "type": "integer",
+                                                    "example": 32
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Usuarios importados correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación o formato del archivo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Archivo Excel inválido o columnas incorrectas."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/import-students": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Importar detalles estudiantiles desde un archivo Excel",
+                "description": "Permite subir un archivo Excel (.xlsx) con los detalles estudiantiles de los usuarios.\r\n *      Solo se insertarán filas con CURP existente en la base de datos y con career_id, n_control y semestre definidos.\r\n *      Columnas esperadas:\r\n *     1. curp (CURP del usuario)\r\n *     2. career_id (ID de la carrera)\r\n *     3. n_control (Número de control)\r\n *     4. semestre (Semestre)\r\n *     5. group (opcional)\r\n *     6. workshop (opcional)",
+                "operationId": "a2fb9e09634f7bad889068a279fd8a45",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "Archivo Excel (.xlsx) con las columnas en el orden especificado",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuarios importados correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_imported": {
+                                                    "type": "integer",
+                                                    "example": 32
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
                                         "message": {
                                             "type": "string",
                                             "example": "Usuarios importados correctamente."
@@ -5334,6 +5429,30 @@
                             "67891"
                         ],
                         "nullable": true
+                    },
+                    "exceptionStudents": {
+                        "description": "Numeros de control de estudiantes a los que el concepto no aplica",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "12345",
+                            "67891"
+                        ],
+                        "nullable": true
+                    },
+                    "applicantTags": {
+                        "description": "Array para aplicar conceptos a alumnos con casos especiales",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "no_student_details",
+                            "applicants"
+                        ],
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -5396,6 +5515,30 @@
                         ],
                         "nullable": true
                     },
+                    "exceptionStudents": {
+                        "description": "Numeros de control de estudiantes a los que el concepto no aplica",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "12345",
+                            "67891"
+                        ],
+                        "nullable": true
+                    },
+                    "applicantTags": {
+                        "description": "Array para aplicar conceptos a alumnos con casos especiales",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "no_student_details",
+                            "applicants"
+                        ],
+                        "nullable": true
+                    },
                     "appliesTo": {
                         "oneOf": [
                             {
@@ -5408,6 +5551,11 @@
                     },
                     "replaceRelations": {
                         "description": "Si es true, reemplaza las relaciones existentes con las nuevas",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "replaceExceptions": {
+                        "description": "Si es true, reemplaza los estudiantes a los que no aplica el concepto",
                         "type": "boolean",
                         "example": false
                     }
@@ -6703,6 +6851,23 @@
                             2,
                             3
                         ]
+                    },
+                    "exceptionUserIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    "applicantTags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentConceptApplicantType"
+                        }
                     }
                 },
                 "type": "object"
@@ -6947,9 +7112,25 @@
                             }
                         ],
                         "nullable": true
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DomainStudentDetail"
+                        },
+                        "nullable": true
                     }
                 },
                 "type": "object"
+            },
+            "PaymentConceptApplicantType": {
+                "description": "Tags de casos especiales",
+                "type": "string",
+                "enum": [
+                    "applicant",
+                    "no_student_details"
+                ],
+                "example": "applicant"
             },
             "PaymentConceptAppliesTo": {
                 "description": "A quien aplica el concepto de pago",
@@ -6959,7 +7140,8 @@
                     "carrera",
                     "semestre",
                     "carrera_semestre",
-                    "estudiantes"
+                    "estudiantes",
+                    "tag"
                 ],
                 "example": "todos"
             },
@@ -7714,6 +7896,28 @@
                             "55",
                             "89"
                         ]
+                    },
+                    "exceptionStudents": {
+                        "description": "Array de CURPs de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "11",
+                            "60",
+                            "90"
+                        ]
+                    },
+                    "applicantTags": {
+                        "description": "Array de casos especiales para aplicar un concepto (opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "applicants"
+                        ]
                     }
                 },
                 "type": "object"
@@ -7800,6 +8004,33 @@
                         "description": "Indica si se deben reemplazar las relaciones existentes",
                         "type": "boolean",
                         "example": true
+                    },
+                    "exceptionStudents": {
+                        "description": "Array de CURPs de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "11",
+                            "60",
+                            "90"
+                        ]
+                    },
+                    "replaceExceptions": {
+                        "description": "Indica si se deben reemplazar las relaciones de exceptions",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "applicantTags": {
+                        "description": "Array de casos especiales para aplicar un concepto (opcional)",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "applicants"
+                        ]
                     }
                 },
                 "type": "object"
