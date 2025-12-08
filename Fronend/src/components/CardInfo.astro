@@ -1,68 +1,126 @@
 ---
-// src/components/CardInfo.astro - Versión FINAL con ÍCONOS DE COLOR y AÑO AUTOMÁTICO
+// src/components/CardInfo.astro - Versión FINAL con ÍCONOS DE COLOR y AÑO AUTOMÁTIC
+const { title, value, description, icon, href } = Astro.props;
 
-interface Props {
-    title: string;
-    value: string;
-    description: string;
-    icon: 'students' | 'pending' | 'recaudado';
-    href: string;
+let displayValue = value;
+
+if (icon === 'students' && !value) {
+    const studentsJSON = '[]';
+    displayValue = studentsJSON;
 }
 
-const { title, value, description, icon, href } = Astro.props; 
-
-// --- LÓGICA DE FECHA AUTOMÁTICA ---
 let finalDescription = description;
-// Verifica si es la tarjeta de estudiantes para sobrescribir la descripción con el año actual
 if (icon === 'students') {
-    const currentYear = new Date().getFullYear();
-    finalDescription = `Matriculados ${currentYear}`;
+    const currentYear = new Date().getFullYear();
+    finalDescription = `Matriculados ${currentYear}`;
 }
-// ----------------------------------
 
 // Colores de los íconos
 const iconColors = {
-    students: 'text-[#3b7666]',  // Verde oscuro
-    pending: 'text-yellow-600',  // Amarillo/Naranja para pendiente
-    recaudado: 'text-blue-600',  // Azul para dinero/recaudado
+    students: 'text-[#3b7666]',
+    pending: 'text-yellow-600',
+    recaudado: 'text-blue-600',
 };
 
 // Función para obtener el SVG de los íconos
-const getIconSvg = (iconName: string, sizeClass: string) => {
-    const getSvgContent = (className: string) => {
-            switch (iconName) {
-                case 'students':
-                    return `<svg xmlns="http://www.w3.org/2000/svg" class="${className}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 13a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M8 21v-1a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v1"></path><path d="M15 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M17 10h2a2 2 0 0 1 2 2v1"></path><path d="M5 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M3 10h2a2 2 0 0 1 2 2v1"></path></svg>`;
-                case 'pending':
-                    return `<svg xmlns="http://www.w3.org/2000/svg" class="${className}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M12 7v5l3 3"></path></svg>`;
-                case 'recaudado':
-                    return `<svg xmlns="http://www.w3.org/2000/svg" class="${className}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 9m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"></path><path d="M14 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M17 9v-2a2 2 0 0 0 -2 -2h-10a2 2 0 0 0 -2 2v6a2 2 0 0 0 2 2h2"></path></svg>`;
-                default:
-                    return '';
-            }
-    }
+const getIconSvg = (iconName, sizeClass) => {
+    const getSvgContent = (className) => {
+            switch (iconName) {
+                case 'students':
+                    return `<svg xmlns="http://www.w3.org/2000/svg" class="${className}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 13a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M8 21v-1a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v1"></path><path d="M15 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M17 10h2a2 2 0 0 1 2 2v1"></path><path d="M5 5a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M3 10h2a2 2 0 0 1 2 2v1"></path></svg>`;
+                case 'pending':
+                    return `<svg xmlns="http://www.w3.org/2000/svg" class="${className}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M12 7v5l3 3"></path></svg>`;
+                case 'recaudado':
+                    return `<svg xmlns="http://www.w3.org/2000/svg" class="${className}" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M7 9m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"></path><path d="M14 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M17 9v-2a2 2 0 0 0 -2 -2h-10a2 2 0 0 0 -2 2v6a2 2 0 0 0 2 2h2"></path></svg>`;
+                default:
+                    return '';
+            }
+    }
 
-    return getSvgContent(sizeClass);
+    return getSvgContent(sizeClass);
 };
 ---
 
 <a href={href} class="bg-white px-4 py-3 rounded-xl border border-[#3b7666]/30 shadow-lg flex flex-col items-center justify-between h-auto w-full text-center
-            transition-all duration-200 hover:shadow-xl focus:outline-none cursor-pointer">
-    
-    {/* SECCIÓN 1: TÍTULO e ÍCONO */}
-    <div class="flex justify-between items-start w-full mb-1">
-        <h3 class="text-sm font-medium text-gray-700">
-            {title}
-        </h3>
-        {/* ÍCONO EN LA ESQUINA SUPERIOR DERECHA CON COLOR */}
-        <span class="flex-shrink-0" class:list={[iconColors[icon]]} set:html={getIconSvg(icon, 'w-5 h-5')}></span>
-    </div>
-    
-    {/* SECCIÓN 2: VALOR PRINCIPAL Y DESCRIPCIÓN */}
-    <div class="flex flex-col items-center justify-center w-full my-2">
-        {/* El valor usa el color principal de la tarjeta/ícono */}
-        <p class:list={['text-2xl md:text-3xl font-bold', iconColors[icon]]}>{value}</p> 
-        {/* DESCRIPCIÓN FINAL (CON AÑO ACTUAL PARA ESTUDIANTES) */}
-        <p class="text-xs text-gray-500 mt-1">{finalDescription}</p> 
-    </div>
+            transition-all duration-200 hover:shadow-xl focus:outline-none cursor-pointer">
+    
+    <div class="flex justify-between items-start w-full mb-1">
+        <h3 class="text-sm font-medium text-gray-700">
+            {title}
+        </h3>
+        <span class="flex-shrink-0" class:list={[iconColors[icon]]} set:html={getIconSvg(icon, 'w-5 h-5')}></span>
+    </div>
+    
+    <div class="flex flex-col items-center justify-center w-full my-2">
+        {/* El valor usa el color principal de la tarjeta/ícono */}
+        <p class:list={['text-2xl md:text-3xl font-bold', iconColors[icon]]} id={icon === 'students' ? 'student-count' : (icon === 'recaudado' ? 'total-recaudado' : '')}>
+            {displayValue}
+        </p> 
+        {/* DESCRIPCIÓN FINAL (CON AÑO ACTUAL PARA ESTUDIANTES) */}
+        <p class="text-xs text-gray-500 mt-1">{finalDescription}</p> 
+    </div>
 </a>
+
+<script define:vars={{icon}}>
+    if (icon === 'students') {
+        const updateStudentCount = () => {
+            try {
+                const stored = localStorage.getItem('studentsList');
+                const students = stored ? JSON.parse(stored) : [];
+                const count = Array.isArray(students) ? students.length : 0;
+                
+                const element = document.getElementById('student-count');
+                if (element) {
+                    element.textContent = String(count);
+                }
+            } catch (e) {
+                console.log('[v0] Error al leer estudiantes:', e);
+            }
+        };
+        
+        updateStudentCount();
+        window.addEventListener('storage', updateStudentCount);
+        window.addEventListener('studentsUpdated', updateStudentCount);
+    }
+    
+    if (icon === 'recaudado') {
+        const updateTotalRecaudado = () => {
+            try {
+                const stored = localStorage.getItem('chargesList');
+                const charges = stored ? JSON.parse(stored) : [];
+                
+                const paidCharges = charges.filter(c => 
+                    String(c.status || '').toLowerCase() === 'paid' || 
+                    String(c.status || '').toLowerCase() === 'pagado'
+                );
+                
+                const total = paidCharges.reduce((sum, charge) => {
+                    return sum + (parseFloat(charge.amount) || 0);
+                }, 0);
+                
+                const formatted = new Intl.NumberFormat('es-MX', {
+                    style: 'currency',
+                    currency: 'MXN',
+                    minimumFractionDigits: 2
+                }).format(total);
+                
+                const element = document.getElementById('total-recaudado');
+                if (element) {
+                    element.textContent = formatted;
+                }
+            } catch (e) {
+                console.log('[v0] Error al leer pagos recaudados:', e);
+            }
+        };
+        
+        updateTotalRecaudado();
+        
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'chargesList') {
+                updateTotalRecaudado();
+            }
+        });
+        
+        window.addEventListener('chargesUpdated', updateTotalRecaudado);
+    }
+</script>

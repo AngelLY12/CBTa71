@@ -1,479 +1,821 @@
 ---
-// src/pages/new.astro
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Crear Concepto - CBTA 71">
-    <style>
-      [x-cloak] {
-        display: none !important;
-      }
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #eef2f5; /* Fondo más suave */
-      }
-      :root {
-        --primary-color: #2e594d; /* Verde/Teal principal */
-      }
-      .text-primary { color: var(--primary-color); }
-      .bg-primary { background-color: var(--primary-color); }
-      .focus\:ring-primary:focus { --tw-ring-color: var(--primary-color); }
-      .focus\:border-primary:focus { border-color: var(--primary-color); }
-      /* Sombra para la tarjeta principal */
-      .card-shadow {
-        box-shadow: 0 10px 30px -5px rgba(46, 89, 77, 0.15), 0 5px 15px -5px rgba(46, 89, 77, 0.05);
-      }
-      /* Custom gradient y border para el botón principal */
-      .btn-primary-gradient {
-        background: linear-gradient(145deg, var(--primary-color), #23453b);
-        border: none;
-      }
-      .btn-primary-gradient:hover {
-        background: linear-gradient(145deg, #4c7c6e, var(--primary-color));
-      }
+<Layout title="Crear/Editar Concepto - CBTA 71">
+    <style is:global>
+        /* DISEÑO MEJORADO Y MODERNO PARA ADMINISTRACIÓN ESCOLAR */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        [x-cloak] { display: none !important; }
+        
+        :root {
+            --primary-color: #10b981; /* emerald-500 moderno */
+            --primary-dark: #059669; /* emerald-600 */
+            --primary-light: #d1fae5; /* emerald-100 */
+            --primary-text: #047857; /* emerald-700 */
+            --secondary-color: #6366f1; /* indigo para acentos */
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: var(--text-primary);
+        }
+        
+        /* BOTONES CON DISEÑO MEJORADO */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark), #047857);
+            box-shadow: 0 12px 20px rgba(16, 185, 129, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1.5px solid var(--border-color);
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+        }
+
+        /* TARJETAS Y CARDS */
+        .card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border-color: var(--primary-light);
+        }
+
+        /* INPUTS CON ESTILO MEJORADO */
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 0.75rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            background: var(--bg-primary);
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+            background: var(--bg-primary);
+        }
+
+        /* CHECKBOXES Y RADIOS MEJORADOS */
+        input[type="checkbox"],
+        input[type="radio"] {
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] + label,
+        input[type="radio"] + label {
+            cursor: pointer;
+        }
+
+        /* SELECT CARDS MEJORADAS */
+        .select-card {
+            border: 1.5px solid var(--border-color);
+            border-radius: 0.875rem;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-primary);
+        }
+
+        .select-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+        }
+
+        .select-card-active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+            box-shadow: 0 0 0 1px var(--primary-color), 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        /* ALERT MEJORADO */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            animation: slideDown 0.3s ease;
+        }
+
+        .alert.success {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .alert.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* SECTION HEADERS */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-icon {
+            padding: 0.5rem;
+            border-radius: 0.625rem;
+            background: linear-gradient(135deg, #d1fae5 0%, #bfdbfe 100%);
+            color: var(--primary-text);
+            font-size: 1.125rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        /* TAGS Y BADGES */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.75rem;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: var(--primary-text);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+        }
+
+        /* HEADER MEJORADO */
+        .page-header {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        @media (min-width: 768px) {
+            .page-header {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+
+        .page-title-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-title-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* GRID RESPONSIVO */
+        .form-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        /* STICKY FOOTER MOBILE */
+        .sticky-footer {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+            display: flex;
+            gap: 0.75rem;
+            z-index: 40;
+        }
+
+        .sticky-footer button {
+            flex: 1;
+        }
+
+        @media (min-width: 640px) {
+            .sticky-footer {
+                display: none;
+            }
+        }
     </style>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-    <div class="p-4 sm:p-8">
-      <div
-        x-data="{
-          careers: [
-            { id: 'AGR', name: 'Técnico Agropecuario' },
-            { id: 'OFI', name: 'Técnico en Ofimática' },
-            { id: 'SMEC', name: 'Técnico en Soporte y Mantenimiento de Equipo de Cómputo' },
-          ],
-          semesters: [
-            { id: '1', name: 'Primer Semestre' },
-            { id: '3', name: 'Tercer Semestre' },
-            { id: '5', name: 'Quinto Semestre' },
-          ],
+    <div class="p-4 md:p-8 min-h-screen pb-24 sm:pb-0">
+        <div
+            x-data="{
+                careers: [
+                    { id: 'AGR', name: 'Téc. Agropecuario' },
+                    { id: 'OFI', name: 'Téc. en Ofimática' },
+                    { id: 'SMEC', name: 'Téc. en Soporte' },
+                ],
+                semesters: Array.from({length: 8}, (_, i) => ({ id: (i+1).toString(), name: (i+1) + '°Sem' })),
+                allStudents: [],
+                formData: {
+                    id: null,
+                    title: '',
+                    amount: 0,
+                    description: '',
+                    status: 'active',
+                    allStudents: true,
+                    selectedCareers: [],
+                    selectedSemesters: [],
+                    selectedSpecificStudents: []
+                },
+                searchTerm: '',
+                errorMessage: '',
 
-          // lista de alumnos poblada desde localStorage (/estudiante_lista) o fallback
-          allStudents: [],
+                initPage() {
+                    this.loadStudents();
+                    this.checkEditMode();
+                },
 
-          formData: {
-            title: '',
-            amount: 0,
-            career: '',
-            semester: '',
-            description: '',
-            status: 'inactive',
-            scope: 'all',
-            selectedStudents: []
-          },
-          searchTerm: '',
-          isSearching: false,
-          errorMessage: '',
+                checkEditMode() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (!urlParams.has('edit')) { localStorage.removeItem('editingConcept'); return; }
+                    const raw = localStorage.getItem('editingConcept');
+                    if (!raw) return;
 
-          // Cargar alumnos desde localStorage o API; mapear a {id,name}
-          loadStudents() {
-            try {
-              const raw = localStorage.getItem('studentsList');
-              if (raw) {
-                const parsed = JSON.parse(raw);
-                this.allStudents = parsed.map(s => ({
-                  id: String(s.id ?? s.numControl ?? s.num_control ?? s.studentId ?? ''),
-                  name: String(s.nombre ?? s.name ?? (s.nombreCompleto || '')).trim() || ('Alumno ' + (s.id || ''))
-                })).filter(s => s.id);
-                return;
-              }
-            } catch (e) {
-              console.warn('No se pudo leer studentsList de localStorage', e);
-            }
+                    try {
+                        const concept = JSON.parse(raw);
+                        if (this.allStudents.length === 0) {
+                            setTimeout(() => this.populateAlpine(concept), 100);
+                        } else {
+                            this.populateAlpine(concept);
+                        }
+                    } catch (e) { console.error('Error al cargar concepto en edición:', e); }
+                },
 
-            // Fallback local (mientras no haya studentsList)
-            this.allStudents = [
-              { id: '1001', name: 'Esteban Martínez' },
-              { id: '1002', name: 'Fernanda López' },
-              { id: '1003', name: 'Gabriel Soto' },
-              { id: '1004', name: 'Hilda Vázquez' },
-              { id: '1005', name: 'Iván Ramírez' },
-              { id: '1006', name: 'Juan Hernández' },
-              { id: '1007', name: 'Karla García' },
-              { id: '1008', name: 'Laura Mendoza' },
-              { id: '1009', name: 'Miguel Torres' },
-              { id: '1010', name: 'Natalia Ruiz' },
-            ];
-          },
+                populateAlpine(concept) {
+                    this.formData.id = concept.id;
+                    this.formData.title = concept.title;
+                    this.formData.amount = concept.amount;
+                    this.formData.description = concept.description || '';
+                    this.formData.status = concept.status;
 
-          toggleStudent(student) {
-            const index = this.formData.selectedStudents.findIndex(s => s.id === student.id);
-            if (index === -1) {
-              this.formData.selectedStudents.push(student);
-            } else {
-              this.formData.selectedStudents.splice(index, 1);
-            }
-            this.searchTerm = '';
-            this.isSearching = false;
-            this.errorMessage = '';
-          },
+                    if (concept.scopeRules) {
+                        this.formData.allStudents = concept.scopeRules.allStudents;
+                        this.formData.selectedCareers = concept.scopeRules.careers || [];
+                        this.formData.selectedSemesters = concept.scopeRules.semesters || [];
+                        
+                        if (Array.isArray(concept.scopeRules.specificStudents)) {
+                            this.formData.selectedSpecificStudents = concept.scopeRules.specificStudents.map(id => {
+                                const student = this.allStudents.find(s => String(s.id) === String(id));
+                                return student ? {id: student.id, name: student.name} : {id: String(id), name: 'ID: ' + id};
+                            });
+                        }
+                    }
+                },
 
-          get filteredStudents() {
-            if (!this.searchTerm) return this.allStudents.slice(0, 10);
-            const searchLower = this.searchTerm.toLowerCase();
-            return this.allStudents.filter(student =>
-              student.name.toLowerCase().includes(searchLower) ||
-              student.id.includes(searchLower)
-            ).slice(0, 10);
-          },
+                loadStudents() {
+                    try {
+                        const raw = localStorage.getItem('studentsList');
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            this.allStudents = parsed.map(s => ({
+                                id: String(s.id ?? s.numControl ?? ''),
+                                name: String(s.nombre ?? s.name ?? '').trim(),
+                                career: String(s.carrera ?? s.career ?? ''),
+                                semester: String(s.semestre ?? s.semester ?? '')
+                            })).filter(s => s.id);
+                            return;
+                        }
+                    } catch (e) { console.warn('Error cargando estudiantes:', e); }
+                    this.allStudents = [];
+                },
 
-          removeStudent(studentId) {
-            this.formData.selectedStudents = this.formData.selectedStudents.filter(s => s.id !== studentId);
-          },
+                toggleSpecificStudent(student) {
+                    const sid = String(student.id);
+                    const index = this.formData.selectedSpecificStudents.findIndex(s => String(s.id) === sid);
+                    if (index === -1) {
+                        this.formData.selectedSpecificStudents.push({id: sid, name: student.name});
+                    } else {
+                        this.formData.selectedSpecificStudents.splice(index, 1);
+                    }
+                    this.searchTerm = '';
+                },
 
-          submitForm() {
-            this.errorMessage = '';
-            if (!this.formData.title || !this.formData.amount || parseFloat(this.formData.amount) <= 0) {
-              this.errorMessage = 'Por favor, complete el Título y la Cantidad (debe ser mayor a $0.00) correctamente.';
-              return;
-            }
-            if (this.formData.scope === 'semester' && !this.formData.semester) {
-              this.errorMessage = 'Debe seleccionar un Semestre específico para aplicar este concepto.';
-              return;
-            }
-            if (this.formData.scope === 'career' && !this.formData.career) {
-              this.errorMessage = 'Debe seleccionar una Carrera específica para aplicar este concepto.';
-              return;
-            }
-            if (this.formData.scope === 'students' && this.formData.selectedStudents.length === 0) {
-              this.errorMessage = 'Debe seleccionar al menos un Alumno específico para aplicar este concepto.';
-              return;
-            }
-            
-            const newConcept = {
-              id: Date.now().toString(),
-              title: this.formData.title,
-              amount: parseFloat(this.formData.amount),
-              status: this.formData.status,
-              scope: this.formData.scope,
-              description: this.formData.description,
-              career: this.formData.career,
-              semester: this.formData.semester,
-              selectedStudents: this.formData.selectedStudents,
-              createdAt: new Date().toISOString()
-            };
+                get filteredStudents() {
+                    if (!this.searchTerm) return [];
+                    const searchLower = this.searchTerm.toLowerCase();
+                    return this.allStudents.filter(student =>
+                        student.name.toLowerCase().includes(searchLower) ||
+                        String(student.id).includes(searchLower)
+                    ).slice(0, 5);
+                },
 
-            // Guardar en localStorage
-            try {
-              const stored = JSON.parse(localStorage.getItem('conceptsList') || '[]');
-              stored.unshift(newConcept); // agregar al inicio
-              localStorage.setItem('conceptsList', JSON.stringify(stored));
-              
-              // Notificar éxito
-              this.errorMessage = 'Concepto guardado correctamente.';
-              
-              // Redireccionar después de 1s
-              setTimeout(() => {
-                window.location.href = '/concepts';
-              }, 1000);
+                removeSpecificStudent(studentId) {
+                    this.formData.selectedSpecificStudents = this.formData.selectedSpecificStudents.filter(s => String(s.id) !== String(studentId));
+                },
 
-            } catch(e) {
-              this.errorMessage = 'Error guardando el concepto.';
-              console.error(e);
-            }
-          },
-          cancel() {
-            // Redirige al usuario a la ruta /concepts, asumiendo que es la URL de concepts.astro
-            window.location.href = '/concepts'; 
-          },
-          handleScopeChange(scope) {
-            this.formData.scope = scope;
-            // Limpiar otros campos de alcance al cambiar
-            if (scope !== 'semester') this.formData.semester = '';
-            if (scope !== 'career') this.formData.career = '';
-            if (scope !== 'students') this.formData.selectedStudents = [];
-            this.errorMessage = '';
-          }
-        }"
-        x-init="loadStudents()"
-        class="space-y-8 max-w-4xl mx-auto bg-white p-6 md:p-10 card-shadow rounded-2xl border border-gray-100"
-      >
-        <header class="pb-4 border-b-2 border-primary/20">
-          <h1 class="text-3xl font-extrabold text-gray-800">Crear Nuevo Concepto de Cobro</h1>
-          <p class="text-gray-500 mt-1">Defina los detalles y el alcance de este nuevo concepto que se aplicará a los alumnos.</p>
-        </header>
+                submitForm() {
+                    this.errorMessage = '';
+                    
+                    if (!this.formData.title || parseFloat(this.formData.amount) <= 0) {
+                        this.errorMessage = '⚠️ Rellene Título y Monto (mayor a $0).';
+                        return;
+                    }
 
-        <!-- Mensaje de Error/Éxito con mejores colores -->
-        <div x-cloak x-show="errorMessage" 
-              :class="{ 
-                'bg-red-100 border-red-400 text-red-700': errorMessage.includes('Por favor') || errorMessage.includes('cancelada'),
-                'bg-green-100 border-green-400 text-green-700': errorMessage.includes('éxito')
-              }"
-              class="border p-4 rounded-lg transition duration-300 ease-in-out font-medium"
-        >
-          <span x-text="errorMessage"></span>
-        </div>
+                    if (!this.formData.allStudents) {
+                        const hasCareer = this.formData.selectedCareers.length > 0;
+                        const hasSemester = this.formData.selectedSemesters.length > 0;
+                        const hasSpecific = this.formData.selectedSpecificStudents.length > 0;
 
-        <!-- Formulario Principal -->
-        <form @submit.prevent="submitForm" class="space-y-6">
+                        if (!hasCareer && !hasSemester && !hasSpecific) {
+                            this.errorMessage = '⚠️ Seleccione al menos una Carrera, Semestre o Alumno Específico.';
+                            return;
+                        }
+                    }
+                    
+                    const newConcept = {
+                        id: this.formData.id || 'conc_' + Date.now().toString(36),
+                        title: this.formData.title,
+                        amount: parseFloat(this.formData.amount),
+                        status: this.formData.status,
+                        description: this.formData.description,
+                        scopeRules: {
+                            allStudents: this.formData.allStudents,
+                            careers: this.formData.selectedCareers,
+                            semesters: this.formData.selectedSemesters,
+                            specificStudents: this.formData.selectedSpecificStudents.map(s => String(s.id))
+                        },
+                        createdAt: new Date().toISOString()
+                    };
 
-          <!-- Sección 1: Detalles Básicos -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="col-span-1 md:col-span-2">
-              <label for="title" class="block text-sm font-bold text-gray-700 mb-1">Título del Concepto</label>
-              <input type="text" id="title" x-model="formData.title" placeholder="Ejemplo: Inscripción Semestral / Cuota de Laboratorio"
-                      class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition duration-150" required>
-            </div>
-
-            <div>
-              <label for="amount" class="block text-sm font-bold text-gray-700 mb-1">Monto ($)</label>
-              <div class="relative">
-                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-semibold">$</span>
-                <input type="number" id="amount" x-model.number="formData.amount" min="0.01" step="0.01" placeholder="0.00"
-                        class="w-full p-3 pl-8 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition duration-150" required>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sección 2: Estado (Status) - Mejora visual con sombreado y borde -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Estado Inicial</label>
-            <div class="flex flex-wrap gap-4">
-              <div @click="formData.status = 'active'"
-                :class="formData.status === 'active' ? 'bg-green-600 text-white shadow-lg shadow-green-600/30' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-green-600'"
-                class="px-5 py-3 rounded-full cursor-pointer transition duration-300 text-sm font-bold flex items-center">
-                <i class="fas fa-check-circle mr-2"></i> Activo (Listo para usar)
-              </div>
-              <div @click="formData.status = 'inactive'"
-                :class="formData.status === 'inactive' ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-primary'"
-                class="px-5 py-3 rounded-full cursor-pointer transition duration-300 text-sm font-bold flex items-center">
-                <i class="fas fa-edit mr-2"></i> Inactivo (Borrador)
-              </div>
-            </div>
-          </div>
-
-          <!-- Sección 3: Ámbito de Aplicación (Scope) - Tarjetas con íconos -->
-          <div class="pt-4 border-t border-gray-100">
-            <label class="block text-lg font-bold text-primary mb-3">Ámbito de Aplicación</label>
-            <p class="text-sm text-gray-500 mb-4">Seleccione a quién se aplicará este concepto de cobro.</p>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              
-              <!-- Opción: Todos -->
-              <label class="relative block cursor-pointer">
-                <input type="radio" name="scope" value="all" x-model="formData.scope" @change="handleScopeChange('all')" class="sr-only">
-                <div :class="formData.scope === 'all' ? 'ring-2 ring-offset-2 ring-primary border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'"
-                  class="p-4 border-2 rounded-xl transition duration-200 shadow-md h-full">
-                  <i class="fas fa-globe-americas text-3xl" :class="formData.scope === 'all' ? 'text-primary' : 'text-gray-400'"></i>
-                  <p class="font-bold text-gray-800 mt-2">Todos</p>
-                  <p class="text-xs text-gray-500">Aplica a todos los estudiantes activos.</p>
-                </div>
-              </label>
-              
-              <!-- Opción: Por Carrera -->
-              <label class="relative block cursor-pointer">
-                <input type="radio" name="scope" value="career" x-model="formData.scope" @change="handleScopeChange('career')" class="sr-only">
-                <div :class="formData.scope === 'career' ? 'ring-2 ring-offset-2 ring-primary border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'"
-                  class="p-4 border-2 rounded-xl transition duration-200 shadow-md h-full">
-                  <i class="fas fa-graduation-cap text-3xl" :class="formData.scope === 'career' ? 'text-primary' : 'text-gray-400'"></i>
-                  <p class="font-bold text-gray-800 mt-2">Por Carrera</p>
-                  <p class="text-xs text-gray-500">Solo alumnos de una carrera específica.</p>
-                </div>
-              </label>
-
-              <!-- Opción: Por Semestre -->
-              <label class="relative block cursor-pointer">
-                <input type="radio" name="scope" value="semester" x-model="formData.scope" @change="handleScopeChange('semester')" class="sr-only">
-                <div :class="formData.scope === 'semester' ? 'ring-2 ring-offset-2 ring-primary border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'"
-                  class="p-4 border-2 rounded-xl transition duration-200 shadow-md h-full">
-                  <i class="fas fa-layer-group text-3xl" :class="formData.scope === 'semester' ? 'text-primary' : 'text-gray-400'"></i>
-                  <p class="font-bold text-gray-800 mt-2">Por Semestre</p>
-                  <p class="text-xs text-gray-500">Solo alumnos en un semestre específico.</p>
-                </div>
-              </label>
-
-              <!-- Opción: Alumnos Específicos -->
-              <label class="relative block cursor-pointer">
-                <input type="radio" name="scope" value="students" x-model="formData.scope" @change="handleScopeChange('students')" class="sr-only">
-                <div :class="formData.scope === 'students' ? 'ring-2 ring-offset-2 ring-primary border-primary bg-primary/5' : 'border-gray-300 hover:border-primary'"
-                  class="p-4 border-2 rounded-xl transition duration-200 shadow-md h-full">
-                  <i class="fas fa-user-tag text-3xl" :class="formData.scope === 'students' ? 'text-primary' : 'text-gray-400'"></i>
-                  <p class="font-bold text-gray-800 mt-2">Específicos</p>
-                  <p class="text-xs text-gray-500">Alumnos seleccionados manualmente.</p>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Campos Condicionales -->
-          <div class="space-y-6">
-            <!-- Selección de Carrera -->
-            <div x-cloak x-show="formData.scope === 'career'">
-              <label for="career-select" class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Carrera</label>
-              <select id="career-select" x-model="formData.career"
-                      class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition duration-150">
-                        <option value="" disabled>-- Seleccione una Carrera --</option>
-                        <template x-for="career in careers" :key="career.id">
-                          <option :value="career.id" x-text="career.name"></option>
-                        </template>
-                      </select>
-            </div>
-
-            <!-- Selección de Semestre -->
-            <div x-cloak x-show="formData.scope === 'semester'">
-              <label for="semester-select" class="block text-sm font-bold text-gray-700 mb-1">Seleccionar Semestre</label>
-              <select id="semester-select" x-model="formData.semester"
-                      class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition duration-150">
-                        <option value="" disabled>-- Seleccione un Semestre --</option>
-                        <template x-for="semester in semesters" :key="semester.id">
-                          <option :value="semester.id" x-text="semester.name"></option>
-                        </template>
-                      </select>
-            </div>
-
-            <!-- Selección de Alumnos Específicos -->
-            <div x-cloak x-show="formData.scope === 'students'" class="bg-gray-50 p-6 rounded-xl border border-dashed border-primary/40">
-              <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center"><i class="fas fa-search mr-2 text-primary"></i> Buscar y Seleccionar Alumnos</h3>
-              
-              <div class="relative" x-data="{ open: false }" @click.away="open = false">
-                <input type="text" x-model="searchTerm" @focus="open = true" @input="isSearching = true; open = true"
-                        placeholder="Buscar por nombre o ID de alumno..."
-                        class="w-full p-3 border border-gray-300 rounded-lg shadow-inner focus:ring-2 focus:ring-primary focus:border-primary transition duration-150">
+                    try {
+                        let stored = JSON.parse(localStorage.getItem('conceptsList') || '[]');
+                        if (this.formData.id) {
+                            stored = stored.map(c => c.id === this.formData.id ? newConcept : c);
+                        } else {
+                            stored.unshift(newConcept);
+                        }
+                        localStorage.setItem('conceptsList', JSON.stringify(stored));
+                        
+                        let assignationMessage = '';
+                        if (newConcept.status === 'active') {
+                            try {
+                                const assignedCount = window.assignConceptToScope ? window.assignConceptToScope(newConcept) : 0;
+                                assignationMessage = `✓ Concepto guardado y aplicado a ${assignedCount} alumnos.`;
+                            } catch (assignError) {
+                                console.error('Error en cobro automático:', assignError);
+                                assignationMessage = '✓ Concepto guardado pero hubo un error al aplicar el cobro.';
+                            }
+                        } else {
+                            assignationMessage = '✓ Concepto guardado como Inactivo.';
+                        }
+                        
+                        localStorage.removeItem('editingConcept');
+                        this.errorMessage = assignationMessage + ' Redirigiendo...';
+                        
+                        setTimeout(() => { window.location.href = '/concepts'; }, 2000);
+                    } catch(e) {
+                        this.errorMessage = '❌ Error guardando el concepto en LocalStorage.';
+                    }
+                },
                 
-                <div x-show="open && searchTerm.length > 0" x-transition:enter.duration.150ms x-transition:leave.duration.100ms
-                      class="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                  <template x-if="filteredStudents.length > 0">
-                    <ul class="divide-y divide-gray-100">
-                      <template x-for="student in filteredStudents" :key="student.id">
-                        <li @click="toggleStudent(student); open = false" class="p-3 hover:bg-primary/10 cursor-pointer flex justify-between items-center text-sm">
-                          <span x-text="student.name + ' (' + student.id + ')'" class="font-medium text-gray-700"></span>
-                          <span x-show="formData.selectedStudents.some(s => s.id === student.id)" class="text-primary text-xs font-bold bg-primary/20 px-2 py-0.5 rounded-full">
-                            <i class="fas fa-check"></i>
-                          </span>
-                        </li>
-                      </template>
-                    </ul>
-                  </template>
-                  <template x-if="filteredStudents.length === 0">
-                    <p class="p-4 text-center text-gray-500 text-sm">No se encontraron resultados para "<span x-text="searchTerm"></span>".</p>
-                  </template>
-                </div>
-              </div>
-
-              <div x-cloak x-show="formData.selectedStudents.length > 0" class="mt-6 pt-4 border-t border-gray-200">
-                <p class="text-sm font-bold text-gray-700 mb-3">Alumnos seleccionados (<span x-text="formData.selectedStudents.length"></span>):</p>
-                <div class="flex flex-wrap gap-2">
-                  <template x-for="student in formData.selectedStudents" :key="student.id">
-                    <div class="flex items-center bg-primary text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
-                      <span x-text="student.name"></span>
-                      <button type="button" @click="removeStudent(student.id)" class="ml-2 text-white/80 hover:text-white transition duration-150">
-                        <i class="fas fa-times text-xs"></i>
-                      </button>
+                cancel() {
+                    localStorage.removeItem('editingConcept');
+                    window.location.href = '/concepts';
+                }
+            }"
+            x-init="initPage()"
+            class="max-w-4xl mx-auto space-y-6"
+        >
+            
+            <!-- HEADER PRINCIPAL -->
+            <div class="page-header">
+                <div class="page-title-group">
+                    <div class="page-title-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
                     </div>
-                  </template>
+                    <div>
+                        <h1 class="page-title">
+                            <span x-text="formData.id ? 'Editar' : 'Nuevo'"></span> Concepto
+                        </h1>
+                        <p class="page-subtitle">Administración y alcance del cargo escolar</p>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sección 4: Descripción -->
-          <div>
-            <label for="description" class="block text-sm font-bold text-gray-700 mb-1">Descripción del Concepto (Opcional)</label>
-            <textarea id="description" x-model="formData.description" rows="3" placeholder="Detalles sobre la aplicación, período de validez, o notas importantes."
-                      class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition duration-150"></textarea>
-          </div>
-
-          <!-- Sección 5: Botones de Acción -->
-          <div class="pt-6 flex justify-end space-x-4 border-t border-gray-100">
-            <button type="button" @click="cancel"
-                      class="px-8 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition duration-150 font-bold shadow-sm hover:shadow-md">
+                
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button type="button" @click="cancel" class="btn-secondary flex-1 sm:flex-none">
                         Cancelar
-                      </button>
-            <button type="submit"
-                      class="px-8 py-3 text-white rounded-lg transition duration-300 font-bold btn-primary-gradient shadow-lg shadow-primary/40 hover:shadow-xl hover:shadow-primary/50">
-                        <i class="fas fa-save mr-2"></i> Guardar Concepto
-                      </button>
-          </div>
-        </form>
-      </div>
+                    </button>
+                    <button type="submit" @click="submitForm" class="btn-primary flex-1 sm:flex-none">
+                        <i class="fas fa-check"></i>
+                        <span x-text="formData.id ? 'Actualizar' : 'Guardar'"></span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ALERTA DE ESTADO -->
+            <div x-cloak x-show="errorMessage"
+                :class="errorMessage.includes('✓') ? 'alert success' : 'alert error'"
+                class="alert"
+            >
+                <i :class="errorMessage.includes('✓') ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'" class="text-lg shrink-0"></i>
+                <span x-text="errorMessage"></span>
+            </div>
+
+            <form @submit.prevent="submitForm" class="form-grid">
+
+                <!-- SECCIÓN: DETALLES GENERALES -->
+                <div class="card">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-pencil-alt"></i>
+                        </div>
+                        <h2 class="section-title">Detalles Generales</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <label for="title" class="block text-sm font-semibold text-var(--text-primary) mb-2">Título del Concepto</label>
+                                <input type="text" id="title" x-model="formData.title" placeholder="Ej. Inscripción Semestre Feb-Jul" required>
+                            </div>
+
+                            <div>
+                                <label for="amount" class="block text-sm font-semibold text-var(--text-primary) mb-2">Monto ($)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-var(--text-secondary) font-semibold text-sm">$</span>
+                                    <input type="number" id="amount" x-model.number="formData.amount" min="0.01" step="0.01" placeholder="0.00" class="pl-7 text-right" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="description" class="block text-sm font-semibold text-var(--text-primary) mb-2">Descripción (Opcional)</label>
+                            <textarea id="description" x-model="formData.description" rows="2" placeholder="Notas relevantes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: ALCANCE DEL COBRO -->
+                <div class="card">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-users-cog"></i>
+                        </div>
+                        <h2 class="section-title">Alcance del Cobro</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div @click="formData.allStudents = true"
+                            :class="formData.allStudents ? 'select-card-active' : 'select-card'"
+                            class="select-card"
+                        >
+                            <div class="flex items-start gap-4">
+                                <div :class="formData.allStudents ? 'bg-var(--primary-color) text-white' : 'bg-var(--bg-secondary) text-var(--text-secondary)'" class="p-3 rounded-lg transition shrink-0">
+                                    <i class="fas fa-users text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-var(--text-primary) text-sm">TODOS los Alumnos</p>
+                                    <p class="text-xs text-var(--text-secondary) mt-1">Aplica a todos los programas y semestres activos.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div @click="formData.allStudents = false"
+                            :class="!formData.allStudents ? 'select-card-active' : 'select-card'"
+                            class="select-card"
+                        >
+                            <div class="flex items-start gap-4">
+                                <div :class="!formData.allStudents ? 'bg-var(--primary-color) text-white' : 'bg-var(--bg-secondary) text-var(--text-secondary)'" class="p-3 rounded-lg transition shrink-0">
+                                    <i class="fas fa-user-tag text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-var(--text-primary) text-sm">RESTRINGIDO por Filtros</p>
+                                    <p class="text-xs text-var(--text-secondary) mt-1">Selecciona carreras, semestres o alumnos específicos.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="!formData.allStudents" x-cloak x-transition class="space-y-5 pt-6 border-t border-var(--border-color)">
+                        <div class="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg">
+                            <i class="fas fa-lightbulb text-amber-500 text-lg mt-0.5 shrink-0"></i>
+                            <p class="text-xs font-medium leading-relaxed"><strong>Criterio:</strong> Se aplica si (Carrera Y Semestre seleccionados) O Alumno específico.</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-var(--text-primary) mb-3">Programas Educativos</label>
+                            <div class="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                                <template x-for="career in careers" :key="career.id">
+                                    <label class="cursor-pointer">
+                                        <input type="checkbox" :value="career.id" x-model="formData.selectedCareers" class="sr-only">
+                                        <div
+                                            :class="formData.selectedCareers.includes(career.id) ? 'bg-var(--primary-color) text-white shadow-lg' : 'bg-var(--bg-secondary) text-var(--text-primary) hover:bg-white hover:border-var(--primary-color)'"
+                                            class="p-3 rounded-lg border border-transparent transition text-center font-semibold text-sm"
+                                        >
+                                            <span x-text="career.name"></span>
+                                        </div>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-var(--text-primary) mb-3">Semestres</label>
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="sem in semesters" :key="sem.id">
+                                    <label class="cursor-pointer">
+                                        <input type="checkbox" :value="sem.id" x-model="formData.selectedSemesters" class="sr-only">
+                                        <div
+                                            :class="formData.selectedSemesters.includes(sem.id) ? 'bg-var(--primary-color) text-white shadow-lg' : 'bg-var(--bg-secondary) text-var(--text-primary) hover:bg-white hover:border-var(--primary-color)'"
+                                            class="w-12 h-12 flex items-center justify-center rounded-lg border border-transparent transition text-sm font-bold"
+                                        >
+                                            <span x-text="sem.id + '°'"></span>
+                                        </div>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-var(--border-color) pt-5 space-y-3">
+                            <label class="block text-sm font-bold text-var(--text-primary)">Alumnos Específicos</label>
+                            <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                                <input type="text" x-model="searchTerm" @focus="open = true" @input="open = true"
+                                    placeholder="Buscar por nombre o matrícula..." class="w-full">
+                                
+                                <div x-show="open && searchTerm.length > 0 && filteredStudents.length > 0" x-cloak
+                                    class="absolute z-10 w-full mt-2 bg-var(--bg-primary) border border-var(--border-color) rounded-lg shadow-lg max-h-56 overflow-y-auto p-1">
+                                    <template x-for="student in filteredStudents" :key="student.id">
+                                        <div @click="toggleSpecificStudent(student); open = false" class="p-3 hover:bg-var(--bg-secondary) rounded-lg cursor-pointer text-sm flex justify-between items-center transition">
+                                            <span x-text="student.name + ' (' + student.id + ')'" class="text-var(--text-primary) font-medium"></span>
+                                            <i x-show="formData.selectedSpecificStudents.some(s => String(s.id) === String(student.id))" class="fas fa-check text-var(--primary-color)"></i>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2" x-show="formData.selectedSpecificStudents.length > 0">
+                                <template x-for="student in formData.selectedSpecificStudents" :key="student.id">
+                                    <div class="badge">
+                                        <span x-text="student.name"></span>
+                                        <button type="button" @click="removeSpecificStudent(student.id)" class="text-var(--primary-text) hover:text-var(--danger-color) transition ml-1">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN: ESTADO -->
+                <div class="card">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-toggle-on"></i>
+                        </div>
+                        <h2 class="section-title">Estado del Concepto</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="status" value="active" x-model="formData.status" class="sr-only peer">
+                            <div class="select-card peer-checked:select-card-active peer-checked:border-var(--success-color) flex items-start gap-4">
+                                <div class="p-3 rounded-lg bg-var(--primary-light) text-var(--primary-color) flex items-center justify-center w-10 h-10 shrink-0">
+                                    <i class="fas fa-check-circle text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-var(--text-primary) text-sm">Activo</p>
+                                    <p class="text-xs text-var(--text-secondary) mt-1">Se aplica inmediatamente a los alumnos seleccionados.</p>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer">
+                            <input type="radio" name="status" value="inactive" x-model="formData.status" class="sr-only peer">
+                            <div class="select-card peer-checked:select-card-active peer-checked:border-gray-400 flex items-start gap-4">
+                                <div class="p-3 rounded-lg bg-gray-200 text-gray-600 flex items-center justify-center w-10 h-10 shrink-0">
+                                    <i class="fas fa-pause-circle text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-var(--text-primary) text-sm">Inactivo</p>
+                                    <p class="text-xs text-var(--text-secondary) mt-1">El concepto se guarda, pero no aplica cargos.</p>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+            </form>
+            
+            <!-- STICKY FOOTER PARA MÓVIL -->
+            <div class="sticky-footer">
+                <button type="button" @click="cancel" class="btn-secondary">
+                    Cancelar
+                </button>
+                <button type="submit" @click="submitForm" class="btn-primary">
+                    <i class="fas fa-check"></i>
+                    Guardar
+                </button>
+            </div>
+        </div>
     </div>
 
-    <script type="module" client:load>
-(function () {
-  function qs(sel){ return document.querySelector(sel); }
-  function setValue(el, value){
-    if (!el) return;
-    if (el.type === 'checkbox') { el.checked = Boolean(value); el.dispatchEvent(new Event('change',{bubbles:true})); return; }
-    if (el.type === 'radio') { el.checked = Boolean(value); el.dispatchEvent(new Event('change',{bubbles:true})); return; }
-    el.value = value ?? '';
-    el.dispatchEvent(new Event('input',{bubbles:true})); 
-    el.dispatchEvent(new Event('change',{bubbles:true}));
-  }
+    <script type="module">
+        (function () {
+            window.getStudents = () => JSON.parse(localStorage.getItem('studentsList') || '[]');
+            window.saveStudents = (students) => localStorage.setItem('studentsList', JSON.stringify(students));
+            window.getCharges = () => JSON.parse(localStorage.getItem('chargesList') || '[]');
+            window.saveCharges = (charges) => localStorage.setItem('chargesList', JSON.stringify(charges));
 
-  try {
-    const raw = localStorage.getItem('editingConcept');
-    if (!raw) return;
-    const concept = JSON.parse(raw);
+            window.getTargetStudentsForConcept = (concept) => {
+                const students = window.getStudents();
+                const activeStudents = students.filter(s => (s.status || '').toLowerCase() !== 'inactive' && (s.status || '').toLowerCase() !== 'inactivo');
+                const rules = concept.scopeRules;
+                if (rules.allStudents) return activeStudents;
 
-    // 1) Rellenar inputs/selecciones que sí existen en el DOM (IDs del formulario)
-    setValue(qs('#title'), concept.title || '');
-    setValue(qs('#amount'), concept.amount ?? '');
-    setValue(qs('#description'), concept.description || '');
+                return activeStudents.filter(alumno => {
+                    let cumpleCareers = true;
+                    let cumpleSemesters = true;
+                    let cumpleSpecific = false;
+                    
+                    const alumnoCareer = String(alumno.career ?? alumno.carrera ?? '');
+                    const alumnoSemester = String(alumno.semester ?? alumno.semestre ?? '');
 
-    // scope: marcar el radio correspondiente
-    if (concept.scope) {
-      const scopeRadio = qs(`input[name="scope"][value="${concept.scope}"]`);
-      if (scopeRadio) { scopeRadio.checked = true; scopeRadio.dispatchEvent(new Event('change',{bubbles:true})); }
-    }
+                    if (rules.careers.length > 0) {
+                        cumpleCareers = rules.careers.includes(alumnoCareer);
+                    }
+                    
+                    if (rules.semesters.length > 0) {
+                        cumpleSemesters = rules.semesters.includes(alumnoSemester);
+                    }
+                    
+                    if (rules.specificStudents.length > 0) {
+                        cumpleSpecific = rules.specificStudents.includes(String(alumno.id));
+                    }
+                    
+                    return (cumpleCareers && cumpleSemesters) || cumpleSpecific;
+                });
+            };
 
-    // career / semester selects (tus ids reales)
-    setValue(qs('#career-select'), concept.career || '');
-    setValue(qs('#semester-select'), concept.semester || '');
+            window.recalcStudentAdeudosFromCharges = () => {
+                const charges = window.getCharges();
+                const students = window.getStudents();
+                const pendingChargesByStudent = {};
+                
+                charges.forEach(ch => {
+                    if ((ch.status || '').toLowerCase() === 'pending' || (ch.status || '').toLowerCase() === 'pendiente') {
+                        const sid = String(ch.studentId);
+                        pendingChargesByStudent[sid] = (pendingChargesByStudent[sid] || 0) + Number(ch.amount || 0);
+                    }
+                });
 
-    // 2) Esperar a Alpine e inyectar directamente en formData para que se refleje la UI (estado, scope, selectedStudents)
-    const maxTries = 30;
-    let tries = 0;
-    const interval = setInterval(() => {
-      tries++;
-      const alpineRoot = document.querySelector('[x-data]');
-      // Alpine v3 suele exponer _x_dataStack o __x (varía); probamos ambas opciones
-      const alpineData = alpineRoot && (alpineRoot._x_dataStack ? alpineRoot._x_dataStack[0] : (alpineRoot.__x && alpineRoot.__x.$data ? alpineRoot.__x.$data : null));
-      if (alpineData && alpineData.formData) {
-        // Fusionar conservando propiedades existentes de formData
-        alpineData.formData.title = concept.title ?? alpineData.formData.title;
-        alpineData.formData.amount = concept.amount ?? alpineData.formData.amount;
-        alpineData.formData.description = concept.description ?? alpineData.formData.description;
-        alpineData.formData.scope = concept.scope ?? alpineData.formData.scope;
-        alpineData.formData.career = concept.career ?? alpineData.formData.career;
-        alpineData.formData.semester = concept.semester ?? alpineData.formData.semester;
-        // selectedStudents en tu app son objetos {id,name}; si vienen como ids, convertimos a objetos básicos
-        if (Array.isArray(concept.selectedStudents)) {
-          alpineData.formData.selectedStudents = concept.selectedStudents.map(s => (typeof s === 'string' || typeof s === 'number') ? { id: String(s), name: String(s) } : s);
-        }
-        // estado (active/inactive)
-        if (concept.status) alpineData.formData.status = concept.status;
+                const updated = students.map(s => {
+                    s.adeudo = parseFloat((pendingChargesByStudent[String(s.id)] || 0).toFixed(2));
+                    return s;
+                });
+                window.saveStudents(updated);
+            };
 
-        // Disparar cambio para que UI reactiva se actualice (si usa getters)
-        try {
-          const ev = new Event('input', { bubbles: true });
-          (qs('#title') || document.body).dispatchEvent(ev);
-        } catch(e){}
-        clearInterval(interval);
-        return;
-      }
-      if (tries >= maxTries) {
-        clearInterval(interval);
-      }
-    }, 100);
+            window.assignConceptToScope = (concept) => {
+                const targets = window.getTargetStudentsForConcept(concept);
+                if (!targets || targets.length === 0) return 0;
 
-    // 3) Asegurar hidden id para identificar edición (opcional, facilita submit si quieres actualizar)
-    let hid = qs('#concept-id') || qs('input[name="id"]');
-    if (!hid) {
-      hid = document.createElement('input');
-      hid.type = 'hidden';
-      hid.id = 'concept-id';
-      hid.name = 'id';
-      (qs('form') || document.body).appendChild(hid);
-    }
-    hid.value = concept.id || '';
+                const amount = Number(concept.amount) || 0;
+                const existingCharges = window.getCharges();
+                const nowIso = new Date().toISOString();
 
-  } catch (e) {
-    console.error('No se pudo prellenar el formulario de concepto:', e);
-  }
-})();
-</script>
+                const toAdd = targets.reduce((acc, s) => {
+                    const exists = existingCharges.some(ec =>
+                        ec.conceptId === concept.id &&
+                        String(ec.studentId) === String(s.id) &&
+                        ((ec.status || '').toLowerCase() === 'pending' || (ec.status || '').toLowerCase() === 'pendiente')
+                    );
+
+                    if (!exists) {
+                        acc.push({
+                            id: 'chg_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
+                            studentId: s.id,
+                            conceptId: concept.id,
+                            amount,
+                            status: 'pending',
+                            createdAt: nowIso
+                        });
+                    }
+                    return acc;
+                }, []);
+
+                if (toAdd.length === 0) return 0;
+
+                window.saveCharges(existingCharges.concat(toAdd));
+                window.recalcStudentAdeudosFromCharges();
+                
+                return toAdd.length;
+            };
+        })();
+    </script>
 </Layout>

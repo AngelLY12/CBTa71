@@ -2,23 +2,23 @@
 // src/pages/pago_estado.astro
 import Layout from "../layouts/Layout.astro"; 
 
-const pageTitle = "Estado de Pagos - CBTA 71";
+const pageTitle = "Estado de Adeudos - CBTA 71";
 ---
 <Layout title={pageTitle}>
   <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-gray-50/50 min-h-screen">
 
-    <header class="flex justify-between items-center mb-10 pb-4 border-b-2 border-green-700/10">
+    <header class="flex justify-between items-center mb-10 pb-4 border-b-2 border-red-700/10">
       <div class="flex items-center">
-        <div class="p-3 bg-[#2e594d] rounded-xl shadow-lg mr-3">
+        <div class="p-3 bg-red-800 rounded-xl shadow-lg mr-3">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 4v2m0 2v2m0 0V4m-7 8a7 7 0 1114 0 7 7 0 01-14 0z" />
           </svg>
         </div>
         <div>
           <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Estado de Pagos
+            Estado de Adeudos Pendientes 🔴
           </h1>
-          <p class="text-sm text-gray-500 mt-1">Monitoreo y gestión de transacciones de estudiantes.</p>
+          <p class="text-sm text-gray-500 mt-1">Monitoreo y gestión de cargos estudiantiles por pagar.</p>
         </div>
       </div>
 
@@ -30,24 +30,25 @@ const pageTitle = "Estado de Pagos - CBTA 71";
             Registrar Pago Manual
         </button>
 
-        <select id="method-filter" class="border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-green-500 focus:border-green-500 transition">
-          <option value="all">Todos los métodos</option>
-          <option value="tarjeta">💳 Tarjeta</option>
-          <option value="referenciado">📄 Pago referenciado</option>
-          <option value="transferencia">🏦 Transferencia</option>
-          <option value="otro">Otro / Efectivo</option>
-        </select>
+        <div class="hidden">
+          <select id="method-filter" class="border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-green-500 focus:border-green-500 transition">
+            <option value="all">Todos los métodos</option>
+            <option value="tarjeta">💳 Tarjeta</option>
+            <option value="referenciado">📄 Pago referenciado</option>
+            <option value="transferencia">🏦 Transferencia</option>
+          </select>
+        </div>
       </div>
     </header>
 
     <div class="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-x-auto mb-6">
       <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-[#2e594d] sticky top-0 z-10">
+        <thead class="bg-red-800 sticky top-0 z-10">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha</th>
-            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Concepto</th>
-            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Monto</th>
-            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Método</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha Vencimiento</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Concepto de Cargo</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Monto Adeudado</th>
+            <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Estado de Cargo</th>
             <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">N. Control</th>
             <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Nombre del Alumno</th>
             <th class="px-6 py-3 text-right text-xs font-bold text-white uppercase tracking-wider">Acciones</th>
@@ -81,7 +82,6 @@ const pageTitle = "Estado de Pagos - CBTA 71";
               <option value="tarjeta">💳 Tarjeta (Físico)</option>
               <option value="referencia">📄 Referencia Bancaria (Manual)</option>
               <option value="transferencia">🏦 Transferencia / SPEI</option>
-              <option value="efectivo">💵 Efectivo (Caja)</option>
               <option value="otro">Otro</option>
             </select>
           </div>
@@ -214,7 +214,7 @@ const pageTitle = "Estado de Pagos - CBTA 71";
         } catch(e){ return String(d); } 
     };
     
-    // Función NUEVA: Calcula el total de adeudo (cargos pendientes) para un estudiante
+    // Función: Calcula el total de adeudo (cargos pendientes) para un estudiante
     function getStudentAdeudo(studentId) {
         try {
             const charges = getCharges();
@@ -231,7 +231,7 @@ const pageTitle = "Estado de Pagos - CBTA 71";
     }
 
 
-    // --- CONSTRUCCIÓN DE LA LISTA UNIFICADA ---
+    // --- CONSTRUCCIÓN DE LA LISTA UNIFICADA (SOLO ADEUDOS) ---
     function buildPaymentsList() {
       const charges = getCharges();
       const students = getStudents();
@@ -239,7 +239,15 @@ const pageTitle = "Estado de Pagos - CBTA 71";
       
       if (!Array.isArray(charges) || charges.length === 0) return [];
       
-      const list = charges.map(ch => {
+      // *** MODIFICACIÓN CLAVE: FILTRAR SÓLO ADEUDOS PENDIENTES ***
+      const pendingCharges = charges.filter(ch => 
+        String(ch.status || 'pending').toLowerCase() !== 'paid' && 
+        String(ch.status || 'pending').toLowerCase() !== 'pagado'
+      );
+      // *************************************************************
+
+      // Ahora mapeamos sobre los cargos pendientes
+      const list = pendingCharges.map(ch => {
         // Buscar estudiante por ID, N. Control o matrícula
         const student = students.find(s => 
             String(s.id) === String(ch.studentId) || 
@@ -250,12 +258,14 @@ const pageTitle = "Estado de Pagos - CBTA 71";
         // Buscar concepto por ID
         const concept = concepts.find(c => String(c.id) === String(ch.conceptId)) || {};
         
-        const methodRaw = (ch.method || ch.paymentMethod || ch.metodo || '').toString().toLowerCase();
+        // El método de pago no aplica para un adeudo (solo para evitar errores)
+        const methodRaw = (ch.method || ch.paymentMethod || ch.metodo || 'N/A').toString().toLowerCase(); 
 
         return {
           id: ch.id || ('chg_' + Math.random().toString(36).slice(2,8)),
-          date: ch.paidAt || ch.createdAt || ch.created || ch.date || null,
-          conceptTitle: concept.title || concept.concept || ch.conceptTitle || 'Pago Genérico',
+          // Usar fecha de Vencimiento para la lista de Adeudos
+          date: ch.dueDate || ch.date || ch.createdAt || null,
+          conceptTitle: concept.title || concept.concept || ch.conceptTitle || 'Cargo Pendiente',
           amount: ch.amount ?? ch.monto ?? concept.amount ?? concept.monto ?? 0,
           method: methodRaw,
           reference: ch.reference || '-', // Añadir referencia al objeto
@@ -263,36 +273,19 @@ const pageTitle = "Estado de Pagos - CBTA 71";
           studentName: [student.nombre, student.apellidoP, student.apellidoM].filter(Boolean).join(' ') || student.fullName || student.name || 'Alumno Desconocido',
           studentCarrera: student.carrera || student.career || '-', // Añadir carrera
           studentId: student.id || ch.studentId, // Asegurar el ID del estudiante
-          status: (ch.status || 'paid').toLowerCase()
+          status: (ch.status || 'pending').toLowerCase() // Usar el estado real del cargo
         };
       });
 
-      // Ordenar por fecha, el más reciente primero
-      return list.sort((a,b) => {
-        const da = a.date ? new Date(a.date).getTime() : 0;
-        const db = b.date ? new Date(b.date).getTime() : 0;
-        return db - da;
-      });
+      // Ordenar por N. Control o fecha de vencimiento (el más viejo primero)
+      return list.sort((a,b) => String(a.studentControl).localeCompare(String(b.studentControl)));
     }
 
-    // --- LÓGICA DE FILTRADO (MANTENIDA) ---
+    // --- LÓGICA DE FILTRADO (MANTENIDA PERO INVISIBLE) ---
     function methodMatchesFilter(method, filter) {
       if (!filter || filter === 'all') return true;
-      if (!method) return (filter === 'otro'); 
-
-      const m = method.toLowerCase();
-      
-      if (filter === 'tarjeta') return m.includes('tarjeta') || m.includes('card');
-      if (filter === 'referenciado') return m.includes('referen'); 
-      if (filter === 'transferencia') return m.includes('transfer') || m.includes('spei') || m.includes('bank');
-      
-      if (filter === 'otro') {
-          return !methodMatchesFilter(method, 'tarjeta') && 
-                 !methodMatchesFilter(method, 'referenciado') && 
-                 !methodMatchesFilter(method, 'transferencia');
-      }
-
-      return false;
+      // Ya que la vista es de adeudos, el filtro es irrelevante, pero se deja la lógica para no romper nada.
+      return true; 
     }
 
     // --- RENDERIZADO DE LA TABLA ---
@@ -300,27 +293,39 @@ const pageTitle = "Estado de Pagos - CBTA 71";
       const tbody = document.getElementById('payments-table-body');
       if (!tbody) return;
 
-      const list = buildPaymentsList();
+      const list = buildPaymentsList(); // Ahora trae solo adeudos pendientes
       const filtered = list.filter(item => methodMatchesFilter(item.method, filter));
       
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 font-medium text-base">😔 No hay registros de pagos para el filtro seleccionado.</td></tr>';
+        // CAMBIAR MENSAJE
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500 font-medium text-base">🎉 No hay cargos pendientes (adeudos) registrados.</td></tr>';
         return;
       }
       
       tbody.innerHTML = filtered.map(r => {
-        const rowClass = 'hover:bg-green-50/20'; 
+        // RESALTAR FILAS CON ADEUDOS URGENTES/VENCIDOS
+        let rowClass = 'hover:bg-red-50/20'; 
+        if (r.status.includes('overdue') || r.status.includes('vencido')) {
+            rowClass = 'bg-red-50/70 hover:bg-red-100/70 font-bold'; 
+        } else if (r.status.includes('pending') || r.status.includes('pendiente')) {
+            rowClass = 'hover:bg-yellow-50/20';
+        }
+        
+        // Determinar el display del estado
+        const statusDisplay = r.status === 'pending' || r.status === 'pendiente' ? '⏳ Pendiente' : 
+                              r.status.includes('overdue') || r.status.includes('vencido') ? '🚨 Vencido' :
+                              '⚠️ Por Pagar';
         
         return `
           <tr class="${rowClass} transition duration-150 ease-in-out">
             <td class="px-6 py-4 text-sm text-gray-600">${esc(parseDate(r.date))}</td>
             <td class="px-6 py-4 text-sm text-gray-800 font-medium">${esc(r.conceptTitle)}</td>
-            <td class="px-6 py-4 text-sm text-green-700 font-bold">${esc(fmtCurrency(r.amount))}</td>
-            <td class="px-6 py-4 text-sm text-gray-700">${esc(r.method)}</td>
+            <td class="px-6 py-4 text-sm text-red-700 font-bold">${esc(fmtCurrency(r.amount))}</td>
+            <td class="px-6 py-4 text-sm text-gray-700">${statusDisplay}</td>
             <td class="px-6 py-4 text-sm text-gray-600">${esc(r.studentControl)}</td>
             <td class="px-6 py-4 text-sm text-gray-800">${esc(r.studentName)}</td>
             <td class="px-6 py-4 text-right text-sm">
-              <button data-id="${esc(r.id)}" data-student-id="${esc(r.studentId)}" class="px-3 py-1 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition view-payment">Ver Detalle</button>
+              <button data-id="${esc(r.id)}" data-student-id="${esc(r.studentId)}" class="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition view-payment">Pagar Ahora</button>
             </td>
           </tr>
         `;
@@ -366,7 +371,7 @@ const pageTitle = "Estado de Pagos - CBTA 71";
         document.getElementById('pay-student-id').value = sid;
         document.getElementById('pay-amount').value = '';
         document.getElementById('pay-ref').value = '';
-        document.getElementById('pay-method').value = 'efectivo';
+        document.getElementById('pay-method').value = 'referencia'; // Mejor default para manual
         openModal(payModal);
         document.getElementById('pay-student-id').focus();
     };
@@ -379,45 +384,66 @@ const pageTitle = "Estado de Pagos - CBTA 71";
 
     // Función para mostrar los detalles
     function showDetailModal(chargeId) {
-        const list = buildPaymentsList();
-        const charge = list.find(c => c.id === chargeId);
+        // Aquí se usaría la lista de TODOS los cargos si este modal se usa para ver historial.
+        // Como la lista filtrada es de ADEUDOS, buscamos en la lista completa.
+        const allCharges = getCharges();
+        const charge = allCharges.find(c => c.id === chargeId);
         
         if (!charge) {
-            alert('Error: No se encontró el detalle de pago.');
+            alert('Error: No se encontró el detalle de pago/cargo.');
             return;
         }
+
+        // Mapeamos temporalmente el cargo para obtener los datos del estudiante
+        const students = getStudents();
+        const student = students.find(s => 
+            String(s.id) === String(charge.studentId) || 
+            String(s.numControl) === String(charge.studentId) || 
+            String(s.matricula) === String(charge.studentId)
+        ) || {};
+
+        const studentName = [student.nombre, student.apellidoP, student.apellidoM].filter(Boolean).join(' ') || student.fullName || student.name || 'Alumno Desconocido';
+        const studentControl = student.numControl ?? student.matricula ?? charge.studentId ?? '-';
+        const studentCarrera = student.carrera || student.career || '-';
+        const concepts = getConcepts();
+        const concept = concepts.find(c => String(c.id) === String(charge.conceptId)) || {};
+        const conceptTitle = concept.title || concept.concept || charge.conceptTitle || 'Cargo/Pago Genérico';
 
         // ESTABLECER EL ID DEL PAGO ACTUAL
         currentChargeId = chargeId;
 
         // Obtener datos del estudiante y el adeudo
         const totalAdeudo = getStudentAdeudo(charge.studentId);
-        const carreraDisplay = CARRERA_MAP[charge.studentCarrera] || charge.studentCarrera;
+        const carreraDisplay = CARRERA_MAP[studentCarrera] || studentCarrera;
 
         // Rellenar datos del ESTUDIANTE y ADEUDO
-        document.getElementById('detail-student-name').textContent = esc(charge.studentName);
-        document.getElementById('detail-student-control').textContent = esc(charge.studentControl);
+        document.getElementById('detail-student-name').textContent = esc(studentName);
+        document.getElementById('detail-student-control').textContent = esc(studentControl);
         document.getElementById('detail-student-carrera').textContent = esc(carreraDisplay);
         document.getElementById('detail-student-adeudo').textContent = fmtCurrency(totalAdeudo);
         
-        // Rellenar datos del PAGO
+        // Rellenar datos del PAGO/CARGO
         document.getElementById('detail-payment-amount').textContent = fmtCurrency(charge.amount);
-        document.getElementById('detail-payment-date').textContent = parseDate(charge.date);
-        document.getElementById('detail-payment-concept').textContent = esc(charge.conceptTitle);
-        document.getElementById('detail-payment-method').textContent = esc(charge.method);
-        document.getElementById('detail-payment-reference').textContent = esc(charge.reference);
+        document.getElementById('detail-payment-date').textContent = parseDate(charge.paidAt || charge.createdAt || charge.date);
+        document.getElementById('detail-payment-concept').textContent = esc(conceptTitle);
+        document.getElementById('detail-payment-method').textContent = esc(charge.method || charge.paymentMethod || 'N/A');
+        document.getElementById('detail-payment-reference').textContent = esc(charge.reference || '-');
         
+        // Ocultar botón de eliminar si ya está pagado (opcional)
+        const isPaid = (charge.status || '').toLowerCase() === 'paid' || (charge.status || '').toLowerCase() === 'pagado';
+        detailDeleteBtn.textContent = isPaid ? 'Eliminar Pago' : 'Eliminar Cargo';
+        
         openModal(detailModal);
     }
 
-    // Función para manejar la eliminación de un pago
+    // Función para manejar la eliminación de un pago/cargo
     function handleDeleteCharge(chargeId) {
         if (!chargeId) {
-            alert('Error: ID de pago no válido.');
+            alert('Error: ID de pago/cargo no válido.');
             return;
         }
 
-        if (!confirm('⚠️ CONFIRMACIÓN: ¿Está seguro de que desea ELIMINAR permanentemente esta transacción de pago? Esta acción no se puede deshacer.')) {
+        if (!confirm('⚠️ CONFIRMACIÓN: ¿Está seguro de que desea ELIMINAR permanentemente esta transacción? Esta acción no se puede deshacer.')) {
             return;
         }
         
@@ -434,24 +460,27 @@ const pageTitle = "Estado de Pagos - CBTA 71";
 
         saveCharges(charges);
         closeModal(detailModal); 
+        // Renderizar la lista de ADEUDOS
         renderPayments(document.getElementById('method-filter')?.value || 'all'); 
         alert('🗑️ Transacción eliminada con éxito.');
     }
     
     // --- LISTENERS ---
 
-    // 1. Filtro
+    // 1. Filtro (Innecesario, pero se mantiene la estructura)
     document.getElementById('method-filter')?.addEventListener('change', (e) => renderPayments(e.target.value));
     
     // 2. Botón Abrir Modal (principal)
     document.getElementById('open-pay-modal-btn')?.addEventListener('click', () => openPayModal());
 
-    // 3. Delegación para botón 'Ver Detalle' (AHORA ABRE EL NUEVO MODAL)
+    // 3. Delegación para botón 'Ver Detalle' / 'Pagar Ahora'
     document.addEventListener('click', (ev) => {
       const btn = ev.target.closest && ev.target.closest('.view-payment');
       if (btn) {
         const id = btn.getAttribute('data-id');
-        showDetailModal(id);
+        // showDetailModal(id); // Para ver el detalle
+        // Opcional: Abrir el modal de Pago para facilitar el registro rápido al hacer click en "Pagar Ahora"
+        openPayModal(btn.getAttribute('data-student-id')); 
       }
     });
 
@@ -465,12 +494,12 @@ const pageTitle = "Estado de Pagos - CBTA 71";
     });
 
 
-    // 5. Submit del Formulario
+    // 5. Submit del Formulario (Registro de Pago Manual)
     payForm?.addEventListener('submit', (e) => {
       e.preventDefault();
       const studentId = document.getElementById('pay-student-id').value.trim();
       const amount = parseFloat(document.getElementById('pay-amount').value) || 0;
-      const method = document.getElementById('pay-method').value || 'efectivo';
+      const method = document.getElementById('pay-method').value || 'referencia';
       const reference = document.getElementById('pay-ref').value || '';
       
       if (!studentId || amount <= 0) { 
@@ -478,21 +507,38 @@ const pageTitle = "Estado de Pagos - CBTA 71";
           return; 
       }
       
-      const charges = getCharges();
+      let charges = getCharges();
       const now = new Date().toISOString();
       
-      const newCharge = {
-        id: 'chg_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
-        studentId,
-        amount,
-        method,
-        reference,
-        status: 'paid', 
-        paidAt: now,
-        createdAt: now
-      };
+      // 1. Opcional: Marcar el cargo pendiente más antiguo como pagado (simulación simple)
+      const oldestPendingCharge = charges.find(c => 
+          String(c.studentId) === studentId && 
+          (String(c.status || 'pending').toLowerCase() !== 'paid' && String(c.status || 'pending').toLowerCase() !== 'pagado')
+      );
+      
+      if (oldestPendingCharge) {
+          // Si existe un cargo, se simula que el pago va dirigido a ese cargo.
+          oldestPendingCharge.status = 'paid';
+          oldestPendingCharge.paidAt = now;
+          oldestPendingCharge.method = method;
+          oldestPendingCharge.reference = reference;
+          // Nota: La lógica real debe manejar pagos parciales. Aquí solo se marca el primero como pagado.
+      } else {
+          // 2. Si no hay cargo pendiente específico, se registra como un pago genérico
+          const newCharge = {
+            id: 'chg_' + (Date.now().toString(36) + Math.random().toString(36).slice(2,6)),
+            studentId,
+            conceptTitle: 'Pago Manual Sin Cargo Previo',
+            amount,
+            method,
+            reference,
+            status: 'paid', // Registrar como pagado (transacción de pago)
+            paidAt: now,
+            createdAt: now
+          };
+          charges.push(newCharge);
+      }
       
-      charges.push(newCharge);
       saveCharges(charges); 
       
       closeModal(payModal); 

@@ -2,16 +2,11 @@
 // src/pages/pago_estado.astro
 import Layout from "../layouts/Layout.astro"; 
 
-const pageTitle = "Estado de Pagos - CBTA 71";
-// Definir un color primario más oscuro para consistencia
-const primaryColor = "#154335"; // Un verde oscuro casi negro
+const pageTitle = "Historial de Pagos - CBTA 71";
+const primaryColor = "#154335"; 
 const primaryBg = "[#154335]";
 const accentColor = "green-600";
 const lightAccent = "green-50";
-
-// Lógica de carga de datos para los estudiantes (similar a estudiante_lista.astro)
-// Esto asegura que tengamos los datos de los estudiantes disponibles en el cliente, 
-// incluso si la carga inicial de la API falla (usando el fallback del otro archivo).
 
 let students = [];
 try {
@@ -20,20 +15,17 @@ try {
         const json = await res.json();
         students = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
     }
-} catch (e) {
-    // Fallback: cargar datos de respaldo
-}
+} catch (e) {}
 
-if (!students || !students.length) {
+if (!students.length) {
     try {
-        const mod = await import('../data/students.js');
+        const mod = await import('../data/students.js'); 
         students = mod.default || mod.students || [];
     } catch (e) {
         students = [];
     }
 }
 
-// Normalizar y asegurar datos (solo los campos esenciales)
 const safeStudents = students.map((s, i) => ({
     id: s.id ?? String(i + 1),
     numControl: s.numControl ?? s.id ?? '',
@@ -43,402 +35,283 @@ const safeStudents = students.map((s, i) => ({
     carrera: s.carrera ?? s.career ?? '',
 }));
 
-// Pasar datos a JS de manera segura para la inicialización
 const studentsJSON = JSON.stringify(safeStudents).replace(/</g, '\\u003c');
 ---
+
 <Layout title={pageTitle}>
-    <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-gray-50/50 min-h-screen">
+<div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-gray-50/50 min-h-screen">
 
-        <header class="flex justify-between items-center mb-10 pb-4 border-b-2 border-green-700/50">
-            <div class="flex items-center">
-                <div class={`p-3 bg-${primaryBg} rounded-xl shadow-lg mr-3`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 4v2m0 2v2m0 0V4m-7 8a7 7 0 1114 0 7 7 0 01-14 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
-                        Estado de Pagos
-                    </h1>
-                    <p class="text-sm text-gray-500 mt-1">Monitoreo y gestión de transacciones de estudiantes.</p>
-                </div>
-            </div>
-
-            <div class="flex gap-3 items-center">
-                <select id="method-filter" class="border border-gray-300 rounded-lg px-4 py-2.5 text-sm bg-white shadow-sm focus:ring-green-500 focus:border-green-500 transition">
-                    <option value="all">Todos los métodos</option>
-                    <option value="tarjeta">💳 Tarjeta</option>
-                    <option value="referenciado">📄 Pago referenciado</option>
-                    <option value="transferencia">🏦 Transferencia</option>
-                    <option value="otro">Otro / Efectivo</option>
-                </select>
-            </div>
-        </header>
-
-        <div class="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-x-auto mb-6">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class={`bg-${primaryBg} sticky top-0 z-10`}>
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Concepto</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Monto</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Método</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">N. Control</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Nombre del Alumno</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-white uppercase tracking-wider">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="payments-table-body" class="bg-white divide-y divide-gray-100">
-                </tbody>
-            </table>
-            <div id="no-payments" class="hidden text-center text-gray-500 py-10 text-base italic">
-                <i class="fas fa-search-minus mr-2"></i> No se encontraron transacciones con el filtro actual.
-            </div>
+    <!-- Header con filtros -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-green-700/50">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                Historial de Pagos Realizados 💰
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">Monitoreo y gestión de transacciones de estudiantes.</p>
         </div>
 
-        <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 transition-opacity duration-300 ease-out opacity-0">
-            <div class="bg-white rounded-xl w-full max-w-xl p-8 shadow-2xl transform scale-95 transition-transform duration-300 ease-out">
-                <h3 class="text-xl font-bold text-gray-900 mb-6 border-b pb-2 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-${accentColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    Detalle de Transacción
-                </h3>
-                
-                <div class="space-y-6">
-                    <div class={`bg-${lightAccent} border border-green-200 p-4 rounded-lg`}>
-                        <h4 class={`text-base font-bold text-green-800 flex items-center mb-2`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.98 5.98 0 0010 16a5.979 5.979 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd" /></svg>
-                            Datos del Estudiante
-                        </h4>
-                        <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                            <div>
-                                <dt class="text-gray-500 font-medium">Nombre Completo:</dt>
-                                <dd id="detail-student-name" class="text-gray-900 font-semibold"></dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-500 font-medium">N. Control / Matrícula:</dt>
-                                <dd id="detail-student-control" class="text-gray-900"></dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-500 font-medium">Carrera:</dt>
-                                <dd id="detail-student-carrera" class="text-gray-900"></dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-500 font-medium">Adeudo Pendiente Total:</dt>
-                                <dd id="detail-student-adeudo" class="text-2xl font-extrabold text-red-600"></dd>
-                            </div>
-                        </dl>
-                    </div>
-                    
-                    <div class="border-t pt-4">
-                        <h4 class="text-base font-bold text-gray-800 flex items-center mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 text-${accentColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 4v2m0 2v2m0 0V4m-7 8a7 7 0 1114 0 7 7 0 01-14 0z" /></svg>
-                            Detalles de la Transacción
-                        </h4>
-                        <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                            <div>
-                                <dt class="text-gray-500 font-medium">Monto Pagado:</dt>
-                                <dd id="detail-payment-amount" class="text-gray-900 font-bold text-lg"></dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-500 font-medium">Fecha de Pago:</dt>
-                                <dd id="detail-payment-date" class="text-gray-900"></dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-500 font-medium">Concepto:</dt>
-                                <dd id="detail-payment-concept" class="text-gray-900"></dd>
-                            </div>
-                            <div>
-                                <dt class="text-gray-500 font-medium">Método de Pago:</dt>
-                                <dd id="detail-payment-method" class="text-gray-900"></dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
+        <!-- Filtros alineados a la derecha -->
+        <div class="mt-4 sm:mt-0 flex gap-3 items-center">
+            <select id="method-filter" class="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white shadow-sm focus:ring-green-500 focus:border-green-500 transition">
+                <option value="all">Todos los métodos</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="referencia">Pago referenciado</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="otro">Efectivo / Otro</option>
+            </select>
 
-                <div class="mt-8 flex justify-end">
-                    <button id="close-modal" class="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
-                        Cerrar
-                    </button>
-                </div>
-            </div>
+            <select id="semester-filter" class="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white shadow-sm focus:ring-green-500 focus:border-green-500 transition">
+                <option value="all">Todos los semestres</option>
+                <option value="1">Semestre 1</option>
+                <option value="2">Semestre 2</option>
+                <option value="3">Semestre 3</option>
+                <option value="4">Semestre 4</option>
+                <option value="5">Semestre 5</option>
+                <option value="6">Semestre 6</option>
+            </select>
         </div>
+    </header>
 
+    <!-- Tabla de pagos -->
+    <div class="bg-white rounded-xl shadow-xl border border-gray-100 overflow-x-auto mb-6">
+        <table class="min-w-full divide-y divide-gray-200 text-base">
+            <thead class={`bg-${primaryBg} sticky top-0 z-10`}>
+                <tr>
+                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">Fecha</th>
+                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">Concepto</th>
+                    <th class="px-4 py-3 text-right font-semibold text-white uppercase tracking-wider">Monto</th>
+                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">Método</th>
+                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">N. Control</th>
+                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">Alumno</th>
+                    <th class="px-4 py-3 text-right font-semibold text-white uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="payments-table-body" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
+        </table>
+        <div id="no-payments" class="hidden text-center text-gray-500 py-6 text-sm italic">
+            No se encontraron transacciones con el filtro actual.
+        </div>
     </div>
 
-    <script>
-        // Variable global para inicializar el script de cliente con los datos de Astro
-        window.__INITIAL_STUDENTS_PAYMENTS = JSON.parse('${studentsJSON}');
-    </script>
+    <!-- Modal de detalle -->
+    <div id="detail-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 transition-opacity duration-300 ease-out opacity-0 hidden">
+        <div class="bg-white rounded-xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300 ease-out">
+            <div class={`px-5 py-3 bg-${primaryBg} rounded-t-xl flex justify-between items-center`}>
+                <h3 class="text-lg font-bold text-white tracking-wide">Detalle de Transacción</h3>
+                <button id="close-modal-icon" class="text-white hover:text-green-200 transition">
+                    ✖
+                </button>
+            </div>
+            <div class="p-5 space-y-5">
+                <div class="border-b border-gray-200 pb-4">
+                    <h4 class="text-base font-bold text-gray-700 mb-2">Datos del Estudiante</h4>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div>
+                            <dt class="text-gray-500 font-medium">Nombre Completo:</dt>
+                            <dd id="detail-student-name" class="text-gray-900 font-semibold mt-0.5"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 font-medium">N. Control / Matrícula:</dt>
+                            <dd id="detail-student-control" class="text-gray-900 mt-0.5"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 font-medium">Carrera:</dt>
+                            <dd id="detail-student-carrera" class="text-gray-900 mt-0.5"></dd>
+                        </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <dt class="text-gray-500 font-medium">Adeudo Pendiente Total:</dt>
+                            <dd id="detail-student-adeudo" class="text-xl font-extrabold text-red-600 mt-0.5"></dd>
+                        </div>
+                    </dl>
+                </div>
 
-    <script type="module" client:load>
-    (function () {
-        const CHARGES_STORAGE_KEY = 'chargesList';
-        const STUDENT_STORAGE_KEY = 'studentsList'; // O usar la variable inyectada
+                <div>
+                    <h4 class="text-base font-bold text-gray-700 mb-2">Detalles de la Transacción</h4>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                        <div class="sm:col-span-2">
+                            <dt class="text-gray-500 font-medium">Concepto:</dt>
+                            <dd id="detail-payment-concept" class="text-gray-900 font-bold text-sm mt-0.5"></dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-gray-500 font-medium">Monto Pagado:</dt>
+                            <dd id="detail-payment-amount" class="text-xl font-extrabold text-green-700 mt-0.5"></dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-gray-500 font-medium">Fecha y Hora de Pago:</dt>
+                            <dd id="detail-payment-date" class="text-gray-900 mt-0.5 text-xs sm:text-sm"></dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-gray-500 font-medium">Método de Pago:</dt>
+                            <dd id="detail-payment-method" class="text-gray-900 mt-0.5 text-xs sm:text-sm"></dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-gray-500 font-medium">Referencia/Folio:</dt>
+                            <dd id="detail-payment-reference" class="text-gray-900 italic mt-0.5 text-xs sm:text-sm">N/A</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+            <div class="px-5 py-3 bg-gray-50 rounded-b-xl flex justify-end border-t border-gray-200">
+                <button id="close-modal" class="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        // Mapeo de carreras y métodos de pago
-        const CARRERA_MAP = {
-            'AGR': 'Agronomía',
-            'INF': 'Informática',
-            'ADM': 'Administración',
-            'TEC': 'Ofimática',
-            '': 'Sin Carrera',
-            '0': 'Sin Carrera',
-        };
-        const METHOD_MAP = {
-            'tarjeta': '💳 Tarjeta de Crédito/Débito',
-            'referenciado': '📄 Pago Referenciado Bancario',
-            'transferencia': '🏦 Transferencia Electrónica',
-            'efectivo': '💵 Efectivo (Caja)',
-            'otro': 'Otro',
-            '': 'Sin especificar'
-        };
+<script>
+window.__INITIAL_STUDENTS_PAYMENTS = JSON.parse('${studentsJSON}');
+</script>
 
-        // Estado y Elementos del DOM
-        let allStudents = window.__INITIAL_STUDENTS_PAYMENTS;
-        const paymentsTableBody = document.getElementById('payments-table-body');
-        const methodFilter = document.getElementById('method-filter');
-        const noPaymentsEl = document.getElementById('no-payments');
-        
-        // Modal elements
-        const detailModal = document.getElementById('detail-modal');
-        const closeModalBtn = document.getElementById('close-modal');
-        const detailStudentName = document.getElementById('detail-student-name');
-        const detailStudentControl = document.getElementById('detail-student-control');
-        const detailStudentCarrera = document.getElementById('detail-student-carrera');
-        const detailStudentAdeudo = document.getElementById('detail-student-adeudo');
-        const detailPaymentAmount = document.getElementById('detail-payment-amount');
-        const detailPaymentDate = document.getElementById('detail-payment-date');
-        const detailPaymentConcept = document.getElementById('detail-payment-concept');
-        const detailPaymentMethod = document.getElementById('detail-payment-method');
+<script type="module" client:load>
+(function() {
+    const CHARGES_STORAGE_KEY = 'chargesList';
+    const STUDENT_STORAGE_KEY = 'studentsList'; 
 
-        // --- FUNCIONES DE UTILIDAD CLAVE ---
+    const METHOD_MAP = {
+        'tarjeta': 'Tarjeta de Crédito/Débito',
+        'referencia': 'Pago Referenciado (Banco)',
+        'transferencia': 'Transferencia Electrónica',
+        'otro': 'Efectivo / Otro',
+        '': 'Sin especificar'
+    };
 
-        // Función para leer los pagos del Local Storage
-        const readCharges = () => {
-            try {
-                const raw = localStorage.getItem(CHARGES_STORAGE_KEY);
-                const charges = JSON.parse(raw || '[]');
-                // Devolvemos solo los pagos que ya se hicieron (status 'paid' o 'pagado')
-                return charges.filter(c => 
-                    String(c.status || '').toLowerCase() === 'paid' || 
-                    String(c.status || '').toLowerCase() === 'pagado'
-                );
-            } catch (e) {
-                return [];
-            }
-        };
+    const paymentsTableBody = document.getElementById('payments-table-body');
+    const methodFilter = document.getElementById('method-filter');
+    const semesterFilter = document.getElementById('semester-filter');
 
-        // Función para leer los estudiantes (usando studentsList de respaldo si está disponible)
-        const readStudents = () => {
-            try {
-                const raw = localStorage.getItem(STUDENT_STORAGE_KEY);
-                if (raw && raw !== '[]') {
-                    const arr = JSON.parse(raw);
-                    return Array.isArray(arr) ? arr : allStudents;
-                }
-                return allStudents;
-            } catch (e) {
-                return allStudents;
-            }
-        };
-        
-        // Obtiene la suma de cargos PENDIENTES de un estudiante (igual que en estudiante_lista.astro)
-        function getPendingChargesSumForStudent(studentId) {
-            try {
-                const charges = JSON.parse(localStorage.getItem('chargesList') || '[]');
-                return charges
-                  .filter(c => 
-                    String(c.studentId) === String(studentId) && 
-                    (String(c.status || '').toLowerCase() === 'pending' || String(c.status || '').toLowerCase() === 'pendiente')
-                  )
-                  .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
-            } catch (e) {
-                return 0;
-            }
+    const detailModal = document.getElementById('detail-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const closeModalIconBtn = document.getElementById('close-modal-icon'); 
+    const detailStudentName = document.getElementById('detail-student-name');
+    const detailStudentControl = document.getElementById('detail-student-control');
+    const detailStudentCarrera = document.getElementById('detail-student-carrera');
+    const detailStudentAdeudo = document.getElementById('detail-student-adeudo');
+    const detailPaymentAmount = document.getElementById('detail-payment-amount');
+    const detailPaymentDate = document.getElementById('detail-payment-date');
+    const detailPaymentConcept = document.getElementById('detail-payment-concept');
+    const detailPaymentMethod = document.getElementById('detail-payment-method');
+    const detailPaymentReference = document.getElementById('detail-payment-reference');
+
+    let initialStudents = window.__INITIAL_STUDENTS_PAYMENTS;
+
+    const readCharges = () => {
+        try {
+            const raw = localStorage.getItem(CHARGES_STORAGE_KEY);
+            return JSON.parse(raw || '[]').filter(c => String(c.status || '').toLowerCase() === 'paid' || String(c.status || '').toLowerCase() === 'pagado');
+        } catch (e) { return []; }
+    };
+
+    const readStudents = () => {
+        try {
+            const raw = localStorage.getItem(STUDENT_STORAGE_KEY);
+            return raw && raw !== '[]' ? JSON.parse(raw) : initialStudents;
+        } catch (e) { return initialStudents; }
+    };
+
+    const formatCurrency = (amount) => new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN', minimumFractionDigits:2 }).format(amount);
+
+    const applyFilters = (list) => {
+        const method = methodFilter.value;
+        const semester = semesterFilter.value;
+        return list.filter(p => {
+            let methodMatch = (method === 'all') || ((p.paymentMethod || p.method || '').toLowerCase() === method);
+            let semesterMatch = true;
+            if (semester !== 'all') semesterMatch = String(p.semester || '') === semester;
+            return methodMatch && semesterMatch;
+        });
+    };
+
+    const renderPaymentsTable = () => {
+        const payments = applyFilters(readCharges());
+        const studentsData = readStudents();
+        paymentsTableBody.innerHTML = '';
+
+        if (!payments.length) {
+            paymentsTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-gray-500 font-medium text-sm">😔 No se encontraron transacciones.</td></tr>';
+            return;
         }
 
+        payments.sort((a,b) => new Date(b.paidAt || b.createdAt || b.date) - new Date(a.paidAt || a.createdAt || a.date));
 
-        // Aplicar Filtros
-        const applyFilters = (list) => {
-            const method = methodFilter.value;
-            
-            if (method === 'all') {
-                return list;
-            }
-
-            return list.filter(p => {
-                const paymentMethod = String(p.paymentMethod || '').toLowerCase();
-                return paymentMethod.includes(method);
-            });
-        };
-
-        // Formato de moneda
-        const formatCurrency = (amount) => {
-            return new Intl.NumberFormat('es-MX', {
-                style: 'currency',
-                currency: 'MXN',
-                minimumFractionDigits: 2
-            }).format(amount);
-        };
-
-        // Renderiza la tabla de pagos
-        const renderPaymentsTable = () => {
-            const payments = readCharges();
-            const studentsData = readStudents();
-            const filteredPayments = applyFilters(payments);
-            
-            paymentsTableBody.innerHTML = '';
-            noPaymentsEl.classList.add('hidden');
-
-            if (filteredPayments.length === 0) {
-                noPaymentsEl.classList.remove('hidden');
-                return;
-            }
-
-            filteredPayments.forEach(p => {
-                const student = studentsData.find(s => String(s.id) === String(p.studentId));
-                const studentName = student ? `${student.nombre} ${student.apellidoP} ${student.apellidoM}` : 'Alumno Desconocido';
-                const numControl = student ? student.numControl : 'N/A';
-                
-                // Formato de fecha
-                const date = new Date(p.paymentDate || p.dateCreated || Date.now());
-                const formattedDate = date.toLocaleDateString('es-MX', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-
-                // Badge del método de pago
-                const methodKey = String(p.paymentMethod || 'otro').toLowerCase();
-                const methodDisplay = METHOD_MAP[methodKey] || METHOD_MAP['otro'];
-                const shortMethod = methodDisplay.split(' ')[0].replace(/[^a-zA-Z]/g, '');
-
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 transition duration-150 ease-in-out';
-                
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">${p.concept || 'Pago de Matrícula'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-700">${formatCurrency(p.amount)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${shortMethod}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${numControl}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">${studentName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="view-detail-btn px-3 py-1 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition" 
-                            data-payment-id="${p.id}" data-student-id="${p.studentId}">
-                            Ver Detalle
-                        </button>
-                    </td>
-                `;
-                paymentsTableBody.appendChild(tr);
-            });
-            
-            addDetailListeners();
-        };
-
-        // --- Lógica del Modal ---
-        
-        const openModal = () => {
-            detailModal.classList.remove('hidden');
-            // Usar setTimeout para aplicar transiciones después de que el elemento es visible
-            setTimeout(() => {
-                detailModal.classList.remove('opacity-0');
-                detailModal.querySelector('div').classList.remove('scale-95');
-                detailModal.querySelector('div').classList.add('scale-100');
-            }, 10);
-        };
-
-        const closeModal = () => {
-            detailModal.classList.add('opacity-0');
-            detailModal.querySelector('div').classList.remove('scale-100');
-            detailModal.querySelector('div').classList.add('scale-95');
-            // Ocultar completamente después de la transición
-            setTimeout(() => {
-                detailModal.classList.add('hidden');
-            }, 300);
-        };
-
-        const showPaymentDetail = (paymentId, studentId) => {
-            const payments = readCharges();
-            const studentsData = readStudents();
-
-            const payment = payments.find(p => String(p.id) === String(paymentId));
-            const student = studentsData.find(s => String(s.id) === String(studentId));
-            
-            if (!payment || !student) {
-                alert('Detalle de pago o estudiante no encontrado.');
-                return;
-            }
-
-            // Datos del Estudiante
-            const fullName = `${student.nombre} ${student.apellidoP} ${student.apellidoM}`;
-            const pendingAdeudo = getPendingChargesSumForStudent(studentId);
-            
-            detailStudentName.textContent = fullName;
-            detailStudentControl.textContent = student.numControl || 'N/A';
-            detailStudentCarrera.textContent = CARRERA_MAP[student.carrera] || student.carrera;
-            detailStudentAdeudo.textContent = formatCurrency(pendingAdeudo);
-
-            // Datos de la Transacción
-            const date = new Date(payment.paymentDate || payment.dateCreated || Date.now());
-            
-            detailPaymentAmount.textContent = formatCurrency(payment.amount);
-            detailPaymentDate.textContent = date.toLocaleDateString('es-MX', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            detailPaymentConcept.textContent = payment.concept || 'Pago de Matrícula';
-            const methodKey = String(payment.paymentMethod || 'otro').toLowerCase();
-            detailPaymentMethod.textContent = METHOD_MAP[methodKey] || METHOD_MAP['otro'];
-
-            openModal();
-        };
-
-        const addDetailListeners = () => {
-            document.querySelectorAll('.view-detail-btn').forEach(button => {
-                button.removeEventListener('click', handleDetailClick); // Evitar duplicados
-                button.addEventListener('click', handleDetailClick);
-            });
-        };
-        
-        const handleDetailClick = (e) => {
-             e.preventDefault();
-             const paymentId = e.currentTarget.getAttribute('data-payment-id');
-             const studentId = e.currentTarget.getAttribute('data-student-id');
-             showPaymentDetail(paymentId, studentId);
-        };
-        
-        // --- Listeners de Eventos ---
-        
-        methodFilter.addEventListener('change', renderPaymentsTable);
-        closeModalBtn.addEventListener('click', closeModal);
-        
-        // Cerrar modal al hacer click fuera o presionar ESC
-        detailModal.addEventListener('click', (e) => {
-            if (e.target === detailModal) {
-                closeModal();
-            }
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !detailModal.classList.contains('hidden')) {
-                closeModal();
-            }
+        payments.forEach(p => {
+            const student = studentsData.find(s => String(s.id) === String(p.studentId) || String(s.numControl) === String(p.studentId));
+            const studentName = student ? `${student.nombre} ${student.apellidoP} ${student.apellidoM}`.trim() : 'Alumno Desconocido';
+            const numControl = student ? student.numControl : (p.studentId || 'N/A');
+            const date = new Date(p.paidAt || p.createdAt || p.date);
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50 transition duration-150 ease-in-out';
+            tr.innerHTML = `
+                <td class="px-4 py-3 text-gray-500">${date.toLocaleDateString('es-MX')}</td>
+                <td class="px-4 py-3 text-gray-900 font-medium">${p.conceptTitle || p.concept || 'Pago de Matrícula'}</td>
+                <td class="px-4 py-3 text-green-700 font-bold text-right">${formatCurrency(p.amount)}</td>
+                <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">${METHOD_MAP[(p.paymentMethod || p.method || 'otro').toLowerCase()]}</span></td>
+                <td class="px-4 py-3 text-gray-700">${numControl}</td>
+                <td class="px-4 py-3 text-gray-700 font-light">${studentName}</td>
+                <td class="px-4 py-3 text-right"><button class="view-detail-btn px-2 py-1 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition" data-payment-id="${p.id}" data-student-id="${p.studentId}">Detalle</button></td>
+            `;
+            paymentsTableBody.appendChild(tr);
         });
 
-        // Re-render cuando cambie localStorage (ej: si se registra un nuevo pago en otra vista)
-        window.addEventListener('storage', (e) => {
-            if (e.key === CHARGES_STORAGE_KEY || e.key === STUDENT_STORAGE_KEY) {
-                try { renderPaymentsTable(); } catch (err) { /* silent */ }
-            }
+        document.querySelectorAll('.view-detail-btn').forEach(button => {
+            button.removeEventListener('click', handleDetailClick); 
+            button.addEventListener('click', handleDetailClick);
         });
+    };
 
-        // 🏁 Inicialización
-        renderPaymentsTable();
-    })();
-    </script>
+    const openModal = () => {
+        detailModal.classList.remove('hidden');
+        setTimeout(() => {
+            detailModal.classList.remove('opacity-0');
+            detailModal.querySelector('div').classList.remove('scale-95');
+            detailModal.querySelector('div').classList.add('scale-100');
+        }, 10);
+    };
+
+    const closeModal = () => {
+        detailModal.classList.add('opacity-0');
+        detailModal.querySelector('div').classList.remove('scale-100');
+        detailModal.querySelector('div').classList.add('scale-95');
+        setTimeout(() => detailModal.classList.add('hidden'), 300);
+    };
+
+    const showPaymentDetail = (paymentId, studentId) => {
+        const payments = readCharges();
+        const studentsData = readStudents();
+        const payment = payments.find(p => String(p.id) === String(paymentId));
+        const student = studentsData.find(s => String(s.id) === String(studentId) || String(s.numControl) === String(studentId));
+        if (!payment || !student) return alert('Detalle no encontrado');
+
+        detailStudentName.textContent = `${student.nombre} ${student.apellidoP} ${student.apellidoM}`.trim();
+        detailStudentControl.textContent = student.numControl || 'N/A';
+        detailStudentCarrera.textContent = student.carrera || 'N/A';
+        detailStudentAdeudo.textContent = formatCurrency(0); // Adeudo pendiente: si tienes lógica, reemplazar
+
+        detailPaymentAmount.textContent = formatCurrency(payment.amount);
+        detailPaymentDate.textContent = new Date(payment.paidAt || payment.createdAt || payment.date).toLocaleString('es-MX');
+        detailPaymentConcept.textContent = payment.conceptTitle || payment.concept || 'Pago Manual';
+        detailPaymentMethod.textContent = METHOD_MAP[(payment.paymentMethod || payment.method || 'otro').toLowerCase()];
+        detailPaymentReference.textContent = payment.reference || 'N/A';
+
+        openModal();
+    };
+
+    const handleDetailClick = (e) => {
+        const paymentId = e.currentTarget.dataset.paymentId;
+        const studentId = e.currentTarget.dataset.studentId;
+        showPaymentDetail(paymentId, studentId);
+    };
+
+    methodFilter.addEventListener('change', renderPaymentsTable);
+    semesterFilter.addEventListener('change', renderPaymentsTable);
+    closeModalBtn.addEventListener('click', closeModal);
+    closeModalIconBtn.addEventListener('click', closeModal);
+    detailModal.addEventListener('click', e => { if(e.target === detailModal) closeModal(); });
+    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+    window.addEventListener('storage', e => { if(e.key===CHARGES_STORAGE_KEY||e.key===STUDENT_STORAGE_KEY) renderPaymentsTable(); });
+
+    renderPaymentsTable();
+})();
+</script>
 </Layout>
