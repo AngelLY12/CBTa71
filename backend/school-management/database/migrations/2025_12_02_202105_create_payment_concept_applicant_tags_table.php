@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('payment_concept_applicant_tags', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(PaymentConcept::class)->nullable()->constrained('payment_concepts')->onDelete('cascade');
-            $table->string('tag')->index();
+            $table->string('tag',60)->index();
             $table->timestamps();
             $table->unique(['payment_concept_id', 'tag']);
 

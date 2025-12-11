@@ -13,7 +13,7 @@ trait HasCache
         $this->cacheService = $cacheService;
     }
 
-    private function cache(string $key, bool $forceRefresh, callable $callback)
+    public function cache(string $key, bool $forceRefresh, callable $callback)
     {
 
         if ($forceRefresh) {

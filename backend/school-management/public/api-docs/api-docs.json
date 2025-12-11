@@ -1043,6 +1043,64 @@
                 ]
             }
         },
+        "/api/v1/admin-actions/temporary-disable-users": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Da de baja temporal múltiples usuarios",
+                "description": "Cambia el estado de los usuarios seleccionados a 'baja-temporal'.",
+                "operationId": "5d3b588afbaedf14d6a3b0cbeee57c5f",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangeUserStatusRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Usuarios dados de baja correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "concept": {
+                                                    "$ref": "#/components/schemas/UserChangedStatusResponse"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Estatus de usuarios actualizados correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto en los datos"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/admin-actions/find-permissions": {
             "post": {
                 "tags": [
@@ -7208,6 +7266,7 @@
                 "type": "string",
                 "enum": [
                     "activo",
+                    "baja-temporal",
                     "baja",
                     "eliminado"
                 ],

@@ -54,6 +54,14 @@ class UpdateStudentRequest extends FormRequest
         ];
     }
 
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'group' => strip_tags($this->group),
+            'workshop' => strip_tags($this->workshop),
+        ]);
+    }
+
     public function messages(): array
     {
         return [

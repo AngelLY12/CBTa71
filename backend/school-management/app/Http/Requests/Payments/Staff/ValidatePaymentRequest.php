@@ -46,6 +46,17 @@ class ValidatePaymentRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation()
+    {
+        if ($this->filled('search')) {
+            $this->merge([
+                'search' => strip_tags($this->search),
+                'payment_intent_id' => strip_tags($this->payment_intent_id),
+
+            ]);
+        }
+    }
+
     public function messages(): array
     {
         return [

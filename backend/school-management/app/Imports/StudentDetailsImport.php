@@ -23,6 +23,6 @@ class StudentDetailsImport implements ToCollection, ShouldQueue
     public function collection(Collection $collection)
     {
         $rows = $collection->skip(1)->toArray();
-        $this->insertedCount = $this->adminService->importUsers($rows);
+        $this->insertedCount = $this->adminService->importStudents($rows);
     }
 }

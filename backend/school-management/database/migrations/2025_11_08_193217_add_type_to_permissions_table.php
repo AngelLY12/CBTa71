@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('permissions', function (Blueprint $table) {
-            $table->string('type')->default('role')->index();
+            $table->string('type',50)->default('role')->index();
             $table->string('belongs_to')->nullable()->index();
         });
     }

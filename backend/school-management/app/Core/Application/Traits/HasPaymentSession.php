@@ -21,7 +21,7 @@ trait HasPaymentSession
     ) {
 
     }
-    private function handlePaymentSession($session, array $fields)
+    public function handlePaymentSession($session, array $fields)
     {
         $payment = $this->pqRepo->findBySessionId($session->id);
         if(!$payment){

@@ -34,7 +34,7 @@ class PaymentValidatedMail extends Mailable
         $messageDetails = "
             <p><strong>Concepto:</strong> {$this->data->concept_name}</p>
             <p><strong>Monto:</strong> $".number_format($this->data->amount, 2)."</p>
-            <p><strong>Método de pago:</strong> {$this->data['type_payment_method']}</p>
+            <p><strong>Método de pago:</strong> {$type_payment_method}</p>
             <p><strong>Código de referencia:</strong> {$this->data->payment_intent_id}</p>
             <p><strong>Voucher OXXO:</strong> {$voucherNumber}</p>
             <p><strong>Referencia SPEI:</strong> {$speiReference}</p>

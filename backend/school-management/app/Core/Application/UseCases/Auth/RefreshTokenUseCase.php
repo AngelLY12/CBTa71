@@ -25,7 +25,7 @@ class RefreshTokenUseCase
         $user = $this->uqRepo->findById($refreshToken->user_id);
         $this->refresh->revokeRefreshToken($refreshTokenValue);
         $userRoles= $user->getRoleNames();
-        $userData=$this->formatUserData($userRoles, $user->fullName());
+        $userData=$this->formatUserData($userRoles, $user->fullName(), $user->id);
         $newAccessToken  = $this->userRepo->createToken($user->id, 'api-token');
         $newRefreshToken = $this->userRepo->createRefreshToken($user->id, 'refresh-token');
         return GeneralMapper::toLoginResponse($newAccessToken,
@@ -34,9 +34,10 @@ class RefreshTokenUseCase
         $userData);
     }
 
-    private function formatUserData(array $roles, string $fullName): array
+    private function formatUserData(array $roles, string $fullName, int $id): array
    {
         return [
+            'id' => $id,
             'fullName' => $fullName,
             'roles' => $roles
         ];

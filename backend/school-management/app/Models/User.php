@@ -26,7 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser, LogsActivity;
-    
+
 
     /**
      * The attributes that are mass assignable.
@@ -62,6 +62,15 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(RefreshToken::class);
 
+    }
+
+    public function currentRefreshToken(): ?RefreshToken
+    {
+        return $this->refreshTokens()
+            ->where('revoked', false)
+            ->where('expires_at', '>', now())
+            ->latest('created_at')
+            ->first();
     }
 
     public function paymentMethods(){

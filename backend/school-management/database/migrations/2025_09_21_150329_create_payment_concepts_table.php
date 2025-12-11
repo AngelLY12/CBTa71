@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('status',20)->default(PaymentConceptStatus::ACTIVO->value)->index();
             $table->date('start_date')->index();
             $table->date('end_date')->nullable()->index();
-            $table->decimal('amount', 7,2);
+            $table->decimal('amount', 7,2)->check('amount >= 0');;
             $table->string('applies_to',25)->default(PaymentConceptAppliesTo::TODOS->value)->index();
             $table->boolean('is_global')->default(false)->index();
             $table->timestamps();

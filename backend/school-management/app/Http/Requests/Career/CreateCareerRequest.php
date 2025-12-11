@@ -40,6 +40,13 @@ class CreateCareerRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation()
+    {
+        $this->merge([
+            'career_name' => $this->has('career_name') ? strip_tags($this->career_name) : null,
+        ]);
+    }
+
     public function messages(): array
     {
         return [

@@ -707,6 +707,37 @@ public function deleteUsers(){}
  */
 public function disableUsers(){}
 
+/**
+ * @OA\Post(
+ *     path="/api/v1/admin-actions/temporary-disable-users",
+ *     summary="Da de baja temporal múltiples usuarios",
+ *     description="Cambia el estado de los usuarios seleccionados a 'baja-temporal'.",
+ *     tags={"Admin"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\RequestBody(
+ *        required=true,
+ *        @OA\JsonContent(ref="#/components/schemas/ChangeUserStatusRequest")
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Usuarios dados de baja correctamente",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="data", type="object",
+ *                 @OA\Property(
+ *                     property="concept",
+ *                     ref="#/components/schemas/UserChangedStatusResponse"
+ *                 )
+ *
+ *             ),
+ *             @OA\Property(property="message", type="string", example="Estatus de usuarios actualizados correctamente.")
+ *         )
+ *     ),
+ *     @OA\Response(response=409, description="Conflicto en los datos")
+ * )
+ */
+public function temporaryDisableUsers(){}
+
 
 /**
  * @OA\Post(

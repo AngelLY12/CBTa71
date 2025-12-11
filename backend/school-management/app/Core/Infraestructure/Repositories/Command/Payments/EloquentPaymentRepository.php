@@ -13,6 +13,7 @@ class EloquentPaymentRepository implements PaymentRepInterface {
     public function create(Payment $payment): Payment
     {
         $pm = EloquentPayment::create(PaymentMapper::toPersistence($payment));
+        $pm->refresh();
         return PaymentMapper::toDomain($pm);
 
     }
@@ -21,7 +22,6 @@ class EloquentPaymentRepository implements PaymentRepInterface {
     {
         $eloquentPayment = EloquentPayment::findOrFail($paymentId);
         $eloquentPayment->update($fields);
-        $eloquentPayment->refresh();
         return PaymentMapper::toDomain($eloquentPayment);
 
     }

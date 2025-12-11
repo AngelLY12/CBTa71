@@ -31,7 +31,6 @@ class EloquentUserRepository implements UserRepInterface
     {
         $eloquentUser =  $this->findOrFail($userId);
         $eloquentUser->update($fields);
-        $eloquentUser->refresh();
         return UserMapper::toDomain($eloquentUser);
     }
 

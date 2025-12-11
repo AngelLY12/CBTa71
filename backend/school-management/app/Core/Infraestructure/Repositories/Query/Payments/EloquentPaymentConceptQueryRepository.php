@@ -7,6 +7,7 @@ use App\Core\Application\Mappers\PaymentConceptMapper as MappersPaymentConceptMa
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\User\UserRoles;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
@@ -94,7 +95,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 $query->whereYear('created_at', now()->year);
             }
 
-         $paginator = $query->paginate($perPage);
+         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $paginator->getCollection()->transform(fn($pc) => MappersPaymentConceptMapper::toConceptsToDashboardResponse($pc));
 
@@ -103,20 +104,28 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     public function getPendingWithDetailsForStudents(array $userIds): array
     {
-        if (empty($userIds)) {
-            return [];
-        }
-        $now = Carbon::now()->toDateString();
-        $rows = $this->basePendingQuery($userIds)
-            ->select('users.id as user_id', DB::raw("CONCAT(users.name, ' ', users.last_name) as user_name"), 'payment_concepts.concept_name', 'payment_concepts.amount')
-            ->get();
-        return $rows->map(fn($r) => MappersPaymentConceptMapper::toConceptNameAndAmoutResonse([
-            'user_name' => $r->user_name,
-            'concept_name' => $r->concept_name,
-            'amount' => $r->amount,
-        ]))->toArray();
+        if (empty($userIds)) return [];
 
+        $rows = $this->basePendingQuery($userIds)
+            ->join('users', 'users.id', '=', 'pending_concepts.target_user_id')
+            ->whereIn('users.id', $userIds)
+            ->select(
+                'users.id as user_id',
+                DB::raw("CONCAT(users.name, ' ', users.last_name) as user_name"),
+                'pending_concepts.concept_name',
+                'pending_concepts.amount'
+            )
+            ->get();
+
+        return $rows->map(fn($r) => MappersPaymentConceptMapper::toConceptNameAndAmoutResonse([
+            'user_name'    => $r->user_name,
+            'concept_name' => $r->concept_name,
+            'amount'       => $r->amount,
+        ]))->toArray();
     }
+
+
+
 
     public function finalizePaymentConcepts(): void
     {
@@ -162,7 +171,10 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
             );
 
             $query->where(function ($q) use ($userId, $careerId, $semester, $isApplicant, $isNewStudent) {
-                $q->where('is_global', true)
+                $q->where(function($q) {
+                    $q->where('is_global', true)
+                        ->whereHas('users', fn($q) => $q->whereHas('roles', fn($r) => $r->where('name', UserRoles::STUDENT->value)));
+                })
                 ->orWhereHas('users', fn($q) => $q->where('users.id', $userId))
                 ->when($careerId, fn($q) =>
                     $q->orWhereHas('careers', fn($q) => $q->where('careers.id', $careerId))
@@ -183,11 +195,38 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 $sub->select(DB::raw(1))
                     ->from('payments')
                     ->whereColumn('payments.payment_concept_id', 'payment_concepts.id');
-            })
-            ->where(function ($q) {
-                $q->where('is_global', true)
-                ->orWhereHas('users', fn($q) => $q->role('student')->where('status', 'activo'))
-                ->orWhereHas('careers.students', fn($q) => $q->role('student')->where('status', 'activo'));
+            });
+
+            $query->where(function ($q) {
+                $q->where(function($q) {
+                    $q->where('is_global', true)
+                        ->whereHas('users', fn($q) => $q->whereHas('roles', fn($r) => $r->where('name', UserRoles::STUDENT->value)));
+                })
+                    ->orWhereHas('users', fn($q) =>
+                    $q->whereHas('roles', fn($r) => $r->where('name',UserRoles::STUDENT->value))
+                        ->where('users.status',UserStatus::ACTIVO->value)
+                    )
+
+                    ->orWhereHas('careers.students', fn($q) =>
+                    $q->whereHas('roles', fn($r) => $r->where('name',UserRoles::STUDENT->value))
+                        ->where('users.status',UserStatus::ACTIVO->value)
+                    )
+
+                    ->orWhereHas('paymentConceptSemesters', fn($q) =>
+                    $q->whereIn('semestre', function ($sub) {
+                        $sub->select('student_details.semestre')
+                            ->from('student_details')
+                            ->join('users','users.id','=','student_details.user_id')
+                            ->where('users.status', UserStatus::ACTIVO->value)
+                            ->whereHas('roles', fn($r) => $r->where('name',UserRoles::STUDENT->value));
+                    })
+                    )
+                    ->orWhereHas('applicantTypes', fn($q) =>
+                    $q->where('tag', PaymentConceptApplicantType::APPLICANT->value)
+                    )
+                    ->orWhereHas('applicantTypes', fn($q) =>
+                    $q->where('tag', PaymentConceptApplicantType::NO_STUDENT_DETAILS->value)
+                    );
             });
         }
 

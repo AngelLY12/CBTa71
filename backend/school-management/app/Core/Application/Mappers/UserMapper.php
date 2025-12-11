@@ -5,6 +5,7 @@ namespace App\Core\Application\Mappers;
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
+use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
@@ -184,6 +185,14 @@ class UserMapper{
             updatedUsers: $data['users'],
             newStatus: $data['status'],
             totalUpdated: $data['total'] ?? 0
+        );
+    }
+
+    public static function toPromotedStudentsResponse(array $data): PromotedStudentsResponse
+    {
+        return new PromotedStudentsResponse(
+            promotedStudents: $data['promotedStudents'] ?? 0,
+            desactivatedStudents: $data['desactivatedStudents'] ?? 0,
         );
     }
 

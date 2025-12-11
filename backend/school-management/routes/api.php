@@ -20,9 +20,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Students\WebhookController;
 use App\Http\Controllers\UpdateUserController;
 
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
-});
+//Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+//    return $request->user();
+//});
 
 Route::post('/stripe/webhook', [WebhookController::class, 'handle']);
 
@@ -49,8 +49,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:view own overdue concepts summary')->get('/overdue/{id}',[DashboardController::class,'overdue']);
         Route::middleware('permission:view payments history')->get('/history/{id}',[DashboardController::class,'history']);
         Route::middleware('permission:refresh all dashboard')->post('/refresh',[DashboardController::class,'refreshDashboard']);
-
-
     });
     Route::prefix('cards')->middleware(['role:student|parent', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['permission:view cards','throttle:global'])->get('/{id}',[CardsController::class,'index']);
@@ -110,6 +108,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:sync roles')->post('/updated-roles', [AdminController::class, 'syncRoles']);
         Route::middleware('permission:activate users')->post('/activate-users', [AdminController::class, 'activateUsers']);
         Route::middleware('permission:disable users')->post('/disable-users', [AdminController::class, 'disableUsers']);
+        Route::middleware('permission:disable users')->post('/temporary-disable-users', [AdminController::class, 'temporaryDisableUsers']);
         Route::middleware('permission:delete users')->post('/delete-users', [AdminController::class, 'deleteUsers']);
         Route::middleware('permission:view permissions')->post('/find-permissions', [AdminController::class, 'findAllPermissions']);
         Route::middleware('permission:view permissions')->get('/permissions/{id}', [AdminController::class, 'findPermissionById']);

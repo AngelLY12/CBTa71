@@ -33,7 +33,7 @@ class PendingPaymentServiceFacades{
     }
 
     public function payConcept(User $user, int $conceptId): string {
-        $pay=$this->pay->execute($user->id,$conceptId);
+        $pay=$this->pay->execute($user,$conceptId);
         $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value . ":pending:$user->id");
         $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::HISTORY->value .":$user->id");
         return $pay;

@@ -65,6 +65,7 @@ class PendingPaymentController extends Controller
 
     public function store(PayConceptRequest $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $payment= $this->pendingPaymentService->payConcept(
             UserMapper::toDomain($user),

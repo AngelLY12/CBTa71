@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('parent_id');
             $table->unsignedBigInteger('student_id');
-            $table->unsignedBigInteger('parent_role_id');
-            $table->unsignedBigInteger('student_role_id');
+            $table->unsignedBigInteger('parent_role_id')->nullable();
+            $table->unsignedBigInteger('student_role_id')->nullable();
             $table->foreign('parent_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('student_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('parent_role_id')->references('id')->on('roles');
-            $table->foreign('student_role_id')->references('id')->on('roles');
+            $table->foreign('parent_role_id')->references('id')->on('roles')->onDelete('set null');
+            $table->foreign('student_role_id')->references('id')->on('roles')->onDelete('set null');
             $table->string('relationship',50)->nullable();
             $table->unique(['parent_id', 'student_id']);
             $table->timestamps();

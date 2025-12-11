@@ -158,6 +158,15 @@ class AdminController extends Controller
 
     }
 
+    public function temporaryDisableUsers(ChangeUserStatusRequest $request)
+    {
+        $ids = $request->validated()['ids'];
+        $updated=$this->service->temporaryDisableUsers($ids);
+
+        return Response::success(['temporary_disable_users' => $updated], 'Estatus de usuarios actualizados correctamente.');
+
+    }
+
     public function findAllPermissions(FindPermissionsRequest $request)
     {
         $validated = $request->validated();

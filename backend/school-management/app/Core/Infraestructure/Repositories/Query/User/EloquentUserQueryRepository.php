@@ -154,28 +154,33 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         if (empty($userIds)) return [];
 
         $rows = $this->basePendingQuery($userIds)
+            ->join('users', 'users.id', '=', 'pending_concepts.target_user_id')
             ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
             ->leftJoin('careers', 'careers.id', '=', 'student_details.career_id')
+            ->whereIn('users.id', $userIds)
             ->selectRaw("
-                users.id AS user_id,
-                CONCAT(users.name, ' ', users.last_name) AS full_name,
-                student_details.semestre AS semestre,
-                careers.career_name AS career,
-                COUNT(payment_concepts.id) AS total_count,
-                COALESCE(SUM(payment_concepts.amount), 0) AS total_amount
-            ")
+            users.id AS user_id,
+            CONCAT(users.name, ' ', users.last_name) AS full_name,
+            student_details.semestre AS semestre,
+            careers.career_name AS career,
+            COUNT(pending_concepts.id) AS total_count,
+            COALESCE(SUM(pending_concepts.amount), 0) AS total_amount
+        ")
             ->groupBy('users.id', 'users.name', 'users.last_name', 'student_details.semestre', 'careers.career_name')
             ->get();
 
         return $rows->map(fn($r) => MappersUserMapper::toUserWithPendingSummaryResponse([
-            'user_id' => (int)$r->user_id,
-            'name' => $r->full_name,
-            'semestre' => $r->semestre,
-            'career' => $r->career ?? null,
-            'total_count' => (int)$r->total_count,
+            'user_id'      => (int)$r->user_id,
+            'name'         => $r->full_name,
+            'semestre'     => $r->semestre,
+            'career'       => $r->career ?? null,
+            'total_count'  => (int)$r->total_count,
             'total_amount' => $r->total_amount,
         ]))->toArray();
     }
+
+
+
 
     public function findAllUsers(int $perPage, int $page): LengthAwarePaginator
     {

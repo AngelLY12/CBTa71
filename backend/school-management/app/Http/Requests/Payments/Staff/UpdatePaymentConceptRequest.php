@@ -185,6 +185,19 @@ class UpdatePaymentConceptRequest extends FormRequest
 
     public function prepareForValidation()
     {
+
+        if ($this->filled('concept_name')) {
+            $this->merge([
+                'concept_name' => strip_tags($this->concept_name),
+            ]);
+        }
+
+        if ($this->filled('description')) {
+            $this->merge([
+                'description' => strip_tags($this->description),
+            ]);
+        }
+
         if ($this->has('is_global')) {
             $this->merge([
                 'is_global' => filter_var($this->is_global, FILTER_VALIDATE_BOOLEAN),
@@ -217,6 +230,13 @@ class UpdatePaymentConceptRequest extends FormRequest
             $this->merge([
                 'applicantTags' => array_map('strtolower', $this->applicantTags),
             ]);
+        }
+        foreach (['students', 'exceptionStudents'] as $field) {
+            if ($this->has($field) && is_array($this->$field)) {
+                $this->merge([
+                    $field => array_map(fn($value) => strip_tags($value), $this->$field),
+                ]);
+            }
         }
 
     }

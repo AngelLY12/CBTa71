@@ -28,8 +28,9 @@ class PromoteStudentsJob implements ShouldQueue
     public function handle(PromoteStudentsUseCase $promote): void
     {
         try {
-            $data = $promote->execute();
-            Log::info('Estudiantes promovidos: ' . json_encode($data));
+            $response = $promote->execute();
+            Log::info('Estudiantes promovidos: ' . $response->promotedStudents);
+            Log::info('Estudiantes dados de baja: ' . $response->desactivatedStudents);
         } catch (\Throwable $e) {
             Log::warning('Promoción no ejecutada automáticamente: ' . $e->getMessage());
         }

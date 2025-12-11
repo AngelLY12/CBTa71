@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('stripe_session_id')->nullable()->unique();
             $table->timestamps();
             $table->index(['status', 'created_at']);
+            $table->index(['user_id', 'payment_concept_id']);
         });
 
 

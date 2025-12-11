@@ -27,7 +27,6 @@ class EloquentCareerRepository implements CareerRepInterface
     {
         $eloquent=$this->findOrFail($careerId);
         $eloquent->update($fields);
-        $eloquent->refresh();
         return CareerMapper::toDomain($eloquent);
     }
 

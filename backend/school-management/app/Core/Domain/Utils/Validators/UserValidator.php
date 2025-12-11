@@ -10,6 +10,7 @@ use App\Exceptions\Conflict\UserAlreadyDisabledException;
 use App\Exceptions\Conflict\UserCannotBeDisabledException;
 use App\Exceptions\Conflict\UserCannotBeUpdatedException;
 use App\Exceptions\Conflict\UserConflictStatusException;
+use App\Exceptions\NotAllowed\UserInactiveException;
 use App\Exceptions\NotAllowed\UserNotAllowedException;
 
 class UserValidator
@@ -22,8 +23,8 @@ class UserValidator
 
             throw match ($newStatus) {
                 UserStatus::ACTIVO     => new UserAlreadyActiveException(),
-                UserStatus::BAJA       => new UserAlreadyDisabledException(),
-                UserStatus::ELIMINADO  => new UserAlreadyDeletedException(),
+                UserStatus::BAJA, UserStatus::BAJA_TEMPORAL => new UserAlreadyDisabledException(),
+                UserStatus::ELIMINADO  => new UserAlreadyDeletedException()
             };
         }
 
@@ -44,7 +45,7 @@ class UserValidator
     {
         if(!$user->isActive())
         {
-            throw new UserNotAllowedException();
+            throw new UserInactiveException();
         }
     }
 

@@ -9,10 +9,31 @@ use App\Core\Application\DTO\Response\Payment\PaymentHistoryResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentListItemResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentValidateResponse;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
+use App\Core\Domain\Entities\PaymentConcept;
+use App\Core\Domain\Entities\User;
 use App\Models\Payment;
 use App\Core\Domain\Entities\Payment as DomainPayment;
+use Stripe\Checkout\Session;
 
 class PaymentMapper{
+
+    public static function toDomain(PaymentConcept $concept, int $userId, Session $session): DomainPayment
+    {
+        return new DomainPayment(
+            id: null,
+            user_id: $userId,
+            payment_concept_id: $concept->id,
+            payment_method_id: null,
+            stripe_payment_method_id: null,
+            concept_name: $concept->concept_name,
+            amount: $concept->amount,
+            payment_method_details: [],
+            status: EnumMapper::fromStripe($session->payment_status),
+            payment_intent_id: null,
+            url: $session->url ?? null,
+            stripe_session_id: $session->id ?? null
+        );
+    }
 
     public static function toHistoryResponse(array $payment): PaymentHistoryResponse
     {

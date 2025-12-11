@@ -10,8 +10,8 @@ class DeleteCareerUseCase
     {
     }
 
-    public function execute(int $careerId)
+    public function execute(int $careerId): void
     {
-        return $this->careerRepo->delete($careerId);
+        $this->careerRepo->delete($careerId);
     }
 }

@@ -17,11 +17,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -63,7 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return $daysBeforeEnd <= 8
                 && in_array($today->month, config('promotions.allowed_months'));
         });
-        $schedule->command('cache:dispatch-clean-cache-job')->cron('0 0 1 */3 *'); 
+        $schedule->command('cache:dispatch-clean-cache-job')->cron('0 0 1 */3 *');
         $schedule->command('backup:clean')->dailyAt('02:30');
         $schedule->command('logs:dispatch-clean-older-logs-job')->quarterly();
         $schedule->command('db:auto-restore')->dailyAt('03:00');
@@ -75,9 +73,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('02:00');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        
+
         $exceptions->render(function (DomainException $e, Request $request) {
-            logger('Handler ejecutado con: ' . get_class($e));
             return Response::error($e->getMessage(), $e->getStatusCode());
         });
 
@@ -85,14 +82,11 @@ return Application::configure(basePath: dirname(__DIR__))
             return Response::error('No estás autenticado', 401);
         });
 
-        $exceptions->render(function ($e, Request $request) {
-            if ($e instanceof AuthorizationException || $e instanceof UnauthorizedException) {
-                return Response::error('No tienes permisos para realizar esta acción.', 403);
-            }
+        $exceptions->render(function (AuthorizationException|UnauthorizedException $e, Request $request) {
+            return Response::error('No tienes permisos para realizar esta acción.', 403);
         });
 
         $exceptions->render(function (QueryException $e, Request $request) {
-            logger()->error('Database error: ' . $e->getMessage());
             if ($e->errorInfo[1] === 1062) {
                 return Response::error('Registro duplicado, ya existe una entidad con esos datos.', 409, $e->errorInfo);
             }
@@ -115,17 +109,52 @@ return Application::configure(basePath: dirname(__DIR__))
             return Response::error('Demasiadas solicitudes a Stripe, intenta más tarde.', 429);
         });
 
+        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException  $e, Request $request) {
+            $headers = $e->getHeaders();
+            $retryAfter = $headers['Retry-After'] ?? null;
+            $reset = $headers['X-RateLimit-Reset'] ?? null;
+
+            $response = Response::error(
+                'Has excedido el límite de solicitudes, intenta nuevamente en unos segundos',
+                429,
+                [
+                    'retry_at'     => $retryAfter ? now()->addSeconds($retryAfter)->timestamp : null,
+                    'available_in' => $retryAfter ? (int) $retryAfter : null,
+                    'limit'        => $headers['X-RateLimit-Limit'] ?? null,
+                    'remaining'    => $headers['X-RateLimit-Remaining'] ?? null,
+                    'reset_at'     => $reset ? (int) $reset : null,
+                ]
+            );
+
+            return $response->withHeaders($headers);
+        });
+
         $exceptions->render(function (ApiErrorException $e, Request $request) {
-            return Response::error('Error al comunicarse con Stripe, intenta más tarde.', 502);
+            return Response::error('Error al comunicarse con Stripe, intenta más tarde.', 502,
+                [
+                    'stripe_error' => $e->getStripeCode()
+                ]
+            );
         });
 
         $exceptions->render(function (ValidationException $e, Request $request) {
-            return Response::error('Errores de validación', 400, $e->errors());
+            return Response::error('Errores de validación', 422, $e->errors());
         });
 
         $exceptions->render(function (\Throwable $e, Request $request) {
-            return Response::error('Ocurrió un error inesperado', 500, [$e->getMessage()]);
+            logger()->error("[UNHANDLED] " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return Response::error(
+                app()->isProduction()
+                    ? 'Ocurrió un error inesperado'
+                    : $e->getMessage(),
+                500
+            );
         });
+
         $exceptions->shouldRenderJsonWhen(function (Request $request, $e) {
             return $request->is('api/*') || $request->expectsJson();
         });
