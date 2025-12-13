@@ -8,8 +8,8 @@ use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Command\Misc\SemesterPromotionsRepInterface;
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
-use App\Exceptions\Conflict\PromotionAlreadyExecutedException;
-use App\Exceptions\NotAllowed\PromotionNotAllowedException;
+use App\Core\Domain\Utils\Validators\SemesterPromotionValidator;
+use Illuminate\Support\Facades\DB;
 
 class PromoteStudentsUseCase
 {
@@ -21,20 +21,15 @@ class PromoteStudentsUseCase
 
     public function execute(): PromotedStudentsResponse
     {
-        $allowedMonths = config('promotions.allowed_months');
-        $currentMonth = now()->month;
-
-        if (! in_array($currentMonth, $allowedMonths)) {
-            throw new PromotionNotAllowedException($allowedMonths);
-        }
-
-        if ($this->promotionRepo->wasExecutedThisMonth()) {
-            throw new PromotionAlreadyExecutedException();
-        }
-        $incrementCount=$this->sdRepo->incrementSemesterForAll();
-        $userIds = $this->sdRepo->getStudentsExceedingSemesterLimit(10);
-        $this->userRepo->changeStatus($userIds, UserStatus::BAJA->value);
-        $this->promotionRepo->registerExecution();
+        $wasExecuted= $this->promotionRepo->wasExecutedThisMonth();
+        SemesterPromotionValidator::ensurePromotionIsValid($wasExecuted);
+        [$incrementCount, $userIds] = DB::transaction(function () {
+            $incrementCount = $this->sdRepo->incrementSemesterForAll();
+            $userIds = $this->sdRepo->getStudentsExceedingSemesterLimit(10);
+            $this->userRepo->changeStatus($userIds, UserStatus::BAJA->value);
+            $this->promotionRepo->registerExecution();
+            return [$incrementCount, $userIds];
+        });
 
         return UserMapper::toPromotedStudentsResponse(
             [

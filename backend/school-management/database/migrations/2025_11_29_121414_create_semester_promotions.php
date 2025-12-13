@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('semester_promotions', function (Blueprint $table) {
             $table->id();
             $table->timestamp('executed_at')->index();
-            $table->timestamps();
         });
     }
 
