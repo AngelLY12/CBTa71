@@ -11,6 +11,7 @@ namespace App\Core\Application\DTO\Response\User;
  *     @OA\Property(property="semestre", type="integer", nullable=true, description="Semestre del estudiante", example=5),
  *     @OA\Property(property="career_name", type="string", nullable=true, description="Nombre de la carrera del estudiante", example="Ingeniería en Sistemas"),
  *     @OA\Property(property="num_pending", type="integer", nullable=true, description="Número de conceptos pendientes", example=3),
+ *     @OA\Property(property="num_expired", type="integer", nullable=true, description="Número de conceptos vencidos", example=1),
  *     @OA\Property(property="total_amount_pending", type="string", nullable=true, description="Monto total pendiente", example="4500.00")
  * )
  */
