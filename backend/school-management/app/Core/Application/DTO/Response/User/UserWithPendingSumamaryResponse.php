@@ -21,6 +21,7 @@ class UserWithPendingSumamaryResponse{
         public readonly ?int $semestre,
         public readonly ?string $career_name,
         public readonly ?int $num_pending,
+        public readonly ?int $num_expired,
         public readonly ?string $total_amount_pending
     )
     {
