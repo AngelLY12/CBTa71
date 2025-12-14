@@ -6,6 +6,7 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptTimeScope;
 use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Enum\User\UserStatus;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -69,9 +70,10 @@ trait HasPendingQuery
                     $q->where('payment_concepts.is_global', true)
                         ->whereExists(function ($r) {
                             $r->select(DB::raw(1))
-                                ->from('role_user')
-                                ->join('roles', 'roles.id', '=', 'role_user.role_id')
-                                ->whereColumn('role_user.user_id', 'u.user_id')
+                                ->from('model_has_roles')
+                                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                                ->whereColumn('model_has_roles.model_id', 'u.user_id')
+                                ->where('model_has_roles.model_type', User::class)
                                 ->where('roles.name', UserRoles::STUDENT->value);
                         });
                 });
@@ -85,9 +87,9 @@ trait HasPendingQuery
 
                 $q->orWhereExists(function ($sub) {
                     $sub->select(DB::raw(1))
-                        ->from('payment_concept_career')
-                        ->whereColumn('payment_concept_career.payment_concept_id', 'payment_concepts.id')
-                        ->whereColumn('payment_concept_career.career_id', 'u.career_id');
+                        ->from('career_payment_concept')
+                        ->whereColumn('career_payment_concept.payment_concept_id', 'payment_concepts.id')
+                        ->whereColumn('career_payment_concept.career_id', 'u.career_id');
                 });
 
                 $q->orWhereExists(function ($sub) {

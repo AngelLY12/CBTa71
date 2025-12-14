@@ -106,7 +106,8 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     {
         if (empty($userIds)) return [];
 
-        $rows = $this->basePendingQuery($userIds)
+        $rows = DB::query()
+            ->fromSub($this->basePendingQuery($userIds), 'pending_concepts')
             ->join('users', 'users.id', '=', 'pending_concepts.target_user_id')
             ->select(
                 'users.id as user_id',
