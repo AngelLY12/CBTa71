@@ -83,16 +83,14 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     {
         return EloquentPayment::with([
             'user:id,name,last_name',
-            'paymentConcept:id,concept_name'
         ])
         ->when($search, function ($q) use ($search) {
             $q->whereHas('user', fn($sub) =>
                 $sub->where('name', 'like', "%$search%")
                     ->orWhere('last_name', 'like', "%$search%")
                     ->orWhere('email', 'like', "%$search%")
-            )->orWhereHas('paymentConcept', fn($sub) =>
-                $sub->where('concept_name', 'like', "%$search%")
-            );
+            )->orWhere('concept_name', 'like', "%$search%");
+
         })
         ->paginate($perPage, ['*'], 'page', $page)
         ->through(fn($p) => MappersPaymentMapper::toListItemResponse($p));
