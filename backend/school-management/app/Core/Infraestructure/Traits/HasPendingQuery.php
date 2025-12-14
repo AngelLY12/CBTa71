@@ -3,6 +3,7 @@
 namespace App\Core\Infraestructure\Traits;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptTimeScope;
 use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Enum\User\UserStatus;
 use Carbon\Carbon;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 trait HasPendingQuery
 {
-    public function basePendingQuery(array $userIds)
+    public function basePendingQuery(array $userIds, PaymentConceptTimeScope $scope= PaymentConceptTimeScope::ONLY_ACTIVE)
     {
         $now = Carbon::now()->toDateString();
 
@@ -34,10 +35,16 @@ trait HasPendingQuery
         $baseConcepts = DB::table('payment_concepts')
             ->where('payment_concepts.status', PaymentConceptStatus::ACTIVO->value)
             ->whereDate('payment_concepts.start_date', '<=', $now)
-            ->where(function ($q) use ($now) {
-                $q->whereNull('payment_concepts.end_date')
-                    ->orWhereDate('payment_concepts.end_date', '>=', $now);
-            });
+            ->when(
+                $scope === PaymentConceptTimeScope::ONLY_ACTIVE,
+                fn($q) =>
+                $q->where(function ($q) use ($now) {
+                    $q->whereNull('payment_concepts.end_date')
+                        ->orWhereDate('payment_concepts.end_date', '>=', $now);
+                })
+
+            );
+
 
         $pending = DB::query()
             ->fromSub($usersContext, 'u')
@@ -100,11 +107,33 @@ trait HasPendingQuery
 
             ->select(
                 'payment_concepts.*',
-                'u.user_id as target_user_id'
+                'u.user_id as target_user_id',
+                DB::raw("
+                    CASE
+                        WHEN payment_concepts.end_date IS NOT NULL
+                             AND payment_concepts.end_date < CURRENT_DATE
+                        THEN 1
+                        ELSE 0
+                    END as is_expired
+                ")
             );
 
         return $pending;
     }
+
+    public function basePendingLeftJoinQuery(array $userIds, PaymentConceptTimeScope $scope = PaymentConceptTimeScope::INCLUDE_EXPIRED)
+    {
+        return DB::table('users')
+            ->whereIn('users.id', $userIds)
+            ->leftJoinSub(
+                $this->basePendingQuery($userIds, $scope),
+                'pending_concepts',
+                'pending_concepts.target_user_id',
+                '=',
+                'users.id'
+            );
+    }
+
 }
 
 
