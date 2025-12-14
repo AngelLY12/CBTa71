@@ -108,7 +108,6 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
         $rows = $this->basePendingQuery($userIds)
             ->join('users', 'users.id', '=', 'pending_concepts.target_user_id')
-            ->whereIn('users.id', $userIds)
             ->select(
                 'users.id as user_id',
                 DB::raw("CONCAT(users.name, ' ', users.last_name) as user_name"),
@@ -137,7 +136,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     }
 
-     private function basePaymentConcept(?User $user = null, $onlyActive=true, ?PaymentConceptStatus $status=null): Builder
+    private function basePaymentConcept(?User $user = null, $onlyActive=true, ?PaymentConceptStatus $status=null): Builder
     {
         $now = now();
 

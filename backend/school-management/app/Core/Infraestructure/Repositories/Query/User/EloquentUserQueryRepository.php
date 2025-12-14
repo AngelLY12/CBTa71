@@ -157,7 +157,6 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             ->join('users', 'users.id', '=', 'pending_concepts.target_user_id')
             ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
             ->leftJoin('careers', 'careers.id', '=', 'student_details.career_id')
-            ->whereIn('users.id', $userIds)
             ->selectRaw("
             users.id AS user_id,
             CONCAT(users.name, ' ', users.last_name) AS full_name,
