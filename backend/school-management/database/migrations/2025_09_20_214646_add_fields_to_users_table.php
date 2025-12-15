@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('last_name')->after('name');
-            $table->string('phone_number',15)->after('last_name');
+            $table->string('phone_number',15)->after('last_name')->unique();
             $table->date('birthdate')->after('phone_number');
             $table->string('gender',10)->nullable()->after('birthdate');
             $table->char('curp',18)->after('gender')->unique();
