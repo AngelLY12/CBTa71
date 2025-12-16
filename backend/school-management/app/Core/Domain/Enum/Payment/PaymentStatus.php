@@ -7,7 +7,7 @@ namespace App\Core\Domain\Enum\Payment;
  *     schema="PaymentStatus",
  *     type="string",
  *     description="Estatus válidos de un pago",
- *     enum={"succeeded", "requires_action", "paid", "unpaid", "pending"},
+ *     enum={"succeeded", "requires_action", "paid", "unpaid", "pending", "overpaid", "underpaid"},
  *     example="paid"
  * )
  */
@@ -18,4 +18,17 @@ enum PaymentStatus: string
     case PAID = 'paid';
     case UNPAID = 'unpaid';
     case DEFAULT = 'pending';
+    case OVERPAID = 'overpaid';
+    case UNDERPAID = 'underpaid';
+
+    public static function terminalStatuses(): array
+    {
+        return [
+            self::SUCCEEDED->value,
+            self::OVERPAID->value,
+            self::PAID->value,
+            self::REQUIRES_ACTION->value,
+        ];
+    }
+
 }

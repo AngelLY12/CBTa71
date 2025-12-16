@@ -10,8 +10,8 @@ use App\Core\Domain\Entities\PaymentConcept;
 interface PaymentConceptQueryRepInterface{
     //Dashboard Student
     public function findById(int $id): ?PaymentConcept;
-    public function getPendingPaymentConcepts(User $user): PendingSummaryResponse;
-    public function countOverduePayments(User $user): int;
+    public function getPendingPaymentConcepts(User $user, bool $onlyThisYear): PendingSummaryResponse;
+    public function getOverduePaymentsSummary(User $user, bool $onlyThisYear): PendingSummaryResponse;
     //Dashboard Staff
     public function findAllConcepts(string $status, int $perPage, int $page): LengthAwarePaginator;
     public function getAllPendingPaymentAmount(bool $onlyThisYear): PendingSummaryResponse;
