@@ -2,8 +2,10 @@
 
 namespace App\Core\Application\Traits;
 
+use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Entities\PaymentMethod;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
@@ -17,11 +19,15 @@ trait HasPaymentStripe
     }
     public function updatePaymentWithStripeData(Payment $payment, $pi, $charge, PaymentMethod $savedPaymentMethod): Payment
     {
+        $expected = $pi->amount / 100;
+        $received = ($pi->amount_received ?? 0) / 100;
+        $internalStatus = $this->verifyStatus($pi, $received, $expected);
         $paymentMethodDetails = $this->formatPaymentMethodDetails($charge->payment_method_details);
         $fields=[
+            'amount_received' => number_format($received, 2, '.', ''),
             'payment_method_id' => $savedPaymentMethod?->id,
             'stripe_payment_method_id' => $charge?->payment_method,
-            'status' => $pi->status,
+            'status' => $internalStatus,
             'payment_method_details'=>$paymentMethodDetails,
             'url' => $charge?->receipt_url ?? $payment->url,
         ];
@@ -41,5 +47,17 @@ trait HasPaymentStripe
         }
 
         return (array) $details;
+    }
+
+    private function verifyStatus($pi, string|float $received, string|float $expected): PaymentStatus
+    {
+        return match (true)
+        {
+            $pi->status !== PaymentStatus::SUCCEEDED->value => PaymentStatus::DEFAULT,
+            $received < $expected => PaymentStatus::UNDERPAID,
+            $received > $expected => PaymentStatus::OVERPAID,
+            default => PaymentStatus::SUCCEEDED
+        };
+
     }
 }

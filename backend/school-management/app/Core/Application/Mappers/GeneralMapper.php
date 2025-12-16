@@ -65,7 +65,7 @@ class GeneralMapper{
             students:$alumnos ?? null
         );
     }
-    public static function toDashboardDataUserResponse(int $realizados, PendingSummaryResponse $pendientes, int $vencidos):DashboardDataUserResponse
+    public static function toDashboardDataUserResponse(int $realizados, PendingSummaryResponse $pendientes, PendingSummaryResponse $vencidos):DashboardDataUserResponse
     {
         return new DashboardDataUserResponse(
             completed:$realizados ?? null,

@@ -45,6 +45,8 @@ class MailMapper
             recipientEmail: $data['recipientEmail'],
             concept_name: $data['concept_name'],
             amount: $data['amount'],
+            amount_received: $data['amount_received'],
+            status: $data['status'],
             payment_method_detail: $data['payment_method_detail'],
             payment_intent_id: $data['payment_intent_id'],
             url:$data['url']

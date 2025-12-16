@@ -50,7 +50,7 @@ class DashboardServiceFacades{
 
     public function getAllConcepts(bool $onlyThisYear, int $perPage, int $page, bool $forceRefresh):PaginatedResponse
     {
-        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value . ":concepts:$onlyThisYear");
+        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value . ":concepts:$perPage:$page:$onlyThisYear");
         return $this->cache($key,$forceRefresh ,fn() => $this->concepts->execute($onlyThisYear, $perPage, $page));
 
     }

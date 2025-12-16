@@ -28,31 +28,31 @@ class DashboardServiceFacades {
 
     }
 
-    public function pendingPaymentAmount(User $user, bool $forceRefresh): PendingSummaryResponse {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":pending:$user->id");
-        return $this->cache($key,$forceRefresh ,fn() => $this->pending->execute($user->id));
+    public function pendingPaymentAmount(bool $onlyThisYear, User $user, bool $forceRefresh): PendingSummaryResponse {
+        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":pending:$user->id:$onlyThisYear");
+        return $this->cache($key,$forceRefresh ,fn() => $this->pending->execute($user->id, $onlyThisYear));
     }
 
-    public function paymentsMade(User $user, bool $forceRefresh): string {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":payments:$user->id");
-        return $this->cache($key,$forceRefresh ,fn() => $this->payments->execute($user->id));
+    public function paymentsMade(bool $onlyThisYear, User $user, bool $forceRefresh): string {
+        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":payments:$user->id:$onlyThisYear");
+        return $this->cache($key,$forceRefresh ,fn() => $this->payments->execute($user->id, $onlyThisYear));
     }
 
-    public function overduePayments(User $user, bool $forceRefresh): int {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":overdue:$user->id");
-        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user->id));
+    public function overduePayments(bool $onlyThisYear, User $user, bool $forceRefresh): PendingSummaryResponse {
+        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":overdue:$user->id:$onlyThisYear");
+        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user->id, $onlyThisYear));
     }
 
-    public function paymentHistory(User $user, int $perPage, int $page, bool $forceRefresh): PaginatedResponse {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":history:$user->id:$perPage:$page");
-        return $this->cache($key,$forceRefresh ,fn() => $this->history->execute($user->id, $perPage, $page));
+    public function paymentHistory(bool $onlyThisYear, User $user, int $perPage, int $page, bool $forceRefresh): PaginatedResponse {
+        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":history:$user->id:$perPage:$page:$onlyThisYear");
+        return $this->cache($key,$forceRefresh ,fn() => $this->history->execute($user->id, $perPage, $page, $onlyThisYear));
 
     }
-    public function getDashboardData(User $user, bool $forceRefresh): DashboardDataUserResponse {
+    public function getDashboardData(bool $onlyThisYear, User $user, bool $forceRefresh): DashboardDataUserResponse {
         return GeneralMapper::toDashboardDataUserResponse(
-            $this->paymentsMade($user, $forceRefresh),
-            $this->pendingPaymentAmount($user, $forceRefresh),
-            $this->overduePayments($user, $forceRefresh));
+            $this->paymentsMade($onlyThisYear,$user, $forceRefresh),
+            $this->pendingPaymentAmount($onlyThisYear,$user, $forceRefresh),
+            $this->overduePayments($onlyThisYear, $user, $forceRefresh));
     }
 
     public function refreshAll(): void

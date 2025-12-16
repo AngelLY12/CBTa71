@@ -9,6 +9,7 @@ namespace App\Core\Application\DTO\Response\Payment;
  *     @OA\Property(property="id", type="integer", nullable=true, description="ID interno del pago", example=123),
  *     @OA\Property(property="concept", type="string", nullable=true, description="Concepto del pago", example="Pago de inscripción"),
  *     @OA\Property(property="amount", type="string", nullable=true, description="Monto del pago", example="1500.00"),
+ *     @OA\Property(property="amount_received", type="string", nullable=true, description="Monto del pago recibido", example="1500.00"),
  *     @OA\Property(property="date", type="string", nullable=true, description="Fecha del pago", example="2025-11-04")
  * )
  */
@@ -17,6 +18,7 @@ class PaymentHistoryResponse{
         public readonly ?int $id,
         public readonly ?string $concept,
         public readonly ?string $amount,
+        public readonly ?string $amount_received,
         public readonly ?string $date
     ) {}
 }

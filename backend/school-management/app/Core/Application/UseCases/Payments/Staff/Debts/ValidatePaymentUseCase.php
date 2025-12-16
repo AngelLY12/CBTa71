@@ -6,6 +6,7 @@ use App\Core\Application\DTO\Response\Payment\PaymentValidateResponse;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Mappers\PaymentMapper;
 use App\Core\Domain\Entities\Payment;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
@@ -69,6 +70,7 @@ class ValidatePaymentUseCase{
                         stripe_payment_method_id: $stripe['charge']->payment_method ?? null,
                         concept_name: $pc->concept_name,
                         amount: $pc->amount,
+                        amount_received: $stripe['charge']->amount_received ?? null,
                         payment_method_details: $paymentMethodDetails,
                         status:$stripe['intent']->status,
                         payment_intent_id:$payment_intent_id,
@@ -80,7 +82,7 @@ class ValidatePaymentUseCase{
                     $validated=true;
             }
             else {
-                if ($payment->status === 'paid' && empty($payment->payment_method_details)) {
+                if ($payment->status === PaymentStatus::PAID && empty($payment->payment_method_details)) {
                     logger()->info("Reconciling existing payment ID={$payment->id}");
                     $stripe=$this->stripeRepo->getIntentAndCharge($payment_intent_id);
                     $pm = $this->pmqRepo->findByStripeId($stripe['charge']->payment_method);

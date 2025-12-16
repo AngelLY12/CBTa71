@@ -10,7 +10,7 @@ class PaymentsMadeUseCase
         private PaymentQueryRepInterface $pqRepo,
 
     ) {}
-    public function execute(int $userId): string {
-        return $this->pqRepo->sumPaymentsByUserYear($userId);
+    public function execute(int $userId, bool $onlyThisYear): string {
+        return $this->pqRepo->sumPaymentsByUserYear($userId, $onlyThisYear);
     }
 }

@@ -23,10 +23,9 @@ use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
  *     ),
  *     @OA\Property(
  *         property="overdue",
- *         type="integer",
+ *         ref="#/components/schemas/PendingSummaryResponse",
  *         nullable=true,
  *         description="Cantidad de pagos vencidos",
- *         example=5
  *     )
  * )
  */
@@ -36,7 +35,7 @@ class DashboardDataUserResponse
      public function __construct(
         public readonly ?string $completed,
         public readonly ?PendingSummaryResponse $pending,
-        public readonly ?int $overdue
+        public readonly ?PendingSummaryResponse $overdue
     )
     {
 

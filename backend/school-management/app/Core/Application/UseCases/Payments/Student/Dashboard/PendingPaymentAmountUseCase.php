@@ -13,9 +13,9 @@ class PendingPaymentAmountUseCase
         private PaymentConceptQueryRepInterface $pcqRepo,
     ) {}
 
-    public function execute(int $userId): PendingSummaryResponse {
+    public function execute(int $userId, bool $onlyThisYear): PendingSummaryResponse {
         $user=$this->uqRepo->getUserWithStudentDetail($userId);
-        return $this->pcqRepo->getPendingPaymentConcepts($user);
+        return $this->pcqRepo->getPendingPaymentConcepts($user, $onlyThisYear);
     }
 
 }

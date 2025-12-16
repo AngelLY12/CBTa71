@@ -76,7 +76,9 @@ class ReconcilePaymentUseCase
                 'recipientEmail' => $user->email,
                 'concept_name'       => $payment->concept_name,
                 'amount'             => $payment->amount,
+                 'amount_received'    => $payment->amount_received,
                 'payment_method_detail' => $details,
+                 'status' => $payment->status->value,
                 'url'                => $payment->url ?? null,
                 'payment_intent_id'  => $payment->payment_intent_id,
             ];
