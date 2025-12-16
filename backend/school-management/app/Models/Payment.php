@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\Domain\Enum\Payment\PaymentStatus;
+use App\Core\Infraestructure\Mappers\PaymentMapper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
@@ -18,6 +19,7 @@ class Payment extends Model
         'stripe_payment_method_id',
         'concept_name',
         'amount',
+        'amount_received',
         'payment_method_details',
         'status',
         'payment_intent_id',
@@ -35,10 +37,16 @@ class Payment extends Model
         return $this->belongsTo(PaymentMethod::class);
     }
 
+    public function toDomain(): \App\Core\Domain\Entities\Payment
+    {
+        return PaymentMapper::toDomain($this);
+    }
+
     protected function casts(): array
     {   return [
             'payment_method_details' => 'array',
             'amount' => 'decimal:2',
+            'amount_received' => 'decimal:2',
             'status' => PaymentStatus::class
         ];
     }
