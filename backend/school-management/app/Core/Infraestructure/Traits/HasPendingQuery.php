@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Core\Infraestructure\Traits;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptTimeScope;
@@ -53,7 +54,8 @@ trait HasPendingQuery
 
             ->leftJoin('payments', function ($q) {
                 $q->on('payments.payment_concept_id', '=', 'payment_concepts.id')
-                    ->on('payments.user_id', '=', 'u.user_id');
+                    ->on('payments.user_id', '=', 'u.user_id')
+                    ->whereNotIn('payments.status', PaymentStatus::terminalStatuses());;
             })
 
             ->leftJoin('concept_exceptions', function ($q) {
@@ -61,7 +63,18 @@ trait HasPendingQuery
                     ->on('concept_exceptions.user_id', '=', 'u.user_id');
             })
 
-            ->whereNull('payments.id')
+            ->where(function($q) {
+                $q->whereNull('payments.id')
+                    ->orWhere(function($q2) {
+                        $q2->whereIn('payments.status', [PaymentStatus::UNDERPAID->value]);
+                        $q2->whereRaw('payments.id = (
+                          SELECT MAX(p2.id)
+                          FROM payments p2
+                          WHERE p2.payment_concept_id = payments.payment_concept_id
+                            AND p2.user_id = payments.user_id
+                      )');
+                    });
+            })
             ->whereNull('concept_exceptions.id')
 
             ->where(function ($q) {
@@ -109,6 +122,7 @@ trait HasPendingQuery
 
             ->select(
                 'payment_concepts.*',
+                DB::raw('COALESCE(payment_concepts.amount - COALESCE(p.amount_received, 0), payment_concepts.amount) as amount'),
                 'u.user_id as target_user_id',
                 DB::raw("
                     CASE

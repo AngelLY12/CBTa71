@@ -93,7 +93,7 @@ class StripeGateway implements StripeGatewayInterface
         }
     }
 
-     public function createCheckoutSession(User $user, PaymentConcept $concept): Session
+     public function createCheckoutSession(User $user, PaymentConcept $paymentConcept, string $amount): Session
     {
         $customerId = $this->createStripeUser($user);
         try{
@@ -104,13 +104,13 @@ class StripeGateway implements StripeGatewayInterface
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'mxn',
-                    'product_data' => ['name' => $concept->concept_name],
-                    'unit_amount' =>(int) round($concept->amount * 100),
+                    'product_data' => ['name' => $paymentConcept->concept_name],
+                    'unit_amount' =>(int) round($amount * 100),
                 ],
                 'quantity' => 1,
             ]],
             'payment_method_types' => ['card', 'oxxo', 'customer_balance'],
-            'metadata' => ['payment_concept_id' => $concept->id, 'concept_name' => $concept->concept_name],
+            'metadata' => ['payment_concept_id' => $paymentConcept->id, 'concept_name' => $paymentConcept->concept_name],
             'payment_method_options' => [
                 'card' => ['setup_future_usage' => 'off_session'],
                 'customer_balance' => [

@@ -5,6 +5,7 @@ namespace App\Core\Infraestructure\Repositories\Query\Payments;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
 use App\Core\Application\Mappers\PaymentConceptMapper as MappersPaymentConceptMapper;
 use App\Core\Domain\Entities\PaymentConcept;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Enum\User\UserStatus;
@@ -28,10 +29,21 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     {
         return optional(EloquentPaymentConcept::find($id), fn($pc) => PaymentConceptMapper::toDomain($pc));
     }
-    public function getPendingPaymentConcepts(User $user): PendingSummaryResponse {
-        $result = $this->basePaymentConcept($user)
-            ->selectRaw('COALESCE(SUM(amount), 0) as total_amount, COUNT(id) as total_count')
-            ->first();
+    public function getPendingPaymentConcepts(User $user, bool $onlyThisYear): PendingSummaryResponse {
+        $query = $this->basePaymentConcept($user)
+            ->leftJoin('payments as p', function($join) use ($user) {
+                $join->on('p.payment_concept_id', '=', 'payment_concepts.id')
+                    ->where('p.user_id', $user->id)
+                    ->whereNotIn('p.status', PaymentStatus::terminalStatuses());
+            });
+
+        if ($onlyThisYear) {
+            $query->whereYear('payment_concepts.created_at', now()->year);
+        }
+
+        $result=$query->selectRaw('COALESCE(SUM(payment_concepts.amount - COALESCE(p.amount_received,0)), 0) as total_amount,
+                 COUNT(payment_concepts.id) as total_count')
+        ->first();
 
         return MappersPaymentConceptMapper::toPendingPaymentSummary((array)$result);
     }
@@ -39,22 +51,58 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     public function getPendingPaymentConceptsWithDetails(User $user): array
     {
         $rows = $this->basePaymentConcept($user)
-            ->addSelect(['payment_concepts.concept_name', 'payment_concepts.description', 'payment_concepts.amount', 'payment_concepts.start_date', 'payment_concepts.end_date'])
+            ->leftJoin('payments as p', function($join) use ($user) {
+                $join->on('p.payment_concept_id', '=', 'payment_concepts.id')
+                    ->where('p.user_id', $user->id)
+                    ->whereNotIn('p.status', PaymentStatus::terminalStatuses());
+            })
+            ->addSelect(
+                [
+                    'payment_concepts.concept_name',
+                    'payment_concepts.description',
+                    'payment_concepts.start_date',
+                    'payment_concepts.end_date',
+                    DB::raw('COALESCE(payment_concepts.amount - COALESCE(p.amount_received,0), payment_concepts.amount) as amount')
+
+                ])
             ->orderBy('payment_concepts.created_at', 'desc')
             ->get();
 
         return $rows->map(fn($pc) => MappersPaymentConceptMapper::toPendingPaymentConceptResponse($pc->toArray()))->toArray();
     }
 
-    public function countOverduePayments(User $user): int
+    public function getOverduePaymentsSummary(User $user, bool $onlyThisYear): PendingSummaryResponse
     {
-        return $this->basePaymentConcept($user, onlyActive: false, status: PaymentConceptStatus::FINALIZADO)->count();
+        $query= $this->baseOverduePaymentConcept($user);
+
+        if ($onlyThisYear) {
+            $query->whereYear('payment_concepts.created_at', now()->year);
+        }
+
+        $result=$query->selectRaw('COALESCE(SUM(payment_concepts.amount - COALESCE(p.amount_received,0)), 0) as total_amount,
+                     COUNT(payment_concepts.id) as total_count')
+            ->first();
+
+        return MappersPaymentConceptMapper::toPendingPaymentSummary((array)$result);
     }
 
     public function getOverduePayments(User $user): array
     {
-        $rows = $this->basePaymentConcept($user, onlyActive: false, status: PaymentConceptStatus::FINALIZADO)
-            ->addSelect(['payment_concepts.concept_name', 'payment_concepts.description', 'payment_concepts.amount', 'payment_concepts.start_date', 'payment_concepts.end_date'])
+        $rows = $this->baseOverduePaymentConcept($user)
+            ->addSelect(
+                [
+                    'payment_concepts.concept_name',
+                    'payment_concepts.description',
+                    'payment_concepts.amount',
+                    'payment_concepts.start_date',
+                    'payment_concepts.end_date',
+                     DB::raw('
+                        COALESCE(
+                            payment_concepts.amount - COALESCE(p.amount_received, 0),
+                            payment_concepts.amount
+                        ) as amount
+                    ')
+                ])
             ->get();
 
         return $rows->map(fn($pc) => MappersPaymentConceptMapper::toPendingPaymentConceptResponse($pc->toArray()))->toArray();
@@ -75,13 +123,19 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     public function getAllPendingPaymentAmount(bool $onlyThisYear): PendingSummaryResponse
     {
-        $query = $this->basePaymentConcept(null, onlyActive: true);
+        $query = $this->basePaymentConcept(null, onlyActive: true)
+            ->leftJoin('payments as p', function($join) {
+                $join->on('p.payment_concept_id', '=', 'payment_concepts.id')
+                    ->whereNotIn('p.status', PaymentStatus::terminalStatuses());
+            });
 
         if ($onlyThisYear) {
             $query->whereYear('payment_concepts.created_at', now()->year);
         }
 
-        $result = $query->selectRaw('COALESCE(SUM(payment_concepts.amount), 0) as total_amount, COUNT(payment_concepts.id) as total_count')->first();
+        $result = $query->selectRaw('COALESCE(SUM(payment_concepts.amount - COALESCE(p.amount_received,0)), 0) as total_amount,
+                                COUNT(payment_concepts.id) as total_count')
+            ->first();
 
         return MappersPaymentConceptMapper::toPendingPaymentSummary($result->toArray());
     }
@@ -164,7 +218,14 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 $sub->select(DB::raw(1))
                     ->from('payments')
                     ->whereColumn('payments.payment_concept_id', 'payment_concepts.id')
-                    ->where('payments.user_id', $userId);
+                    ->where('payments.user_id', $userId)
+                    ->whereIn('payments.status', PaymentStatus::terminalStatuses())
+                    ->whereRaw('payments.id = (
+                        SELECT MAX(p2.id)
+                        FROM payments p2
+                        WHERE p2.payment_concept_id = payments.payment_concept_id
+                          AND p2.user_id = payments.user_id
+                    )');
             });
             $query->whereDoesntHave('exceptions', fn($q) =>
                 $q->where('user_id', $userId)
@@ -194,7 +255,15 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
             $query->whereNotExists(function ($sub) {
                 $sub->select(DB::raw(1))
                     ->from('payments')
-                    ->whereColumn('payments.payment_concept_id', 'payment_concepts.id');
+                    ->whereColumn('payments.payment_concept_id', 'payment_concepts.id')
+                    ->whereIn('payments.status', PaymentStatus::terminalStatuses())
+                    ->whereRaw('payments.id = (
+                        SELECT MAX(p2.id)
+                        FROM payments p2
+                        WHERE p2.payment_concept_id = payments.payment_concept_id
+                          AND p2.user_id = payments.user_id
+                    )');
+
             });
 
             $query->where(function ($q) {
@@ -232,4 +301,15 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
         return $query;
     }
+
+    private function baseOverduePaymentConcept(User $user): Builder
+    {
+        return $this->basePaymentConcept($user, onlyActive: false, status: PaymentConceptStatus::FINALIZADO)
+            ->leftJoin('payments as p', function ($join) use ($user) {
+                $join->on('p.payment_concept_id', '=', 'payment_concepts.id')
+                    ->where('p.user_id', $user->id)
+                    ->whereNotIn('p.status', PaymentStatus::terminalStatuses());
+            });
+    }
+
 }

@@ -31,19 +31,24 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         return $payment ? PaymentMapper::toDomain($payment) : null;
     }
 
-    public function sumPaymentsByUserYear(int $userId): string {
-        $total = EloquentPayment::where('user_id', $userId)
-        ->whereYear('created_at', now()->year)
-        ->sum('amount');
+    public function sumPaymentsByUserYear(int $userId, bool $onlyThisYear): string {
+        $query = EloquentPayment::where('user_id', $userId);
+        if ($onlyThisYear) {
+            $query->whereYear('created_at', now()->year);
+        }
+        $total=$query->sum('amount_received');
 
         return number_format($total, 2, '.', '');
     }
 
-    public function getPaymentHistory(int $userId, int $perPage, int $page): LengthAwarePaginator
+    public function getPaymentHistory(int $userId, int $perPage, int $page, bool $onlyThisYear): LengthAwarePaginator
     {
-         return EloquentPayment::where('user_id', $userId)
-        ->select('id', 'concept_name', 'amount', 'created_at')
-        ->orderBy('created_at','desc')
+         $query= EloquentPayment::where('user_id', $userId)
+        ->select('id', 'concept_name', 'amount', 'amount_received' ,'created_at');
+        if ($onlyThisYear) {
+            $query->whereYear('created_at', now()->year);
+        }
+        return $query->orderBy('created_at','desc')
         ->paginate($perPage, ['*'], 'page', $page)
         ->through(fn($p) => MappersPaymentMapper::toHistoryResponse($p));
     }
@@ -51,7 +56,7 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     public function getPaymentHistoryWithDetails(int $userId, int $perPage, int $page): LengthAwarePaginator
     {
         return EloquentPayment::where('user_id', $userId)
-            ->select('id', 'concept_name', 'amount', 'status','payment_intent_id','url','payment_method_details', 'created_at')
+            ->select('id', 'concept_name', 'amount', 'amount_received','status','payment_intent_id','url','payment_method_details', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page)
             ->through(fn($p) => MappersPaymentMapper::toDetailResponse($p));
@@ -64,7 +69,7 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         if ($onlyThisYear) {
             $query->whereYear('created_at', now()->year);
         }
-        return number_format($query->sum('amount'), 2, '.', '');
+        return number_format($query->sum('amount_received'), 2, '.', '');
     }
 
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment
@@ -107,5 +112,18 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
                 ->cursor() as $model) {
             yield PaymentMapper::toDomain($model);
         }
+    }
+
+    public function getLastPaymentForConcept(int $userId, int $conceptId, array $allowedStatuses = []): ?Payment
+    {
+        $query = EloquentPayment::query()
+            ->where('user_id', $userId)
+            ->where('payment_concept_id', $conceptId);
+
+        if (!empty($allowedStatuses)) {
+            $query->whereIn('status', $allowedStatuses);
+        }
+
+        return PaymentMapper::toDomain($query->orderByDesc('id')->first());
     }
 }
