@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Students;
 
 use App\Core\Application\Services\Payments\Student\DashboardServiceFacades;
 use App\Core\Infraestructure\Mappers\UserMapper;
+use App\Http\Requests\Payments\Staff\DashboardRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\General\ForceRefreshRequest;
@@ -27,33 +28,35 @@ class DashboardController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
-    public function index(ForceRefreshRequest $request, ?int $id=null)
+    public function index(DashboardRequest $request, ?int $id=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $onlyThisYear = $request->validated()['only_this_year'] ?? false;
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
         }
-        $data = $this->dashboardService->getDashboardData(UserMapper::toDomain($targetUser), $forceRefresh);
+        $data = $this->dashboardService->getDashboardData($onlyThisYear,UserMapper::toDomain($targetUser), $forceRefresh);
 
         return Response::success(['statistics' => $data]);
 
     }
 
-    public function pending(ForceRefreshRequest $request, ?int $id=null)
+    public function pending(DashboardRequest $request, ?int $id=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $onlyThisYear = $request->validated()['only_this_year'] ?? false;
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
         }
-        $data = $this->dashboardService->pendingPaymentAmount(UserMapper::toDomain($targetUser), $forceRefresh);
+        $data = $this->dashboardService->pendingPaymentAmount($onlyThisYear,UserMapper::toDomain($targetUser), $forceRefresh);
 
         return Response::success(['total_pending' => $data]);
 
@@ -61,46 +64,49 @@ class DashboardController extends Controller
 
 
 
-    public function paid(ForceRefreshRequest $request, ?int $id=null)
+    public function paid(DashboardRequest $request, ?int $id=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $onlyThisYear = $request->validated()['only_this_year'] ?? false;
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
         }
 
-        $data = $this->dashboardService->paymentsMade(UserMapper::toDomain($targetUser), $forceRefresh);
+        $data = $this->dashboardService->paymentsMade($onlyThisYear,UserMapper::toDomain($targetUser), $forceRefresh);
 
         return Response::success(['total_paid' => $data]);
 
     }
 
 
-    public function overdue(ForceRefreshRequest $request, ?int $id)
+    public function overdue(DashboardRequest $request, ?int $id)
     {
        /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $onlyThisYear = $request->validated()['only_this_year'] ?? false;
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
         }
 
-        $data = $this->dashboardService->overduePayments(UserMapper::toDomain($user), $forceRefresh);
+        $data = $this->dashboardService->overduePayments($onlyThisYear,UserMapper::toDomain($user), $forceRefresh);
 
         return Response::success(['total_overdue' => $data]);
 
     }
-    
+
     public function history(PaginationRequest $request, ?int $id=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $onlyThisYear = $request->validated()['only_this_year'] ?? false;
         $targetUser = $user->resolveTargetUser($id);
 
         if (!$targetUser) {
@@ -108,7 +114,7 @@ class DashboardController extends Controller
         }
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
-        $data = $this->dashboardService->paymentHistory(UserMapper::toDomain($targetUser), $perPage, $page, $forceRefresh);
+        $data = $this->dashboardService->paymentHistory($onlyThisYear,UserMapper::toDomain($targetUser), $perPage, $page, $forceRefresh);
 
         return Response::success(
             ['payment_history' => $data],
@@ -116,7 +122,7 @@ class DashboardController extends Controller
         );
     }
 
-    
+
     public function refreshDashboard()
     {
         $this->dashboardService->refreshAll();
