@@ -5886,10 +5886,13 @@
                         "description": "Resumen de pagos pendientes"
                     },
                     "overdue": {
-                        "description": "Cantidad de pagos vencidos",
-                        "type": "integer",
-                        "example": 5,
-                        "nullable": true
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PendingSummaryResponse"
+                            }
+                        ],
+                        "nullable": true,
+                        "description": "Cantidad de pagos vencidos"
                     }
                 },
                 "type": "object"
@@ -6251,6 +6254,12 @@
                         "example": "1500.00",
                         "nullable": true
                     },
+                    "amount_received": {
+                        "description": "Monto del pago recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
                     "status": {
                         "description": "Estado del pago",
                         "type": "string",
@@ -6284,6 +6293,18 @@
                         "description": "Monto del pago",
                         "type": "string",
                         "example": "1500.00",
+                        "nullable": true
+                    },
+                    "amount_received": {
+                        "description": "Monto del pago recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "balance": {
+                        "description": "Saldo a favor",
+                        "type": "string",
+                        "example": "150.00",
                         "nullable": true
                     },
                     "date": {
@@ -6341,6 +6362,12 @@
                         "example": "1500.00",
                         "nullable": true
                     },
+                    "amount_received": {
+                        "description": "Monto del pago recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
                     "date": {
                         "description": "Fecha del pago",
                         "type": "string",
@@ -6366,6 +6393,12 @@
                     },
                     "amount": {
                         "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "amount_received": {
+                        "description": "Monto del pago recibido",
                         "type": "string",
                         "example": "1500.00",
                         "nullable": true
@@ -6578,6 +6611,12 @@
                         "description": "Número de conceptos pendientes",
                         "type": "integer",
                         "example": 3,
+                        "nullable": true
+                    },
+                    "num_expired": {
+                        "description": "Número de conceptos vencidos",
+                        "type": "integer",
+                        "example": 1,
                         "nullable": true
                     },
                     "total_amount_pending": {
@@ -6799,9 +6838,13 @@
                         "nullable": true
                     },
                     "amount": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 1500,
+                        "type": "string",
+                        "example": "1500",
+                        "nullable": true
+                    },
+                    "amount_received": {
+                        "type": "string",
+                        "example": "1500",
                         "nullable": true
                     },
                     "payment_method_details": {
@@ -7222,7 +7265,9 @@
                     "requires_action",
                     "paid",
                     "unpaid",
-                    "pending"
+                    "pending",
+                    "overpaid",
+                    "underpaid"
                 ],
                 "example": "paid"
             },
@@ -7687,6 +7732,10 @@
                 "properties": {
                     "forceRefresh": {
                         "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean"
+                    },
+                    "only_this_year": {
+                        "description": "Indica si se debe mostrar datos de este año o de todos (opcional, aplica solo en Dashboard)",
                         "type": "boolean"
                     },
                     "perPage": {
