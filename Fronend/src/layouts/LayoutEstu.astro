@@ -1,0 +1,188 @@
+---
+interface Props {
+    title: string;
+}
+const { title } = Astro.props;
+
+import '../styles/global.css';
+import '../styles/tailwind.css';
+
+// Colores basados en la imagen del portal del estudiante
+const STUDENT_PRIMARY = '#52b788'; // Verde principal del sidebar
+const STUDENT_DARK = '#2d6a4f';    // Verde oscuro para texto/iconos activos
+const STUDENT_LIGHT = '#b7e4c7';   // Verde claro para el fondo del enlace activo
+const BACKGROUND_COLOR = '#f3f4f6'; // Gris muy suave para el fondo
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title} | Estudiante CBTA 71</title>
+
+    <link rel="icon" href="/Logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style define:vars={{ STUDENT_PRIMARY, STUDENT_LIGHT, STUDENT_DARK, BACKGROUND_COLOR }}>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--BACKGROUND_COLOR);
+            margin: 0;
+        }
+
+        /* Estilo del Sidebar Estudiante */
+        .sidebar-student {
+            background-color: var(--STUDENT_PRIMARY);
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.05);
+        }
+
+        /* Enlace Activo (estilo pastilla redondeada a la derecha) */
+        .nav-active {
+            background-color: var(--STUDENT_LIGHT);
+            color: var(--STUDENT_DARK) !important;
+            font-weight: 700;
+            border-radius: 0 50px 50px 0;
+            margin-right: 1.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.9);
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover:not(.nav-active) {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0 50px 50px 0;
+            margin-right: 1.5rem;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Estilo del botón Salir (Igual a la imagen) */
+        .logout-container {
+            margin-top: auto;
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-logout {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+            width: 100%;
+        }
+
+        .logout-icon-circle {
+            background: white;
+            color: var(--STUDENT_PRIMARY);
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="sidebar-student">
+        <div class="p-6 mb-4 flex items-center gap-3">
+            <div class="bg-white p-1 rounded-lg">
+                <img src="/Logo.png" alt="Logo" class="h-8 w-8 object-contain">
+            </div>
+            <div>
+                <h1 class="text-lg font-bold leading-tight">CBTA 71</h1>
+                <p class="text-[10px] opacity-80 uppercase tracking-tighter">Portal Estudiante</p>
+            </div>
+        </div>
+
+        <div class="flex-grow space-y-1">
+            <a href="/PortalEstudiante" data-path="/PortalEstudiante" class="nav-link">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="/PortalEstudiante/Tarjetas" data-path="/PortalEstudiante/Tarjetas" class="nav-link">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Tarjetas
+            </a>
+
+            <a href="/PortalEstudiante/Adeudos" data-path="/PortalEstudiante/Adeudos" class="nav-link">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Pagos pendientes
+            </a>
+
+            <a href="/PortalEstudiante/Historial" data-path="/PortalEstudiante/Historial" class="nav-link">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Historial
+            </a>
+        </div>
+
+        <div class="logout-container">
+            <a href="/logout" class="btn-logout">
+                <div class="logout-icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </div>
+                <span>Salir</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="bg-white p-8 rounded-3xl shadow-sm min-h-[90vh]">
+            <slot />
+        </div>
+    </main>
+
+    <script is:inline>
+        function updateActiveLink() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.nav-link');
+            
+            links.forEach(link => {
+                const path = link.getAttribute('data-path');
+                link.classList.remove('nav-active');
+                
+                // Si la ruta coincide o si estamos en la raíz del portal
+                if (currentPath === path || (path === '/PortalEstudiante' && currentPath === '/PortalEstudiante/')) {
+                    link.classList.add('nav-active');
+                }
+            });
+        }
+
+        window.addEventListener('load', updateActiveLink);
+        document.addEventListener('astro:after-swap', updateActiveLink);
+    </script>
+</body>
+</html>

@@ -9,12 +9,10 @@ const pageTitle = "Acceso al Sistema - SIGE";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso al Sistema - SIGE</title>
+    <title>{pageTitle}</title>
 
     <link rel="icon" href="/cbta71_icon.png" type="image/png">
-
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 
     <style>
@@ -23,14 +21,10 @@ const pageTitle = "Acceso al Sistema - SIGE";
             background-image: radial-gradient(#2c3947 1px, transparent 0);
             background-size: 40px 40px;
         }
-
         .input-inset-shadow {
             background-color: #f4f7fa;
-            box-shadow:
-                inset 2px 2px 5px rgba(0, 0, 0, 0.1),
-                inset -2px -2px 5px rgba(255, 255, 255, 0.7);
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px rgba(255, 255, 255, 0.7);
         }
-
         .btn-hover-green:hover {
             background-color: #43A047;
             transform: scale(1.01);
@@ -43,13 +37,12 @@ const pageTitle = "Acceso al Sistema - SIGE";
 
 <section class="min-h-screen flex items-center justify-center p-4 relative z-20"
     x-data="{
-        mode: 'login',                     /* 'login' | 'recover' */
+        mode: 'login',
         email: '',
         password: '',
         error: '',
         message: '',
         isLoading: false,
-        redirectTo: '/Dashboard',
 
         handleLogin() {
             this.error = '';
@@ -61,17 +54,24 @@ const pageTitle = "Acceso al Sistema - SIGE";
                 return;
             }
 
-            const validEmail = 'admin@uni.edu';
-            const validPass  = '123456';
+            // --- BASE DE DATOS DE USUARIOS ---
+            const users = [
+                { email: 'admin@uni.edu', pass: '123456', role: 'admin', redirect: '/Dashboard' },
+                { email: 'estudiante@uni.edu', pass: 'alumno123', role: 'student', redirect: '/PortalEstudiante' }
+            ];
 
-            let success = (this.email === validEmail && this.password === validPass);
+            const userFound = users.find(u => u.email === this.email && u.pass === this.password);
 
             setTimeout(() => {
                 this.isLoading = false;
 
-                if (success) {
-                    this.error = '✅ Bienvenido. Redirigiendo...';
-                    setTimeout(() => window.location.href = this.redirectTo, 800);
+                if (userFound) {
+                    this.error = `✅ Bienvenido (${userFound.role}). Redirigiendo...`;
+                    
+                    // Guardamos el rol en localStorage por si lo necesitas en otras páginas
+                    localStorage.setItem('userRole', userFound.role);
+                    
+                    setTimeout(() => window.location.href = userFound.redirect, 800);
                 } else {
                     this.error = '❌ Credenciales incorrectas.';
                 }
@@ -81,13 +81,11 @@ const pageTitle = "Acceso al Sistema - SIGE";
         handleRecovery() {
             this.message = '';
             this.isLoading = true;
-
             if (!this.email) {
                 this.message = '⚠️ Ingresa un correo válido.';
                 this.isLoading = false;
                 return;
             }
-
             setTimeout(() => {
                 this.isLoading = false;
                 this.message = '📩 Se ha enviado un enlace de recuperación a tu correo.';
@@ -102,99 +100,55 @@ const pageTitle = "Acceso al Sistema - SIGE";
 
     <div class="w-full max-w-md bg-white p-0 rounded-3xl overflow-hidden shadow-xl mt-28">
 
-        <!-- HEADER -->
-        <header class="space-y-4 pt-14 pb-6 border-b border-gray-100">
-            <div class="flex flex-col items-center justify-center">
-
-                <template x-if="mode === 'login'">
-                    <h1 class="text-3xl font-black text-gray-800 uppercase tracking-widest">SIGE</h1>
-                </template>
-
-                <template x-if="mode === 'recover'">
-                    <h1 class="text-2xl font-black text-gray-800 uppercase tracking-widest">Recuperar Contraseña</h1>
-                </template>
-
-                <p class="text-center text-sm text-gray-500 font-medium mt-1">Sistema Educativo</p>
-            </div>
+        <header class="space-y-4 pt-14 pb-6 border-b border-gray-100 text-center">
+            <template x-if="mode === 'login'">
+                <h1 class="text-3xl font-black text-gray-800 uppercase tracking-widest">SIGE</h1>
+            </template>
+            <template x-if="mode === 'recover'">
+                <h1 class="text-2xl font-black text-gray-800 uppercase tracking-widest px-4">Recuperar Contraseña</h1>
+            </template>
+            <p class="text-sm text-gray-500 font-medium mt-1">Sistema Educativo</p>
         </header>
 
         <div class="p-8 space-y-7">
+            <div x-show="error" :class="error.includes('✅') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'" class="p-3 border rounded-xl text-xs font-medium shadow-inner">
+                <span x-text="error"></span>
+            </div>
+            <div x-show="message" :class="message.includes('📩') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'" class="p-3 border rounded-xl text-xs font-medium shadow-inner">
+                <span x-text="message"></span>
+            </div>
 
-            <!-- ALERTA LOGIN -->
-            <template x-if="mode === 'login' && error">
-                <div x-show="error"
-                    :class="error.includes('Bienvenido') ? 
-                            'bg-green-100 border-green-400 text-green-700' : 
-                            'bg-red-100 border-red-400 text-red-700'"
-                    class="p-3 border rounded-xl text-xs font-medium shadow-inner">
-                    <span x-text="error"></span>
-                </div>
-            </template>
-
-            <!-- ALERTA RECUPERACIÓN -->
-            <template x-if="mode === 'recover' && message">
-                <div x-show="message"
-                    :class="message.includes('enlace') ? 
-                            'bg-green-100 border-green-400 text-green-700' : 
-                            'bg-red-100 border-red-400 text-red-700'"
-                    class="p-3 border rounded-xl text-xs font-medium shadow-inner">
-                    <span x-text="message"></span>
-                </div>
-            </template>
-
-            <!-- FORMULARIO LOGIN -->
             <form class="space-y-6" x-show="mode === 'login'" @submit.prevent="handleLogin">
-
                 <div class="flex items-center rounded-xl p-3 input-inset-shadow">
-                    <input type="email" x-model="email" placeholder="Correo Electrónico"
-                        class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                    <input type="email" x-model="email" placeholder="Correo Electrónico" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
                 </div>
-
                 <div class="flex items-center rounded-xl p-3 input-inset-shadow">
-                    <input type="password" x-model="password" placeholder="Contraseña"
-                        class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                    <input type="password" x-model="password" placeholder="Contraseña" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
                 </div>
-
-                <button type="submit"
-                    :disabled="isLoading"
-                    class="w-full py-3 px-4 mt-6 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
+                <button type="submit" :disabled="isLoading" class="w-full py-3 px-4 mt-6 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
                     <span x-text="isLoading ? 'Cargando...' : 'Entrar'"></span>
                 </button>
-
-                <div class="text-center mt-4">
-                    <button type="button"
-                        @click="mode = 'recover'; error = ''; password = ''; message = '';"
-                        class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                <div class="text-center mt-4 text-xs space-y-2">
+                    <button type="button" @click="mode = 'recover'; error = ''; message = '';" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
                         ¿Olvidaste tu contraseña?
                     </button>
+                    <p class="text-gray-400 italic">Prueba con: estudiante@uni.edu / alumno123</p>
                 </div>
-
             </form>
 
-            <!-- FORMULARIO RECUPERAR CONTRASEÑA -->
             <form class="space-y-6" x-show="mode === 'recover'" @submit.prevent="handleRecovery">
-
                 <div class="flex items-center rounded-xl p-3 input-inset-shadow">
-                    <input type="email" x-model="email" placeholder="Ingresa tu correo"
-                        class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                    <input type="email" x-model="email" placeholder="Ingresa tu correo" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
                 </div>
-
-                <button type="submit"
-                    :disabled="isLoading"
-                    class="w-full py-3 px-4 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
+                <button type="submit" :disabled="isLoading" class="w-full py-3 px-4 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
                     <span x-text="isLoading ? 'Enviando...' : 'Enviar Enlace'"></span>
                 </button>
-
                 <div class="text-center mt-4">
-                    <button type="button"
-                        @click="mode = 'login'; message = '';"
-                        class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                    <button type="button" @click="mode = 'login'; message = '';" class="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
                         ← Volver al inicio de sesión
                     </button>
                 </div>
-
             </form>
-
         </div>
 
         <footer class="text-center p-3 bg-gray-100 text-xs text-gray-500 border-t border-gray-200">

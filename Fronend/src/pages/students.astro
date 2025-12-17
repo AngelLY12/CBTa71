@@ -1,506 +1,355 @@
 ---
-// src/pages/estudiante_lista.astro
 import Layout from '../layouts/Layout.astro';
 
-// Lógica de carga de datos: Intenta cargar de la API o usa datos de respaldo
+// ================= CONFIG =================
+const MAX_SEMESTER = 10;
+const SEMESTERS = Array.from({ length: MAX_SEMESTER }, (_, i) => i + 1);
+
+const CAREERS = [
+  { code: 'TAG-E', name: 'Técnico Agropecuario' },
+  { code: 'TOF', name: 'Técnico en Ofimática' },
+  { code: 'TEM', name: 'Técnico en Admón. de Emprendimiento' },
+  { code: 'TAG-M', name: 'Técnico Agropecuario (modalidad mixta)' },
+  { code: 'TRH', name: 'Técnico en Admón. de Recursos Humanos (modalidad mixta)' },
+];
+
+const CAREER_MAP = CAREERS.reduce((a, c) => {
+  a[c.code] = c.name;
+  return a;
+}, { '': 'Sin Carrera' });
+
+// ================= DATA =================
 let students = [];
 try {
-  // Nota: En un proyecto real, esto sería una llamada a tu backend.
-  const res = await fetch('/api/students');
-  if (res.ok) {
-    const json = await res.json();
-    students = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
-  }
-} catch (e) {
-  // Fallback: cargar datos de respaldo
-}
+  const mod = await import('../data/students.js');
+  students = mod.default || mod.students || [];
+} catch {}
 
-// Cargar datos de respaldo si la lista está vacía o hubo error
-if (!students || !students.length) {
-  try {
-    // Simulación de datos iniciales si no hay API o si el archivo está vacío
-    const mod = await import('../data/students.js');
-    students = mod.default || mod.students || [];
-    
-    // 💡 SE ELIMINÓ EL BLOQUE DE DATOS ESTÁTICOS
-    if (students.length === 0) {
-        // En un entorno de producción, aquí podrías considerar un log de error 
-        // o dejar la lista completamente vacía.
-        students = [];
-    }
-  } catch (e) {
-    students = [];
-  }
-}
-
-// Normalizar y asegurar datos (importante para evitar errores en el JS)
 students = students.map((s, i) => ({
-  numControl: s.numControl ?? s.id ?? '',
-  nombre: s.nombre ?? s.name ?? '',
-  apellidoP: s.apellidoP ?? s.apellidoPaterno ?? s.apellido_paterno ?? '',
-  apellidoM: s.apellidoM ?? s.apellidoMaterno ?? s.apellido_materno ?? '',
-  semestre: s.semestre ? parseInt(s.semestre) : 0, // Asegura que sea número
-  carrera: s.carrera ?? s.career ?? '',
-  correo: s.correo ?? s.email ?? '', 
-  password: s.password ?? s.contrasena ?? '', 
-  id: s.id ?? String(i + 1), // Asegura un ID único para lógica de pagos/local storage
-  adeudo: Number(s.adeudo || 0).toFixed(2)
+  id: s.id ?? String(i + 1),
+  numControl: s.numControl ?? '',
+  nombre: s.nombre ?? '',
+  apellidoP: s.apellidoP ?? '',
+  apellidoM: s.apellidoM ?? '',
+  semestre: s.semestre ? Math.min(Number(s.semestre), MAX_SEMESTER) : 1,
+  carrera: s.carrera ?? '',
+  correo: s.correo ?? '',
 }));
 
-// Pasar datos a JS de manera segura para la inicialización
-const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
+const studentsJSON = JSON.stringify(students);
+const careerMapJSON = JSON.stringify(CAREER_MAP);
 ---
-<Layout title="Gestión de Estudiantes">
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" type="text/javascript" defer></script>
 
-    <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 py-10 bg-white min-h-screen"> 
-    
-    <header class="flex items-center justify-between mb-10 pb-4 border-b-2 border-green-100">
-      <div class="flex items-center">
-        <div class="p-3 bg-green-700 rounded-xl shadow-lg mr-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.656-.126-1.283-.356-1.857M9 20l-2.003-.594A4 4 0 003 15.25V7a4 4 0 014-4h10a4 4 0 014 4v8.25c0 .59-.234 1.157-.659 1.571L17 20m-2 1a2 2 0 100-4 2 2 0 000 4zM8 10h.01M12 10h.01M16 10h.01M9 16h.01M13 16h.01" />
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Administración de Alumnos
-          </h1>
-          <p class="text-sm text-gray-500 mt-1">Gestione la información y el estado de pagos de la matrícula.</p>
-        </div>
+<style>
+:root {
+  --ui-primary: #2D584C;
+  --status-pending-bg: #FFEBE6;
+  --status-pending-text: #B35F4C;
+  --status-current-bg: #EAF4E9;
+  --status-current-text: #50784D;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #F8F9FA;
+}
+
+.badge-pending { background-color: var(--status-pending-bg); color: var(--status-pending-text); }
+.badge-current { background-color: var(--status-current-bg); color: var(--status-current-text); }
+
+#filter-menu {
+  display: none;
+  animation: fadeIn 0.2s ease-out;
+}
+
+#filter-menu.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+
+<Layout title="Administración de Alumnos">
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 min-h-screen">
+
+  <header class="flex flex-wrap items-center justify-between mb-8 gap-4 border-b pb-6 border-gray-200">
+    <div class="flex items-center gap-4">
+      <div class="p-2 sm:p-3 bg-emerald-100 rounded-2xl text-emerald-800 shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
       </div>
       <div>
-        <a href="/Dashboard" class="px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition duration-150 ease-in-out flex items-center shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Volver
-        </a>
+        <h1 class="text-xl sm:text-3xl font-black text-gray-900 tracking-tight leading-tight">Administración de Alumnos</h1>
+        <p class="text-gray-500 text-xs sm:text-sm italic">Control académico y financiero</p>
       </div>
-    </header>
+    </div>
+    
+    <button id="export-xlsx" class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 text-white font-bold shadow-lg hover:bg-emerald-800 transition transform active:scale-95 text-xs sm:text-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        EXPORTAR REPORTE
+    </button>
+  </header>
 
-    <section class="grid grid-cols-1 gap-6"> 
-        <div id="table-container" class="bg-white p-6 rounded-xl shadow-2xl col-span-1 flex flex-col border border-gray-100"> 
-          
-          <div class="flex items-center justify-between mb-6 flex-wrap gap-4 relative">
-            
-            <h2 class="font-bold text-xl text-gray-800">Lista de Estudiantes 
-              <span id="students-total" class="text-base font-medium text-green-700 ml-2">({students.length})</span>
-            </h2>
-            
-            <div class="flex flex-wrap gap-2 items-center">
-                
-                <div class="relative w-48 sm:w-64"> 
-                    <input type="text" id="search-bar" placeholder="Buscar N. Control, Nombre o Apellido..." class="w-full p-2.5 pl-10 border border-gray-300 rounded-xl text-sm placeholder-gray-400 focus:ring-green-500 focus:border-green-500 transition shadow-sm" />
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                </div>
-                
-                <button id="toggle-filters-btn" class="flex items-center px-4 py-2.5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-medium hover:bg-green-100 transition shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v3.414l-4 4v-4.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    <span id="filters-status">Filtros</span>
-                </button>
-                
-                <button id="export-xlsx" title="Exportar a Excel (XLSX)" class="flex items-center px-4 py-2.5 rounded-xl bg-gray-50 border text-gray-700 text-sm font-medium hover:bg-gray-100 transition shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-green-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>XLSX
-                </button>
-                <button id="export-csv" title="Exportar a CSV" class="flex items-center px-4 py-2.5 rounded-xl bg-gray-50 border text-gray-700 text-sm font-medium hover:bg-gray-100 transition shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>CSV
-                </button>
-            </div>
-                
-                <div id="filters-popover" class="absolute z-30 top-full right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl p-5 border border-gray-200 hidden transform origin-top-right transition duration-300 ease-out opacity-0 translate-y-2">
-                    <h3 class="text-base font-bold text-gray-800 mb-4 border-b pb-2">Opciones de Filtrado Avanzado</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="filter-carrera" class="block text-xs font-medium text-gray-500 mb-1">Filtrar por Carrera:</label>
-                            <select id="filter-carrera" class="w-full p-2.5 border border-gray-300 rounded-xl bg-white text-gray-800 shadow-sm focus:ring-green-500 focus:border-green-500 transition text-sm">
-                                <option value="">Todas las Carreras</option>
-                                <option value="AGR">Agronomía</option>
-                                <option value="INF">Informática</option>
-                                <option value="ADM">Administración</option>
-                                <option value="TEC">Ofimática</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label for="filter-semestre" class="block text-xs font-medium text-gray-500 mb-1">Filtrar por Semestre:</label>
-                            <select id="filter-semestre" class="w-full p-2.5 border border-gray-300 rounded-xl bg-white text-gray-800 shadow-sm focus:ring-green-500 focus:border-green-500 transition text-sm">
-                                <option value="">Todos los Semestres</option>
-                                <option value="1">1ro</option>
-                                <option value="2">2do</option>
-                                <option value="3">3ro</option>
-                                <option value="4">4to</option>
-                                <option value="5">5to</option>
-                                <option value="6">6to</option>
-                                <option value="0">N/A</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label for="filter-adeudo" class="block text-xs font-medium text-gray-500 mb-1">Status de Pago:</label>
-                            <select id="filter-adeudo" class="w-full p-2.5 border border-gray-300 rounded-xl bg-white text-gray-800 shadow-sm focus:ring-green-500 focus:border-green-500 transition text-sm">
-                                <option value="">Todos los Pagos</option>
-                                <option value="pendiente">Con Adeudo</option>
-                                <option value="corriente">Al Corriente</option>
-                            </select>
-                        </div>
-                        </div>
-                    <button id="clear-filters-btn" class="w-full mt-5 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-xl shadow-sm hover:bg-red-100 transition flex items-center justify-center text-sm font-medium">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        Limpiar Todos los Filtros
-                    </button>
-                </div>
-            </div>
-          </div>
-          
-          <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-inner">
-            <table class="min-w-full text-sm divide-y divide-gray-200">
-              <thead class="bg-green-50 text-left sticky top-0 z-10 border-b border-green-200">
-                <tr>
-                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-28">N. Control</th>
-                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-36">Nombre</th>
-                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-36">Apellido P.</th>
-                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-36">Apellido M.</th>
-                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-24 text-center">Semestre</th>
-                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-24">Carrera</th>
-                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-32 text-center">Status Pagos</th>
-                    <th class="px-4 py-3.5 font-bold text-green-800 tracking-wider w-24 text-right">Adeudo</th>
-                </tr>
-              </thead>
-              <tbody id="students-tbody" class="bg-white divide-y divide-gray-100">
-                </tbody>
-            </table>
-            <div id="no-results" class="hidden text-center text-gray-500 py-10 text-base italic">
-                <i class="fas fa-search-minus mr-2"></i> No se encontraron estudiantes con los criterios de búsqueda y/o filtrado.
-            </div>
-          </div>
+  <div class="relative flex items-center gap-2 mb-6">
+    <button id="filter-btn" class="flex items-center justify-center p-2.5 sm:px-4 sm:py-2.5 rounded-xl border-2 border-emerald-400 bg-emerald-50 text-emerald-700 font-bold hover:bg-emerald-100 transition shadow-sm shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+        <span class="hidden sm:inline ml-2 text-sm">Filtros</span>
+    </button>
+
+    <div class="relative flex-1 min-w-0">
+      <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </span>
+      <input id="search" placeholder="Buscar por nombre o matrícula..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white text-sm" />
+    </div>
+
+    <div id="filter-menu" class="absolute top-full left-0 z-50 w-full sm:w-80 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6">
+      <h3 class="text-gray-800 font-black mb-4 border-b pb-2">Opciones de Filtrado</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Programa Educativo:</label>
+          <select id="filter-carrera" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-emerald-500 bg-gray-50">
+            <option value="">Todos los Programas</option>
+            {CAREERS.map(c => <option value={c.code}>{c.name}</option>)}
+          </select>
         </div>
-    </section>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Nivel Semestral:</label>
+          <select id="filter-semestre" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-emerald-500 bg-gray-50">
+            <option value="">Todos los Semestres</option>
+            {SEMESTERS.map(s => <option value={String(s)}>{s}º Semestre</option>)}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Estado de Pago:</label>
+          <select id="filter-adeudo" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:border-emerald-500 bg-gray-50">
+            <option value="">Cualquier estado</option>
+            <option value="pendiente">Con Adeudo</option>
+            <option value="corriente">Al Corriente</option>
+          </select>
+        </div>
+        <button id="clear-filters" class="w-full mt-2 py-2.5 rounded-xl bg-red-50 text-red-600 font-bold border border-red-100 hover:bg-red-200 transition flex items-center justify-center gap-2 text-xs">
+            Limpiar Filtros
+        </button>
+      </div>
+    </div>
   </div>
 
-  <script>
-    // Variable global para inicializar el script de cliente con los datos de Astro
-    window.__INITIAL_STUDENTS = JSON.parse('${initialJSON}');
-  </script>
+  <section class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="bg-[#2D584C] text-white text-left">
+          <tr>
+            <th class="px-6 py-4 font-bold uppercase tracking-wider">N. Control</th>
+            <th class="px-6 py-4 font-bold uppercase tracking-wider">Nombre Completo</th>
+            <th class="px-6 py-4 font-bold uppercase tracking-wider text-center">Sem.</th>
+            <th class="px-6 py-4 font-bold uppercase tracking-wider">Carrera</th>
+            <th class="px-6 py-4 font-bold uppercase tracking-wider text-center">Estado</th>
+            <th class="px-6 py-4 font-bold uppercase tracking-wider text-right">Adeudo</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-desktop" class="divide-y divide-gray-100 text-gray-700"></tbody>
+      </table>
+    </div>
 
-  <script type="module" client:load>
-  (function () {
-    const STORAGE_KEY = 'studentsList';
-    const initial = Array.isArray(window.__INITIAL_STUDENTS) ? window.__INITIAL_STUDENTS : [];
-    
-    // Mapeo de carreras (ajustar según tu aplicación)
-    const CARRERA_MAP = {
-        'AGR': 'Agronomía',
-        'INF': 'Informática',
-        'ADM': 'Administración',
-        'TEC': 'Ofimática',
-        '': 'Sin Carrera',
-        '0': 'Sin Carrera',
-    };
-    
-    // Estado de los filtros
-    let currentFilters = {
-        semestre: '',
-        carrera: '',
-        searchText: '',
-        adeudo: '' 
-    };
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <span id="pagination-info" class="text-[11px] font-bold text-gray-400 uppercase tracking-widest italic"></span>
+        <div id="pagination-controls" class="flex items-center gap-1"></div>
+    </div>
 
+    <div id="no-results" class="hidden text-center text-gray-400 py-20 text-lg italic">No hay alumnos que coincidan.</div>
+  </section>
+</div>
 
-    // Elementos del DOM
-    const tbody = document.getElementById('students-tbody');
-    const totalEl = document.getElementById('students-total');
-    const filterCarrera = document.getElementById('filter-carrera');
-    const filterSemestre = document.getElementById('filter-semestre');
-    const filterAdeudo = document.getElementById('filter-adeudo');
-    const filtersPopover = document.getElementById('filters-popover');
-    const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
-    const filtersStatusEl = document.getElementById('filters-status');
-    const clearFiltersBtn = document.getElementById('clear-filters-btn');
-    const searchBar = document.getElementById('search-bar'); 
-    const noResultsEl = document.getElementById('no-results');
+<div id="data-store" data-students={studentsJSON} data-career-map={careerMapJSON} is:raw></div>
 
+<script type="module">
+const STORAGE_KEY = 'studentsList';
+const ITEMS_PER_PAGE = 50;
+let currentPage = 1;
 
-    // --- FUNCIONES DE UTILIDAD CLAVE ---
-    
-    // Leer Local Storage o usar la lista inicial de Astro
-    const readLocal = () => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw && raw !== '[]') {
-             const arr = JSON.parse(raw);
-             return Array.isArray(arr) ? arr : initial.slice();
-        }
-        return initial.slice();
-      } catch (e) {
-        return initial.slice();
-      }
-    };
-    
-    // Función de escape HTML
-    function escapeHtml(s) {
-      if (s === undefined || s === null) return '';
-      return String(s).replace(/[&<>"']/g, function (m) {
-        return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m];
-      });
+const dataStore = document.getElementById('data-store');
+const initial = JSON.parse(dataStore.dataset.students);
+const CAREER_MAP = JSON.parse(dataStore.dataset.careerMap);
+
+let filters = { text:'', carrera:'', semestre:'', adeudo:'' };
+
+const filterBtn = document.getElementById('filter-btn');
+const filterMenu = document.getElementById('filter-menu');
+const searchInput = document.getElementById('search');
+const filterCarrera = document.getElementById('filter-carrera');
+const filterSemestre = document.getElementById('filter-semestre');
+const filterAdeudo = document.getElementById('filter-adeudo');
+const clearFiltersButton = document.getElementById('clear-filters');
+const tbodyDesktop = document.getElementById('tbody-desktop'); 
+const noResults = document.getElementById('no-results');
+const paginationInfo = document.getElementById('pagination-info');
+const paginationControls = document.getElementById('pagination-controls');
+
+// Interacción Menú Filtros
+filterBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  filterMenu.classList.toggle('active');
+});
+
+document.addEventListener('click', (e) => {
+    if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) {
+        filterMenu.classList.remove('active');
     }
+});
+
+// Funciones de Datos
+function readLocal(){
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || initial; } catch { return initial; }
+}
+
+function getChargesSum(id){
+  try {
+    const c = JSON.parse(localStorage.getItem('chargesList') || '[]');
+    return c.filter(x => String(x.studentId) === String(id) && (x.status === 'pending' || x.status === 'pendiente'))
+            .reduce((s,x)=>s+Number(x.amount),0);
+  } catch { return 0; }
+}
+
+function paymentStatus(id){
+  const p = getChargesSum(id);
+  return p > 0 ? { text:'Pago Pendiente', adeudo:p.toFixed(2), bad:true } : { text:'Al Corriente', adeudo:'0.00', bad:false };
+}
+
+// Lógica de Renderizado y Paginación
+function render(){
+    const allFiltered = readLocal().filter(s=>{
+      const t = filters.text.toLowerCase();
+      const st = paymentStatus(s.id);
+      const fullName = `${s.nombre} ${s.apellidoP} ${s.apellidoM}`.toLowerCase();
+      return ((!t || fullName.includes(t) || s.numControl.toLowerCase().includes(t)) &&
+        (!filters.carrera || s.carrera === filters.carrera) &&
+        (!filters.semestre || String(s.semestre) === filters.semestre) &&
+        (!filters.adeudo || (filters.adeudo==='pendiente' && st.bad) || (filters.adeudo==='corriente' && !st.bad)));
+    });
+
+    const totalItems = allFiltered.length;
+    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
     
-    // LÓGICA DE PAGOS/ADEUDOS
-    function getChargesSumForStudent(studentId) {
-        try {
-            const charges = JSON.parse(localStorage.getItem('chargesList') || '[]');
-            // Sumar solo los cargos que están pendientes
-            return charges
-              .filter(c => 
-                String(c.studentId) === String(studentId) && 
-                (String(c.status || '').toLowerCase() === 'pending' || String(c.status || '').toLowerCase() === 'pendiente')
-              )
-              .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
-        } catch (e) {
-            return 0;
+    if (currentPage > totalPages) currentPage = totalPages || 1;
+
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedList = allFiltered.slice(start, start + ITEMS_PER_PAGE);
+
+    tbodyDesktop.innerHTML = '';
+    noResults.classList.toggle('hidden', allFiltered.length > 0);
+
+    paginatedList.forEach((s)=>{
+        const st = paymentStatus(s.id);
+        const badgeClass = st.bad ? 'badge-pending' : 'badge-current';
+        tbodyDesktop.insertAdjacentHTML('beforeend', `
+          <tr class="hover:bg-emerald-50 transition border-b border-gray-50">
+            <td class="px-6 py-4 font-mono text-xs font-bold text-gray-500">${s.numControl}</td>
+            <td class="px-6 py-4 font-bold text-gray-900">${s.nombre} ${s.apellidoP} ${s.apellidoM}</td>
+            <td class="px-6 py-4 text-center font-medium">${s.semestre}º</td>
+            <td class="px-6 py-4 text-gray-600 text-xs">${CAREER_MAP[s.carrera] || s.carrera}</td>
+            <td class="px-6 py-4 text-center">
+              <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${badgeClass}">${st.text}</span>
+            </td>
+            <td class="px-6 py-4 text-right font-black text-base ${st.bad ? 'text-red-600' : 'text-emerald-700'}">$${st.adeudo}</td>
+          </tr>
+        `);
+    });
+
+    updatePaginationUI(totalItems, totalPages);
+}
+
+function updatePaginationUI(totalItems, totalPages) {
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+    const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
+    
+    paginationInfo.innerText = `Mostrando ${startItem}-${endItem} de ${totalItems} registros`;
+    paginationControls.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    const createBtn = (label, targetPage, disabled = false, active = false) => {
+        const btn = document.createElement('button');
+        btn.innerText = label;
+        btn.disabled = disabled;
+        btn.className = `min-w-[32px] h-8 px-2 rounded-lg text-xs font-black transition-all ${
+            active ? 'bg-[#2D584C] text-white shadow-md' : 
+            disabled ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-200'
+        }`;
+        if (!disabled) btn.onclick = () => { currentPage = targetPage; render(); window.scrollTo({top:0, behavior:'smooth'}); };
+        return btn;
+    };
+
+    paginationControls.appendChild(createBtn('←', currentPage - 1, currentPage === 1));
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+            paginationControls.appendChild(createBtn(i, i, false, currentPage === i));
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
+            const span = document.createElement('span');
+            span.innerText = '...';
+            span.className = 'text-gray-400 px-1';
+            paginationControls.appendChild(span);
         }
     }
 
-    // Determina el estado de pago del alumno
-    const getStudentPaymentStatus = (studentId) => {
-        const totalPending = getChargesSumForStudent(studentId);
-        const adeudo = Number(totalPending || 0);
+    paginationControls.appendChild(createBtn('→', currentPage + 1, currentPage === totalPages));
+}
 
-        if (adeudo > 0.01) { 
-            return {
-                status: 'Pago Pendiente',
-                adeudo: adeudo.toFixed(2),
-                isAdeudo: true
-            };
-        } else {
-            return {
-                status: 'Al Corriente',
-                adeudo: '0.00',
-                isAdeudo: false
-            };
-        }
-    };
-    
-    // Aplicar Filtros (Incluye búsqueda de texto y nuevo filtro de adeudo)
-    const applyFilters = (list) => {
-        const text = currentFilters.searchText.toLowerCase().trim();
+// Eventos de Filtro
+searchInput.addEventListener('input', (e) => { filters.text = e.target.value; currentPage = 1; render(); });
+filterCarrera.addEventListener('change', (e) => { filters.carrera = e.target.value; currentPage = 1; render(); });
+filterSemestre.addEventListener('change', (e) => { filters.semestre = e.target.value; currentPage = 1; render(); });
+filterAdeudo.addEventListener('change', (e) => { filters.adeudo = e.target.value; currentPage = 1; render(); });
 
-        return list.filter(s => {
-            const matchCarrera = !currentFilters.carrera || s.carrera === currentFilters.carrera;
-            const matchSemestre = !currentFilters.semestre || String(s.semestre) === currentFilters.semestre; 
-            
-            // LÓGICA DE FILTRO DE ADEUDO
-            const paymentStatus = getStudentPaymentStatus(s.id);
-            let matchAdeudo = true;
-            if (currentFilters.adeudo === 'pendiente') {
-                matchAdeudo = paymentStatus.isAdeudo;
-            } else if (currentFilters.adeudo === 'corriente') {
-                matchAdeudo = !paymentStatus.isAdeudo;
-            }
-            // FIN LÓGICA DE FILTRO DE ADEUDO
-            
-            let matchSearch = true;
-            if (text.length > 0) {
-                const nombreCompleto = `${s.nombre} ${s.apellidoP} ${s.apellidoM}`.toLowerCase();
-                const numControl = (s.numControl || '').toLowerCase();
-                
-                matchSearch = nombreCompleto.includes(text) || numControl.includes(text);
-            }
-            
-            return matchCarrera && matchSemestre && matchSearch && matchAdeudo; 
-        });
-    };
-    
-    // Actualizar el estado de los filtros
-    const updateFiltersStatus = (filteredCount, totalCount) => {
-        const isActive = currentFilters.carrera || currentFilters.semestre || currentFilters.searchText.length > 0 || currentFilters.adeudo;
-        
-        totalEl.textContent = `(${filteredCount}${isActive ? ' de ' + totalCount + ' encontrados' : ''})`;
-        
-        let statusText = 'Filtros';
-        if (isActive) {
-            statusText = currentFilters.searchText.length > 0 ? 'Búsqueda Activa' : 'Filtros Activos';
-        }
-        filtersStatusEl.textContent = statusText;
-        
-        // Estilo del botón de filtros
-        const baseClasses = 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100';
-        const activeClasses = 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200';
-        
-        // Remover y añadir clases para simular un toggle de estado visual
-        toggleFiltersBtn.classList.remove(baseClasses, activeClasses);
-        toggleFiltersBtn.classList.add(isActive ? activeClasses : baseClasses);
-    };
-
-
-    // Genera el HTML de los badges
-    const getStatusBadge = (statusObj) => {
-        const status = statusObj.status;
-        const adeudo = statusObj.adeudo;
-
-        let statusClasses = '';
-        let adeudoClasses = '';
-        let adeudoText = `$${adeudo}`;
-
-        if (status === 'Pago Pendiente') {
-            statusClasses = 'bg-amber-100 text-amber-800'; 
-            adeudoClasses = 'font-bold text-red-600'; // Rojo para deuda
-        } else if (status === 'Al Corriente') {
-            statusClasses = 'bg-green-100 text-green-800'; 
-            adeudoClasses = 'text-gray-500';
-            adeudoText = 'N/A';
-        } else {
-            statusClasses = 'bg-gray-100 text-gray-800';
-            adeudoClasses = 'text-gray-500';
-        }
-
-        return {
-            statusHtml: `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${statusClasses}">${status}</span>`,
-            adeudoHtml: `<span class="${adeudoClasses}">${statusObj.isAdeudo ? `$${adeudo}` : adeudoText}</span>`
-        };
-    };
-    
-    // Función de renderizado principal
-    const render = () => {
-      const rawList = readLocal(); 
-      const filteredList = applyFilters(rawList); 
-      
-      tbody.innerHTML = '';
-      noResultsEl.classList.add('hidden');
-      
-      if (filteredList.length === 0) {
-        tbody.innerHTML = '';
-        noResultsEl.classList.remove('hidden');
-      } else {
-        filteredList.forEach((s) => {
-            const paymentStatus = getStudentPaymentStatus(s.id); 
-            const badges = getStatusBadge(paymentStatus); 
-
-          const tr = document.createElement('tr');
-          // Resaltado visual para deudores
-          const rowClass = paymentStatus.isAdeudo ? 'bg-amber-50/70 hover:bg-amber-100' : 'hover:bg-green-50/20';
-          tr.className = `${rowClass} transition duration-150 ease-in-out`;
-          
-          tr.innerHTML = `
-            <td class="px-4 py-3.5 font-semibold text-gray-900 w-28">${escapeHtml(s.numControl)}</td>
-            <td class="px-4 py-3.5 text-gray-700 w-36">${escapeHtml(s.nombre)}</td>
-            <td class="px-4 py-3.5 text-gray-700 w-36">${escapeHtml(s.apellidoP)}</td>
-            <td class="px-4 py-3.5 text-gray-700 w-36">${escapeHtml(s.apellidoM)}</td>
-            <td class="px-4 py-3.5 text-gray-700 w-24 text-center">${s.semestre === 0 ? 'N/A' : s.semestre}</td>
-            <td class="px-4 py-3.5 text-green-600 font-medium w-24">${CARRERA_MAP[s.carrera] || s.carrera}</td>
-            
-            <td class="px-4 py-3.5 w-32 text-center">${badges.statusHtml}</td>
-            <td class="px-4 py-3.5 w-24 text-right font-medium">${badges.adeudoHtml}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      updateFiltersStatus(filteredList.length, rawList.length);
-    };
-    
-    // --- Listeners de Eventos ---
-    
-    searchBar.addEventListener('input', (e) => {
-        currentFilters.searchText = e.target.value;
-        render(); 
-    });
-
-    // Toggle para el popover de filtros (usa transiciones CSS)
-    toggleFiltersBtn.addEventListener('click', () => {
-        const isHidden = filtersPopover.classList.contains('hidden');
-        if (isHidden) {
-            filtersPopover.classList.remove('hidden', 'opacity-0', 'translate-y-2');
-            filtersPopover.classList.add('opacity-100', 'translate-y-0');
-        } else {
-            filtersPopover.classList.remove('opacity-100', 'translate-y-0');
-            filtersPopover.classList.add('opacity-0', 'translate-y-2');
-            setTimeout(() => filtersPopover.classList.add('hidden'), 300);
-        }
-    });
-
-    // Cierre del popover al hacer click fuera
-    document.addEventListener('click', (event) => {
-        const isButton = toggleFiltersBtn.contains(event.target) || event.target === toggleFiltersBtn;
-        if (!filtersPopover.classList.contains('hidden') && !filtersPopover.contains(event.target) && !isButton) {
-            filtersPopover.classList.remove('opacity-100', 'translate-y-0');
-            filtersPopover.classList.add('opacity-0', 'translate-y-2');
-            setTimeout(() => filtersPopover.classList.add('hidden'), 300);
-        }
-    });
-
-
-    filterCarrera.addEventListener('change', (e) => {
-        currentFilters.carrera = e.target.value;
-        render();
-    });
-
-    filterSemestre.addEventListener('change', (e) => {
-        currentFilters.semestre = e.target.value;
-        render();
-    });
-    
-    // NUEVO LISTENER PARA FILTRO DE ADEUDO
-    filterAdeudo.addEventListener('change', (e) => {
-        currentFilters.adeudo = e.target.value;
-        render();
-    });
-
-    clearFiltersBtn.addEventListener('click', () => {
-        filterCarrera.value = '';
-        filterSemestre.value = '';
-        filterAdeudo.value = '';
-        searchBar.value = ''; 
-        currentFilters.carrera = '';
-        currentFilters.semestre = '';
-        currentFilters.adeudo = ''; 
-        currentFilters.searchText = '';
-        render();
-        // Cierra el popover 
-        filtersPopover.classList.remove('opacity-100', 'translate-y-0');
-        filtersPopover.classList.add('opacity-0', 'translate-y-2');
-        setTimeout(() => filtersPopover.classList.add('hidden'), 300);
-    });
-
-    // Función de Exportación 
-    const exportData = (format) => {
-        const studentsToExport = readLocal().map(s => {
-            const statusObj = getStudentPaymentStatus(s.id);
-            return {
-                'Num Control': s.numControl,
-                'Nombre': s.nombre,
-                'Apellido Paterno': s.apellidoP,
-                'Apellido Materno': s.apellidoM,
-                'Semestre': s.semestre,
-                'Carrera': CARRERA_MAP[s.carrera] || s.carrera,
-                'Correo': s.correo,
-                'Status Pago': statusObj.status,
-                'Adeudo': statusObj.adeudo,
-            }
-        });
-        
-        const worksheet = XLSX.utils.json_to_sheet(studentsToExport);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Estudiantes");
-        XLSX.writeFile(workbook, `estudiantes_lista_${new Date().toISOString().slice(0,10)}.${format}`);
-    };
-    
-    document.getElementById('export-xlsx').addEventListener('click', () => exportData('xlsx'));
-    document.getElementById('export-csv').addEventListener('click', () => exportData('csv'));
-
-    // Re-render cuando cambie localStorage 
-    window.addEventListener('storage', (e) => {
-      if (['chargesList', 'studentsList', 'chargesLastUpdate', 'studentsLastUpdate'].includes(e.key)) {
-        try { render(); } catch (err) { /* silent */ }
-      }
-    });
-
-    // 🏁 Inicialización (Primer renderizado)
+clearFiltersButton.addEventListener('click', () => {
+    filters = { text:'', carrera:'', semestre:'', adeudo:'' };
+    searchInput.value = ''; filterCarrera.value = ''; filterSemestre.value = ''; filterAdeudo.value = '';
+    currentPage = 1;
     render();
-  })();
-  </script>
+    filterMenu.classList.remove('active');
+});
+
+// Exportación XLSX
+document.getElementById('export-xlsx').addEventListener('click', () => {
+    if (typeof XLSX === 'undefined') return alert('Cargando librería...');
+    const allStudents = readLocal();
+    const wb = XLSX.utils.book_new();
+    const uniqueCareers = [...new Set(allStudents.map(s => s.carrera))];
+
+    uniqueCareers.forEach(careerCode => {
+        const studentsInCareer = allStudents
+            .filter(s => s.carrera === careerCode)
+            .sort((a, b) => a.semestre - b.semestre);
+
+        const data = studentsInCareer.map(s => {
+            const status = paymentStatus(s.id);
+            return {
+                'Semestre': s.semestre + 'º',
+                'Número de Control': s.numControl, 
+                'Nombre Completo': `${s.nombre} ${s.apellidoP} ${s.apellidoM}`,
+                'Carrera': CAREER_MAP[s.carrera] || s.carrera,
+                'Estado Financiero': status.text, 
+                'Adeudo Pendiente': parseFloat(status.adeudo)
+            };
+        });
+
+        if (data.length > 0) {
+            const ws = XLSX.utils.json_to_sheet(data);
+            let sheetName = (CAREER_MAP[careerCode] || careerCode || 'General')
+                .replace(/[\\*?:/\[\]]/g, '').substring(0, 31);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        }
+    });
+    XLSX.writeFile(wb, `Reporte_General_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
+});
+
+window.onload = render;
+</script>
+
 </Layout>

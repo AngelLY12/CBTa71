@@ -3,10 +3,16 @@
 import Layout from "../layouts/Layout.astro"; 
 
 const pageTitle = "Historial de Pagos - CBTA 71";
-const primaryColor = "#154335"; 
-const primaryBg = "[#154335]";
-const accentColor = "green-600";
-const lightAccent = "green-50";
+
+// Configuración de Carreras para el mapeo de nombres en Excel
+const CAREER_MAP = {
+  'TAG-E': 'Técnico Agropecuario',
+  'TOF': 'Técnico en Ofimática',
+  'TEM': 'Técnico en Admón. de Emprendimiento',
+  'TAG-M': 'Técnico Agropecuario (Mixta)',
+  'TRH': 'Técnico en Admón. de Recursos Humanos (Mixta)',
+  '': 'Sin Carrera'
+};
 
 let students = [];
 try {
@@ -32,286 +38,274 @@ const safeStudents = students.map((s, i) => ({
     nombre: s.nombre ?? s.name ?? '',
     apellidoP: s.apellidoP ?? s.apellidoPaterno ?? '',
     apellidoM: s.apellidoM ?? s.apellidoMaterno ?? '',
-    carrera: s.carrera ?? s.career ?? '',
+    semestre: s.semestre ?? '1',
+    carrera: s.carrera ?? '',
 }));
 
 const studentsJSON = JSON.stringify(safeStudents).replace(/</g, '\\u003c');
+const careerMapJSON = JSON.stringify(CAREER_MAP);
 ---
 
 <Layout title={pageTitle}>
-<div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-gray-50/50 min-h-screen">
+<style is:global>
+    :root { --cbta-green: #2E594D; }
+    
+    .page-link {
+        width: 2.5rem; height: 2.5rem;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 0.75rem; border: 1px solid #f3f4f6;
+        color: #9ca3af; transition: all 0.2s;
+        background: white; cursor: pointer; font-weight: 700;
+    }
+    .page-link.active {
+        background-color: #2E594D; color: white; border-color: #2E594D;
+    }
 
-    <!-- Header con filtros -->
-    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-green-700/50">
+    .filter-card {
+        position: absolute; top: 100%; right: 0; margin-top: 0.5rem;
+        width: 18rem; background: white; border-radius: 1rem;
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        border: 1px solid #f3f4f6; padding: 1.25rem;
+        z-index: 50; display: none;
+    }
+    .filter-card.show { display: block; }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous" defer></script>
+
+<div class="max-w-7xl mx-auto px-6 py-10 bg-white min-h-screen">
+
+    <div class="flex items-center gap-5 mb-8">
+        <div class="w-16 h-16 bg-[#eaf1ef] rounded-2xl flex items-center justify-center border-2 border-[#2E594D] shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2E594D" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        </div>
         <div>
-            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">
-                Historial de Pagos Realizados 💰
-            </h1>
-            <p class="text-sm text-gray-500 mt-1">Monitoreo y gestión de transacciones de estudiantes.</p>
-        </div>
-
-        <!-- Filtros alineados a la derecha -->
-        <div class="mt-4 sm:mt-0 flex gap-3 items-center">
-            <select id="method-filter" class="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white shadow-sm focus:ring-green-500 focus:border-green-500 transition">
-                <option value="all">Todos los métodos</option>
-                <option value="tarjeta">Tarjeta</option>
-                <option value="referencia">Pago referenciado</option>
-                <option value="transferencia">Transferencia</option>
-                <option value="otro">Efectivo / Otro</option>
-            </select>
-
-            <select id="semester-filter" class="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-white shadow-sm focus:ring-green-500 focus:border-green-500 transition">
-                <option value="all">Todos los semestres</option>
-                <option value="1">Semestre 1</option>
-                <option value="2">Semestre 2</option>
-                <option value="3">Semestre 3</option>
-                <option value="4">Semestre 4</option>
-                <option value="5">Semestre 5</option>
-                <option value="6">Semestre 6</option>
-            </select>
-        </div>
-    </header>
-
-    <!-- Tabla de pagos -->
-    <div class="bg-white rounded-xl shadow-xl border border-gray-100 overflow-x-auto mb-6">
-        <table class="min-w-full divide-y divide-gray-200 text-base">
-            <thead class={`bg-${primaryBg} sticky top-0 z-10`}>
-                <tr>
-                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">Fecha</th>
-                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">Concepto</th>
-                    <th class="px-4 py-3 text-right font-semibold text-white uppercase tracking-wider">Monto</th>
-                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">Método</th>
-                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">N. Control</th>
-                    <th class="px-4 py-3 text-left font-semibold text-white uppercase tracking-wider">Alumno</th>
-                    <th class="px-4 py-3 text-right font-semibold text-white uppercase tracking-wider">Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="payments-table-body" class="bg-white divide-y divide-gray-100 text-sm"></tbody>
-        </table>
-        <div id="no-payments" class="hidden text-center text-gray-500 py-6 text-sm italic">
-            No se encontraron transacciones con el filtro actual.
+            <h1 class="text-3xl font-black text-gray-800 tracking-tight leading-none">Historial de Pagos Realizados</h1>
+            <p class="text-gray-500 font-medium mt-1">Panel de control y auditoría financiera</p>
         </div>
     </div>
 
-    <!-- Modal de detalle -->
-    <div id="detail-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 transition-opacity duration-300 ease-out opacity-0 hidden">
-        <div class="bg-white rounded-xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300 ease-out">
-            <div class={`px-5 py-3 bg-${primaryBg} rounded-t-xl flex justify-between items-center`}>
-                <h3 class="text-lg font-bold text-white tracking-wide">Detalle de Transacción</h3>
-                <button id="close-modal-icon" class="text-white hover:text-green-200 transition">
-                    ✖
-                </button>
-            </div>
-            <div class="p-5 space-y-5">
-                <div class="border-b border-gray-200 pb-4">
-                    <h4 class="text-base font-bold text-gray-700 mb-2">Datos del Estudiante</h4>
-                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                        <div>
-                            <dt class="text-gray-500 font-medium">Nombre Completo:</dt>
-                            <dd id="detail-student-name" class="text-gray-900 font-semibold mt-0.5"></dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-500 font-medium">N. Control / Matrícula:</dt>
-                            <dd id="detail-student-control" class="text-gray-900 mt-0.5"></dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-500 font-medium">Carrera:</dt>
-                            <dd id="detail-student-carrera" class="text-gray-900 mt-0.5"></dd>
-                        </div>
-                        <div class="col-span-1 sm:col-span-2">
-                            <dt class="text-gray-500 font-medium">Adeudo Pendiente Total:</dt>
-                            <dd id="detail-student-adeudo" class="text-xl font-extrabold text-red-600 mt-0.5"></dd>
-                        </div>
-                    </dl>
-                </div>
+    <div class="flex flex-row items-center gap-3 mb-8 w-full">
+        <div class="relative flex-grow">
+            <input type="text" id="search-input" placeholder="Buscar por nombre, matrícula o concepto..." class="w-full pl-12 pr-4 h-[46px] bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 focus:ring-2 focus:ring-[#2E594D] focus:bg-white outline-none transition-all shadow-sm" />
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </div>
 
-                <div>
-                    <h4 class="text-base font-bold text-gray-700 mb-2">Detalles de la Transacción</h4>
-                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                        <div class="sm:col-span-2">
-                            <dt class="text-gray-500 font-medium">Concepto:</dt>
-                            <dd id="detail-payment-concept" class="text-gray-900 font-bold text-sm mt-0.5"></dd>
-                        </div>
-                        <div class="col-span-1">
-                            <dt class="text-gray-500 font-medium">Monto Pagado:</dt>
-                            <dd id="detail-payment-amount" class="text-xl font-extrabold text-green-700 mt-0.5"></dd>
-                        </div>
-                        <div class="col-span-1">
-                            <dt class="text-gray-500 font-medium">Fecha y Hora de Pago:</dt>
-                            <dd id="detail-payment-date" class="text-gray-900 mt-0.5 text-xs sm:text-sm"></dd>
-                        </div>
-                        <div class="col-span-1">
-                            <dt class="text-gray-500 font-medium">Método de Pago:</dt>
-                            <dd id="detail-payment-method" class="text-gray-900 mt-0.5 text-xs sm:text-sm"></dd>
-                        </div>
-                        <div class="col-span-1">
-                            <dt class="text-gray-500 font-medium">Referencia/Folio:</dt>
-                            <dd id="detail-payment-reference" class="text-gray-900 italic mt-0.5 text-xs sm:text-sm">N/A</dd>
-                        </div>
-                    </dl>
+        <div class="flex items-center gap-2 relative">
+            <button id="toggle-filters" class="flex items-center gap-2 px-5 h-[46px] border-2 border-[#2E594D] text-[#2E594D] font-bold text-sm rounded-xl hover:bg-[#2E594D] hover:text-white transition-all shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                Filtros
+            </button>
+            <button id="export-xlsx" class="flex items-center gap-2 px-5 h-[46px] bg-emerald-700 text-white font-bold text-sm rounded-xl hover:bg-emerald-800 transition-all shadow-lg active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                EXPORTAR REPORTE
+            </button>
+
+            <div id="filter-menu" class="filter-card">
+                <h3 class="font-bold text-slate-800 mb-4 border-b pb-2">Opciones de Filtrado</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Semestre:</label>
+                        <select id="semester-filter" class="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#2E594D]">
+                            <option value="all">Todos</option>
+                            {[...Array(10)].map((_, i) => ( <option value={i + 1}>{i + 1}º Semestre</option> ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Método:</label>
+                        <select id="method-filter" class="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#2E594D]">
+                            <option value="all">Todos</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Depósito">Depósito</option>
+                        </select>
+                    </div>
+                    <button id="clear-filters" class="w-full mt-2 p-2 bg-red-50 text-red-500 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors">Limpiar Filtros</button>
                 </div>
-            </div>
-            <div class="px-5 py-3 bg-gray-50 rounded-b-xl flex justify-end border-t border-gray-200">
-                <button id="close-modal" class="px-3 py-1.5 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
-                    Cerrar
-                </button>
             </div>
         </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden mb-8">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="bg-[#2E594D] text-white">
+                        <th class="px-6 py-5 text-left text-xs font-black uppercase tracking-widest">Fecha</th>
+                        <th class="px-6 py-5 text-left text-xs font-black uppercase tracking-widest">Concepto de Pago</th>
+                        <th class="px-6 py-5 text-left text-xs font-black uppercase tracking-widest">Estudiante</th>
+                        <th class="px-6 py-5 text-left text-xs font-black uppercase tracking-widest">Método</th>
+                        <th class="px-6 py-5 text-right text-xs font-black uppercase tracking-widest">Monto</th>
+                    </tr>
+                </thead>
+                <tbody id="payments-table-body" class="divide-y divide-gray-50"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="flex flex-col items-center gap-4 py-4">
+        <p class="text-slate-500 text-sm font-medium">Registros: <span id="p-total" class="font-bold text-slate-800">0</span></p>
+        <div class="flex items-center gap-2" id="pagination-controls"></div>
     </div>
 </div>
 
-<script>
-window.__INITIAL_STUDENTS_PAYMENTS = JSON.parse('${studentsJSON}');
+<script is:inline define:vars={{ studentsJSON, careerMapJSON }}>
+window.__INITIAL_STUDENTS_PAYMENTS = JSON.parse(studentsJSON);
+window.__CAREER_MAP = JSON.parse(careerMapJSON);
 </script>
 
-<script type="module" client:load>
+<script type="module">
 (function() {
-    const CHARGES_STORAGE_KEY = 'chargesList';
-    const STUDENT_STORAGE_KEY = 'studentsList'; 
+    let currentPage = 1;
+    const itemsPerPage = 50;
+    let filteredData = [];
 
-    const METHOD_MAP = {
-        'tarjeta': 'Tarjeta de Crédito/Débito',
-        'referencia': 'Pago Referenciado (Banco)',
-        'transferencia': 'Transferencia Electrónica',
-        'otro': 'Efectivo / Otro',
-        '': 'Sin especificar'
-    };
+    const tableBody = document.getElementById('payments-table-body');
+    const searchInput = document.getElementById('search-input');
+    const filterMenu = document.getElementById('filter-menu');
+    const btnExport = document.getElementById('export-xlsx');
 
-    const paymentsTableBody = document.getElementById('payments-table-body');
-    const methodFilter = document.getElementById('method-filter');
-    const semesterFilter = document.getElementById('semester-filter');
+    document.getElementById('toggle-filters').onclick = (e) => { e.stopPropagation(); filterMenu.classList.toggle('show'); };
+    document.onclick = () => filterMenu.classList.remove('show');
+    filterMenu.onclick = (e) => e.stopPropagation();
 
-    const detailModal = document.getElementById('detail-modal');
-    const closeModalBtn = document.getElementById('close-modal');
-    const closeModalIconBtn = document.getElementById('close-modal-icon'); 
-    const detailStudentName = document.getElementById('detail-student-name');
-    const detailStudentControl = document.getElementById('detail-student-control');
-    const detailStudentCarrera = document.getElementById('detail-student-carrera');
-    const detailStudentAdeudo = document.getElementById('detail-student-adeudo');
-    const detailPaymentAmount = document.getElementById('detail-payment-amount');
-    const detailPaymentDate = document.getElementById('detail-payment-date');
-    const detailPaymentConcept = document.getElementById('detail-payment-concept');
-    const detailPaymentMethod = document.getElementById('detail-payment-method');
-    const detailPaymentReference = document.getElementById('detail-payment-reference');
+    const render = () => {
+        const students = JSON.parse(localStorage.getItem('studentsList') || '[]') || window.__INITIAL_STUDENTS_PAYMENTS;
+        const allCharges = JSON.parse(localStorage.getItem('chargesList') || '[]').filter(c => 
+            ['paid', 'pagado'].includes(String(c.status || '').toLowerCase())
+        );
 
-    let initialStudents = window.__INITIAL_STUDENTS_PAYMENTS;
+        const term = searchInput.value.toLowerCase();
+        const semesterSel = document.getElementById('semester-filter').value;
+        const methodSel = document.getElementById('method-filter').value;
 
-    const readCharges = () => {
-        try {
-            const raw = localStorage.getItem(CHARGES_STORAGE_KEY);
-            return JSON.parse(raw || '[]').filter(c => String(c.status || '').toLowerCase() === 'paid' || String(c.status || '').toLowerCase() === 'pagado');
-        } catch (e) { return []; }
-    };
-
-    const readStudents = () => {
-        try {
-            const raw = localStorage.getItem(STUDENT_STORAGE_KEY);
-            return raw && raw !== '[]' ? JSON.parse(raw) : initialStudents;
-        } catch (e) { return initialStudents; }
-    };
-
-    const formatCurrency = (amount) => new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN', minimumFractionDigits:2 }).format(amount);
-
-    const applyFilters = (list) => {
-        const method = methodFilter.value;
-        const semester = semesterFilter.value;
-        return list.filter(p => {
-            let methodMatch = (method === 'all') || ((p.paymentMethod || p.method || '').toLowerCase() === method);
-            let semesterMatch = true;
-            if (semester !== 'all') semesterMatch = String(p.semester || '') === semester;
-            return methodMatch && semesterMatch;
+        filteredData = allCharges.filter(p => {
+            const s = students.find(x => String(x.id) === String(p.studentId) || String(x.numControl) === String(p.studentId));
+            if(!s) return false;
+            
+            const conceptoReal = p.conceptTitle || p.conceptName || p.conceptText || p.concept || p.title || 'PAGO GENERAL';
+            const fullName = `${s.nombre} ${s.apellidoP} ${s.apellidoM}`.toLowerCase();
+            
+            const matchesSearch = fullName.includes(term) || String(s.numControl).includes(term) || conceptoReal.toLowerCase().includes(term);
+            const matchesSemester = semesterSel === 'all' || String(s.semestre) === semesterSel;
+            const matchesMethod = methodSel === 'all' || p.paymentMethod === methodSel;
+            
+            return matchesSearch && matchesSemester && matchesMethod;
         });
-    };
 
-    const renderPaymentsTable = () => {
-        const payments = applyFilters(readCharges());
-        const studentsData = readStudents();
-        paymentsTableBody.innerHTML = '';
+        const startIdx = (currentPage - 1) * itemsPerPage;
+        const pageItems = filteredData.slice(startIdx, startIdx + itemsPerPage);
 
-        if (!payments.length) {
-            paymentsTableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-gray-500 font-medium text-sm">😔 No se encontraron transacciones.</td></tr>';
-            return;
-        }
+        tableBody.innerHTML = pageItems.map(p => {
+            const s = students.find(x => String(x.id) === String(p.studentId) || String(x.numControl) === String(p.studentId));
+            const displayConcept = p.conceptTitle || p.conceptName || p.conceptText || p.concept || p.title || 'PAGO REGISTRADO';
 
-        payments.sort((a,b) => new Date(b.paidAt || b.createdAt || b.date) - new Date(a.paidAt || a.createdAt || a.date));
-
-        payments.forEach(p => {
-            const student = studentsData.find(s => String(s.id) === String(p.studentId) || String(s.numControl) === String(p.studentId));
-            const studentName = student ? `${student.nombre} ${student.apellidoP} ${student.apellidoM}`.trim() : 'Alumno Desconocido';
-            const numControl = student ? student.numControl : (p.studentId || 'N/A');
-            const date = new Date(p.paidAt || p.createdAt || p.date);
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-gray-50 transition duration-150 ease-in-out';
-            tr.innerHTML = `
-                <td class="px-4 py-3 text-gray-500">${date.toLocaleDateString('es-MX')}</td>
-                <td class="px-4 py-3 text-gray-900 font-medium">${p.conceptTitle || p.concept || 'Pago de Matrícula'}</td>
-                <td class="px-4 py-3 text-green-700 font-bold text-right">${formatCurrency(p.amount)}</td>
-                <td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800">${METHOD_MAP[(p.paymentMethod || p.method || 'otro').toLowerCase()]}</span></td>
-                <td class="px-4 py-3 text-gray-700">${numControl}</td>
-                <td class="px-4 py-3 text-gray-700 font-light">${studentName}</td>
-                <td class="px-4 py-3 text-right"><button class="view-detail-btn px-2 py-1 text-xs bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition" data-payment-id="${p.id}" data-student-id="${p.studentId}">Detalle</button></td>
+            return `
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-5 text-gray-500 font-mono text-xs">${new Date(p.paidAt || p.date).toLocaleDateString('es-MX')}</td>
+                    <td class="px-6 py-5">
+                        <span class="text-gray-900 font-extrabold text-xs uppercase block" style="letter-spacing: -0.01em;">
+                            ${displayConcept}
+                        </span>
+                    </td>
+                    <td class="px-6 py-5">
+                        <div class="flex flex-col">
+                            <span class="text-gray-800 font-bold text-xs uppercase leading-tight">${s.nombre} ${s.apellidoP} ${s.apellidoM}</span>
+                            <span class="text-[9px] text-gray-400 font-mono">${s.numControl}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-[10px] font-bold text-gray-400 uppercase">${p.paymentMethod || 'EFECTIVO'}</td>
+                    <td class="px-6 py-5 text-right font-black text-[#2E594D] text-sm">
+                        $${Number(p.amount).toLocaleString('es-MX', {minimumFractionDigits:2})}
+                    </td>
+                </tr>
             `;
-            paymentsTableBody.appendChild(tr);
+        }).join('');
+
+        document.getElementById('p-total').textContent = filteredData.length;
+        renderPagination(Math.ceil(filteredData.length / itemsPerPage));
+    };
+
+    const renderPagination = (totalPages) => {
+        const controls = document.getElementById('pagination-controls');
+        if(totalPages <= 1) { controls.innerHTML = ''; return; }
+        let html = '';
+        for(let i=1; i<=totalPages; i++) {
+            html += `<button class="page-link ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        controls.innerHTML = html;
+        controls.querySelectorAll('button').forEach(b => {
+            b.onclick = () => { currentPage = parseInt(b.dataset.page); render(); };
+        });
+    };
+
+    // --- NUEVA LÓGICA DE EXPORTACIÓN POR CARRERAS ---
+    btnExport.onclick = () => {
+        if(filteredData.length === 0) return alert("No hay datos para exportar");
+        
+        const students = JSON.parse(localStorage.getItem('studentsList') || '[]') || window.__INITIAL_STUDENTS_PAYMENTS;
+        const CAREER_MAP = window.__CAREER_MAP;
+        const wb = XLSX.utils.book_new();
+
+        // 1. Identificar las carreras únicas presentes en los resultados filtrados
+        const uniqueCareers = [...new Set(filteredData.map(p => {
+            const s = students.find(x => String(x.id) === String(p.studentId) || String(x.numControl) === String(p.studentId));
+            return s ? s.carrera : '';
+        }))];
+
+        // 2. Crear una pestaña por cada carrera
+        uniqueCareers.forEach(careerCode => {
+            const paymentsInCareer = filteredData.filter(p => {
+                const s = students.find(x => String(x.id) === String(p.studentId) || String(x.numControl) === String(p.studentId));
+                return s && s.carrera === careerCode;
+            });
+
+            // Ordenar por semestre y luego por nombre
+            const sortedPayments = paymentsInCareer.sort((a, b) => {
+                const sA = students.find(x => String(x.id) === String(a.studentId) || String(x.numControl) === String(a.studentId));
+                const sB = students.find(x => String(x.id) === String(b.studentId) || String(x.numControl) === String(b.studentId));
+                return (sA.semestre - sB.semestre) || `${sA.nombre}`.localeCompare(`${sB.nombre}`);
+            });
+
+            const exportData = sortedPayments.map(p => {
+                const s = students.find(x => String(x.id) === String(p.studentId) || String(x.numControl) === String(p.studentId));
+                return {
+                    'Fecha': new Date(p.paidAt || p.date).toLocaleDateString('es-MX'),
+                    'Semestre': s.semestre + 'º',
+                    'Matrícula': s.numControl,
+                    'Estudiante': `${s.nombre} ${s.apellidoP} ${s.apellidoM}`,
+                    'Concepto': p.conceptTitle || p.conceptName || p.concept || p.title || 'PAGO',
+                    'Método': p.paymentMethod || 'Efectivo',
+                    'Monto ($)': Number(p.amount)
+                };
+            });
+
+            if (exportData.length > 0) {
+                const ws = XLSX.utils.json_to_sheet(exportData);
+                
+                // Nombre de la hoja limpio y corto (Máx 31 caracteres para Excel)
+                let sheetName = (CAREER_MAP[careerCode] || careerCode || 'General')
+                    .replace(/[\\*?:/\[\]]/g, '')
+                    .substring(0, 31);
+                
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            }
         });
 
-        document.querySelectorAll('.view-detail-btn').forEach(button => {
-            button.removeEventListener('click', handleDetailClick); 
-            button.addEventListener('click', handleDetailClick);
-        });
+        XLSX.writeFile(wb, `Reporte_Pagos_CBTA71_${new Date().toLocaleDateString().replace(/\//g, '-')}.xlsx`);
     };
 
-    const openModal = () => {
-        detailModal.classList.remove('hidden');
-        setTimeout(() => {
-            detailModal.classList.remove('opacity-0');
-            detailModal.querySelector('div').classList.remove('scale-95');
-            detailModal.querySelector('div').classList.add('scale-100');
-        }, 10);
+    searchInput.oninput = () => { currentPage = 1; render(); };
+    document.getElementById('semester-filter').onchange = () => { currentPage = 1; render(); };
+    document.getElementById('method-filter').onchange = () => { currentPage = 1; render(); };
+    document.getElementById('clear-filters').onclick = () => { 
+        searchInput.value = ''; 
+        document.getElementById('semester-filter').value = 'all'; 
+        document.getElementById('method-filter').value = 'all'; 
+        render(); 
     };
 
-    const closeModal = () => {
-        detailModal.classList.add('opacity-0');
-        detailModal.querySelector('div').classList.remove('scale-100');
-        detailModal.querySelector('div').classList.add('scale-95');
-        setTimeout(() => detailModal.classList.add('hidden'), 300);
-    };
-
-    const showPaymentDetail = (paymentId, studentId) => {
-        const payments = readCharges();
-        const studentsData = readStudents();
-        const payment = payments.find(p => String(p.id) === String(paymentId));
-        const student = studentsData.find(s => String(s.id) === String(studentId) || String(s.numControl) === String(studentId));
-        if (!payment || !student) return alert('Detalle no encontrado');
-
-        detailStudentName.textContent = `${student.nombre} ${student.apellidoP} ${student.apellidoM}`.trim();
-        detailStudentControl.textContent = student.numControl || 'N/A';
-        detailStudentCarrera.textContent = student.carrera || 'N/A';
-        detailStudentAdeudo.textContent = formatCurrency(0); // Adeudo pendiente: si tienes lógica, reemplazar
-
-        detailPaymentAmount.textContent = formatCurrency(payment.amount);
-        detailPaymentDate.textContent = new Date(payment.paidAt || payment.createdAt || payment.date).toLocaleString('es-MX');
-        detailPaymentConcept.textContent = payment.conceptTitle || payment.concept || 'Pago Manual';
-        detailPaymentMethod.textContent = METHOD_MAP[(payment.paymentMethod || payment.method || 'otro').toLowerCase()];
-        detailPaymentReference.textContent = payment.reference || 'N/A';
-
-        openModal();
-    };
-
-    const handleDetailClick = (e) => {
-        const paymentId = e.currentTarget.dataset.paymentId;
-        const studentId = e.currentTarget.dataset.studentId;
-        showPaymentDetail(paymentId, studentId);
-    };
-
-    methodFilter.addEventListener('change', renderPaymentsTable);
-    semesterFilter.addEventListener('change', renderPaymentsTable);
-    closeModalBtn.addEventListener('click', closeModal);
-    closeModalIconBtn.addEventListener('click', closeModal);
-    detailModal.addEventListener('click', e => { if(e.target === detailModal) closeModal(); });
-    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
-    window.addEventListener('storage', e => { if(e.key===CHARGES_STORAGE_KEY||e.key===STUDENT_STORAGE_KEY) renderPaymentsTable(); });
-
-    renderPaymentsTable();
+    render();
 })();
 </script>
 </Layout>

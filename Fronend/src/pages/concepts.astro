@@ -1,248 +1,234 @@
 ---
+// src/pages/concepts.astro
 import Layout from '../layouts/Layout.astro'; 
 const pageTitle = "Conceptos de Cobro"; 
+
+const PRIMARY_ACCENT_COLOR = 'bg-[#2E584C]'; 
+const PRIMARY_HOVER = 'hover:bg-[#274D43]'; 
+const PRIMARY_TEXT_COLOR = 'text-[#2E584C]'; 
 ---
 
 <Layout title={pageTitle}>  
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10 bg-gray-50 min-h-screen">
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 bg-gray-50/50 min-h-screen">    
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-gray-300">
+      <div class="flex items-start">
+        <div class={`p-3 ${PRIMARY_ACCENT_COLOR} rounded-lg shadow-xl mr-4 flex-shrink-0`}>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
 
-  <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-green-700/50">
-    <div class="flex items-start">
-      <div class="p-3 bg-[#154335] rounded-xl shadow-lg mr-3 flex-shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+        <div>
+          <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Gestión de Conceptos de Cobro</h1>
+          <p class="text-md text-gray-500 mt-1">Definición y asignación de adeudos a grupos de estudiantes.</p>
+        </div>
       </div>
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Gestión de Conceptos de Cobro 🏷️</h1>
-        <p class="text-sm text-gray-500 mt-1">Definición y asignación de adeudos a grupos de estudiantes.</p>
-      </div>
+
+      <a href="/new"
+         class={`mt-4 sm:mt-0 px-6 py-2.5 ${PRIMARY_ACCENT_COLOR} text-white font-semibold rounded-lg shadow-lg ${PRIMARY_HOVER} transition-colors duration-300 text-sm sm:text-base`}>
+        <i class="fas fa-plus-circle mr-2"></i> Crear Nuevo Concepto
+      </a>
+    </header>
+
+    <div id="concepts-grid"
+         class="grid gap-6"
+         style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
     </div>
-    
-    <a href="/new" class="mt-4 sm:mt-0 px-4 py-2 sm:px-6 sm:py-2 bg-green-700 text-white font-bold rounded-lg shadow-md hover:bg-green-800 transition-colors duration-300 text-sm sm:text-base">
-      <i class="fas fa-plus-circle mr-2"></i> Crear Nuevo Concepto
-    </a>    
-  </header>    
 
-  <!-- Grid responsivo tipo tabla -->
-  <div id="concepts-grid" class="grid gap-4 sm:gap-6" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));"></div>  
+  </div>
 
-</div>  
-
-<script type="module" client:load>  
+<script type="module" client:load>
 const CONCEPTS_KEY = 'conceptsList';
 const STUDENTS_KEY = 'studentsList';
 const CHARGES_KEY = 'chargesList';
+const PRIMARY_TEXT_COLOR_HEX = '#2E584C';
 
-function getStudents() { return JSON.parse(localStorage.getItem(STUDENTS_KEY)||'[]'); }     
-function getCharges() { return JSON.parse(localStorage.getItem(CHARGES_KEY)||'[]'); }     
-function getConcepts() { return JSON.parse(localStorage.getItem(CONCEPTS_KEY)||'[]'); }     
-function saveConcepts(c){ localStorage.setItem(CONCEPTS_KEY, JSON.stringify(c)); }     
-function saveCharges(c){ localStorage.setItem(CHARGES_KEY, JSON.stringify(c)); }     
-function saveStudents(s){ localStorage.setItem(STUDENTS_KEY, JSON.stringify(s)); }     
+/* --- UTILIDADES --- */
+function getStudents(){ try { return JSON.parse(localStorage.getItem(STUDENTS_KEY) || '[]'); } catch(e) { return []; } }
+function getCharges(){ try { return JSON.parse(localStorage.getItem(CHARGES_KEY) || '[]'); } catch(e) { return []; } }
+function getConcepts(){ 
+    try { 
+        const data = localStorage.getItem(CONCEPTS_KEY);
+        return (data && data !== 'undefined') ? JSON.parse(data) : [];
+    } catch(e) { return []; }
+}
+function saveConcepts(x){ localStorage.setItem(CONCEPTS_KEY, JSON.stringify(x)); }
+function saveCharges(x){ localStorage.setItem(CHARGES_KEY, JSON.stringify(x)); }
 
-function escapeHtml(str=''){ 
-  return String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); 
-}     
+function escapeHtml(str=''){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m]));
+}
 
-function getTargetStudentsForConcept(concept){       
-  const students=getStudents().filter(s=>!['inactive','inactivo'].includes(String(s.status||'').toLowerCase()));       
-  const scope=(concept.scope||'all').toLowerCase();       
-  const selectedStudentsIds = (concept.selectedStudents||[]).map(x=>String(x.id||x));
-  switch(scope){         
-    case 'all': return students;         
-    case 'career': return students.filter(s=>(s.carrera||s.career||'').toLowerCase() === (concept.career||'').toLowerCase());         
-    case 'semester': return students.filter(s=>Number(s.semestre||s.semester||0) === Number(concept.semester||0));         
-    case 'students': return students.filter(s=>selectedStudentsIds.includes(String(s.id)));         
-    default: return [];       
-  }     
-}     
-
-function getScopeText(concept){       
-  const scope=(concept.scope||'all').toLowerCase();       
-  switch(scope){         
-    case 'all': return 'Todos Activos';         
-    case 'career': return `Carrera: ${escapeHtml(concept.career||'N/A')}`;         
-    case 'semester': return `${concept.semester||'??'}° Semestre`;         
-    case 'students': return `${concept.selectedStudents?.length||0} Alumnos Específicos`;         
-    default: return 'No Definido';       
-  }     
-}     
-
-function assignConceptToScope(concept){       
-  const targets=getTargetStudentsForConcept(concept);       
-  if(!targets.length){ alert('No hay alumnos objetivo para asignar este concepto.'); return 0; }         
-  
-  if(!confirm(`¿Desea asignar el concepto "${concept.title}" ($${Number(concept.amount||0).toFixed(2)}) a ${targets.length} alumnos?`)){
-      return 0;
-  }
-
-  const charges=getCharges();       
-  const now=new Date().toISOString();       
-  const amount=Number(concept.amount)||0;        
-
-  const toAdd=targets.map(s=>{         
-    if((s.charges||[]).some(ch=>ch.conceptId===concept.id && ch.status==='pending')){
-        return null; 
-    }
-
-    s.charges = s.charges || [];         
-    const charge = {           
-      id: 'chg_'+(Date.now().toString(36)+Math.random().toString(36).slice(2,6)),           
-      conceptId: concept.id,           
-      amount,           
-      status: 'pending', 
-      studentId: s.id, 
-      conceptTitle: concept.title, 
-      createdAt: now           
-    };         
-    s.charges.push(charge);         
-    return charge;       
-  }).filter(c => c !== null); 
-  
-  if(!toAdd.length){
-      alert('Todos los alumnos objetivo ya tienen este cargo pendiente. No se añadió ningún adeudo.');
-      return 0;
-  }
-
-  saveStudents(getStudents());       
-  saveCharges(charges.concat(toAdd));       
-  alert(`✅ Asignados ${toAdd.length} nuevos adeudos con éxito.`);       
-  return toAdd.length;     
-}     
-
-function editConcept(id){       
-  const c=getConcepts().find(x=>x.id===id);       
-  if(!c) return alert('Concepto no encontrado');       
-  localStorage.setItem('editingConcept', JSON.stringify(c));       
-  window.location.href='/new?edit='+encodeURIComponent(id);     
-}     
-
-function deleteConcept(id){       
-  if(!confirm('⚠️ ¿Está seguro que desea ELIMINAR este concepto y TODOS los ADEUDOS PENDIENTES asociados? Esta acción es irreversible.')) return;       
-  saveConcepts(getConcepts().filter(c=>c.id!==id));       
-  const students=getStudents().map(s=>{         
-    s.charges = (s.charges||[]).filter(ch=>ch.conceptId!==id);         
-    return s;       
-  });       
-  saveStudents(students);       
-  saveCharges(getCharges().filter(ch=>ch.conceptId!==id));       
-  renderConcepts(); 
-  alert('🗑️ Concepto y adeudos asociados eliminados con éxito.');
-}     
-
-function formatCurrency(amount) {
+function formatCurrency(amount){
   return new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN', minimumFractionDigits:2 }).format(amount);
 }
 
-function renderConcepts(){       
-  const grid=document.getElementById('concepts-grid');       
-  if(!grid) return;        
+/* --- LÓGICA DE ALCANCE --- */
+function getTargetStudentsForConcept(concept){
+    const students = getStudents();
+    const activeStudents = students.filter(s => (s.status || '').toLowerCase() !== 'inactive' && (s.status || '').toLowerCase() !== 'inactivo');
+    
+    const normalizedActiveStudents = activeStudents.map(alumno => ({
+        ...alumno,
+        id: String(alumno.numControl ?? alumno.id ?? ''),
+        normalizedCareer: String(alumno.carrera ?? alumno.career ?? '').trim().toUpperCase(),
+        normalizedSemester: String(alumno.semestre ?? alumno.semester ?? '').trim()
+    }));
 
-  const list=getConcepts().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));       
+  if (concept.scopeRules) {
+      const rules = concept.scopeRules;
+      if (rules.allStudents) return normalizedActiveStudents;
+      const specificIds = (rules.specificStudents || []).map(String);
+      if (specificIds.length > 0) return normalizedActiveStudents.filter(s => specificIds.includes(s.id));
 
-  if(!list.length){         
-    grid.innerHTML=`
-      <div class="col-span-2 text-center py-16 bg-white rounded-xl shadow border border-gray-200">
-        <i class="fas fa-folder-open text-5xl mb-4 text-gray-400"></i>
-        <p class="text-lg text-gray-700 font-semibold mb-3">Aún no hay conceptos de cobro creados.</p>
-        <p class="text-sm text-gray-500 mb-6">Utiliza el botón para empezar a definir tus cuotas.</p>
-        <a href="/new" class="inline-block px-5 py-2.5 bg-green-700 text-white rounded-xl shadow-md hover:bg-green-800 transition-colors text-base font-medium">
-          <i class="fas fa-plus-circle mr-2"></i> Crear Primer Concepto
-        </a>
-      </div>`;
-    return;       
-  }        
+      return normalizedActiveStudents.filter(alumno => {
+          let cumpleCareers = (rules.careers || []).length === 0 || rules.careers.includes(alumno.normalizedCareer);
+          let cumpleSemesters = (rules.semesters || []).length === 0 || rules.semesters.includes(alumno.normalizedSemester);
+          return cumpleCareers && cumpleSemesters;
+      });
+  }
+  return normalizedActiveStudents;
+}
 
-  grid.innerHTML=list.map(c=>{         
-    const amount=Number(c.amount)||0;         
-    const targets=getTargetStudentsForConcept(c);
-    const targetCount=targets.length; 
-    const pendingCharges = getCharges().filter(ch => ch.conceptId === c.id && ch.status === 'pending').length;
+function getScopeText(concept){
+  if (concept.scopeRules) {
+      const rules = concept.scopeRules;
+      if (rules.allStudents) return 'Todos Activos';
+      if ((rules.specificStudents || []).length > 0) return `${rules.specificStudents.length} Alumnos Esp.`;
+      const cCount = (rules.careers || []).length;
+      const sCount = (rules.semesters || []).length;
+      if (cCount > 0 && sCount > 0) return `${cCount} Carr. / ${sCount} Sem.`;
+      if (cCount > 0) return `${cCount} Carrera(s)`;
+      if (sCount > 0) return `${sCount} Semestre(s)`;
+  }
+  return 'No Definido';
+}
 
-    return `           
-      <div class="concept-card bg-white rounded-xl shadow border border-gray-100 p-3 flex flex-col justify-between hover:shadow-md transition duration-200">
-        <div class="space-y-1 flex-grow overflow-hidden"> 
-          <div class="flex justify-between items-start border-b pb-1 border-gray-100">
-            <h3 class="font-bold text-sm line-clamp-2">${escapeHtml(c.title)}</h3>
-            <div class="text-lg font-bold text-amber-600 ml-2 flex-shrink-0">${formatCurrency(amount)}</div>
+/* --- ACCIONES CRUD --- */
+function finalizeConcept(id) {
+  const concepts = getConcepts();
+  const index = concepts.findIndex(c => c.id === id);
+  if (index === -1) return;
+
+  const confirmMsg = `¿Finalizar "${concepts[index].title}"?\n\nSe marcará como INACTIVO. ¿Deseas eliminar también los cargos PENDIENTES asociados?`;
+  const removePending = confirm(confirmMsg);
+
+  // REGISTRAMOS LA FECHA PARA LA TABLA
+  const hoy = new Date().toLocaleDateString('es-MX');
+
+  concepts[index].status = 'inactive';
+  concepts[index].fechaFin = hoy; // <--- Se guarda para la tabla
+
+  saveConcepts(concepts);
+
+  if (removePending) {
+    const charges = getCharges();
+    const filteredCharges = charges.filter(ch => !(ch.conceptId === id && ch.status === 'pending'));
+    saveCharges(filteredCharges);
+  }
+  
+  renderConcepts();
+  window.dispatchEvent(new Event('storage'));
+}
+
+/* --- RENDERIZADO CON TU DISEÑO ORIGINAL --- */
+function renderConcepts(){
+  const grid = document.getElementById('concepts-grid');
+  if(!grid) return;
+
+  const list = getConcepts().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+
+  if(!list.length){
+    grid.innerHTML = `<div class="col-span-full text-center py-16 bg-white rounded-xl shadow-lg border border-gray-100">...</div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(c=>{
+    const amount = Number(c.amount)||0;
+    const isInactive = c.status === 'inactive';
+    const targets = getTargetStudentsForConcept(c);
+    const pending = getCharges().filter(ch=>ch.conceptId===c.id && ch.status==='pending').length;
+
+    return `
+      <div class="bg-white rounded-xl shadow-lg border ${isInactive ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200'} p-5 flex flex-col justify-between transition hover:shadow-2xl">
+        
+        <div class="flex justify-between items-start mb-4">
+          <div class="pr-2">
+            <h3 class="font-bold text-lg text-gray-900 leading-tight line-clamp-2">${escapeHtml(c.title)}</h3>
+            ${isInactive ? '<span class="inline-block mt-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold uppercase">Finalizado</span>' : '<span class="inline-block mt-1 text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold uppercase">Vigente</span>'}
           </div>
+          <div class="text-xl font-black text-[${PRIMARY_TEXT_COLOR_HEX}] flex-shrink-0">${formatCurrency(amount)}</div>
+        </div>
 
-          <div class="text-xs text-gray-700 mt-1 space-y-0.5">
-            <p class="flex items-center"><strong class="text-gray-500 mr-1">Objetivo:</strong> ${getScopeText(c)}</p>
-            <p class="flex items-center"><strong class="text-gray-500 mr-1">Pendientes:</strong> 
-              <span class="font-bold ${pendingCharges > 0 ? 'text-red-600' : 'text-green-600'}">${pendingCharges}</span>
-            </p>
+        <div class="text-sm space-y-2 py-3 rounded-lg bg-white/50 border border-gray-100 px-3 mb-4">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 font-medium text-xs uppercase italic">Filtro:</span>
+            <span class="font-semibold text-gray-800">${getScopeText(c)}</span>
           </div>
-
-          <div class="pt-1 border-t border-gray-100">
-            <div class="text-[0.65rem] text-gray-500 italic hidden details mb-1" id="details-${c.id}">             
-              <p class="line-clamp-2">${c.description ? escapeHtml(c.description) : 'Sin descripción detallada.'}</p>             
-            </div>               
-            <button data-concept-id="${c.id}" class="toggle-desc text-green-700 hover:text-green-900 transition text-[0.6rem] font-semibold">Ver más</button>              
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 font-medium text-xs uppercase italic">Impacto:</span>
+            <span class="font-semibold text-gray-800">${targets.length} alumnos</span>
           </div>
-        </div>         
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 font-medium text-xs uppercase italic">Adeudos Activos:</span>
+            <span class="font-bold ${pending > 0 ? 'text-red-600' : 'text-green-600'}">${pending}</span>
+          </div>
+        </div>
 
-        <div class="mt-2 pt-2 border-t border-gray-100 space-y-1">         
-          <button data-concept-id="${c.id}" class="assign-all w-full px-2 py-1.5 text-xs font-medium bg-green-700 text-white rounded-lg hover:bg-green-800 shadow-md transition">
-            <i class="fas fa-money-bill-wave mr-1"></i> Asignar
-          </button>         
-          <div class="flex space-x-1">
-            <button data-concept-id="${c.id}" class="edit-concept w-1/2 px-2 py-1.5 text-xs font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition">
-              <i class="fas fa-edit"></i> Editar
-            </button>         
-            <button data-concept-id="${c.id}" class="delete-concept w-1/2 px-2 py-1.5 text-xs font-medium bg-red-50 text-red-700 rounded-lg hover:bg-red-100 border border-red-200 transition">
-              <i class="fas fa-trash-alt"></i> Eliminar
+        <div class="space-y-3">
+          <div class="hidden text-xs text-gray-600 bg-gray-50 p-2 rounded border mb-2" id="details-${c.id}">
+              ${escapeHtml(c.description || 'Sin descripción.')}
+          </div>
+          
+          <div class="flex gap-2">
+            <button onclick="window.editConcept('${c.id}')" class="w-1/3 py-2 text-xs font-bold border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition">
+              <i class="fas fa-edit mr-1"></i> Editar
+            </button>
+
+            ${!isInactive ? `
+              <button onclick="window.finalizeConcept('${c.id}')" class="w-1/3 py-2 text-xs font-bold bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 border border-amber-200 transition">
+                <i class="fas fa-check-double mr-1"></i> Finalizar
+              </button>
+            ` : `
+              <button class="w-1/3 py-2 text-xs font-bold text-amber-400 cursor-not-allowed italic" disabled>Cerrado</button>
+            `}
+
+            <button onclick="window.deleteConcept('${c.id}')" class="w-1/3 py-2 text-xs font-bold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-200 transition">
+              <i class="fas fa-trash-alt mr-1"></i> Borrar
             </button>
           </div>
-        </div>         
-      </div>`;       
+          
+          <button onclick="document.getElementById('details-${c.id}').classList.toggle('hidden')" class="w-full text-[10px] text-gray-400 hover:text-gray-600 uppercase font-bold tracking-widest transition">
+            Ver descripción <i class="fas fa-chevron-down ml-1"></i>
+          </button>
+        </div>
+      </div>
+    `;
   }).join('');
-
-  document.querySelectorAll('.toggle-desc').forEach(btn=>{         
-    btn.onclick=()=>{           
-      const id=btn.dataset.conceptId;           
-      const details=document.getElementById(`details-${id}`);           
-      if(details.classList.contains('hidden')){             
-        details.classList.remove('hidden');             
-        btn.textContent='Ocultar';           
-      } else {             
-        details.classList.add('hidden');             
-        btn.textContent='Ver más';           
-      }         
-    };       
-  });     
-}       
-
-document.addEventListener('click', ev=>{       
-  const assignBtn=ev.target.closest?.('.assign-all');       
-  if(assignBtn){ 
-      const concept = getConcepts().find(c=>c.id===assignBtn.dataset.conceptId);
-      assignConceptToScope(concept); 
-      renderConcepts(); 
-      return; 
-  }         
-
-  const editBtn=ev.target.closest?.('.edit-concept');       
-  if(editBtn){ editConcept(editBtn.dataset.conceptId); return; }         
-
-  const delBtn=ev.target.closest?.('.delete-concept');       
-  if(delBtn){ deleteConcept(delBtn.dataset.conceptId); return; }     
-});       
-
-renderConcepts();     
-window.addEventListener('storage', ()=>renderConcepts());   
-</script>     
-
-<style>     
-.hidden { display: none; }     
-.line-clamp-2 { 
-    overflow: hidden; 
-    display: -webkit-box; 
-    -webkit-box-orient: vertical; 
-    -webkit-line-clamp: 2;
-    white-space: normal;
 }
-.concept-card button { cursor: pointer; }
-</style> 
 
+/* --- EXPOSICIÓN GLOBAL --- */
+window.editConcept = (id) => {
+  const c = getConcepts().find(x=>x.id===id);
+  localStorage.setItem('editingConcept', JSON.stringify(c));
+  window.location.href = '/new?edit='+encodeURIComponent(id);
+};
+window.finalizeConcept = finalizeConcept;
+window.deleteConcept = (id) => {
+  if(!confirm('⚠️ ¿ELIMINAR concepto?')) return;
+  saveConcepts(getConcepts().filter(c=>c.id!==id));
+  renderConcepts();
+  window.dispatchEvent(new Event('storage'));
+};
+
+renderConcepts();
+window.addEventListener('storage', renderConcepts);
+</script>
+
+<style>
+.hidden { display:none; }
+.line-clamp-2 { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.col-span-full { grid-column: 1 / -1; }
+</style>
 </Layout>

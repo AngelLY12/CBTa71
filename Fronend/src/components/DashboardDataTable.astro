@@ -1,0 +1,141 @@
+---
+// Define las propiedades (props) que espera el componente.
+interface Props {
+    chartData: {
+        labels: string[];
+        ganancias: number[];
+        estudiantes: number[];
+    };
+    totalRecaudado: number;
+    totalPendiente: number;
+    totalGeneral: number;
+    formatCurrency: (value: number | string) => string;
+}
+
+const { 
+    chartData, 
+    totalRecaudado, 
+    totalPendiente, 
+    totalGeneral, 
+    formatCurrency 
+} = Astro.props;
+
+// Calculamos los porcentajes
+const porcentajeRecaudado = totalGeneral > 0 
+    ? ((totalRecaudado / totalGeneral) * 100).toFixed(2) 
+    : '0.00';
+const porcentajePendiente = totalGeneral > 0 
+    ? ((totalPendiente / totalGeneral) * 100).toFixed(2) 
+    : '0.00';
+
+// Prepara los datos mensuales para la iteración
+const monthlyData = chartData.labels.map((label, index) => ({
+    mes: label,
+    ganancias: chartData.ganancias[index] || 0,
+    estudiantes: chartData.estudiantes[index] || 0
+}));
+---
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+    
+    <section class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 border-b pb-2">
+            📈 Evolución Mensual
+        </h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Mes
+                        </th>
+                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Ganancias
+                        </th>
+                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Estudiantes
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {monthlyData.map(data => (
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {data.mes}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-right">
+                                {formatCurrency(data.ganancias)}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-700 text-right">
+                                {data.estudiantes.toLocaleString()}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="bg-white p-4 md:p-6 rounded-xl shadow-md border border-gray-200">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 border-b pb-2">
+            💰 Recaudación vs. Pendiente (Totales)
+        </h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Concepto
+                        </th>
+                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Monto
+                        </th>
+                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            %
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr class="bg-green-50/50">
+                        <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-green-700">
+                            Recaudado
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-green-700 text-right">
+                            {formatCurrency(totalRecaudado)}
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm font-bold text-green-700 text-right">
+                            {porcentajeRecaudado}%
+                        </td>
+                    </tr>
+
+                    <tr class="bg-yellow-50/50">
+                        <td class="px-3 py-4 whitespace-nowrap text-sm font-semibold text-yellow-700">
+                            Pendiente
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-yellow-700 text-right">
+                            {formatCurrency(totalPendiente)}
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm font-bold text-yellow-700 text-right">
+                            {porcentajePendiente}%
+                        </td>
+                    </tr>
+                    
+                    <tr class="border-t-2 border-gray-300 font-bold bg-gray-100">
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                            Total General
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                            {formatCurrency(totalGeneral)}
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                            100.00%
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>

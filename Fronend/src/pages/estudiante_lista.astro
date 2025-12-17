@@ -1,27 +1,20 @@
 ---
-import Layout from '../layouts/Layout.astro';                
+import Layout from '../layouts/Layout.astro';                
 
-// Configuraciones: Color de acento institucional (VERDE OSCURO: EMERALD)
-const ACCENT_COLOR_CLASS = 'emerald'; 
+// Configuraciones: Color de acento institucional (VERDE OSCURO: #2E594D)
+const ACCENT_COLOR_HEX = '#2E594D'; 
+const ACCENT_HOVER_COLOR_HEX = '#264c41'; // Un poco más oscuro para el hover
 
-// --- CONFIGURACIÓN ACTUALIZADA DE SEMESTRES Y CARRERAS ---
-const MAX_SEMESTER = 8;
+// --- CONFIGURACIÓN DE SEMESTRES Y CARRERAS ---
+const MAX_SEMESTER = 10;
 const SEMESTERS = Array.from({ length: MAX_SEMESTER }, (_, i) => i + 1);
-
 const CAREERS = [
-    { code: 'RMA', name: 'Rehabilitación y Mejoramiento Ambiental' },
-    { code: 'AGR', name: 'Agronomía' },
-    { code: 'AGO', name: 'Agroindustrias' },
-    { code: 'AHO', name: 'Agropecuario (Horticultura)' },
-    { code: 'VET', name: 'Veterinaria' },
-    { code: 'ZOO', name: 'Zootecnia' },
-    { code: 'SIL', name: 'Silvicultura' },
-    { code: 'PES', name: 'Pesca' },
-    { code: 'CPA', name: 'Ciencias Políticas y Adm. Pública' },
-    { code: 'TRS', name: 'Trabajo Social' },
-    { code: 'TUR', name: 'Turismo' },
-    { code: 'ADM', name: 'Administración de Empresas' },
-    { code: 'ECO', name: 'Economía' },
+    // Carreras Escolarizadas
+    { code: 'TAG-E', name: 'Técnico Agropecuario' },
+    { code: 'TOF', name: 'Técnico en Ofimática' },
+    { code: 'TEM', name: 'Técnico en Admón. de Emprendimiento' },
+    { code: 'TAG-M', name: 'Técnico Agropecuario (modalidad mixta)' },
+    { code: 'TRH', name: 'Técnico en Admón. de Recursos Humanos (modalidad mixta)' },
 ];
 
 // Mapeo para normalización y visualización
@@ -35,14 +28,12 @@ const CAREER_MAP = CAREERS.reduce((acc, curr) => {
 // Lógica de carga de datos (Lado del Servidor)
 let students = [];
 try {
-  // 1. Intenta cargar desde la API
   const res = await fetch('/api/students');
   if (res.ok) {
     const json = await res.json();
     students = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
   }
 } catch (e) {
-  // 2. Si la API falla, intenta cargar desde el archivo local de datos
   if (!students || !students.length) {
     try {
       const mod = await import('../data/students.js');
@@ -53,7 +44,7 @@ try {
   }
 }
 
-// 3. Normalización de los datos iniciales (excluyendo password)
+// Normalización de los datos iniciales (excluyendo password)
 students = students.map((s, i) => ({
   id: s.id ?? String(Date.now() + i),
   numControl: (s.numControl ?? s.id ?? '').toUpperCase(),
@@ -64,29 +55,29 @@ students = students.map((s, i) => ({
   carrera: (s.carrera ?? s.career ?? '').toUpperCase(),
   correo: s.correo ?? s.email ?? '',
 }));
-
 // Preparar los datos para pasarlos al cliente de forma segura
 const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
 ---
 
 <Layout title="Gestión de Estudiantes">
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" type="text/javascript" defer></script>
+  {/* CARGA LOCAL: Usamos la ruta local para evitar el bloqueo del CDN por Tracking Prevention */}
+  <script src="/js/xlsx.min.js" type="text/javascript" defer></script>
 
-  <div class="max-w-7xl xl:max-w-screen-xl mx-auto px-4 py-12 bg-white min-h-screen font-sans">
+  <div class="max-w-7xl mx-auto px-4 py-8 bg-white min-h-screen font-sans">
     
-    <header class="flex items-center justify-between mb-10 pb-4 border-b-2 border-emerald-100">
+    <header class="flex items-center justify-between mb-6 pb-4 border-b border-emerald-200">
       <div>
-        <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-700 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <h1 class="text-3xl font-extrabold text-gray-900 flex items-center">
+          {/* Icono de estudiante en el color del acento */}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" style={`color:${ACCENT_COLOR_HEX};`} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20v-2c0-.656-.126-1.283-.356-1.857M9 20l-2.003-.594A4 4 0 003 15.25V7a4 4 0 014-4h10a4 4 0 014 4v8.25c0 .59-.234 1.157-.659 1.571L17 20m-2 1a2 2 0 100-4 2 2 0 000 4zM8 10h.01M12 10h.01M16 10h.01M9 16h.01M13 16h.01" />
           </svg>
-          Gestión Académica de Estudiantes
+          Gestión de Estudiantes
         </h1>
-        <p class="text-sm text-gray-500 mt-2 ml-12">Plataforma centralizada para la administración de la matrícula estudiantil.</p>
       </div>
       <div>
-        <a href="/Dashboard" class="text-base font-semibold text-emerald-600 hover:text-emerald-800 transition duration-150 ease-in-out flex items-center p-2 rounded-lg hover:bg-emerald-50">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <a href="/Dashboard" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition duration-150 ease-in-out flex items-center p-1 rounded-lg hover:bg-emerald-50">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
           Volver al Panel
@@ -94,86 +85,108 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
       </div>
     </header>
 
-    <div class="mb-8">
-      <button id="show-form-btn" class="px-8 py-3 bg-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:bg-emerald-800 transition duration-150 ease-in-out transform hover:scale-[1.01] focus:outline-none focus:ring-4 focus:ring-emerald-300">
+    <div class="mb-6">
+      {/* Botón principal de registro con el color específico */}
+      <button 
+          id="show-form-btn" 
+          class="px-6 py-2 text-white font-semibold rounded-lg shadow-md transition focus:outline-none focus:ring-4 focus:ring-emerald-300 text-sm"
+          style={`background-color:${ACCENT_COLOR_HEX}; hover:background-color:${ACCENT_HOVER_COLOR_HEX};`}
+      >
         + Registrar Nuevo Estudiante
-      </button                >
+      </button>
     </div>
 
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-      <div id="form-container" class="bg-white p-8 rounded-xl shadow-2xl col-span-1 hidden relative border border-gray-100 h-fit sticky top-10">
-        <h2 id="form-title" class="font-bold text-xl mb-6 text-gray-800 border-b pb-2">Registro de Estudiante</h2>
-        <form id="add-student-form" class="space-y-4">
-          <button id="close-form-btn" type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition duration-150 ease-in-out">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      {/* FORMULARIO */}
+      <div id="form-container" class="bg-white p-6 rounded-xl shadow-lg col-span-1 hidden relative border border-gray-100 h-fit sticky top-4">
+        <h2 id="form-title" class="font-bold text-lg mb-4 text-gray-800 border-b pb-2">Registro de Estudiante</h2>
+        <form id="add-student-form" class="space-y-3">
+          <button 
+            id="close-form-btn" type="button" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition duration-150 ease-in-out">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
           <input type="hidden" name="id" id="student-id-input" value="" />
 
-          <input name="numControl" id="numControl-input" placeholder="Número de control (Matrícula)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
-          <div class="grid grid-cols-2 gap-4">
-            <input name="nombre" id="nombre-input" placeholder="Nombre(s)" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
-            <input name="apellidoP" id="apellidoP-input" placeholder="Apellido paterno" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
+          
+          {/* Los inputs mantienen el focus de color emerald-500 por ser la familia más cercana y estándar */}
+          <input name="numControl" id="numControl-input" placeholder="Número de control (Matrícula)" required class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
+          <div class="grid grid-cols-2 gap-3">
+            <input name="nombre" id="nombre-input" placeholder="Nombre(s)" required class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
+            <input name="apellidoP" id="apellidoP-input" placeholder="Apellido paterno" 
+            required class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
           </div>
-          <input name="apellidoM" id="apellidoM-input" placeholder="Apellido materno (Opcional)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
+          <input name="apellidoM" id="apellidoM-input" placeholder="Apellido materno (Opcional)" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
 
-          <div class="grid grid-cols-2 gap-4">
-            <select name="semestre" id="semestre-input" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm">
+          <div class="grid grid-cols-2 gap-3">
+            <select name="semestre" id="semestre-input" class="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm">
               <option value="0">Semestre</option>
               {SEMESTERS.map(s => <option value={s}>{s}ro</option>)}
             </select>
 
-            <select name="carrera" id="carrera-input" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm">
+            <select name="carrera" id="carrera-input" class="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm">
               <option value="">Programa Educativo</option>
               {CAREERS.map(c => <option value={c.code}>{c.name}</option>)}
             </select>
           </div>
 
-          <input name="correo" id="correo-input" type="email" placeholder="Correo electrónico institucional" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
+          <input name="correo" id="correo-input" type="email" placeholder="Correo electrónico institucional" required class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 text-sm shadow-sm" />
           
-          <div class="flex gap-3 pt-4">
-            <button type="submit" id="submit-btn" class="flex-1 px-4 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 transition duration-150 text-sm shadow-md">Registrar</button>
-            <button id="reset-btn" type="button" class="px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition duration-150 text-sm shadow-sm">Reiniciar</button>
+          <div class="flex gap-3 pt-3">
+            {/* Botón de Submit/Actualizar con el color específico */}
+            <button 
+                type="submit" 
+                id="submit-btn" 
+                class="flex-1 px-4 py-2 text-white font-semibold rounded-lg transition duration-150 text-sm shadow-md"
+                style={`background-color:${ACCENT_COLOR_HEX}; hover:background-color:${ACCENT_HOVER_COLOR_HEX};`}
+            >
+                Registrar
+            </button>
+            <button id="reset-btn" type="button" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition duration-150 text-sm shadow-sm">Reiniciar</button>
           </div>
-          <p id="form-msg" class="text-sm text-center pt-2 hidden"></p>
+          <p id="form-msg" class="text-xs text-center pt-2 hidden"></p>
         </form>
 
-        <hr class="my-6 border-emerald-100" />
+        <hr class="my-4 border-emerald-100" />
 
-        <div class="bg-emerald-50 p-4 rounded-lg border border-dashed border-emerald-200 shadow-inner">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Carga Masiva (Excel)</label>
-          <input id="import-file" type="file" accept=".xlsx,.xls,.csv" class="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition duration-150"/>
-          <p class="text-xs text-gray-500 mt-2">Formato de columnas requerido: numControl,nombre,apellidoP,apellidoM,semestre,carrera,correo</p>
+        {/* Sección de Importación Masiva (Formato COMPLETO) */}
+        <div class="bg-emerald-50 p-3 rounded-lg border border-dashed border-emerald-200 shadow-inner">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Carga Masiva (Excel)</label>
+          <input id="import-file" type="file" accept=".xlsx,.xls,.csv" class="w-full text-xs text-gray-600 file:mr-3 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition duration-150"/>
+          
+          {/* Formato Requerido por el Usuario (CABECERAS SIN ESPACIOS EN APELLIDOS) */}
+          <p class="text-xs text-gray-500 mt-1">Formato: **NumControl**, **Nombre**, **ApellidoPaterno**, **ApellidoMaterno**, **Semestre**, **Carrera** (Nombre Completo o Código), **Correo**.</p>
         </div>
       </div>
 
-      <div id="table-container" class="bg-white p-8 rounded-xl shadow-2xl col-span-1 lg:col-span-3 flex flex-col border border-gray-100 relative">
-        <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
-          <h2 class="font-bold text-2xl text-gray-800">Listado de Matrícula <span id="students-total" class="text-base font-semibold text-emerald-600">({students.length})</span></h2>
+      {/* TABLA */}
+      <div id="table-container" class="bg-white p-6 rounded-xl shadow-lg col-span-1 lg:col-span-3 flex flex-col border border-gray-100 relative">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <h2 class="font-bold text-xl text-gray-800">Listado de Matrícula <span id="students-total" class="text-sm font-semibold text-emerald-600">({students.length})</span></h2>
 
-          <div class="flex gap-3 relative flex-wrap">
+          <div class="flex gap-2 relative flex-wrap">
 
             {/* BARRA DE BÚSQUEDA */}
-            <div class="relative w-56">
-              <input id="search-input" type="text" placeholder="Buscar por Nombre, Control, Correo..." class="w-full p-2 pl-9 border border-gray-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm transition" />
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <div class="relative w-52">
+              <input id="search-input" type="text" placeholder="Buscar..." class="w-full p-2 pl-8 border border-gray-300 rounded-lg text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-sm transition" />
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
 
-            {/* BOTÓN Y POPUP DE FILTROS (Verde) */}
-            <button id="toggle-filters-btn" class="flex items-center px-4 py-2 rounded-lg bg-emerald-100 border border-emerald-300 text-emerald-700 text-sm font-medium hover:bg-emerald-200 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            {/* BOTÓN Y POPUP DE FILTROS (se mantiene el color verde claro para indicar estado) */}
+            <button id="toggle-filters-btn" class="flex items-center px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-700 text-sm font-medium hover:bg-emerald-100 transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v3.414l-4 4v-4.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
               <span id="filters-status">Filtros</span>
             </button>
 
 
-            <div id="filters-popover" class="absolute z-20 top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl p-5 border border-gray-200 hidden transform origin-top-right transition duration-200 ease-out scale-95 opacity-0">
+            <div id="filters-popover" class="absolute z-20 top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl p-4 border border-gray-200 hidden transform origin-top-right transition duration-200 ease-out scale-95 opacity-0">
               <h3 class="text-sm font-bold text-gray-700 mb-3 border-b pb-2">Opciones de Filtrado</h3>
               <div class="space-y-3">
                 <div>
@@ -201,39 +214,63 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
               </button>
             </div>
 
-            {/* BOTONES DE EXPORTACIÓN Y LIMPIEZA */}
-            <button id="export-xlsx" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 text-sm hover:bg-gray-100 transition duration-150 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>XLSX</button>
-            <button id="export-csv" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 text-sm hover:bg-gray-100 transition duration-150 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>CSV</button>
             
-            {/* */}
-            <button id="delete-selected" class="hidden flex items-center px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition duration-150 shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {/* BOTONES DE EXPORTACIÓN Y LIMPIEZA */}
+            <button id="export-xlsx" class="flex items-center px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-700 text-sm hover:bg-gray-100 transition shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>XLSX</button>
+            
+           
+            {/* Botón de borrado masivo (SE MANTIENE, solo se quita el individual) */}
+            <button id="delete-selected" class="hidden flex items-center px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 Borrar (<span id="selected-count">0</span>)
             </button>
 
-            <button id="clear-storage" class="px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-medium hover:bg-red-200 transition duration-150 shadow-sm">Borrar Local</button>
+            <button id="clear-storage" class="px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-medium hover:bg-red-200 transition shadow-sm">Borrar Local</button>
           </div>
         </div>
+        
+        {/* CONTROLES DE PAGINACIÓN NUMÉRICA */}
+        <div class="flex items-center justify-center mt-3 mb-3 pt-3 border-t border-gray-100">
+            <div id="pagination-controls" class="flex items-center space-x-1">
+                
+                <button id="prev-page-btn" class="p-1.5 text-gray-500 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                
+                <div id="page-buttons-container" class="flex space-x-1 items-center">
+                </div>
+                
+                <button id="next-page-btn" class="p-1.5 text-gray-500 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+      
+        <p id="pagination-status" class="text-xs text-gray-500 text-center mb-3">Mostrando: 50 registros por página.</p>
 
         {/* CONTENEDOR DE LA TABLA CON SCROLL */}
-        <div class="overflow-x-auto rounded-xl border border-gray-200 max-h-[70vh] shadow-inner">
+        <div class="overflow-x-auto rounded-lg border border-gray-200 max-h-[60vh] shadow-inner">
           <table class="min-w-full text-sm divide-y divide-gray-200">
-            <thead class="bg-gray-100 text-left sticky top-0 z-10">
+            {/* CABECERA DE LA TABLA con el color de fondo específico #2E594D */}
+            <thead class="text-left sticky top-0 z-10" style={`background-color:${ACCENT_COLOR_HEX}; color: #FFFFFF;`}>
               <tr>
-                {/* */}
-                <th class="px-4 py-3 text-center w-[4%]">
-                    <input type="checkbox" id="select-all" class="rounded text-emerald-600 focus:ring-emerald-500" />
+                <th class="px-3 py-2 text-center w-[4%]">
+                    <input type="checkbox" id="select-all" class="rounded text-white focus:ring-emerald-500" style={`background-color:${ACCENT_HOVER_COLOR_HEX}; border-color:white;`} />
                 </th>
-                <th class="px-4 py-3 font-bold text-gray-700 w-[12%]">N. Control</th>
-                <th class="px-4 py-3 font-bold text-gray-700 w-[15%]">Nombre</th>
-                <th class="px-4 py-3 font-bold text-gray-700 w-[15%]">Apellido P.</th>
-                <th class="px-4 py-3 font-bold text-gray-700 w-[15%]">Apellido M.</th>
-                <th class="px-4 py-3 font-bold text-gray-700 text-center w-[10%]">Semestre</th>
-                <th class="px-4 py-3 font-bold text-gray-700 w-[12%]">Carrera</th>
-                <th class="px-4 py-3 font-bold text-gray-700 w-[15%]">Correo</th>
-                <th class="px-4 py-3 font-bold text-gray-700 text-center w-[8%] min-w-[120px]">Acciones</th>
+                <th class="px-3 py-2 font-bold w-[12%]">N. Control</th>
+                <th class="px-3 py-2 font-bold w-[15%]">Nombre</th>
+                <th class="px-3 py-2 font-bold w-[15%]">Apellido P.</th>
+                <th class="px-3 py-2 font-bold w-[15%]">Apellido M.</th>
+                <th class="px-3 py-2 font-bold text-center w-[10%]">Semestre</th>
+                <th class="px-3 py-2 font-bold w-[12%]">Carrera</th>
+                <th class="px-3 py-2 font-bold w-[15%]">Correo</th>
+                <th class="px-3 py-2 font-bold text-center w-[8%] min-w-[100px]">Acciones</th>
               </tr>
             </thead>
             <tbody id="students-tbody" class="bg-white divide-y divide-gray-100">
@@ -244,31 +281,49 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
     </section>
   </div>
 
-  <script define:vars={{ initialJSON, CAREER_MAP }}>
-    // define:vars inyecta las variables de Astro de forma segura al script cliente
+  <script define:vars={{ initialJSON, CAREER_MAP, ACCENT_COLOR_HEX, ACCENT_HOVER_COLOR_HEX }}>
     window.__INITIAL_STUDENTS = JSON.parse(initialJSON);
     window.__CAREER_MAP = CAREER_MAP;
+    window.__ACCENT_COLOR_HEX = ACCENT_COLOR_HEX;
+    window.__ACCENT_HOVER_COLOR_HEX = ACCENT_HOVER_COLOR_HEX;
   </script>
 
   <script type="module" client:load>
     (function () { 
       const STORAGE_KEY = 'studentsList';
       const initial = Array.isArray(window.__INITIAL_STUDENTS) ? window.__INITIAL_STUDENTS : [];
-      // Se utiliza el mapa de carreras inyectado
       const CARRERA_MAP = window.__CAREER_MAP || {};
+      const ACCENT_COLOR = window.__ACCENT_COLOR_HEX;
+      const ACCENT_HOVER_COLOR = window.__ACCENT_HOVER_COLOR_HEX; 
+      
+      const SELECTED_ROW_BG = '#ebfcf5'; // Un verde claro que contraste con el oscuro.
 
-      // // NUEVO: ESTADO PARA SELECCIÓN DE FILAS
+      // --- ESTADO DE PAGINACIÓN ---
+      const paginationState = {
+          currentPage: 1,
+          pageSize: 50, 
+          totalPages: 1,
+          filteredCount: 0,
+      };
+      // ----------------------------
+
       let selectedStudentIds = new Set();
+      let forceOverwrite = false;
 
-
-      // Estado de los filtros
       const currentFilters = {
         semestre: '',
         carrera: ''
       };
 
+      // CAMBIO 1: Crear el Mapa Inverso (Nombre Completo -> Código Corto)
+      const REVERSE_CAREER_MAP = Object.entries(CARRERA_MAP).reduce((acc, [code, name]) => {
+          // Normalizamos para búsqueda insensible a mayúsculas y acentos
+          if (code !== '0' && code !== '') {
+              acc[normalizeForSearch(name)] = code;
+          }
+          return acc;
+      }, {});
 
-      // Funciones de utilidad (lectura/escritura local)
       const readLocal = () => {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
@@ -281,7 +336,6 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
       };
       const writeLocal = (arr) => {
         try {
-          // Eliminamos cualquier propiedad 'password' antes de guardar.
           const cleanedArr = arr.map(s => {
             const { password, ...rest } = s;
             return rest;
@@ -289,7 +343,6 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
           localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedArr));
         } catch (e) {}
       };
-
       // Elementos del DOM
       const tbody = document.getElementById('students-tbody');
       const totalEl = document.getElementById('students-total');
@@ -300,7 +353,6 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
       const msg = document.getElementById('form-msg');
       const importFile = document.getElementById('import-file');
       const exportXlsx = document.getElementById('export-xlsx');
-      const exportCsv = document.getElementById('export-csv');
       const clearBtn = document.getElementById('clear-storage');
       const formContainer = document.getElementById('form-container');
       const tableContainer = document.getElementById('table-container');
@@ -314,25 +366,22 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
       const semestreInput = document.getElementById('semestre-input');
       const carreraInput = document.getElementById('carrera-input');
       const correoInput = document.getElementById('correo-input');
-
-      // Elementos de Búsqueda
       const searchInput = document.getElementById('search-input');
-
-      // Elementos de Filtro
       const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
       const filtersPopover = document.getElementById('filters-popover');
       const filtersStatusEl = document.getElementById('filters-status');
       const filterSemestreEl = document.getElementById('filter-semestre');
       const filterCarreraEl = document.getElementById('filter-carrera');
       const clearFiltersBtn = document.getElementById('clear-filters-btn');
-
-      // // NUEVO: Elementos DOM para selección y borrado masivo
       const selectAllCheckbox = document.getElementById('select-all');
       const deleteSelectedBtn = document.getElementById('delete-selected');
       const selectedCountEl = document.getElementById('selected-count');
-
-
-      // Función de escape HTML
+      const prevPageBtn = document.getElementById('prev-page-btn');
+      const nextPageBtn = document.getElementById('next-page-btn');
+      const paginationStatusEl = document.getElementById('pagination-status');
+      const paginationControls = document.getElementById('pagination-controls');
+      const pageButtonsContainer = document.getElementById('page-buttons-container');
+      
       function escapeHtml(s) {
         if (!s) return '';
         return String(s).replace(/[&<>"']/g, function (m) {
@@ -340,7 +389,6 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
         });
       }
 
-      // Mostrar mensaje breve
       function showMsg(text, isError) {
         msg.textContent = text;
         msg.classList.remove('text-red-600', 'text-green-600');
@@ -350,62 +398,79 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
         setTimeout(() => msg.classList.add('hidden'), 3000);
       }
 
-      // Función de capitalización (primera letra de cada palabra)
+      // FUNCIÓN: Normaliza para búsqueda insensible a mayúsculas y acentos
+      function normalizeForSearch(str) {
+          if (!str) return '';
+          // toLowerCase: Convierte a minúsculas y normalize("NFD").replace: elimina acentos/diacríticos
+          return String(str).toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+
+      // FUNCIÓN CORREGIDA: Capitaliza correctamente respetando acentos
       function capitalizeName(str) {
         if (!str) return '';
-        return String(str).toLowerCase().trim().replace(/\b\w/g, l => l.toUpperCase());
+        // 1. Elimina espacios extra y convierte todo a minúsculas
+        const lowerCaseStr = String(str).toLowerCase().trim().replace(/\s+/g, ' ');
+        
+        // 2. Capitaliza la primera letra de cada palabra
+        return lowerCaseStr.replace(/(^|\s)\S/g, function(l) {
+            return l.toUpperCase();
+        });
       }
 
 
-      // Función de filtrado
       const applyFilters = (list) => {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-
+        const normalizedSearchTerm = normalizeForSearch(searchInput.value); // Normaliza el término de búsqueda
+        
         return list.filter(s => {
           const matchesSemestre = currentFilters.semestre === '' || String(s.semestre) === currentFilters.semestre;
           const matchesCarrera = currentFilters.carrera === '' || s.carrera === currentFilters.carrera;
 
-          // Lógica de Búsqueda
-          const matchesSearch = searchTerm === '' ||
-              s.numControl.toLowerCase().includes(searchTerm) ||
-              s.nombre.toLowerCase().includes(searchTerm) ||
-              s.apellidoP.toLowerCase().includes(searchTerm) ||
-              s.apellidoM.toLowerCase().includes(searchTerm) ||
-              (CARRERA_MAP[s.carrera] || s.carrera).toLowerCase().includes(searchTerm) ||
-              s.correo.toLowerCase().includes(searchTerm);
+          if (normalizedSearchTerm === '') return matchesSemestre && matchesCarrera;
+
+          // Aplica la normalización a los campos del estudiante antes de comparar
+          const matchesSearch = 
+              normalizeForSearch(s.numControl).includes(normalizedSearchTerm) ||
+              normalizeForSearch(s.nombre).includes(normalizedSearchTerm) ||
+              normalizeForSearch(s.apellidoP).includes(normalizedSearchTerm) ||
+              normalizeForSearch(s.apellidoM).includes(normalizedSearchTerm) ||
+              normalizeForSearch(CARRERA_MAP[s.carrera] || s.carrera).includes(normalizedSearchTerm) ||
+              normalizeForSearch(s.correo).includes(normalizedSearchTerm);
 
           return matchesSemestre && matchesCarrera && matchesSearch;
         });
       }
 
-      // Función para obtener la lista que se está viendo (filtrada)
       const getExportList = () => {
           const rawList = readLocal();
           return applyFilters(rawList);
       }
 
-      // Función para actualizar el estado visual del botón de filtros (Verde)
+      // Se ajusta el botón de filtros para reflejar el color principal
       const updateFiltersStatus = (filteredCount, totalCount) => {
-          const isActive = currentFilters.semestre !== '' || currentFilters.carrera !== '';
+          const isActive = currentFilters.semestre !== '' ||
+          currentFilters.carrera !== '';
 
           if (isActive || searchInput.value.trim() !== '') {
-              // Botón activo (Verde más oscuro)
-              toggleFiltersBtn.classList.add('bg-emerald-700', 'text-white', 'border-emerald-700');
-              toggleFiltersBtn.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+              // Botón activo (USANDO el color principal)
+              toggleFiltersBtn.style.backgroundColor = ACCENT_COLOR;
+              toggleFiltersBtn.style.borderColor = ACCENT_COLOR;
+              toggleFiltersBtn.classList.add('text-white');
+              toggleFiltersBtn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
               filtersStatusEl.textContent = `Filtros: ${filteredCount}/${totalCount}`;
           } else {
-              // Botón inactivo (Verde claro)
-              toggleFiltersBtn.classList.remove('bg-emerald-700', 'text-white', 'border-emerald-700');
-              toggleFiltersBtn.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-300');
+              // Botón inactivo (Volver al verde claro)
+              toggleFiltersBtn.style.backgroundColor = '';
+              toggleFiltersBtn.style.borderColor = '';
+              toggleFiltersBtn.classList.remove('text-white');
+              toggleFiltersBtn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-300');
               filtersStatusEl.textContent = 'Filtros';
           }
       }
 
 
-      // --- LÓGICA DE VISIBILIDAD DEL FORMULARIO ---
       function setFormVisibility(isVisible) {
         if (isVisible) {
-          filtersPopover.classList.add('hidden'); // Ocultar filtros si se abre el form
+          filtersPopover.classList.add('hidden');
           formContainer.classList.remove('hidden');
           tableContainer.classList.remove('lg:col-span-3');
           tableContainer.classList.add('lg:col-span-2');
@@ -422,7 +487,6 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
         }
       }
 
-      // Función para limpiar formulario y volver a modo "Agregar"
       function resetForm() {
         form.reset();
         idInput.value = '';
@@ -430,15 +494,14 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
         submitBtn.textContent = 'Registrar';
         msg.classList.add('hidden');
         msg.classList.remove('text-red-600', 'text-green-600');
+        forceOverwrite = false;
       }
 
-      // Función para precargar el formulario con datos de edición
       function handleEdit(e) {
         e.preventDefault();
         const studentId = e.currentTarget.getAttribute('data-id');
         const list = readLocal();
         const student = list.find(s => s.id === studentId);
-
         if (!student) {
           showMsg('Estudiante no encontrado para editar.', true);
           return;
@@ -446,7 +509,6 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
 
         setFormVisibility(true);
 
-        // Llenar el formulario con los datos del estudiante
         idInput.value = student.id;
         numControlInput.value = student.numControl;
         nombreInput.value = student.nombre;
@@ -455,100 +517,137 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
         semestreInput.value = String(student.semestre || '0');
         carreraInput.value = student.carrera;
         correoInput.value = student.correo;
-
-        // Cambiar el título y el botón
         formTitle.textContent = `Editar Estudiante: ${student.nombre}`;
         submitBtn.textContent = 'Actualizar Datos';
       }
 
-      // Función para manejar la eliminación
-      function handleDelete(e) {
-          e.preventDefault();
-          const studentId = e.currentTarget.getAttribute('data-id');
-          const list = readLocal();
-          const student = list.find(s => s.id === studentId);
+      
+      function renderPageButtons() {
+          pageButtonsContainer.innerHTML = '';
+          const { currentPage, totalPages } = paginationState;
+          
+          if (totalPages <= 1) return;
 
-          if (!student) {
-              showMsg('Error: Estudiante no encontrado.', true);
-              return;
+          const maxVisible = 7;
+          let startPage = Math.max(1, currentPage - 2); 
+          let endPage = Math.min(totalPages, currentPage + 2);
+
+          if (endPage - startPage + 1 < maxVisible) {
+              startPage = Math.max(1, endPage - maxVisible + 1);
+          }
+          if (endPage - startPage + 1 < maxVisible) {
+              endPage = Math.min(totalPages, startPage + maxVisible - 1);
           }
 
-          if (!confirm(`⚠️ Advertencia: ¿Está seguro de que desea ELIMINAR permanentemente al estudiante: ${student.nombre} ${student.apellidoP}?`)) {
-              return;
+          if (startPage > 1) {
+              createPageButton(1);
+              if (startPage > 2) {
+                  createEllipsis();
+              }
+          }
+          
+          for (let i = startPage; i <= endPage; i++) {
+              createPageButton(i);
           }
 
-          const newList = list.filter(s => s.id !== studentId);
-          writeLocal(newList);
-          // // NUEVO: Quitar del Set de seleccionados si estaba
-          selectedStudentIds.delete(studentId);
-          render();
-          setFormVisibility(false);
-          showMsg('Estudiante eliminado con éxito. ❌');
+          if (endPage < totalPages) {
+              if (endPage < totalPages - 1) {
+                  createEllipsis();
+              }
+              createPageButton(totalPages);
+          }
       }
 
-      // Función de renderizado de la tabla - // NUEVO: Modificada para checkboxes y borrado masivo
+      function createPageButton(pageNumber) {
+          const btn = document.createElement('button');
+          btn.textContent = pageNumber;
+          btn.className = `w-7 h-7 rounded-lg text-xs font-semibold transition duration-150`;
+          btn.setAttribute('data-page', pageNumber);
+
+          if (pageNumber === paginationState.currentPage) {
+              // Aplicar el color principal al botón activo de paginación
+              btn.style.backgroundColor = ACCENT_COLOR;
+              btn.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)';
+              // shadow-md
+              btn.classList.add('text-white');
+              btn.classList.remove('text-gray-700', 'border', 'border-gray-300', 'hover:bg-gray-100');
+          } else {
+              btn.classList.add('text-gray-700', 'border', 'border-gray-300', 'hover:bg-gray-100');
+              btn.addEventListener('click', () => {
+                  paginationState.currentPage = pageNumber;
+                  render();
+                  document.getElementById('table-container').querySelector('.overflow-x-auto').scrollTop = 0;
+              });
+          }
+          pageButtonsContainer.appendChild(btn);
+      }
+
+      function createEllipsis() {
+          const span = document.createElement('span');
+          span.textContent = '...';
+          span.className = 'px-1 text-gray-400 font-semibold text-sm pt-0.5';
+          pageButtonsContainer.appendChild(span);
+      }
+
       const render = () => {
-        // 1. Leer y Filtrar
         const rawList = readLocal();
         const filteredList = applyFilters(rawList);
 
-        tbody.innerHTML = '';
-
-        // // NUEVO: Actualizar Checkbox "Seleccionar Todo"
-        if(selectAllCheckbox) {
-            selectAllCheckbox.checked = filteredList.length > 0 && filteredList.every(s => selectedStudentIds.has(s.id));
+        paginationState.filteredCount = filteredList.length;
+        paginationState.totalPages = Math.ceil(filteredList.length / paginationState.pageSize);
+        if (paginationState.currentPage > paginationState.totalPages) {
+            paginationState.currentPage = Math.max(1, paginationState.totalPages);
         }
 
-        if (filteredList.length === 0) {
-          // // NUEVO: Colspan ajustado a 9 (por la columna checkbox)
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="9" class="px-4 py-8 text-center text-gray-500 italic">
-                No se encontraron registros de estudiantes que coincidan con los criterios de búsqueda o filtro.
+        const start = (paginationState.currentPage - 1) * paginationState.pageSize;
+        const end = Math.min(start + paginationState.pageSize, filteredList.length);
+        const paginatedList = filteredList.slice(start, end);
+
+        tbody.innerHTML = '';
+        if (paginatedList.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-gray-500">No se encontraron estudiantes que coincidan con los filtros.</td></tr>`;
+        }
+        
+        paginatedList.forEach(s => {
+          const tr = document.createElement('tr');
+          // Aplicar el color de fondo personalizado para las filas seleccionadas
+          const isSelected = selectedStudentIds.has(s.id);
+          tr.className = `hover:bg-emerald-50 ${isSelected ? 'bg-emerald-50' : ''}`;
+          if(isSelected) {
+              // Sobrescribir con un color más suave si está seleccionado (usando el color verde base de Tailwind para un contraste suave)
+              tr.style.backgroundColor = SELECTED_ROW_BG;
+          }
+          tr.innerHTML = `
+              <td class="px-3 py-2 text-center">
+                  <input type="checkbox" class="student-checkbox rounded focus:ring-emerald-500" data-id="${s.id}" ${isSelected ? 'checked' : ''} style="color:${ACCENT_COLOR}; border-color:${ACCENT_COLOR};" />
               </td>
-            </tr>
-          `;
-        } else {
-          // 2. Renderizar la lista filtrada
-          filteredList.forEach((s) => {
-            const tr = document.createElement('tr');
-            // // NUEVO: Clase de fondo si está seleccionado
-            tr.className = `hover:bg-emerald-50 ${selectedStudentIds.has(s.id) ? 'bg-emerald-50' : ''}`;
-            
-            // // NUEVO: HTML modificado para incluir Checkbox en cada fila
-            tr.innerHTML = `
-              <td class="px-4 py-3 text-center">
-                <input type="checkbox" class="student-checkbox rounded text-emerald-600 focus:ring-emerald-500" data-id="${s.id}" ${selectedStudentIds.has(s.id) ? 'checked' : ''} />
-              </td>
-              <td class="px-4 py-3 font-medium text-gray-900">${escapeHtml(s.numControl)}</td>
-              <td class="px-4 py-3">${escapeHtml(s.nombre)}</td>
-              <td class="px-4 py-3">${escapeHtml(s.apellidoP)}</td>
-              <td class="px-4 py-3">${escapeHtml(s.apellidoM)}</td>
-              <td class="px-4 py-3 text-center font-semibold">${s.semestre === 0 ? '-' : s.semestre}</td>
-              <td class="px-4 py-3 text-emerald-700 font-medium">${CARRERA_MAP[s.carrera] || s.carrera}</td>
-              <td class="px-4 py-3 text-xs text-gray-600">${escapeHtml(s.correo)}</td>
-              <td class="px-4 py-3 flex justify-center space-x-2 min-w-[120px]">
-                  <button data-id="${s.id}" class="edit-btn text-emerald-600 hover:text-emerald-800 p-2 rounded-full hover:bg-emerald-50 transition" title="Editar Registro">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <td class="px-3 py-2 font-medium text-gray-900">${escapeHtml(s.numControl)}</td>
+              <td class="px-3 py-2">${escapeHtml(s.nombre)}</td>
+              <td class="px-3 py-2">${escapeHtml(s.apellidoP)}</td>
+              <td class="px-3 py-2">${escapeHtml(s.apellidoM)}</td>
+              <td class="px-3 py-2 text-center font-semibold">${s.semestre === 0 ? '-' : s.semestre}</td>
+              <td class="px-3 py-2 text-emerald-700 font-medium">${CARRERA_MAP[s.carrera] || s.carrera}</td>
+              <td class="px-3 py-2 text-xs text-gray-600">${escapeHtml(s.correo)}</td>
+              <td class="px-3 py-2 flex justify-center space-x-1 min-w-[100px]">
+                  <button data-id="${s.id}" class="edit-btn text-emerald-600 hover:text-emerald-800 p-1 rounded-full hover:bg-emerald-50 transition" title="Editar Registro">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-7 1l4-4m-4 4l5.5-5.5a1 1 0 000-1.414l-2.5-2.5a1 1 0 00-1.414 0L10 13z" />
                       </svg>
                   </button>
-                  <button data-id="${s.id}" class="delete-btn text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition" title="Eliminar Registro">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                  </button>
-              </td>
-            `;
-            tbody.appendChild(tr);
-          });
-        }
+                  </td>
+          `;
+          tbody.appendChild(tr);
+        });
 
-        totalEl.textContent = `(${rawList.length}) / Mostrando: ${filteredList.length}`;
-
+        totalEl.textContent = `(${rawList.length}) / Filtrados: ${filteredList.length}`;
         updateFiltersStatus(filteredList.length, rawList.length);
 
-        // // NUEVO: Actualizar botón de ELIMINACIÓN MASIVA
+        // Actualizar el estado de selección global
+        const allFilteredSelected = filteredList.length > 0 && filteredList.every(s => selectedStudentIds.has(s.id));
+        selectAllCheckbox.checked = allFilteredSelected;
+        selectAllCheckbox.indeterminate = !allFilteredSelected && Array.from(selectedStudentIds).some(id => filteredList.some(s => s.id === id));
+
+
         if (selectedStudentIds.size > 0) {
             deleteSelectedBtn.classList.remove('hidden');
             selectedCountEl.textContent = selectedStudentIds.size;
@@ -556,9 +655,25 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
             deleteSelectedBtn.classList.add('hidden');
         }
 
-        // --- ACTUALIZAR EVENTOS ---
+        // Paginación
+        if (paginationState.totalPages <= 1) {
+            paginationControls.classList.add('hidden');
+            paginationStatusEl.classList.add('hidden');
+        } else {
+            paginationControls.classList.remove('hidden');
+            paginationStatusEl.classList.remove('hidden');
+            renderPageButtons();
+            prevPageBtn.disabled = paginationState.currentPage === 1;
+            nextPageBtn.disabled = paginationState.currentPage === paginationState.totalPages;
+            const displayStart = start + 1;
+            const displayEnd = Math.min(end, filteredList.length);
+            paginationStatusEl.textContent = `Página ${paginationState.currentPage} de ${paginationState.totalPages} (Registros: ${displayStart}-${displayEnd})`;
+        }
 
-        // // NUEVO: Eventos Checkboxes Individuales
+        // Manejadores de eventos para la página actual
+        document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEdit));
+        // El evento .delete-btn fue removido aquí, junto con la función handleDelete.
+
         document.querySelectorAll('.student-checkbox').forEach(cb => {
             cb.addEventListener('change', (e) => {
                 const id = e.target.getAttribute('data-id');
@@ -567,116 +682,134 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
                 } else {
                     selectedStudentIds.delete(id);
                 }
-                render(); // Re-render para actualizar estilos y botón masivo
+                render();
             });
         });
-
-        document.querySelectorAll('.edit-btn').forEach(button => {
-          button.addEventListener('click', handleEdit);
-        });
-
-        document.querySelectorAll('.delete-btn').forEach(button => {
-          button.addEventListener('click', handleDelete);
-        });
       };
+      
+      // La función handleDelete fue removida.
 
-      // --- MANEJO DE EVENTOS ---
+      function handleMassDelete() {
+          if (selectedStudentIds.size === 0) return;
+
+          if (confirm(`⚠️ Advertencia: ¿Está seguro de que desea eliminar los ${selectedStudentIds.size} registros seleccionados? Esta acción es irreversible.`)) {
+              let list = readLocal();
+              const initialSize = list.length;
+              const newList = list.filter(s => !selectedStudentIds.has(s.id));
+              const deletedCount = initialSize - newList.length;
+
+              writeLocal(newList);
+              selectedStudentIds.clear(); // Limpiar la selección después del borrado
+              showMsg(`Se eliminaron ${deletedCount} registros con éxito. 🗑️`, false);
+              paginationState.currentPage = 1; // Volver a la primera página después de un borrado masivo
+              render();
+          }
+      }
+
+      function handleSelectAll(e) {
+          const list = readLocal();
+          const filteredList = applyFilters(list);
+          const isChecked = e.target.checked;
+          
+          if (isChecked) {
+              filteredList.forEach(s => selectedStudentIds.add(s.id));
+          } else {
+              filteredList.forEach(s => selectedStudentIds.delete(s.id));
+          }
+          render();
+      }
+
+      // --- MANEJADORES DE EVENTOS ---
 
       form.addEventListener('submit', (e) => {
         e.preventDefault();
+        const data = new FormData(form);
+        const isEdit = !!data.get('id');
 
-        const fd = new FormData(form);
-        const isEdit = !!idInput.value;
-
-        let list = readLocal();
-
-        // Normalización de datos al ingresar/editar (sin password)
         const newS = {
-          id: isEdit ? idInput.value : Date.now().toString(),
-          numControl: (fd.get('numControl') || '').toString().trim().toUpperCase(),
-          nombre: capitalizeName(fd.get('nombre') || ''),
-          apellidoP: capitalizeName(fd.get('apellidoP') || ''),
-          apellidoM: capitalizeName(fd.get('apellidoM') || ''),
-          semestre: Number(fd.get('semestre') || 0),
-          carrera: (fd.get('carrera') || '').toString().trim().toUpperCase(),
-          correo: (fd.get('correo') || '').toString().trim().toLowerCase(),
+          id: data.get('id') || Date.now().toString() + Math.random().toString(36).slice(2, 7),
+          numControl: data.get('numControl').toUpperCase().trim(),
+          nombre: capitalizeName(data.get('nombre')),
+          apellidoP: capitalizeName(data.get('apellidoP')),
+          apellidoM: capitalizeName(data.get('apellidoM')),
+          semestre: parseInt(data.get('semestre') || '0', 10),
+          carrera: data.get('carrera').toUpperCase().trim(),
+          correo: data.get('correo').toLowerCase().trim(),
         };
 
-        if (!newS.numControl || !newS.nombre || !newS.apellidoP || !newS.correo) {
-          showMsg('Rellene todos los campos obligatorios.', true);
-          return;
-        }
-
-        if (isEdit) {
-          const index = list.findIndex(s => s.id === newS.id);
-          if (index !== -1) {
-            list[index] = newS;
-            showMsg('Estudiante editado y actualizado. ✔️');
-          }
+        let list = readLocal();
+        const duplicateIndex = list.findIndex(s => s.numControl === newS.numControl && s.id !== newS.id);
+        
+        if (duplicateIndex !== -1) {
+            const duplicateStudent = list[duplicateIndex];
+            if (!confirm(`⚠️ ALUMNO DUPLICADO DETECTADO: El N. Control ${newS.numControl} ya pertenece a ${duplicateStudent.nombre} ${duplicateStudent.apellidoP}. \n\n¿Desea sobreescribir (actualizar) los datos del registro existente con los datos que acaba de ingresar?`)) {
+                showMsg(`Operación cancelada. El registro para ${newS.numControl} no fue creado ni modificado.`, true);
+                return;
+            }
+            newS.id = duplicateStudent.id;
+            list[duplicateIndex] = newS;
+            showMsg('Duplicado actualizado con éxito. ✔️');
+        } else if (isEdit) {
+            const index = list.findIndex(s => s.id === newS.id);
+            if (index !== -1) {
+                list[index] = newS;
+                showMsg('Estudiante editado y actualizado. ✔️');
+            }
         } else {
-          // Verificar duplicado por numControl al agregar
-          const duplicate = list.some(s => s.numControl === newS.numControl);
-          if (duplicate) {
-            showMsg(`El Número de Control ${newS.numControl} ya se encuentra registrado.`, true);
-            return;
-          }
-          list.unshift(newS);
-          window.dispatchEvent(new CustomEvent('students:added', { detail: newS }));
-          showMsg('Estudiante registrado con éxito. ✨');
+            list.unshift(newS);
+            window.dispatchEvent(new CustomEvent('students:added', { detail: newS }));
+            showMsg('Estudiante registrado con éxito. ✨');
         }
 
         writeLocal(list);
+        paginationState.currentPage = 1;
         render();
         setFormVisibility(false);
       });
 
-      // Visibilidad del formulario
       showFormBtn.addEventListener('click', () => setFormVisibility(true));
       closeFormBtn.addEventListener('click', () => setFormVisibility(false));
       resetBtn.addEventListener('click', resetForm);
 
-      // --- LÓGICA DE VISIBILIDAD DEL POP-OVER DE FILTROS ---
-      toggleFiltersBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isHidden = filtersPopover.classList.contains('hidden');
-        if (isHidden) {
-            filtersPopover.classList.remove('hidden');
-            setTimeout(() => {
-                filtersPopover.classList.add('scale-100', 'opacity-100');
-                filtersPopover.classList.remove('scale-95', 'opacity-0');
-            }, 10);
-        } else {
-            filtersPopover.classList.remove('scale-100', 'opacity-100');
-            filtersPopover.classList.add('scale-95', 'opacity-0');
-            filtersPopover.addEventListener('transitionend', function handler() {
-                filtersPopover.classList.add('hidden');
-                filtersPopover.removeEventListener('transitionend', handler);
-            }, { once: true });
-        }
+      toggleFiltersBtn.addEventListener('click', (e) => { 
+          e.stopPropagation();
+          const isHidden = filtersPopover.classList.contains('hidden');
+          if (isHidden) {
+              filtersPopover.classList.remove('hidden');
+              setTimeout(() => {
+                  filtersPopover.classList.add('scale-100', 'opacity-100');
+                  filtersPopover.classList.remove('scale-95', 'opacity-0');
+              }, 10);
+          } else {
+              filtersPopover.classList.remove('scale-100', 'opacity-100');
+              filtersPopover.classList.add('scale-95', 'opacity-0');
+              filtersPopover.addEventListener('transitionend', function handler() {
+                  filtersPopover.classList.add('hidden');
+                  filtersPopover.removeEventListener('transitionend', handler);
+              }, { once: true });
+          }
       });
 
-      // Ocultar el pop-over si se hace clic fuera de él
-      document.addEventListener('click', (e) => {
+      document.addEventListener('click', (e) => { 
           if (!filtersPopover.contains(e.target) && !toggleFiltersBtn.contains(e.target)) {
               filtersPopover.classList.remove('scale-100', 'opacity-100');
               filtersPopover.classList.add('scale-95', 'opacity-0');
               setTimeout(() => {
                   filtersPopover.classList.add('hidden');
-              }, 200); // 200ms para que la transición termine
+              }, 200);
           }
       });
 
-      // --- MANEJO DE EVENTOS DE FILTRADO ---
       const updateFilters = () => {
           currentFilters.semestre = filterSemestreEl.value;
           currentFilters.carrera = filterCarreraEl.value;
-          render(); // Vuelve a renderizar la tabla con los nuevos filtros
+          paginationState.currentPage = 1;
+          render();
       }
 
       filterSemestreEl.addEventListener('change', updateFilters);
       filterCarreraEl.addEventListener('change', updateFilters);
 
-      // Función para limpiar ambos filtros y actualizar
       clearFiltersBtn.addEventListener('click', (e) => {
           e.preventDefault();
           filterSemestreEl.value = '';
@@ -688,168 +821,169 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
               filtersPopover.classList.add('hidden');
           }, 200);
       });
-      // --- FIN MANEJO DE EVENTOS DE FILTRADO ---
 
-      // --- MANEJO DE EVENTOS DE BÚSQUEDA ---
       searchInput.addEventListener('input', () => {
+          paginationState.currentPage = 1;
           render();
       });
-      // --- FIN MANEJO DE EVENTOS DE BÚSQUEDA ---
 
-
-      // // NUEVO: EVENTO SELECCIONAR TODO EN CABECERA
-      selectAllCheckbox?.addEventListener('change', (e) => {
-        const rawList = readLocal();
-        const filteredList = applyFilters(rawList); // Solo seleccionar los visibles actualmente
-
-        if (e.target.checked) {
-            filteredList.forEach(s => selectedStudentIds.add(s.id));
-        } else {
-            filteredList.forEach(s => selectedStudentIds.delete(s.id));
-        }
-        render();
+      prevPageBtn.addEventListener('click', () => {
+          if (paginationState.currentPage > 1) {
+              paginationState.currentPage--;
+              render();
+              document.getElementById('table-container').querySelector('.overflow-x-auto').scrollTop = 0;
+          }
+      });
+      nextPageBtn.addEventListener('click', () => {
+          if (paginationState.currentPage < paginationState.totalPages) {
+              paginationState.currentPage++;
+              render();
+              document.getElementById('table-container').querySelector('.overflow-x-auto').scrollTop = 0;
+          }
       });
 
-      // // NUEVO: EVENTO ELIMINACIÓN MASIVA
-      deleteSelectedBtn.addEventListener('click', () => {
-        const count = selectedStudentIds.size;
-        if (!confirm(`⚠️ Advertencia Crítica: ¿Está seguro de que desea ELIMINAR permanentemente a los ${count} estudiantes seleccionados?`)) {
-            return;
-        }
-
-        const list = readLocal();
-        // Filtrar la lista local quitando los que tengan ID presente en el Set de seleccionados
-        const newList = list.filter(s => !selectedStudentIds.has(s.id));
-        
-        writeLocal(newList);
-        selectedStudentIds.clear(); // Limpiar el Set
-        showMsg(`${count} estudiantes eliminados con éxito. ❌`);
-        render();
-        setFormVisibility(false);
-      });
-
-
-      // --- LÓGICA DE EXPORTACIÓN ---
+      selectAllCheckbox.addEventListener('change', handleSelectAll);
+      deleteSelectedBtn.addEventListener('click', handleMassDelete);
 
       // exportar XLSX
       exportXlsx.addEventListener('click', () => {
         try {
+          // El objeto XLSX debería estar globalmente disponible si la librería cargó
           if (typeof XLSX === 'undefined') {
-              showMsg('Error: La librería XLSX no se ha cargado correctamente.', true);
-              return;
+            showMsg('Error: La librería XLSX no se ha cargado. Verifique la consola (F12) y que el archivo xlsx.min.js esté en /public/js.', true);
+            return;
           }
-
           const list = getExportList().map((s, i) => ({
-            '#': i + 1,
-            'Número de Control': s.numControl,
-            Nombre: s.nombre,
-            'Apellido Paterno': s.apellidoP,
-            'Apellido Materno': s.apellidoM,
-            Semestre: s.semestre,
-            Carrera: (CARRERA_MAP[s.carrera] || s.carrera),
-            Correo: s.correo,
+              '#': i + 1,
+              'Número de Control': s.numControl,
+              Nombre: s.nombre,
+              'Apellido Paterno': s.apellidoP, // Cabeceras de exportación con espacio
+              'Apellido Materno': s.apellidoM, // Cabeceras de exportación con espacio
+              Semestre: s.semestre,
+              Carrera: (CARRERA_MAP[s.carrera] || s.carrera),
+              Correo: s.correo,
           }));
 
           const ws = XLSX.utils.json_to_sheet(list);
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, 'students');
+
           const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
 
           function s2ab(s) {
-            const buf = new ArrayBuffer(s.length);
-            const view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-            return buf;
+              const buf = new ArrayBuffer(s.length);
+              const view = new Uint8Array(buf);
+              for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+              return buf;
           }
-
-          const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+          
+          // Corrección de exportación para la descarga
+          const blob = new Blob([s2ab(wbout)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); 
           const url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = 'matrícula_estudiantil.xlsx'; a.click(); URL.revokeObjectURL(url);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'matrícula_estudiantil.xlsx';
+          a.click();
+          
+          // Retrasar la revocación para dar tiempo al navegador de iniciar la descarga
+          setTimeout(() => URL.revokeObjectURL(url), 100); 
 
           showMsg('Listado exportado a Excel. 📊', false);
+
         } catch (err) {
-          console.error(err); showMsg('Error al exportar a XLSX.', true);
+          console.error(err);
+          showMsg('Error al exportar a XLSX. Verifique que la librería esté cargada y que no haya errores previos.', true);
         }
       });
 
-      // exportar CSV simple
-      exportCsv.addEventListener('click', () => {
-        try {
-          const list = getExportList();
-          // Encabezados sin 'password'
-          const headers = ['numControl','nombre','apellidoP','apellidoM','semestre','carrera','correo'];
-
-          const rows = [headers.join(',')].concat(list.map(s =>
-            headers.map(h => `"${String(s[h] ?? '').replace(/"/g,'""')}"`).join(',')
-          ));
-
-          const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a'); a.href = url; a.download = 'matrícula_estudiantil.csv'; a.click(); URL.revokeObjectURL(url);
-
-          showMsg('Listado exportado a CSV. 📝', false);
-        } catch (err) {
-          console.error(err); showMsg('Error al exportar a CSV.', true);
-        }
-      });
-
-      // // NUEVO: Lógica de IMPORTACIÓN Modificada para evitar duplicados por Num Control
+      // Lógica de IMPORTACIÓN Masiva (Upsert por numControl)
       importFile.addEventListener('change', (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
 
         if (typeof XLSX === 'undefined') {
-              showMsg('Error: La librería XLSX no se ha cargado correctamente.', true);
-              e.target.value = ''; // Limpiar el input
-              return;
+          showMsg('Error: La librería XLSX no se ha cargado correctamente. Verifique que el archivo xlsx.min.js esté en /public/js.', true);
+          e.target.value = '';
+          return;
         }
 
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onload = function(e) {
           try {
-            const data = ev.target.result;
+            const data = e.target.result;
             const workbook = XLSX.read(data, { type: 'binary' });
-            const first = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[first];
-            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
             
+            // Usar raw:false para obtener los valores formateados
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, dateNF: "yyyy-mm-dd" });
+
+            if (json.length < 2) {
+              showMsg('El archivo está vacío o solo contiene la cabecera.', true);
+              e.target.value = '';
+              return;
+            }
+
+            const header = json[0].map(h => normalizeForSearch(h));
+            
+            const numControlCol = header.indexOf(normalizeForSearch('numcontrol'));
+            const nombreCol = header.indexOf(normalizeForSearch('nombre'));
+            
+            // BUSCA APELLIDOPATERNO Y APELLIDOMATERNO SIN ESPACIOS
+            const apellidoPCol = header.indexOf(normalizeForSearch('apellidopaterno'));
+            const apellidoMCol = header.indexOf(normalizeForSearch('apellidomaterno'));
+            
+            const semestreCol = header.indexOf(normalizeForSearch('semestre'));
+            const carreraCol = header.indexOf(normalizeForSearch('carrera'));
+            const correoCol = header.indexOf(normalizeForSearch('correo'));
+
+            // Se relaja la verificación para permitir ApellidoMaterno opcional
+            if ([numControlCol, nombreCol, apellidoPCol, semestreCol, carreraCol, correoCol].some(i => i === -1)) {
+              showMsg('Error: El formato del Excel no coincide con el esperado. Revise que las cabeceras sean exactamente: NumControl, Nombre, ApellidoPaterno, ApellidoMaterno, Semestre, Carrera, Correo.', true);
+              e.target.value = '';
+              return;
+            }
+
+            let list = readLocal();
             let added = 0;
             let updated = 0;
-            
-            const list = readLocal();
 
-            rows.forEach(r => {
-              // // NUEVO: Paso 1. Obtener y normalizar Número de Control (identificador único funcional)
-              const numControlRaw = (r.numControl || r['Número de Control'] || r['numcontrol'] || '').toString().trim().toUpperCase();
+            json.slice(1).forEach(row => {
+              // Si la fila no tiene un número de control, se omite
+              if (!row[numControlCol] || String(row[numControlCol]).trim() === '') return;
 
-              // Validación de fila mínima
-              if (!numControlRaw || !(r.nombre || r.name)) return;
+              // Lógica de mapeo de nombre de carrera a código
+              let carreraValue = String(row[carreraCol] || '').trim();
+              let carreraCode = carreraValue.toUpperCase(); 
 
-              // // NUEVO: Paso 2. Comprobar si ya existe un alumno con ese Número de Control
-              const existingIndex = list.findIndex(existing => existing.numControl === numControlRaw);
+              if (carreraCode.length > 5 || carreraCode.includes(' ')) {
+                  const normalizedName = normalizeForSearch(carreraValue);
+                  carreraCode = REVERSE_CAREER_MAP[normalizedName] || '';
+              } else if (!CARRERA_MAP[carreraCode]) {
+                   // Si es un código corto que no existe, lo ponemos vacío
+                   carreraCode = '';
+              }
+              // FIN LÓGICA DE CAMBIO
 
-              // // NUEVO: Paso 3. Preparar objeto base
               const s = {
-                numControl: numControlRaw,
-                nombre: capitalizeName(r.nombre || r.name || ''),
-                apellidoP: capitalizeName(r.apellidoP || r.apellidoPaterno || ''),
-                apellidoM: capitalizeName(r.apellidoM || r.apellidoMaterno || ''),
-                semestre: Math.max(0, Number(r.semestre || r.sem || 0)),
-                carrera: (r.carrera || r.Carrera || '').toString().trim().toUpperCase(),
-                correo: (r.correo || r.email || '').toString().trim().toLowerCase(),
+                  numControl: String(row[numControlCol]).toUpperCase().trim(),
+                  nombre: capitalizeName(row[nombreCol] || ''),
+                  apellidoP: capitalizeName(row[apellidoPCol] || ''),
+                  apellidoM: capitalizeName(row[apellidoMCol] || ''),
+                  semestre: parseInt(row[semestreCol] || '0', 10),
+                  carrera: carreraCode, // <--- Usamos el código de la carrera
+                  correo: String(row[correoCol] || '').toLowerCase().trim(),
               };
 
+              // Buscar si ya existe por numControl
+              const existingIndex = list.findIndex(e => e.numControl === s.numControl);
+
               if (existingIndex !== -1) {
-                  // --- ES UN DUPLICADO ---
-                  // OPCIÓN SELECCIONADA: Actualizar el registro existente (Upsert)
-                  const existing = list[existingIndex];
-                  s.id = existing.id; // IMPORTANTE: Mantener el ID original para no romper referencias
+                  s.id = list[existingIndex].id; // Conservar el ID existente
                   list[existingIndex] = s;
                   updated++;
               } else {
-                  // --- ES NUEVO ---
-                  // Generar ID único solo si no existe
-                  s.id = Date.now().toString() + Math.random().toString(36).slice(2,7);
+                  s.id = Date.now().toString() + Math.random().toString(36).slice(2, 7);
                   list.unshift(s);
                   added++;
               }
@@ -857,6 +991,7 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
 
             if (added > 0 || updated > 0) {
               writeLocal(list);
+              paginationState.currentPage = 1;
               render();
               showMsg(`Carga Masiva: ${added} agregados, ${updated} actualizados. 💾`);
               window.dispatchEvent(new CustomEvent('students:imported', { detail: { added, updated } }));
@@ -871,12 +1006,11 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
       });
 
 
-      // Limpiar localStorage
       clearBtn.addEventListener('click', () => {
         if (!confirm('⚠️ Advertencia: ¿Está seguro de que quiere ELIMINAR TODOS los datos locales de estudiantes? Esta acción es irreversible.')) return;
         localStorage.removeItem(STORAGE_KEY);
-        // // NUEVO: Limpiar selección
         selectedStudentIds.clear();
+        paginationState.currentPage = 1;
         render();
         setFormVisibility(false);
         showMsg('Datos de la matrícula borrados del almacenamiento local. 🗑️', false);
@@ -884,25 +1018,7 @@ const initialJSON = JSON.stringify(students).replace(/</g, '\\u003c');
 
       // Inicialización
       render();
-      setFormVisibility(false);
+
     })();
   </script>
-      <!-- BOTÓN FLOTANTE DE RECARGA -->
-    <button 
-        onclick="location.reload()" 
-        class="fixed bottom-6 right-6 bg-white text-gray-800 shadow-lg border border-gray-300 w-12 h-12 
-               rounded-full flex items-center justify-center hover:bg-gray-100 hover:shadow-xl 
-               transition transform hover:scale-105 z-50"
-        title="Recargar página"
-    >
-        <svg xmlns="http://www.w3.org/2000/svg" 
-             class="w-6 h-6" 
-             fill="none" 
-             viewBox="0 0 24 24" 
-             stroke="currentColor" 
-             stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" 
-                d="M4 4v6h6M20 20v-6h-6M5 19a8 8 0 0112-12l1.5 1.5M19 5l-1.5 1.5" />
-        </svg>
-    </button>
 </Layout>
