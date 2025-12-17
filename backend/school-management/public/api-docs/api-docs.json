@@ -6056,190 +6056,6 @@
                 },
                 "type": "object"
             },
-            "ConceptNameAndAmountResponse": {
-                "properties": {
-                    "user_name": {
-                        "description": "Nombre del usuario asociado al pago",
-                        "type": "string",
-                        "example": "Juan Pérez",
-                        "nullable": true
-                    },
-                    "concept_name": {
-                        "description": "Nombre del concepto de pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "ConceptsToDashboardResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID del concepto",
-                        "type": "integer",
-                        "example": 1,
-                        "nullable": true
-                    },
-                    "concept_name": {
-                        "description": "Nombre del concepto de pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "status": {
-                        "description": "Estado del concepto",
-                        "type": "string",
-                        "example": "activo",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del concepto",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "applies_to": {
-                        "description": "A quién aplica el concepto",
-                        "type": "string",
-                        "example": "todos",
-                        "nullable": true
-                    },
-                    "start_date": {
-                        "description": "Fecha de inicio de validez",
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-11-01",
-                        "nullable": true
-                    },
-                    "end_date": {
-                        "description": "Fecha de fin de validez",
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-12-01",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PendingPaymentConceptsResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID del concepto pendiente",
-                        "type": "integer",
-                        "example": 1,
-                        "nullable": true
-                    },
-                    "concept_name": {
-                        "description": "Nombre del concepto pendiente",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "description": {
-                        "description": "Descripción del concepto",
-                        "type": "string",
-                        "example": "Pago correspondiente al semestre 2025-2",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del concepto pendiente",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "start_date": {
-                        "description": "Fecha de inicio del concepto pendiente",
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-11-01",
-                        "nullable": true
-                    },
-                    "end_date": {
-                        "description": "Fecha de finalización del concepto pendiente",
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-12-01",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PendingSummaryResponse": {
-                "properties": {
-                    "totalAmount": {
-                        "description": "Monto total pendiente",
-                        "type": "string",
-                        "example": "4500.00",
-                        "nullable": true
-                    },
-                    "totalCount": {
-                        "description": "Cantidad total de conceptos pendientes",
-                        "type": "integer",
-                        "example": 3,
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "DisplayPaymentMethodResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID del método de pago",
-                        "type": "integer",
-                        "example": 1,
-                        "nullable": true
-                    },
-                    "brand": {
-                        "description": "Marca de la tarjeta",
-                        "type": "string",
-                        "example": "Visa",
-                        "nullable": true
-                    },
-                    "masked_card": {
-                        "description": "Número de tarjeta enmascarado",
-                        "type": "string",
-                        "example": "**** **** **** 4242",
-                        "nullable": true
-                    },
-                    "expiration_date": {
-                        "description": "Fecha de expiración de la tarjeta",
-                        "type": "string",
-                        "example": "12/25",
-                        "nullable": true
-                    },
-                    "status": {
-                        "description": "Estado del método de pago",
-                        "type": "string",
-                        "example": "active",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "SetupCardResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID de la configuración de la tarjeta",
-                        "type": "string",
-                        "example": "pm_01HXXXXXX",
-                        "nullable": true
-                    },
-                    "url": {
-                        "description": "URL para completar el setup de la tarjeta",
-                        "type": "string",
-                        "example": "https://example.com/setup/pm_01HXXXXXX",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
             "PaymentDataResponse": {
                 "properties": {
                     "id": {
@@ -6439,6 +6255,190 @@
                 },
                 "type": "object"
             },
+            "ConceptNameAndAmountResponse": {
+                "properties": {
+                    "user_name": {
+                        "description": "Nombre del usuario asociado al pago",
+                        "type": "string",
+                        "example": "Juan Pérez",
+                        "nullable": true
+                    },
+                    "concept_name": {
+                        "description": "Nombre del concepto de pago",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ConceptsToDashboardResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID del concepto",
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "concept_name": {
+                        "description": "Nombre del concepto de pago",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "status": {
+                        "description": "Estado del concepto",
+                        "type": "string",
+                        "example": "activo",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del concepto",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "applies_to": {
+                        "description": "A quién aplica el concepto",
+                        "type": "string",
+                        "example": "todos",
+                        "nullable": true
+                    },
+                    "start_date": {
+                        "description": "Fecha de inicio de validez",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-11-01",
+                        "nullable": true
+                    },
+                    "end_date": {
+                        "description": "Fecha de fin de validez",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-01",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PendingPaymentConceptsResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID del concepto pendiente",
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "concept_name": {
+                        "description": "Nombre del concepto pendiente",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "description": {
+                        "description": "Descripción del concepto",
+                        "type": "string",
+                        "example": "Pago correspondiente al semestre 2025-2",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del concepto pendiente",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "start_date": {
+                        "description": "Fecha de inicio del concepto pendiente",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-11-01",
+                        "nullable": true
+                    },
+                    "end_date": {
+                        "description": "Fecha de finalización del concepto pendiente",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-01",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PendingSummaryResponse": {
+                "properties": {
+                    "totalAmount": {
+                        "description": "Monto total pendiente",
+                        "type": "string",
+                        "example": "4500.00",
+                        "nullable": true
+                    },
+                    "totalCount": {
+                        "description": "Cantidad total de conceptos pendientes",
+                        "type": "integer",
+                        "example": 3,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "DisplayPaymentMethodResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID del método de pago",
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "brand": {
+                        "description": "Marca de la tarjeta",
+                        "type": "string",
+                        "example": "Visa",
+                        "nullable": true
+                    },
+                    "masked_card": {
+                        "description": "Número de tarjeta enmascarado",
+                        "type": "string",
+                        "example": "**** **** **** 4242",
+                        "nullable": true
+                    },
+                    "expiration_date": {
+                        "description": "Fecha de expiración de la tarjeta",
+                        "type": "string",
+                        "example": "12/25",
+                        "nullable": true
+                    },
+                    "status": {
+                        "description": "Estado del método de pago",
+                        "type": "string",
+                        "example": "active",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "SetupCardResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID de la configuración de la tarjeta",
+                        "type": "string",
+                        "example": "pm_01HXXXXXX",
+                        "nullable": true
+                    },
+                    "url": {
+                        "description": "URL para completar el setup de la tarjeta",
+                        "type": "string",
+                        "example": "https://example.com/setup/pm_01HXXXXXX",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "UserChangedStatusResponse": {
                 "description": "Respuesta después de cambiar el estado de uno o más usuarios",
                 "properties": {
@@ -6623,6 +6623,18 @@
                         "description": "Monto total pendiente",
                         "type": "string",
                         "example": "4500.00",
+                        "nullable": true
+                    },
+                    "total_paid": {
+                        "description": "Monto total pagado",
+                        "type": "string",
+                        "example": "7500.00",
+                        "nullable": true
+                    },
+                    "num_paid": {
+                        "description": "Número de conceptos pagados",
+                        "type": "integer",
+                        "example": 1,
                         "nullable": true
                     }
                 },
@@ -6875,6 +6887,11 @@
                         "type": "string",
                         "example": "cs_test_a1b2c3d4",
                         "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-01"
                     }
                 },
                 "type": "object"
@@ -7224,6 +7241,20 @@
                 },
                 "type": "object"
             },
+            "PaymentStatus": {
+                "description": "Estatus válidos de un pago",
+                "type": "string",
+                "enum": [
+                    "succeeded",
+                    "requires_action",
+                    "paid",
+                    "unpaid",
+                    "pending",
+                    "overpaid",
+                    "underpaid"
+                ],
+                "example": "paid"
+            },
             "PaymentConceptApplicantType": {
                 "description": "Tags de casos especiales",
                 "type": "string",
@@ -7256,20 +7287,6 @@
                     "eliminado"
                 ],
                 "example": "activo"
-            },
-            "PaymentStatus": {
-                "description": "Estatus válidos de un pago",
-                "type": "string",
-                "enum": [
-                    "succeeded",
-                    "requires_action",
-                    "paid",
-                    "unpaid",
-                    "pending",
-                    "overpaid",
-                    "underpaid"
-                ],
-                "example": "paid"
             },
             "RelationshipType": {
                 "description": "Tipo de relación entre padre y estudiante",

@@ -5,6 +5,7 @@ namespace App\Core\Infraestructure\Repositories\Query\User;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\Mappers\UserMapper as MappersUserMapper;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -117,18 +118,21 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         $usersQuery = EloquentUser::query()->where('status', UserStatus::ACTIVO)->select('id', 'name', 'last_name', 'email');
 
         $usersQuery = match($appliesTo) {
-            'carrera' => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {
+            PaymentConceptAppliesTo::CARRERA->value => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {
                 $q->whereIn('career_id', $concept->getCareerIds());
             }),
-            'semestre' => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {
+            PaymentConceptAppliesTo::SEMESTRE->value => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {
                 $q->whereIn('semester', $concept->getSemesters());
             }),
-            'carrera_semestre' => $usersQuery->whereHas('studentDetail', function($q) use ($concept){
+            PaymentConceptAppliesTo::CARRERA_SEMESTRE->value => $usersQuery->whereHas('studentDetail', function($q) use ($concept){
                 $q->whereIn('career_id', $concept->getCareerIds())
                 ->whereIn('semester', $concept->getSemesters());
             }),
-            'estudiantes' => $usersQuery->whereIn('id', $concept->getUserIds()),
-            'todos' => $usersQuery,
+            PaymentConceptAppliesTo::ESTUDIANTES->value => $usersQuery->whereIn('id', $concept->getUserIds()),
+            PaymentConceptAppliesTo::TODOS->value => $usersQuery,
+            PaymentConceptAppliesTo::TAG->value => $usersQuery->whereHas('applicantTypes', function($q) use ($concept) {
+                $q->whereIn('tag', $concept->getApplicantTag());
+            }),
         };
 
         $exceptionIds = $concept->getExceptionUsersIds();
