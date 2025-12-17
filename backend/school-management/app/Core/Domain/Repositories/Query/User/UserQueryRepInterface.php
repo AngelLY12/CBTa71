@@ -5,6 +5,7 @@ namespace App\Core\Domain\Repositories\Query\User;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Models\User as ModelsUser;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -21,7 +22,7 @@ interface UserQueryRepInterface{
     public function getRecipients(PaymentConcept $concept, string $appliesTo): array;
     public function hasRole(int $userId, string $role):bool;
     public function getStudentsWithPendingSummary(array $userIds): array;
-    public function findAllUsers(int $perPage, int $page): LengthAwarePaginator;
+    public function findAllUsers(int $perPage, int $page, ?UserStatus $status = null): LengthAwarePaginator;
     public function findAuthUser(): ?User;
     public function findByIds(array $ids): iterable;
     public function findUserRoles(int $userId): array;

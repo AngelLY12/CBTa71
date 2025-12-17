@@ -528,6 +528,13 @@ public function updatePermissions(){}
  *         required=false,
  *         @OA\Schema(type="integer", default=1)
  *     ),
+ *     @OA\Parameter (
+ *           name="status",
+ *           in="query",
+ *           description="Filtrar usuarios por estatus",
+ *           required=false,
+ *           @OA\Schema(ref="#/components/schemas/UserStatus")
+ *     ),
  *
  *     @OA\Response(
  *         response=200,
@@ -571,7 +578,12 @@ public function updatePermissions(){}
  *                                 @OA\Property(property="n_control", type="integer", example=21432),
  *                                 @OA\Property(property="semestre", type="integer", example=5),
  *                                 @OA\Property(property="group", type="string", example="B")
- *                             )
+ *                             ),
+ *                             @OA\Property(
+ *                                  property="status",
+ *                                  ref="#/components/schemas/UserStatus"
+ *                              ),
+ *
  *                         )
  *                     )
  *                 )

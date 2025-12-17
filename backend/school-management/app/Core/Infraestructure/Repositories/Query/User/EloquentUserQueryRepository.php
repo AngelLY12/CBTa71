@@ -231,16 +231,20 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         ]))->toArray();
     }
 
-    public function findAllUsers(int $perPage, int $page): LengthAwarePaginator
+    public function findAllUsers(int $perPage, int $page, ?UserStatus $status = null): LengthAwarePaginator
     {
         $paginator = EloquentUser::with([
             'roles:id,name',
             'permissions:id,name'
         ])
+
         ->whereDoesntHave('roles', function($query) {
             $query->where('name', UserRoles::ADMIN->value);
         })
-        ->select('id','name','last_name','email','curp', 'phone_number','address','blood_type')
+            ->when($status, fn ($q) =>
+            $q->where('status', $status->value)
+            )
+        ->select('id','name','last_name','email','curp', 'phone_number','address','blood_type', 'status')
         ->paginate($perPage, ['*'], 'page', $page);
 
         $paginator->getCollection()->transform(function ($user) {

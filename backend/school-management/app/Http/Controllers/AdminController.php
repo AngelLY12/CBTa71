@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Core\Application\Mappers\StudentDetailMapper;
 use App\Core\Application\Mappers\UserMapper;
 use App\Core\Application\Services\Admin\AdminServiceFacades;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Http\Requests\Admin\AttachStudentRequest;
 use App\Http\Requests\Admin\ChangeUserStatusRequest;
 use App\Http\Requests\Admin\FindPermissionsRequest;
 use App\Http\Requests\Admin\RegisterUserRequest;
+use App\Http\Requests\Admin\ShowUsersPaginationRequest;
 use App\Http\Requests\Admin\UpdatePermissionsRequest;
 use App\Http\Requests\Admin\UpdateRolesRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
@@ -111,12 +113,13 @@ class AdminController extends Controller
 
     }
 
-    public function index(PaginationRequest $request)
+    public function index(ShowUsersPaginationRequest $request)
     {
         $forceRefresh = $request->boolean('forceRefresh');
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
-        $users=$this->service->showAllUsers($perPage, $page,$forceRefresh);
+        $status=$request->validated()['status'] ?? null;
+        $users=$this->service->showAllUsers($perPage, $page,$forceRefresh, $status);
         return Response::success(['users' => $users], 'Usuarios encontrados.');
 
     }

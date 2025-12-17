@@ -36,6 +36,7 @@ use App\Core\Domain\Entities\StudentDetail;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Cache\AdminCacheSufix;
 use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Infraestructure\Cache\CacheService;
 
 class AdminServiceFacades
@@ -114,10 +115,10 @@ class AdminServiceFacades
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $import;
     }
-    public function showAllUsers(int $perPage, int $page, bool $forceRefresh): PaginatedResponse
+    public function showAllUsers(int $perPage, int $page, bool $forceRefresh, UserStatus $status): PaginatedResponse
     {
-        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage");
-        return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page));
+        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage:$status->value");
+        return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page, $status));
     }
     public function syncPermissions(UpdateUserPermissionsDTO $dto):array
     {

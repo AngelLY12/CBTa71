@@ -772,6 +772,15 @@
                             "type": "integer",
                             "default": 1
                         }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrar usuarios por estatus",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/UserStatus"
+                        }
                     }
                 ],
                 "responses": {
@@ -6631,6 +6640,12 @@
                         "example": "7500.00",
                         "nullable": true
                     },
+                    "expired_amount": {
+                        "description": "Monto total expirado",
+                        "type": "string",
+                        "example": "500.00",
+                        "nullable": true
+                    },
                     "num_paid": {
                         "description": "Número de conceptos pagados",
                         "type": "integer",
@@ -7487,6 +7502,35 @@
                         "type": "string",
                         "format": "date",
                         "example": "2025-01-01"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/UserStatus"
+                    }
+                },
+                "type": "object"
+            },
+            "ShowUsersPaginationRequest": {
+                "properties": {
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean"
+                    },
+                    "only_this_year": {
+                        "description": "Indica si se debe mostrar datos de este año o de todos (opcional, aplica solo en Dashboard)",
+                        "type": "boolean"
+                    },
+                    "perPage": {
+                        "description": "Número de elementos por página (opcional, entre 1 y 200)",
+                        "type": "integer",
+                        "maximum": 200,
+                        "minimum": 1,
+                        "example": 20
+                    },
+                    "page": {
+                        "description": "Número de página (opcional, mínimo 1)",
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 1
                     },
                     "status": {
                         "$ref": "#/components/schemas/UserStatus"

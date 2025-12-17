@@ -4,6 +4,7 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\Mappers\GeneralMapper;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
 class ShowAllUsersUseCase
@@ -14,9 +15,9 @@ class ShowAllUsersUseCase
     {
     }
 
-    public function execute(int $perPage, int $page): PaginatedResponse
+    public function execute(int $perPage, int $page, UserStatus $status): PaginatedResponse
     {
-        $users= $this->uqRepo->findAllUsers($perPage, $page);
+        $users= $this->uqRepo->findAllUsers($perPage, $page, $status);
         return GeneralMapper::toPaginatedResponse($users->items(), $users);
     }
 }
