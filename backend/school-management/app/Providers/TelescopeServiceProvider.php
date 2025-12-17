@@ -15,7 +15,9 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
     public function register(): void
     {
         // Telescope::night();
-
+        if (! config('telescope.enabled')) {
+            return;
+        }
         $this->hideSensitiveRequestDetails();
 
         $isLocal = $this->app->environment('local');
@@ -38,6 +40,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
         if ($this->app->environment('local')) {
             return;
         }
+
 
         Telescope::hideRequestParameters(['_token']);
 
