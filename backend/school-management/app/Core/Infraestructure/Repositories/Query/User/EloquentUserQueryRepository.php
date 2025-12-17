@@ -4,6 +4,7 @@ namespace App\Core\Infraestructure\Repositories\Query\User;
 
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\Mappers\UserMapper as MappersUserMapper;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class EloquentUserQueryRepository implements UserQueryRepInterface
 {
@@ -153,9 +155,29 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
     {
         if (empty($userIds)) return [];
 
+        $paidTotals = DB::table('payments')
+            ->select(
+                'payments.user_id',
+                DB::raw('COALESCE(SUM(payments.amount_received), 0) AS total_paid'),
+                DB::raw('COUNT(payments.id) AS total_paid_concepts')
+            )
+            ->whereIn('payments.status', [
+                PaymentStatus::SUCCEEDED->value,
+                PaymentStatus::OVERPAID->value,
+            ])
+            ->whereIn('payments.user_id', $userIds)
+            ->groupBy('payments.user_id');
+
         $rows = $this->basePendingLeftJoinQuery($userIds)
             ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
             ->leftJoin('careers', 'careers.id', '=', 'student_details.career_id')
+            ->leftJoinSub(
+                $paidTotals,
+                'paid_totals',
+                'paid_totals.user_id',
+                '=',
+                'users.id'
+            )
             ->selectRaw("
                 users.id AS user_id,
                 CONCAT(users.name, ' ', users.last_name) AS full_name,
@@ -166,9 +188,19 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                 COALESCE(
                     SUM(CASE WHEN pending_concepts.is_expired = 1 THEN 1 ELSE 0 END),
                     0
-                ) AS expired_count
+                ) AS expired_count,
+                COALESCE(paid_totals.total_paid, 0) AS total_paid,
+                COALESCE(paid_totals.total_paid_concepts, 0) AS total_paid_concepts
             ")
-            ->groupBy('users.id', 'users.name', 'users.last_name', 'student_details.semestre', 'careers.career_name')
+            ->groupBy(
+                'users.id',
+                'users.name',
+                'users.last_name',
+                'student_details.semestre',
+                'careers.career_name',
+                'paid_totals.total_paid',
+                'paid_totals.total_paid_concepts'
+            )
             ->get();
 
         return $rows->map(fn($r) => MappersUserMapper::toUserWithPendingSummaryResponse([
@@ -179,11 +211,10 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             'total_count'  => (int)$r->total_count,
             'expired_count' => (int) $r->expired_count,
             'total_amount' => $r->total_amount,
+            'total_paid'     => $r->total_paid,
+            'total_paid_concepts' => (int) $r->total_paid_concepts,
         ]))->toArray();
     }
-
-
-
 
     public function findAllUsers(int $perPage, int $page): LengthAwarePaginator
     {

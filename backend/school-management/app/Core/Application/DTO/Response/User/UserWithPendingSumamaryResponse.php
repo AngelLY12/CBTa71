@@ -13,6 +13,8 @@ namespace App\Core\Application\DTO\Response\User;
  *     @OA\Property(property="num_pending", type="integer", nullable=true, description="Número de conceptos pendientes", example=3),
  *     @OA\Property(property="num_expired", type="integer", nullable=true, description="Número de conceptos vencidos", example=1),
  *     @OA\Property(property="total_amount_pending", type="string", nullable=true, description="Monto total pendiente", example="4500.00")
+ *     @OA\Property(property="total_paid", type="string", nullable=true, description="Monto total pagado", example="7500.00")
+ *     @OA\Property(property="num_paid", type="integer", nullable=true, description="Número de conceptos pagados", example=1),
  * )
  */
 class UserWithPendingSumamaryResponse{
@@ -23,7 +25,9 @@ class UserWithPendingSumamaryResponse{
         public readonly ?string $career_name,
         public readonly ?int $num_pending,
         public readonly ?int $num_expired,
-        public readonly ?string $total_amount_pending
+        public readonly ?string $total_amount_pending,
+        public readonly ?string $total_paid,
+        public readonly ?int $num_paid,
     )
     {
     }

@@ -136,7 +136,9 @@ class UserMapper{
             career_name: $studentSummary['career'] ?? null,
             num_pending: $studentSummary['total_count'] ?? null,
             num_expired: $studentSummary['expired_count'] ?? null,
-            total_amount_pending: $studentSummary['total_amount'] ?? null
+            total_amount_pending: $studentSummary['total_amount'] ?? null,
+            total_paid: $studentSummary['total_paid'] ?? null,
+            num_paid: $studentSummary['total_paid_concepts'] ?? null,
         );
     }
 
