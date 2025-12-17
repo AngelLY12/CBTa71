@@ -27,6 +27,15 @@ enum PaymentStatus: string
             self::SUCCEEDED->value,
             self::OVERPAID->value,
             self::PAID->value,
+        ];
+    }
+
+    public static function nonTerminalStatuses(): array
+    {
+        return [
+            self::DEFAULT->value,
+            self::UNDERPAID->value,
+            self::UNPAID->value,
             self::REQUIRES_ACTION->value,
         ];
     }

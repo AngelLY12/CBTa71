@@ -31,7 +31,8 @@ class PaymentMapper{
             status: EnumMapper::fromStripe($session->payment_status),
             payment_intent_id: null,
             url: $session->url ?? null,
-            stripe_session_id: $session->id ?? null
+            stripe_session_id: $session->id ?? null,
+            created_at: null,
         );
     }
 

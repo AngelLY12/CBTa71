@@ -4,6 +4,7 @@ namespace App\Core\Infraestructure\Mappers;
 
 use App\Models\Payment;
 use App\Core\Domain\Entities\Payment as DomainPayment;
+use Carbon\Carbon;
 
 class PaymentMapper{
 
@@ -23,6 +24,7 @@ class PaymentMapper{
             payment_intent_id:$payment->payment_intent_id ?? null,
             url:$payment->url ?? null,
             stripe_session_id:$payment->stripe_session_id ?? null,
+            created_at: $payment->created_at ? Carbon::parse($payment->created_at) : null,
         );
     }
 

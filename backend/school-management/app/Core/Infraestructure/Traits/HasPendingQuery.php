@@ -66,7 +66,7 @@ trait HasPendingQuery
             ->where(function($q) {
                 $q->whereNull('payments.id')
                     ->orWhere(function($q2) {
-                        $q2->whereIn('payments.status', [PaymentStatus::UNDERPAID->value]);
+                        $q2->whereIn('payments.status', PaymentStatus::nonTerminalStatuses());
                         $q2->whereRaw('payments.id = (
                           SELECT MAX(p2.id)
                           FROM payments p2

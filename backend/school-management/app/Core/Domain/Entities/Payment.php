@@ -3,6 +3,7 @@
 namespace App\Core\Domain\Entities;
 
 use App\Core\Domain\Enum\Payment\PaymentStatus;
+use Carbon\Carbon;
 
 /**
  * @OA\Schema(
@@ -24,7 +25,8 @@ use App\Core\Domain\Enum\Payment\PaymentStatus;
  *     @OA\Property(property="status", ref="#/components/schemas/PaymentStatus", example="pendiente"),
  *     @OA\Property(property="payment_intent_id", type="string", nullable=true, example="pi_1Hh1Xx2eZvKYlo2Cd1234567"),
  *     @OA\Property(property="url", type="string", nullable=true, example="https://checkout.stripe.com/pay/cs_test_a1b2c3d4"),
- *     @OA\Property(property="stripe_session_id", type="string", nullable=true, example="cs_test_a1b2c3d4")
+ *     @OA\Property(property="stripe_session_id", type="string", nullable=true, example="cs_test_a1b2c3d4"),
+ *     @OA\Property(property="created_at", type="string", format="date", example="2025-09-01"),
  * )
  */
 class Payment
@@ -46,7 +48,8 @@ class Payment
         public PaymentStatus $status,
         public ?string $payment_intent_id=null,
         public ?string $url,
-        public ?string $stripe_session_id
+        public ?string $stripe_session_id,
+        public ?Carbon $created_at,
     ) {}
     private function amountAsFloat(?string $value): float
     {
