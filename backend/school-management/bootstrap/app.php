@@ -51,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule){
+        $schedule->command('payments:dispatch-reconcile-payments-job')->everyTwoHours()->withoutOverlapping()->onOneServer();
         $schedule->command('backup:dispatch-create-backup-job')->dailyAt('02:00');
         $schedule->command('app:dispatch-promote-students-job')
         ->dailyAt('23:55')

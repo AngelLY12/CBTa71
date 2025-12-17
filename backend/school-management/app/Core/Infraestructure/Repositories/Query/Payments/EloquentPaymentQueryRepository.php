@@ -107,8 +107,11 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
      */
     public function getPaidWithinLastMonthCursor(): Generator
     {
-        foreach (EloquentPayment::where('status', PaymentStatus::PAID)
-                ->where('created_at', '>=', now()->subMonths(1))
+        foreach (EloquentPayment::whereIn('status', PaymentStatus::reconcilableStatuses())
+                     ->whereBetween('created_at', [
+                         now()->subMonth(),
+                         now()->subMinutes(10),
+                     ])
                 ->cursor() as $model) {
             yield PaymentMapper::toDomain($model);
         }

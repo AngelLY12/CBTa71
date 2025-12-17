@@ -31,4 +31,14 @@ enum PaymentStatus: string
         ];
     }
 
+    public static function reconcilableStatuses(): array
+    {
+        return [
+            self::DEFAULT->value,
+            self::UNPAID->value,
+            self::REQUIRES_ACTION->value,
+            self::PAID->value,
+        ];
+    }
+
 }

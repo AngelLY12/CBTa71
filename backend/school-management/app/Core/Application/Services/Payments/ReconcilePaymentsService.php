@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\Services\Payments;
 
+use App\Core\Application\DTO\Response\General\ReconciliationResult;
 use App\Core\Application\UseCases\Payments\ReconcilePaymentUseCase;
 
 class ReconcilePaymentsService
@@ -11,8 +12,8 @@ class ReconcilePaymentsService
     )
     {
     }
-    public function reconcile():void
+    public function reconcile(): ReconciliationResult
     {
-        $this->reconcile->execute();
+        return $this->reconcile->execute();
     }
 }

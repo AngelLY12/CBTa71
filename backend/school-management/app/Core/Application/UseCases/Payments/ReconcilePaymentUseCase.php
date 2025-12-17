@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\UseCases\Payments;
 
+use App\Core\Application\DTO\Response\General\ReconciliationResult;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Traits\HasPaymentStripe;
 use App\Core\Domain\Entities\Payment;
@@ -32,10 +33,12 @@ class ReconcilePaymentUseCase
     {
         $this->setRepository($paymentRep);
     }
-    public function execute():void
+    public function execute(): ReconciliationResult
     {
+        $result = new ReconciliationResult();
         $affectedUsers = [];
         foreach ($this->pqRepo->getPaidWithinLastMonthCursor() as $payment) {
+            $result->processed++;
             try {
                 [$pi, $charge] = $this->stripe->getIntentAndCharge($payment->payment_intent_id);
 
@@ -47,18 +50,25 @@ class ReconcilePaymentUseCase
                     throw new PaymentMethodNotFoundException();
                 }
                 $newPayment=$this->updatePaymentWithStripeData($payment, $pi, $charge,$pm);
+                $result->updated++;
                 $this->notifyUser($newPayment);
+                $result->notified++;
                 $affectedUsers[] = $newPayment->user_id;
             } catch (DomainException $e) {
+                $result->failed++;
                 logger()->warning("[ReconcilePayment] {$e->getMessage()} (code: {$e->getCode()})");
             } catch (\Throwable $e) {
+                $result->failed++;
                 logger()->error("Error al reconciliar el pago {$payment->id}: {$e->getMessage()}");
             }
         }
-        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
-        foreach (array_unique($affectedUsers) as $userId) {
-            ClearStudentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
+        if ($result->updated > 0) {
+            ClearStaffCacheJob::dispatch();
+            foreach (array_unique($affectedUsers) as $userId) {
+                ClearStudentCacheJob::dispatch($userId);
+            }
         }
+        return $result;
 
     }
 
