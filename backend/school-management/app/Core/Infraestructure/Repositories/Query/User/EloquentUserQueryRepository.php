@@ -193,6 +193,16 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                     SUM(CASE WHEN pending_concepts.is_expired = 1 THEN 1 ELSE 0 END),
                     0
                 ) AS expired_count,
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN pending_concepts.is_expired = 1
+                            THEN pending_concepts.amount
+                            ELSE 0
+                        END
+                    ),
+                    0
+                ) AS expired_amount,
                 COALESCE(paid_totals.total_paid, 0) AS total_paid,
                 COALESCE(paid_totals.total_paid_concepts, 0) AS total_paid_concepts
             ")
@@ -213,10 +223,11 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             'semestre'     => $r->semestre,
             'career'       => $r->career ?? null,
             'total_count'  => (int)$r->total_count,
-            'expired_count' => (int) $r->expired_count,
             'total_amount' => $r->total_amount,
-            'total_paid'     => $r->total_paid,
+            'expired_count' => (int) $r->expired_count,
+            'expired_amount' => $r->expired_amount,
             'total_paid_concepts' => (int) $r->total_paid_concepts,
+            'total_paid'     => $r->total_paid,
         ]))->toArray();
     }
 

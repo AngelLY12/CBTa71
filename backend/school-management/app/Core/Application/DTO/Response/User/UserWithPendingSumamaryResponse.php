@@ -14,6 +14,7 @@ namespace App\Core\Application\DTO\Response\User;
  *     @OA\Property(property="num_expired", type="integer", nullable=true, description="Número de conceptos vencidos", example=1),
  *     @OA\Property(property="total_amount_pending", type="string", nullable=true, description="Monto total pendiente", example="4500.00"),
  *     @OA\Property(property="total_paid", type="string", nullable=true, description="Monto total pagado", example="7500.00"),
+ *     @OA\Property(property="expired_amount", type="string", nullable=true, description="Monto total expirado", example="500.00"),
  *     @OA\Property(property="num_paid", type="integer", nullable=true, description="Número de conceptos pagados", example=1),
  * )
  */
@@ -27,6 +28,7 @@ class UserWithPendingSumamaryResponse{
         public readonly ?int $num_expired,
         public readonly ?string $total_amount_pending,
         public readonly ?string $total_paid,
+        public readonly ?string $expired_amount,
         public readonly ?int $num_paid,
     )
     {

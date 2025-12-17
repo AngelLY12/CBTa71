@@ -138,6 +138,7 @@ class UserMapper{
             num_expired: $studentSummary['expired_count'] ?? null,
             total_amount_pending: $studentSummary['total_amount'] ?? null,
             total_paid: $studentSummary['total_paid'] ?? null,
+            expired_amount: $studentSummary['expired_amount'] ?? null,
             num_paid: $studentSummary['total_paid_concepts'] ?? null,
         );
     }
