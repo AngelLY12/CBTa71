@@ -15,7 +15,8 @@
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-permission": "^6.21",
-        "stripe/stripe-php": "^17.6"
+        "stripe/stripe-php": "^17.6",
+        "ext-bcmath": "*"
     },
     "require-dev": {
         "darkaonline/l5-swagger": "*",

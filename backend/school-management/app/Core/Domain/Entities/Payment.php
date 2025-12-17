@@ -51,37 +51,35 @@ class Payment
         public ?string $stripe_session_id,
         public ?Carbon $created_at,
     ) {}
-    private function amountAsFloat(?string $value): float
+    private function amount(?string $value): string
     {
-        return $value !== null ? (float) $value : 0.0;
+        return $value ?? '0.00';
     }
 
     public function getPendingAmount(): string
     {
-        if ($this->amount === null || $this->amount_received === null) {
-            return '0.00';
-        }
-        $expected = $this->amountAsFloat($this->amount);
-        $received = $this->amountAsFloat($this->amount_received);
-        if ($received >= $expected) {
-            return '0.00';
-        }
-        return number_format($expected - $received, 2, '.', '');
+        $expected = $this->amount($this->amount);
+        $received = $this->amount($this->amount_received);
 
+        if (bccomp($received, $expected, 2) >= 0) {
+            return '0.00';
+        }
+
+        return bcsub($expected, $received, 2);
     }
 
     public function getOverPaidAmount(): string
     {
-        if ($this->amount === null || $this->amount_received === null) {
+        $expected = $this->amount($this->amount);
+        $received = $this->amount($this->amount_received);
+
+        if (bccomp($received, $expected, 2) <= 0) {
             return '0.00';
         }
-        $expected = $this->amountAsFloat($this->amount);
-        $received = $this->amountAsFloat($this->amount_received);
-        if ($received <= $expected) {
-            return '0.00';
-        }
-        return number_format($received - $expected, 2, '.', '');
+
+        return bcsub($received, $expected, 2);
     }
+
 
     public function isOverPaid(): bool
     {
