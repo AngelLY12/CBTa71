@@ -75,8 +75,8 @@ class ValidatePaymentUseCase{
                         status:$stripe['intent']->status,
                         payment_intent_id:$payment_intent_id,
                         url:$stripe['charge']->receipt_url ?? null,
-                        stripe_session_id: $stripe['intent']->latest_charge->id ?? null
-
+                        stripe_session_id: $stripe['intent']->latest_charge->id ?? null,
+                        created_at: null
                     );
                     $payment = $this->paymentRepo->create($payment);
                     $validated=true;
