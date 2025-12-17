@@ -67,16 +67,24 @@ class PaymentValidatedMail extends Mailable
 
     private function buildPaymentLegend(): string
     {
+        $pending = bcsub(
+            (string) $this->data->amount,
+            (string) $this->data->amount_received,
+            2
+        );
+        $balance= bcsub(
+            (string) $this->data->amount_received,
+            (string) $this->data->amount,
+            2
+        );
         return match ($this->data->status) {
             PaymentStatus::UNDERPAID->value =>
                 "<p style='color:#d97706;'>
                 Detectamos que el monto recibido es menor al esperado.
                 <br>
                 <strong>Monto pendiente:</strong> $"
-                . number_format(
-                    $this->data->amount - $this->data->amount_received,
-                    2
-                ) .
+                . number_format($pending, 2)
+                .
                 "</p>",
 
             PaymentStatus::OVERPAID->value =>
@@ -85,7 +93,7 @@ class PaymentValidatedMail extends Mailable
                 <br>
                 <strong>Saldo extra pagado:</strong> $"
                 . number_format(
-                    $this->data->amount_received - $this->data->amount,
+                    $balance,
                     2
                 ) .
                 "</p>",

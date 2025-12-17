@@ -121,7 +121,7 @@ class PaymentConceptValidator{
             throw new ConceptMissingNameException();
         }
 
-        if ($concept->amount === null || $concept->amount < 10) {
+        if ($concept->amount === null || bccomp($concept->amount, '10', 2) === -1) {
             throw new ConceptInvalidAmountException();
         }
 
