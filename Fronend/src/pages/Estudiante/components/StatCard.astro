@@ -1,0 +1,109 @@
+---
+interface Props {
+  title: string;
+  amount: string;
+  subtitle: string;
+  type?: 'default' | 'danger' | 'info';
+}
+const { title, amount, subtitle, type = 'default' } = Astro.props;
+---
+
+<div class={`card-container ${type}`}>
+  <div class="card-header">
+    <span class="label">{title}</span>
+    <div class="icon-wrapper">
+      <slot name="icon" />
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <h2 class="amount">{amount}</h2>
+  </div>
+
+  <div class="card-footer">
+    <p class="subtitle">{subtitle}</p>
+  </div>
+</div>
+
+<style>
+  .card-container {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 160px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .label {
+    font-size: 0.9rem;
+    color: #4b5563; /* Gris como en la imagen */
+    font-weight: 500;
+  }
+
+  .icon-wrapper {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    margin: 0.5rem 0;
+  }
+
+  .amount {
+    font-size: 2.5rem; /* Tamaño grande e impactante */
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    text-align: center;
+  }
+
+  .card-footer {
+    text-align: center;
+    width: 100%;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+
+  /* Colores según tus imágenes */
+  .default .amount { color: #2E594D; } /* Verde Institucional */
+  .default .icon-wrapper { color: #2E594D; }
+
+  .danger .amount { color: #ff0000; } /* Rojo Alerta */
+  .danger .icon-wrapper { color: #ff0000; }
+
+  .info .amount { color: #0044ff; } /* Azul Recaudación */
+  .info .icon-wrapper { color: #0044ff; }
+
+  @media (max-width: 768px) {
+    .card-container { min-height: 140px; padding: 1rem; border-radius: 0.8rem; }
+    .card-header { margin-bottom: 0.5rem; }
+    .label { font-size: 0.8rem; }
+    .icon-wrapper { width: 20px; height: 20px; }
+    .icon-wrapper svg { width: 16px; height: 16px; }
+    .card-body { margin: 0.3rem 0; }
+    .amount { font-size: 1.8rem; }
+    .card-footer { margin-top: 0.5rem; }
+    .subtitle { font-size: 0.8rem; }
+  }
+</style>

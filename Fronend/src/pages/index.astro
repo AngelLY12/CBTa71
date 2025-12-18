@@ -55,9 +55,10 @@ const pageTitle = "Acceso al Sistema - SIGE";
             }
 
             // --- BASE DE DATOS DE USUARIOS ---
+            // Se actualizó la ruta de redirección para el rol 'student'
             const users = [
                 { email: 'admin@uni.edu', pass: '123456', role: 'admin', redirect: '/Dashboard' },
-                { email: 'estudiante@uni.edu', pass: 'alumno123', role: 'student', redirect: '/PortalEstudiante' }
+                { email: 'estudiante@uni.edu', pass: 'alumno123', role: 'student', redirect: '/Estudiante/PortalEstudiante' }
             ];
 
             const userFound = users.find(u => u.email === this.email && u.pass === this.password);
@@ -68,7 +69,6 @@ const pageTitle = "Acceso al Sistema - SIGE";
                 if (userFound) {
                     this.error = `✅ Bienvenido (${userFound.role}). Redirigiendo...`;
                     
-                    // Guardamos el rol en localStorage por si lo necesitas en otras páginas
                     localStorage.setItem('userRole', userFound.role);
                     
                     setTimeout(() => window.location.href = userFound.redirect, 800);
@@ -111,10 +111,10 @@ const pageTitle = "Acceso al Sistema - SIGE";
         </header>
 
         <div class="p-8 space-y-7">
-            <div x-show="error" :class="error.includes('✅') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'" class="p-3 border rounded-xl text-xs font-medium shadow-inner">
+            <div x-show="error" :class="error.includes('✅') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'" class="p-3 border rounded-xl text-xs font-medium shadow-inner" x-cloak>
                 <span x-text="error"></span>
             </div>
-            <div x-show="message" :class="message.includes('📩') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'" class="p-3 border rounded-xl text-xs font-medium shadow-inner">
+            <div x-show="message" :class="message.includes('📩') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'" class="p-3 border rounded-xl text-xs font-medium shadow-inner" x-cloak>
                 <span x-text="message"></span>
             </div>
 
@@ -136,7 +136,7 @@ const pageTitle = "Acceso al Sistema - SIGE";
                 </div>
             </form>
 
-            <form class="space-y-6" x-show="mode === 'recover'" @submit.prevent="handleRecovery">
+            <form class="space-y-6" x-show="mode === 'recover'" @submit.prevent="handleRecovery" x-cloak>
                 <div class="flex items-center rounded-xl p-3 input-inset-shadow">
                     <input type="email" x-model="email" placeholder="Ingresa tu correo" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
                 </div>

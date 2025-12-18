@@ -1,0 +1,162 @@
+---
+interface Pago {
+  concepto: string;
+  monto: string;
+  fecha?: string | null;
+  // Mantenemos estas propiedades en la interfaz por si vienen del backend, 
+  // aunque no las mostremos en las columnas.
+  periodo?: string;
+  estado?: 'PAGADO' | 'PENDIENTE';
+}
+
+interface Props {
+  pagos?: Pago[];
+}
+
+const { pagos = [] } = Astro.props;
+---
+
+<div class="payments-section">
+  <h3 class="payments-title">Mis Pagos</h3>
+
+  <div class="payments-table-wrapper">
+    <table class="payments-table">
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th>Monto</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {pagos.length ? (
+          pagos.map((pago) => (
+            <tr>
+              <td>{pago.concepto}</td>
+              <td class="monto">{pago.monto}</td>
+              <td class="fecha-celda">{pago.fecha ?? '—'}</td>
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colspan="3" class="empty-row">
+              No hay registros de pagos
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  :global(.payments-section) {
+    background: white;
+    border: 1px solid #f3f4f6;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+
+  :global(.payments-title) {
+    /* Color solicitado: #2E594D */
+    color: #2E594D;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  :global(.payments-table-wrapper) {
+    width: 100%;
+    /* Permite scroll horizontal en celulares si el contenido desborda */
+    overflow-x: auto;
+  }
+
+  :global(.payments-table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  :global(.payments-table thead th) {
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #9ca3af;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f3f4f6;
+  }
+
+  :global(.payments-table tbody tr) {
+    border-top: 1px solid #f3f4f6;
+    transition: background-color 0.2s ease;
+  }
+
+  :global(.payments-table tbody tr:hover) {
+    background-color: #f9fafb;
+  }
+
+  :global(.payments-table td) {
+    padding: 1rem 0;
+    color: #374151;
+  }
+
+  :global(.payments-table .monto) {
+    /* Aplicando color #2E594D al monto para resaltar */
+    color: #2E594D;
+    font-weight: 700;
+  }
+
+  :global(.fecha-celda) {
+    color: #6b7280;
+  }
+
+  :global(.empty-row) {
+    text-align: center;
+    padding: 2.5rem 0;
+    color: #9ca3af;
+    font-size: 0.85rem;
+  }
+
+  /* Ajustes para Celulares */
+  @media (max-width: 768px) {
+    :global(.payments-section) {
+      padding: 1rem;
+      border-radius: 1rem;
+    }
+    
+    :global(.payments-title) {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    :global(.payments-table-wrapper) {
+      margin: 0 -0.5rem;
+      padding: 0 0.5rem;
+    }
+    
+    :global(.payments-table) {
+      font-size: 0.85rem;
+    }
+    
+    :global(.payments-table thead th) {
+      padding-bottom: 0.5rem;
+      font-size: 0.7rem;
+    }
+    
+    :global(.payments-table tbody tr) {
+      border-top: 1px solid #f3f4f6;
+    }
+    
+    :global(.payments-table td) {
+      padding: 0.8rem 0;
+    }
+    
+    :global(.empty-row) {
+      padding: 2rem 0;
+      font-size: 0.8rem;
+    }
+  }
+</style>

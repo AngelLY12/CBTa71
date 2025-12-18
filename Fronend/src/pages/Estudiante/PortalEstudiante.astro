@@ -1,125 +1,227 @@
 ---
-import StudentLayout from '../layouts/LayoutEstu.astro';
+import StudentLayout from '../../layouts/LayoutEstu.astro';
+import StatCard from './components/StatCard.astro';
+import ProgressCircle from './components/ProgressCircle.astro';
+import PaymentsTable from './components/PaymentsTable.astro'; 
 
-// Datos para las tarjetas superiores (Basados en imagen_ce081b.png)
-const stats = [
-  { title: "Pagos Pendientes", amount: "S/ 1,336.00", detail: "1 concepto", icon: "clock", color: "border-gray-200" },
-  { title: "Pagos Realizados", amount: "S/ 0.00", detail: "Este año académico", icon: "check", color: "border-gray-200" },
-  { title: "Pagos Vencidos", amount: "1", detail: "Requiere atención", icon: "alert", color: "border-red-400 text-red-600" }
-];
-
-// Datos para la tabla (Basados en imagen_d80ba8.png)
-const conceptos = [
-  { nombre: 'HM', monto: 11.00, estado: 'ACTIVO', inicio: '---', fin: '---' },
-  { nombre: 'HJ', monto: 100.00, estado: 'ACTIVO', inicio: '---', fin: '---' },
-  { nombre: 'HJ', monto: 100.00, estado: 'ACTIVO', inicio: '---', fin: '---' },
-  { nombre: 'gd', monto: 10.00, estado: 'FINALIZADO', inicio: '---', fin: '16/12/2025' },
-];
-
-const porcentajeAnual = 0; // Basado en imagen_ce081b.png
+const dashboardData = Astro.props.dashboardData ?? {};
 ---
 
-<StudentLayout title="Dashboard Estudiante">
-  <div class="space-y-8">
-    <div class="flex items-center gap-3 border-b pb-4">
-      <div class="bg-emerald-100 p-2 rounded-lg text-emerald-700">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      </div>
-      <h2 class="text-2xl font-bold text-slate-800">Pedro Gonzalez Lopez</h2>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {stats.map(stat => (
-        <div class={`bg-white p-4 rounded-xl border-2 ${stat.color} shadow-sm`}>
-          <div class="flex justify-between items-start">
-            <span class="text-sm font-semibold text-slate-500">{stat.title}</span>
-            <div class="opacity-40">
-                {stat.icon === 'clock' && <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
-                {stat.icon === 'check' && <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
-                {stat.icon === 'alert' && <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
-            </div>
-          </div>
-          <div class="mt-2">
-            <div class="text-xl font-black">{stat.amount}</div>
-            <div class="text-xs text-slate-400">{stat.detail}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white border rounded-2xl p-6 flex flex-col justify-center">
-        <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
-          <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
-          Resumen del Año Académico 2024
-        </h3>
-        <div class="space-y-4">
-          <div class="flex justify-between items-center p-3 hover:bg-slate-50 rounded-lg transition-colors">
-            <span class="text-slate-600 font-medium">Total pagado</span>
-            <span class="font-bold text-slate-900">$0.00</span>
-          </div>
-          <div class="flex justify-between items-center p-3 hover:bg-slate-50 rounded-lg transition-colors">
-            <span class="text-slate-600 font-medium">Total pendiente</span>
-            <span class="font-bold text-slate-900">$1336.00</span>
-          </div>
-          <div class="flex justify-between items-center p-3 border-t font-bold">
-            <span class="text-slate-600">Total año</span>
-            <span class="text-slate-900">$0.00</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white border rounded-2xl p-6 flex flex-col items-center">
-        <h3 class="w-full text-left text-slate-500 font-bold mb-4 uppercase text-xs tracking-wider">Anual</h3>
-        <div class="relative flex items-center justify-center">
-          <svg class="w-48 h-48 transform -rotate-90">
-            <circle cx="96" cy="96" r="80" stroke="currentColor" stroke-width="16" fill="transparent" class="text-slate-100" />
-            <circle cx="96" cy="96" r="80" stroke="currentColor" stroke-width="16" fill="transparent" 
-              stroke-dasharray="502" 
-              stroke-dashoffset={502 - (502 * porcentajeAnual) / 100}
-              class="text-emerald-500" stroke-linecap="round" 
-            />
+<StudentLayout title="Panel de Estudiante">
+  <div class="main-container">
+    <header class="welcome-header">
+      <div class="header-left">
+        <div class="icon-box">
+          <svg xmlns="http://www.w3.org/2000/svg" class="header-icon-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          <div class="absolute text-center">
-            <span class="text-4xl font-black text-slate-800">{porcentajeAnual}%</span>
-          </div>
         </div>
-        <div class="mt-4 text-slate-900 font-bold">$0.00</div>
+        <div>
+          <p class="welcome-label">Dashboard Académico</p>
+          <h1 class="student-name">Hola, {dashboardData.alumnoNombre?.split(' ')[0] || "Estudiante"}</h1>
+        </div>
+      </div>
+      <div class="header-right mobile-hide">
+        <span class="current-date">{new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      </div>
+    </header>
+
+    <section class="stats-scroll-container">
+      <StatCard 
+        title="Pendientes" 
+        amount={dashboardData?.pagosPendientes?.monto || "$0.00"} 
+        subtitle={dashboardData?.pagosPendientes?.info || "Sin adeudos"} 
+        type="danger"
+      >
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path></svg>
+      </StatCard>
+
+      <StatCard 
+        title="Realizados" 
+        amount={dashboardData?.pagosRealizados?.monto || "$0.00"} 
+        subtitle={dashboardData?.pagosRealizados?.info || "0 Pagos"} 
+        type="default"
+      >
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      </StatCard>
+
+      <StatCard 
+        title="Total Inversión" 
+        amount={dashboardData?.totalPagado || "$0.00"} 
+        subtitle="Monto acumulado" 
+        type="info"
+      >
+        <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+      </StatCard>
+    </section>
+
+    <div class="bottom-grid">
+      <div class="summary-card glass-effect">
+        <div class="card-header">
+           <h3 class="summary-title">Balance de Cuenta</h3>
+           <span class="status-badge">Actualizado</span>
+        </div>
+        <div class="summary-row">
+          <div class="label-group">
+            <div class="dot green"></div>
+            <span class="summary-label">Monto Liquidado</span>
+          </div>
+          <span class="val-ok">{dashboardData?.totalPagado}</span>
+        </div>
+        <div class="summary-row no-border">
+          <div class="label-group">
+            <div class="dot red"></div>
+            <span class="summary-label">Monto por Pagar</span>
+          </div>
+          <span class="val-alert">{dashboardData?.totalPendiente}</span>
+        </div>
+      </div>
+
+      <div class="progress-card glass-effect">
+        <div class="progress-inner">
+           <ProgressCircle percentage={dashboardData?.porcentajeProgreso} label="Logro" />
+        </div>
       </div>
     </div>
 
-    <div class="mt-8">
-        <h3 class="text-lg font-bold mb-4">Mis pagos</h3>
-        <div class="overflow-x-auto border rounded-xl shadow-sm">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Concepto</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Monto</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Estado</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase">Fecha Fin</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    {conceptos.map((item) => (
-                        <tr class="hover:bg-slate-50/50">
-                            <td class="px-6 py-4 font-bold text-slate-700">{item.nombre}</td>
-                            <td class="px-6 py-4 text-slate-600 font-medium">${item.monto.toFixed(2)}</td>
-                            <td class="px-6 py-4">
-                                <span class={`px-3 py-1 rounded-lg text-[10px] font-black ${
-                                    item.estado === 'ACTIVO' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                                }`}>
-                                    {item.estado}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-slate-500">{item.fin}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+    <div class="payments-wrapper glass-effect">
+      <div class="table-header">
+        <h3 class="summary-title">Historial Reciente</h3>
+      </div>
+      <PaymentsTable pagos={dashboardData?.pagos} />
     </div>
   </div>
 </StudentLayout>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+  :root {
+    --primary: #2E594D;
+    --primary-light: #e9f0ee;
+    --danger: #ef4444;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --bg-page: #f8fafc;
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  }
+
+  .main-container { 
+    padding: 2.5rem; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 2rem; 
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-page);
+  }
+
+  /* --- HEADER --- */
+  .welcome-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+  }
+  .header-left { display: flex; align-items: center; gap: 1.25rem; }
+  .icon-box { 
+    background: var(--primary); 
+    padding: 1rem; 
+    border-radius: 1.25rem; 
+    box-shadow: 0 10px 20px -5px rgba(46, 89, 77, 0.3);
+  }
+  .header-icon-svg { width: 1.75rem; height: 1.75rem; color: #fff; }
+  .welcome-label { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--primary); letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+  .student-name { font-size: 2.25rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.02em; }
+  .current-date { color: var(--text-muted); font-weight: 600; text-transform: capitalize; }
+
+  /* --- STATS --- */
+  .stats-scroll-container { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 1.5rem; 
+  }
+
+  /* --- CARDS & GRID --- */
+  .bottom-grid { 
+    display: grid; 
+    grid-template-columns: 1.8fr 1.2fr; 
+    gap: 1.5rem; 
+  }
+
+  .glass-effect {
+    background: white; 
+    border: 1px solid rgba(241, 245, 249, 1); 
+    border-radius: 2rem; 
+    padding: 2rem; 
+    box-shadow: var(--shadow);
+  }
+
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+  .status-badge { background: var(--primary-light); color: var(--primary); padding: 0.4rem 0.8rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 700; }
+  
+  .summary-title { color: var(--text-main); font-weight: 800; font-size: 1.25rem; margin: 0; }
+  
+  .summary-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 1.25rem 0; 
+    border-bottom: 1px solid #f1f5f9; 
+  }
+  .label-group { display: flex; align-items: center; gap: 0.75rem; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.green { background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+  .dot.red { background: var(--danger); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+  
+  .summary-label { font-weight: 600; color: var(--text-muted); font-size: 1rem; }
+  .val-ok, .val-alert { color: var(--text-main); font-weight: 800; font-size: 1.35rem; }
+  .val-alert { color: var(--danger); }
+  .no-border { border: none; }
+
+  .progress-inner { display: flex; justify-content: center; align-items: center; height: 100%; }
+
+  .table-header { margin-bottom: 1.5rem; }
+
+  /* --- MOBILE ADAPTATIONS --- */
+  @media (max-width: 768px) {
+    .main-container { padding: 1rem; gap: 1.5rem; max-width: none; }
+    .welcome-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+    .header-left { gap: 0.8rem; }
+    .icon-box { padding: 0.8rem; border-radius: 1rem; }
+    .header-icon-svg { width: 1.5rem; height: 1.5rem; }
+    .welcome-label { font-size: 0.75rem; }
+    .student-name { font-size: 1.5rem; }
+    .mobile-hide { display: none; }
+
+    .stats-scroll-container { 
+      display: flex; 
+      overflow-x: auto; 
+      margin: 0 -1rem; 
+      padding: 0 1rem 0.5rem 1rem;
+      scrollbar-width: none;
+    }
+    .stats-scroll-container::-webkit-scrollbar { display: none; }
+
+    .stats-scroll-container > * {
+      min-width: 240px;
+      flex: 0 0 auto;
+    }
+
+    .bottom-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    .summary-card { order: 1; }
+    .progress-card { order: 2; }
+    .payments-wrapper { order: 3; }
+    .glass-effect { padding: 1.2rem; border-radius: 1.2rem; }
+    .card-header { margin-bottom: 1.5rem; }
+    .summary-title { font-size: 1.1rem; }
+    .summary-row { padding: 1rem 0; }
+    .label-group { gap: 0.5rem; }
+    .dot { width: 6px; height: 6px; }
+    .summary-label { font-size: 0.9rem; }
+    .val-ok, .val-alert { font-size: 1.1rem; }
+    .progress-inner { padding: 1rem; }
+    .table-header { margin-bottom: 1rem; }
+    .payments-title { font-size: 1rem; }
+  }
+</style>

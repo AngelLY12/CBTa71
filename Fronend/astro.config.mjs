@@ -5,10 +5,12 @@ import react from '@astrojs/react'; // Importa la integración de React
 
 import vercel from '@astrojs/vercel';
 
+import alpinejs from '@astrojs/alpinejs';
+
 // https://astro.build/config
 export default defineConfig({
   // Agrega la integración aquí
-  integrations: [react()],
+  integrations: [react(), alpinejs()],
 
   vite: {
     plugins: [tailwindcss()]
