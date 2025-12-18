@@ -5,6 +5,7 @@ namespace App\Core\Application\UseCases\Payments\Staff\Debts;
 use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Exceptions\NotFound\UserNotFoundException;
 use App\Exceptions\ValidationException;
 
 class GetPaymentsFromStripeUseCase
@@ -21,8 +22,11 @@ class GetPaymentsFromStripeUseCase
             throw new ValidationException("El año especificado no es válido.");
         }
         $student=$this->uqRepo->findBySearch($search);
-        if (!$student || !$student->stripe_customer_id) {
-            return [];
+        if (!$student) {
+            throw new UserNotFoundException();
+        }
+        if (!$student->stripe_customer_id) {
+            throw new ValidationException("El estudiante no tiene Stripe ID.");
         }
         $sessions = $this->stripeRepo->getStudentPaymentsFromStripe($student,$year);
 
