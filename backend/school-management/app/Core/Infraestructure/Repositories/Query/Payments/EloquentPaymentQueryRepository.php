@@ -89,7 +89,8 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         return EloquentPayment::with([
             'user:id,name,last_name',
         ])
-        ->when($search, function ($q) use ($search) {
+            ->select('id', 'user_id', 'concept_name', 'amount', 'amount_received', 'payment_method_details', 'created_at')
+            ->when($search, function ($q) use ($search) {
             $q->whereHas('user', fn($sub) =>
                 $sub->where('name', 'like', "%$search%")
                     ->orWhere('last_name', 'like', "%$search%")

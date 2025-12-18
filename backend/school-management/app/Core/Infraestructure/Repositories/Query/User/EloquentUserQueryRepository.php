@@ -97,20 +97,23 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
     public function findActiveStudents(?string $search, int $perPage, int $page): LengthAwarePaginator
     {
-       $studentsQuery = EloquentUser::role(UserRoles::STUDENT->value)->select('id','name','last_name','email')
-        ->where('status', UserStatus::ACTIVO)
-        ->with('studentDetail:user_id,semestre,career_id');
+        $query = EloquentUser::query()
+            ->select('id','name','last_name','email')
+            ->where('status', UserStatus::ACTIVO)
+            ->whereHas('roles', function ($q) {
+                $q->whereIn('name', UserRoles::students());
+            });
 
         if ($search) {
-            $studentsQuery->where(function($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('curp', 'like', "%$search%")
-                ->orWhere('email', 'like', "%$search%")
-                ->orWhereHas('studentDetail', function($q2) use ($search) {
-                  $q2->where('n_control', 'like', "%$search%");
-              });
+                    ->orWhere('email', 'like', "%$search%")
+                    ->orWhereHas('studentDetail', function($q2) use ($search) {
+                        $q2->where('n_control', 'like', "%$search%");
+                    });
             });
         }
-        return $studentsQuery->paginate($perPage, ['*'], 'page', $page);
+        return $query->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function getRecipients(PaymentConcept $concept, string $appliesTo): array
@@ -165,16 +168,18 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                 DB::raw('COALESCE(SUM(payments.amount_received), 0) AS total_paid'),
                 DB::raw('COUNT(payments.id) AS total_paid_concepts')
             )
-            ->whereIn('payments.status', [
-                PaymentStatus::SUCCEEDED->value,
-                PaymentStatus::OVERPAID->value,
-            ])
+            ->whereIn('payments.status', PaymentStatus::terminalStatuses())
             ->whereIn('payments.user_id', $userIds)
             ->groupBy('payments.user_id');
 
         $rows = $this->basePendingLeftJoinQuery($userIds)
             ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
             ->leftJoin('careers', 'careers.id', '=', 'student_details.career_id')
+            ->leftJoin('model_has_roles', function ($q) {
+                $q->on('model_has_roles.model_id', '=', 'users.id')
+                    ->where('model_has_roles.model_type', User::class);
+            })
+            ->leftJoin('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->leftJoinSub(
                 $paidTotals,
                 'paid_totals',
@@ -185,6 +190,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             ->selectRaw("
                 users.id AS user_id,
                 CONCAT(users.name, ' ', users.last_name) AS full_name,
+                GROUP_CONCAT(DISTINCT roles.name) AS roles,
                 student_details.semestre AS semestre,
                 careers.career_name AS career,
                 COUNT(pending_concepts.id) AS total_count,
@@ -220,6 +226,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return $rows->map(fn($r) => MappersUserMapper::toUserWithPendingSummaryResponse([
             'user_id'      => (int)$r->user_id,
             'name'         => $r->full_name,
+            'roles' => $r->roles ? explode(',', $r->roles) : [],
             'semestre'     => $r->semestre,
             'career'       => $r->career ?? null,
             'total_count'  => (int)$r->total_count,

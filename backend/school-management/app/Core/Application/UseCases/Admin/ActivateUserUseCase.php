@@ -25,7 +25,8 @@ class ActivateUserUseCase
         foreach($users as $user){
             UserValidator::ensureValidStatusTransition($user, EnumMapper::toUserStatus('activo'));
         }
+        $changed=$this->userRepo->changeStatus($ids, UserStatus::ACTIVO->value);
         ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
-        return $this->userRepo->changeStatus($ids, UserStatus::ACTIVO->value);
+        return $changed;
     }
 }

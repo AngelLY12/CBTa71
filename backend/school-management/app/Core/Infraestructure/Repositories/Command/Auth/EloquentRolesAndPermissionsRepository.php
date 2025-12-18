@@ -81,7 +81,4 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
 
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
     }
-
-
-
 }

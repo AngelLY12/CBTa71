@@ -25,7 +25,8 @@ class DisableUserUseCase
         foreach($users as $user){
             UserValidator::ensureValidStatusTransition($user, UserStatus::BAJA);
         }
+        $changed= $this->userRepo->changeStatus($ids, UserStatus::BAJA->value);
         ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
-        return $this->userRepo->changeStatus($ids, UserStatus::BAJA->value);
+        return $changed;
     }
 }

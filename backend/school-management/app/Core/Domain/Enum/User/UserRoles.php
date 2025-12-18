@@ -16,4 +16,13 @@ enum UserRoles: string
     {
         return array_map(fn($role) => $role->value, self::cases());
     }
+
+    public static function students(): array
+    {
+        return [
+            self::STUDENT->value,
+            self::APPLICANT->value,
+        ];
+    }
+
 }

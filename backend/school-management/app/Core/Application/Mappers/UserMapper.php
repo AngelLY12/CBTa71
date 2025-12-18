@@ -132,6 +132,7 @@ class UserMapper{
         return new UserWithPendingSumamaryResponse(
             userId: $studentSummary['user_id'] ?? null,
             fullName: $studentSummary['name'] ?? null,
+            roles: $studentSummary['roles'] ?? null,
             semestre: $studentSummary['semestre'] ?? null,
             career_name: $studentSummary['career'] ?? null,
             num_pending: $studentSummary['total_count'] ?? null,

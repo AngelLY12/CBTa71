@@ -23,7 +23,8 @@ class TemporaryDisableUserUseCase
         foreach ($users as $user) {
             UserValidator::ensureValidStatusTransition($user, UserStatus::BAJA_TEMPORAL);
         }
+        $changed = $this->userRepo->changeStatus($ids, UserStatus::BAJA_TEMPORAL->value);
         ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
-        return $this->userRepo->changeStatus($ids, UserStatus::BAJA_TEMPORAL->value);
+        return $changed;
     }
 }

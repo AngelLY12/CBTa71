@@ -25,8 +25,9 @@ class DeleteLogicalUserUseCase
         foreach($users as $user){
             UserValidator::ensureValidStatusTransition($user, EnumMapper::toUserStatus('eliminado'));
         }
+        $changed=$this->userRepo->changeStatus($ids, UserStatus::ELIMINADO->value);
         ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
-        return $this->userRepo->changeStatus($ids, UserStatus::ELIMINADO->value);
+        return $changed;
     }
 
 }
