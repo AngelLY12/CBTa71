@@ -47,6 +47,7 @@ use App\Core\Infraestructure\Repositories\Query\Misc\EloquentParentInviteQueryRe
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentConceptQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentMethodQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentQueryRepository;
+use App\Core\Infraestructure\Repositories\Query\Stripe\StripeGatewayQuery;
 use App\Core\Infraestructure\Repositories\Query\User\EloquentParentStudentQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\User\EloquentUserQueryRepository;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -65,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(StripeGatewayInterface::class, StripeGateway::class);
+        $this->app->bind(StripeGatewayInterface::class, StripeGatewayQuery::class);
         $this->app->bind(PaymentMethodRepInterface::class, EloquentPaymentMethodRepository::class);
         $this->app->bind(PaymentMethodQueryRepInterface::class, EloquentPaymentMethodQueryRepository::class);
         $this->app->bind(PaymentRepInterface::class, EloquentPaymentRepository::class);
