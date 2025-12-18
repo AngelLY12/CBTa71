@@ -19,5 +19,4 @@ interface PaymentConceptQueryRepInterface{
     public function getPendingPaymentConceptsWithDetails(User $user):array;
     public function getOverduePayments(User $user):array;
     public function getPendingWithDetailsForStudents(array $userIds): array;
-    public function finalizePaymentConcepts(): void;
 }

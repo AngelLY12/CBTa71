@@ -178,19 +178,6 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
         ]))->toArray();
     }
 
-
-
-
-    public function finalizePaymentConcepts(): void
-    {
-        $today = Carbon::today();
-
-        EloquentPaymentConcept::where('status', PaymentConceptStatus::ACTIVO)
-        ->whereDate('end_date', '<', $today)
-        ->update(['status' => PaymentConceptStatus::FINALIZADO]);
-
-    }
-
     private function basePaymentConcept(?User $user = null, $onlyActive=true, ?PaymentConceptStatus $status=null): Builder
     {
         $now = now();

@@ -8,8 +8,8 @@ use App\Core\Application\Mappers\PaymentMapper;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
-use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Stripe\StripeGatewayQueryInterface;
 use Illuminate\Support\Facades\DB;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
 use App\Core\Application\Traits\HasPaymentStripe;
@@ -32,7 +32,7 @@ class ValidatePaymentUseCase{
         public UserQueryRepInterface $uqRepo,
         public PaymentRepInterface $paymentRepo,
         public PaymentQueryRepInterface $pqRepo,
-        public StripeGatewayInterface $stripeRepo,
+        public StripeGatewayQueryInterface $stripeRepo,
         public PaymentMethodQueryRepInterface $pmqRepo,
         public PaymentConceptQueryRepInterface $pcqRepo,
     )

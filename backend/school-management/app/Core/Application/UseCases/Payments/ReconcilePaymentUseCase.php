@@ -7,9 +7,9 @@ use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Traits\HasPaymentStripe;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
-use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Stripe\StripeGatewayQueryInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\DomainException;
 use App\Exceptions\NotFound\PaymentMethodNotFoundException;
@@ -25,7 +25,7 @@ class ReconcilePaymentUseCase
     use HasPaymentStripe;
     public function __construct(
         private PaymentQueryRepInterface $pqRepo,
-        private StripeGatewayInterface $stripe,
+        private StripeGatewayQueryInterface $stripe,
         private UserQueryRepInterface $userRepo,
         private PaymentMethodQueryRepInterface $pmRepo,
         private PaymentRepInterface $paymentRep,

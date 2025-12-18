@@ -2,12 +2,12 @@
 
 namespace App\Core\Application\UseCases\Jobs;
 
-use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
+use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 
 class FinalizePaymentConceptsUseCase
 {
     public function __construct(
-        private PaymentConceptQueryRepInterface $finalize
+        private PaymentConceptRepInterface $finalize
     )
     {
 
