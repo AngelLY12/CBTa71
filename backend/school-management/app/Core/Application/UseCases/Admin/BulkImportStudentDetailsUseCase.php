@@ -4,6 +4,7 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Jobs\ClearStaffCacheJob;
 
 class BulkImportStudentDetailsUseCase
 {
@@ -64,6 +65,7 @@ class BulkImportStudentDetailsUseCase
         if (!empty($studentDetailsToInsert)) {
             $this->sdRepo->insertStudentDetails($studentDetailsToInsert);
         }
+        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
 
         return count($studentDetailsToInsert);
     }

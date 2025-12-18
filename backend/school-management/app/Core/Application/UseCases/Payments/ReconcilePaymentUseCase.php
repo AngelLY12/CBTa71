@@ -63,9 +63,9 @@ class ReconcilePaymentUseCase
             }
         }
         if ($result->updated > 0) {
-            ClearStaffCacheJob::dispatch();
+            ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
             foreach (array_unique($affectedUsers) as $userId) {
-                ClearStudentCacheJob::dispatch($userId);
+                ClearStudentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
             }
         }
         return $result;

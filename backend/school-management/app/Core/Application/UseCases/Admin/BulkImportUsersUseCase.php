@@ -110,6 +110,7 @@ class BulkImportUsersUseCase
 
             if (!empty($studentDetails)) {
                 $this->sdRepo->insertStudentDetails($studentDetails);
+                ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
             }
 
             if (!empty($roleRows)) {

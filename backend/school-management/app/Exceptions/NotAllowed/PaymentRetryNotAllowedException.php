@@ -6,9 +6,9 @@ use App\Exceptions\DomainException;
 
 class PaymentRetryNotAllowedException extends DomainException
 {
-    public function __construct()
+    public function __construct($message)
     {
-        parent::__construct(403, "No se permite repetir el pago de este concepto.");
+        parent::__construct(403, $message);
     }
 
 }

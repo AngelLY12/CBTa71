@@ -9,6 +9,7 @@ use App\Core\Application\UseCases\Career\FindAllCareersUseCase;
 use App\Core\Application\UseCases\Career\FindCareerUseCase;
 use App\Core\Application\UseCases\Career\UpdateCareerUseCase;
 use App\Core\Domain\Entities\Career;
+use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Infraestructure\Cache\CacheService;
 
 class CareerServiceFacades
@@ -31,19 +32,19 @@ class CareerServiceFacades
     public function createCareer(Career $career): Career
     {
         $career = $this->create->execute($career);
-        $this->service->clearKey('careers', 'all');
+        $this->service->clearKey(CachePrefix::CAREERS->value, 'all');
         return $career;
     }
 
     public function deleteCareer(int $careerId): void
     {
         $this->delete->execute($careerId);
-        $this->service->clearKey('careers', 'all');
+        $this->service->clearKey(CachePrefix::CAREERS->value, 'all');
     }
 
     public function findAllCareers(bool $forceRefresh): array
     {
-        $key = $this->service->makeKey('careers', "all");
+        $key = $this->service->makeKey(CachePrefix::CAREERS->value, "all");
         return $this->cache($key, $forceRefresh, fn() => $this->all->execute());
     }
 
@@ -55,7 +56,7 @@ class CareerServiceFacades
     public function updateCareer(int $careerId, array $fields): Career
     {
         $career = $this->update->execute($careerId, $fields);
-        $this->service->clearKey('careers', 'all');
+        $this->service->clearKey(CachePrefix::CAREERS->value, 'all');
         return $career;
     }
 }

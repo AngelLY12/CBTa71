@@ -39,7 +39,7 @@ class PayConceptUseCase
             if ($lastPayment && $lastPayment->isUnderPaid()) {
                 $amountToPay = $lastPayment->getPendingAmount();
             }
-            if($lastPayment)
+            if($lastPayment && $lastPayment->isNonPaid())
             {
                 PaymentValidator::ensurePaymentIsValidToRepay($lastPayment);
                 $this->stripe->expireSessionIfPending($lastPayment->stripe_session_id);

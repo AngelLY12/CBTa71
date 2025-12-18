@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckUserStatus
 {
-    public function __construct(private CacheService $cache,)
+    public function __construct()
     {}
     /**
      * Handle an incoming request.

@@ -98,7 +98,7 @@ class Payment
 
     public function isRecentPayment(): bool
     {
-        return $this->created_at->gt(now()->subDay());
+        return $this->created_at->gt(now()->subHour());
 
     }
 

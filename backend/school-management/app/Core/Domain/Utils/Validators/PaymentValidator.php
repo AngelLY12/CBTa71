@@ -10,10 +10,16 @@ class PaymentValidator
 
     public static function ensurePaymentIsValidToRepay(Payment $payment)
     {
-        $canRepay= $payment->isNonPaid() && $payment->isRecentPayment() && is_null($payment->amount_received);
-        if(!$canRepay)
-        {
-            throw new PaymentRetryNotAllowedException();
+        if (! $payment->isRecentPayment()) {
+            throw new PaymentRetryNotAllowedException("No se puede volver a pagar: el intento de pago anterior fue hace más de 1 horao.");
+        }
+
+        if (! is_null($payment->amount_received)) {
+            throw new PaymentRetryNotAllowedException("No se puede volver a pagar: el pago ya recibió algún monto.");
+        }
+
+        if (! $payment->isNonPaid()) {
+            throw new PaymentRetryNotAllowedException("No se puede volver a pagar: el pago actual ya está en estado terminal.");
         }
     }
 

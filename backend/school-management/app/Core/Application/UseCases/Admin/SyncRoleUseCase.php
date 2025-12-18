@@ -55,7 +55,7 @@ class SyncRoleUseCase
 
         $adminRole = $this->rpqRepo->findRoleByName(UserRoles::ADMIN->value);
         if (!$adminRole) {
-            throw new RoleNotFoundException('Admin role not found.');
+            throw new RoleNotFoundException();
         }
         if ($this->rpqRepo->hasAdminAssignError($adminRole->id, $rolesToAddIds, $users)
             || $this->rpqRepo->hasAdminRemoveError($adminRole->id, $rolesToRemoveIds, $users)

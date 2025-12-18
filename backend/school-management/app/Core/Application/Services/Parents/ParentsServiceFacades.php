@@ -35,12 +35,12 @@ class ParentsServiceFacades
     {
         $this->accept->execute($token, $relationship);
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
-        $this->service->clearKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN . ":$userId");
+        $this->service->clearKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value . ":$userId");
     }
 
     public function getParentChildren(int $parentId): ParentChildrenResponse
     {
-        $key = $this->service->makeKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN . ":$parentId");
+        $key = $this->service->makeKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value . ":$parentId");
         return $this->cache($key, false, fn() => $this->children->execute($parentId));
     }
 }

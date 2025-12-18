@@ -29,7 +29,9 @@ trait HasPaymentSession
             throw new ModelNotFoundException("No se encontró el pago con session_id={$session->id}");
         }
         $user = $this->userRepo->getUserByStripeCustomer($session->customer);
-
+        $status=$fields['status'];
+        $received=$status===PaymentStatus::PAID ? bcdiv((string)($session->amount_received ?? 0), '100', 2) : null;
+        $fields['amount_received']=$received;
         $payment=$this->paymentRepo->update($payment->id,$fields);
         if($payment->status===PaymentStatus::PAID){
            $data = MailMapper::toPaymentCreatedEmailDTO($payment, $user->fullName(), $user->email);
@@ -39,6 +41,4 @@ trait HasPaymentSession
         ClearStudentCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));;
         return $payment;
     }
-
-
 }

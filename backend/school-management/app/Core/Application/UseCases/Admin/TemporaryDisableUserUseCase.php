@@ -7,6 +7,7 @@ use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\UserValidator;
+use App\Jobs\ClearStaffCacheJob;
 
 class TemporaryDisableUserUseCase
 {
@@ -22,6 +23,7 @@ class TemporaryDisableUserUseCase
         foreach ($users as $user) {
             UserValidator::ensureValidStatusTransition($user, UserStatus::BAJA_TEMPORAL);
         }
+        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
         return $this->userRepo->changeStatus($ids, UserStatus::BAJA_TEMPORAL->value);
     }
 }
