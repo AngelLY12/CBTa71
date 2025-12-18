@@ -6604,6 +6604,16 @@
                         "example": "Juan Pérez",
                         "nullable": true
                     },
+                    "roles": {
+                        "description": "Lista de roles",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "student"
+                        ]
+                    },
                     "semestre": {
                         "description": "Semestre del estudiante",
                         "type": "integer",
