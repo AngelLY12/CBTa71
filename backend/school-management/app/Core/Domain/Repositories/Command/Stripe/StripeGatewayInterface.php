@@ -17,6 +17,8 @@ interface StripeGatewayInterface{
     public function getIntentAndCharge(string $paymentIntentId): array;
     public function getStudentPaymentsFromStripe(User $user, ?int $year): array;
     public function getPaymentIntentFromSession(string $sessionId): PaymentIntent;
+    public function expireSessionIfPending(string $sessionId): bool;
+
 
 
 }

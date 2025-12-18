@@ -3,6 +3,7 @@ namespace App\Core\Infraestructure\Repositories\Command\Stripe;
 
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Utils\Validators\StripeValidator;
 use App\Exceptions\StripeGatewayException;
@@ -238,6 +239,22 @@ class StripeGateway implements StripeGatewayInterface
             logger()->error("Stripe error retrieving payment intent from session: " . $e->getMessage());
             throw new StripeGatewayException("Error obteniendo los datos", 500);
         }
+    }
+    public function expireSessionIfPending(string $sessionId): bool
+    {
+        StripeValidator::validateStripeId($sessionId,'cs','ID de la sesión');
+        try {
+            $session = Session::retrieve($sessionId);
 
+            if (in_array($session->payment_status, PaymentStatus::nonPaidStatuses())) {
+                $session->expire();
+                return true;
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            logger()->warning("No se pudo expirar la sesión {$sessionId}: " . $e->getMessage());
+            return false;
+        }
     }
 }

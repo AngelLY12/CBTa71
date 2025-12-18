@@ -91,5 +91,16 @@ class Payment
         return $this->status === PaymentStatus::UNDERPAID;
     }
 
+    public function isNonPaid():bool
+    {
+        return in_array($this->status, PaymentStatus::nonPaidStatuses());
+    }
+
+    public function isRecentPayment(): bool
+    {
+        return $this->created_at->gt(now()->subDay());
+
+    }
+
 
 }

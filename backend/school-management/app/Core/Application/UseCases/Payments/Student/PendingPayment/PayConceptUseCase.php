@@ -11,6 +11,7 @@ use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
+use App\Core\Domain\Utils\Validators\PaymentValidator;
 use App\Exceptions\NotFound\ConceptNotFoundException;
 use Illuminate\Support\Facades\DB;
 
@@ -31,12 +32,19 @@ class PayConceptUseCase
             $lastPayment = $this->paymentQueryRep->getLastPaymentForConcept(
                 $user->id,
                 $conceptId,
-                allowedStatuses: [PaymentStatus::UNDERPAID->value]
+                allowedStatuses: PaymentStatus::nonTerminalStatuses()
             );
+
             $amountToPay = $concept->amount;
             if ($lastPayment && $lastPayment->isUnderPaid()) {
                 $amountToPay = $lastPayment->getPendingAmount();
             }
+            if($lastPayment)
+            {
+                PaymentValidator::ensurePaymentIsValidToRepay($lastPayment);
+                $this->stripe->expireSessionIfPending($lastPayment->stripe_session_id);
+            }
+
             $session = $this->stripe->createCheckoutSession($user, $concept, $amountToPay);
 
 
