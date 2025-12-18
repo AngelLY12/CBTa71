@@ -26,7 +26,8 @@ class UserMapper{
             stripe_customer_id: $user->stripe_customer_id ?? null,
             blood_type: $user->blood_type ?? null,
             registration_date: $user->registration_date ?? null,
-            status: $user->status
+            status: $user->status,
+            emailVerified: $user->hasVerifiedEmail()
         );
         if ($user->studentDetail) {
             $domainUser->setStudentDetail(StudentDetailMapper::toDomain($user->studentDetail));
@@ -37,6 +38,7 @@ class UserMapper{
                 $domainUser->addRole(RolesAndPermissionMapper::toRoleDomain($role));
             }
         }
+
         return $domainUser;
 
     }

@@ -30,6 +30,7 @@ use Carbon\Carbon;
  *     @OA\Property(property="status", ref="#/components/schemas/UserStatus", nullable=true, example="activo"),
  *     @OA\Property(property="studentDetail", ref="#/components/schemas/DomainStudentDetail", nullable=true),
  *     @OA\Property(property="roles", type="array", nullable=true, @OA\Items(ref="#/components/schemas/DomainStudentDetail")),
+ *     @OA\Property(property="emailVerified", type="boolean", description="Indica si el correo del usuario ya ha sido verificado"),
  * )
  */
 class User
@@ -56,6 +57,7 @@ class User
         public ?StudentDetail $studentDetail=null,
         /** @var Role[] */
         public array $roles=[],
+        public bool $emailVerified = false
     ) {}
 
     public function fullName(): string

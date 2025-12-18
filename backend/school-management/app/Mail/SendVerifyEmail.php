@@ -26,7 +26,7 @@ class SendVerifyEmail extends VerifyEmail
             new Personalization($notifiable->email, [
                 'greeting' => "Hola {$notifiable->name}",
                 'header_title' => 'Verifica tu correo electrónico',
-                'message_intro' => 'Gracias por registrarte en nuestra plataforma.',
+                'message_intro' => 'Para completar el proceso de registro debes hacer la verificación de correo.',
                 'message_details' => $messageDetails,
                 'message_footer' => 'Este enlace expirará en 60 minutos.',
             ])
