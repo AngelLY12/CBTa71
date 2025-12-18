@@ -15,7 +15,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('last_name')->after('name');
+            $table->string('last_name')->after('name')->index();
             $table->string('phone_number',15)->after('last_name')->unique();
             $table->date('birthdate')->after('phone_number');
             $table->string('gender',10)->nullable()->after('birthdate');
@@ -24,8 +24,14 @@ return new class extends Migration
             $table->string('stripe_customer_id',50)->nullable()->unique();
             $table->char('blood_type',4)->nullable();
             $table->date('registration_date');
-            $table->string('status',20)->default(UserStatus::ACTIVO->value);
-            $table->index(['last_name', 'created_at','status']);
+            $table->string('status',20)->default(UserStatus::ACTIVO->value)->index();
+            $table->index('created_at');
+            $table->index(['status','created_at']);
+            $table->index(['status','curp']);
+            $table->index(['status','email']);
+            $table->index(['id', 'status']);
+            $table->index(['name','last_name']);
+            $table->index(['status',\Illuminate\Support\Facades\DB::raw('YEAR(created_at)')]);
 
         });
         Schema::create('student_details', function (Blueprint $table) {
@@ -37,6 +43,14 @@ return new class extends Migration
             $table->string('group', 10)->nullable();
             $table->string('workshop')->nullable();
             $table->timestamps();
+            $table->index('user_id');
+            $table->index(['career_id']);
+            $table->index('semestre');
+            $table->index('group');
+            $table->index(['semestre', 'career_id']);
+            $table->index(['semestre', 'user_id']);
+            $table->index(['career_id', 'semestre', 'user_id']);
+
         });
 
     }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(PaymentConcept::class)->constrained('payment_concepts')->onDelete('cascade');
             $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
             $table->timestamps();
-        $table->index(['payment_concept_id', 'user_id']);
+            $table->index(['payment_concept_id', 'user_id']);
         });
     }
 

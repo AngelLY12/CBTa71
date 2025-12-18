@@ -38,12 +38,15 @@ return new class extends Migration
         });
 
         Schema::create('refresh_tokens', function (Blueprint $table) {
-        $table->id();
-        $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
-        $table->string('token')->unique();
-        $table->timestamp('expires_at');
-        $table->boolean('revoked');
-        $table->timestamps();
+            $table->id();
+            $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
+            $table->string('token')->unique();
+            $table->timestamp('expires_at');
+            $table->boolean('revoked');
+            $table->timestamps();
+            $table->index('expires_at');
+            $table->index('revoked');
+            $table->index(['revoked', 'expires_at']);
         });
 
     }

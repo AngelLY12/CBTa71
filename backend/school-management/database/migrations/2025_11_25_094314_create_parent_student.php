@@ -23,6 +23,9 @@ return new class extends Migration
             $table->foreign('student_role_id')->references('id')->on('roles')->onDelete('set null');
             $table->string('relationship',50)->nullable();
             $table->unique(['parent_id', 'student_id']);
+            $table->index('parent_id');
+            $table->index('student_id');
+            $table->index(['student_id', 'parent_id']);
             $table->timestamps();
         });
 
@@ -34,11 +37,13 @@ return new class extends Migration
             $table->timestamp('expires_at');
             $table->timestamp('used_at')->nullable();
             $table->unsignedBigInteger('created_by');
-
             $table->timestamps();
-
             $table->foreign('student_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
+            $table->index('student_id');
+            $table->index('email');
+            $table->index('expires_at');
+            $table->index('used_at');
         });
     }
 

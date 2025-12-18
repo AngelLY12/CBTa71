@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('roles', function(Blueprint $table){
-            $table->boolean('hidden')->default(false);
+            $table->boolean('hidden')->default(false)->index();
+            $table->index('name');
         });
 
     }

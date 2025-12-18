@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(Career::class)->constrained('careers')->onDelete('cascade');
             $table->foreignIdFor(PaymentConcept::class)->constrained('payment_concepts')->onDelete('cascade');
             $table->timestamps();
+            $table->index(['payment_concept_id', 'career_id']);
         });
     }
 

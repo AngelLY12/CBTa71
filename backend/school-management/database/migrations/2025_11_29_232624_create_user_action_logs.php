@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('method', 10);
             $table->text('url');
             $table->timestamps();
+            $table->index('created_at');
         });
     }
 

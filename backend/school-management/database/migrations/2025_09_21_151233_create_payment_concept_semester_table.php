@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignIdFor(PaymentConcept::class)->constrained('payment_concepts')->onDelete('cascade');
             $table->integer('semestre');
             $table->timestamps();
+            $table->index(['payment_concept_id', 'semestre']);
+
         });
     }
 
