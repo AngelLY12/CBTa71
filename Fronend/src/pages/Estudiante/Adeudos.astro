@@ -4,12 +4,14 @@ import StudentLayout from '../../layouts/LayoutEstu.astro';
 const alumnoBackend = "Pedro Gonzalez Lopez";
 const title = "Finanzas Estudiantiles";
 
+// Lista de adeudos con el nuevo ejemplo incluido
 const adeudosExistentes = [
   { id: 1, concepto: "Colegiatura Semestre I - 2024", monto: "1,218.00", fecha: "20 Dic, 2024", status: "Pendiente" },
-  { id: 2, concepto: "Inscripción Curso Inglés", monto: "450.00", fecha: "15 Ene, 2025", status: "Próximo" }
+  { id: 2, concepto: "Inscripción Curso Inglés", monto: "450.00", fecha: "15 Ene, 2025", status: "Próximo" },
+  { id: 3, concepto: "Seguro Estudiantil Anual", monto: "285.00", fecha: "05 Feb, 2025", status: "Próximo" }
 ];
 
-const tarjetasExistentes = [
+const tarjetasPorDefecto = [
   { id: 1, tipo: 'Visa', terminacion: '4242', logo: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg' },
   { id: 2, tipo: 'Mastercard', terminacion: '8812', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg' }
 ];
@@ -24,8 +26,17 @@ const tarjetasExistentes = [
       loading: false,
       selectedItem: null,
       selectedCard: null,
-      adeudos: ${JSON.stringify(adeudosExistentes)},
-      tarjetas: ${JSON.stringify(tarjetasExistentes)},
+      adeudos: [],
+      tarjetas: [],
+
+      init() {
+        const guardadas = localStorage.getItem('mis_tarjetas');
+        this.tarjetas = guardadas ? JSON.parse(guardadas) : ${JSON.stringify(tarjetasPorDefecto)};
+        
+        const adeudosGuardados = localStorage.getItem('mis_adeudos');
+        this.adeudos = adeudosGuardados ? JSON.parse(adeudosGuardados) : ${JSON.stringify(adeudosExistentes)};
+        if(!adeudosGuardados) localStorage.setItem('mis_adeudos', JSON.stringify(this.adeudos));
+      },
 
       openPayment(item) {
         this.selectedItem = item;
@@ -33,12 +44,32 @@ const tarjetasExistentes = [
         this.showModal = true;
       },
 
-      processPayment() {
+      processPayment(isReference = false) {
         this.loading = true;
+        
+        const nuevoPago = {
+          id: Date.now(),
+          concepto: this.selectedItem.concepto,
+          monto: this.selectedItem.monto,
+          fecha: new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
+          metodo: isReference ? 'Referencia / Efectivo' : (this.selectedCard.tipo + ' • ' + this.selectedCard.terminacion),
+          folio: 'PAY-' + Math.floor(Math.random() * 90000 + 10000),
+          categoria: isReference ? 'Trámite' : 'Académico'
+        };
+
         setTimeout(() => {
+          // 1. Guardar en Historial
+          const historial = JSON.parse(localStorage.getItem('historial_pagos') || '[]');
+          historial.unshift(nuevoPago);
+          localStorage.setItem('historial_pagos', JSON.stringify(historial));
+
+          // 2. Borrar de Pendientes
+          this.adeudos = this.adeudos.filter(a => a.id !== this.selectedItem.id);
+          localStorage.setItem('mis_adeudos', JSON.stringify(this.adeudos));
+
           this.loading = false;
-          this.showModal = false;
-          alert('¡Pago procesado con éxito!');
+          // 3. Redirigir a la ruta exacta
+          window.location.href = '/Estudiante/Historial'; 
         }, 2000);
       }
     }`}
@@ -54,7 +85,7 @@ const tarjetasExistentes = [
         </div>
         <div class="balance-summary">
           <span class="label">Total por Pagar</span>
-          <span class="amount">$1,668.00</span>
+          <span class="amount" x-text="'$' + adeudos.reduce((acc, item) => acc + parseFloat(item.monto.replace(',','')), 0).toLocaleString('en-US', {minimumFractionDigits: 2})"></span>
         </div>
       </div>
     </header>
@@ -62,13 +93,18 @@ const tarjetasExistentes = [
     <main class="content-grid">
       <section class="section-container">
         <h2 class="section-title">Pagos Pendientes</h2>
+        
+        <template x-if="adeudos.length === 0">
+          <div style="text-align: center; padding: 4rem; background: white; border-radius: 24px; border: 2px dashed #e2e8f0;">
+             <p style="color: var(--text-muted); font-weight: 600;">✨ No tienes pagos pendientes por ahora.</p>
+          </div>
+        </template>
 
         <div class="cards-stack">
           <template x-for="item in adeudos" :key="item.id">
             <div class="modern-card">
               <div class="card-left">
                 <div class="status-indicator" :class="item.status === 'Pendiente' ? 'urgent' : 'upcoming'"></div>
-                
                 <div class="card-details-text">
                   <h3 x-text="item.concepto"></h3>
                   <div class="date-row">
@@ -77,7 +113,6 @@ const tarjetasExistentes = [
                   </div>
                 </div>
               </div>
-
               <div class="card-right">
                 <span class="price" x-text="'$' + item.monto"></span>
                 <button @click="openPayment(item)" class="pay-button">Pagar</button>
@@ -90,7 +125,6 @@ const tarjetasExistentes = [
 
     <div x-show="showModal" x-cloak class="modal-overlay">
       <div class="modal-backdrop" @click="!loading && (showModal = false)" x-show="showModal" x-transition.opacity></div>
-      
       <div class="modal-sheet" x-show="showModal" x-transition:enter="modal-anim-enter" x-transition:enter-start="modal-anim-start" x-transition:enter-end="modal-anim-end">
         <div class="sheet-handle"></div>
         <div class="sheet-body">
@@ -103,7 +137,7 @@ const tarjetasExistentes = [
             <div class="modern-options-list">
               <button @click="step = 'card-list'" class="modern-option-item">
                 <div class="m-option-icon blue-grad">💳</div>
-                <div class="m-option-info"><strong>Tarjetas Guardadas</strong><span>Visa o Mastercard</span></div>
+                <div class="m-option-info"><strong>Tarjetas Guardadas</strong><span>Usa tus tarjetas registradas</span></div>
               </button>
               <button @click="step = 'reference'" class="modern-option-item">
                 <div class="m-option-icon gold-grad">🏦</div>
@@ -112,57 +146,67 @@ const tarjetasExistentes = [
             </div>
           </div>
 
-          <div x-show="step === 'reference'" class="step-content-centered">
-             <div class="reference-visual-card">
-                <p class="ref-title">REFERENCIA DE PAGO</p>
-                <div class="barcode-area">
-                  <span class="barcode-digits">0123 4567 8910 1112</span>
-                  <div class="barcode-lines">|| ||| | ||| || ||| | || |||</div>
-                </div>
-                <div class="ref-data-grid">
-                  <div class="ref-data-row"><span>Convenio:</span><strong>CIE 163721</strong></div>
-                  <div class="ref-data-row"><span>Banco:</span><strong>BBVA</strong></div>
-                </div>
-             </div>
-             <button @click="alert('Imagen guardada'); showModal = false" class="btn-primary-action">GUARDAR COMO IMAGEN</button>
-             <button @click="step = 'select-method'" class="btn-link-action">Volver</button>
-          </div>
-
           <div x-show="step === 'card-list'">
-            <div class="modal-step-header">
-              <button @click="step = 'select-method'" class="btn-back-circle">←</button>
-              <h3>Selecciona tarjeta</h3>
+            <div class="modal-step-header" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+              <button @click="step = 'select-method'" style="background: #f1f5f9; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer;">←</button>
+              <h3 style="margin: 0;">Selecciona tarjeta</h3>
             </div>
-            <div class="cards-scroller">
+            <div class="cards-scroller" style="max-height: 300px; overflow-y: auto;">
               <template x-for="tarjeta in tarjetas" :key="tarjeta.id">
                 <div @click="selectedCard = tarjeta; step = 'confirm'" class="modern-card-pill">
-                  <img :src="tarjeta.logo" class="pill-logo">
-                  <div class="pill-info">
-                    <span class="p-type" x-text="tarjeta.tipo"></span>
-                    <strong class="p-num" x-text="'•••• ' + tarjeta.terminacion"></strong>
+                  <img :src="tarjeta.logo" style="width: 40px;">
+                  <div style="text-align: left; margin-left: 1rem;">
+                    <strong x-text="'•••• ' + tarjeta.terminacion" style="font-size: 1.1rem; color: var(--primary);"></strong>
                   </div>
                 </div>
               </template>
             </div>
           </div>
 
-          <div x-show="step === 'confirm' || loading">
+          <div x-show="step === 'confirm' || (loading && selectedCard)">
              <template x-if="loading">
-               <div class="loading-ui"><div class="custom-loader"></div><p>Procesando...</p></div>
+               <div style="padding: 2rem 0;">
+                 <div class="custom-loader"></div>
+                 <p>Procesando pago seguro...</p>
+               </div>
              </template>
              <template x-if="!loading">
                <div class="confirm-summary-ui">
                  <div class="check-icon-ring">✓</div>
-                 <h3>¿Confirmar pago?</h3>
+                 <h3>Confirmar pago</h3>
                  <div class="summary-box">
-                    <div class="s-row"><span>Total:</span><strong x-text="'$' + selectedItem?.monto"></strong></div>
-                    <div class="s-row"><span>Método:</span><span x-text="selectedCard?.tipo + ' •' + selectedCard?.terminacion"></span></div>
+                    <div class="summary-row"><span>Total:</span><strong x-text="'$' + selectedItem?.monto"></strong></div>
+                    <div class="summary-row"><span>Método:</span><span x-text="selectedCard?.tipo + ' •' + selectedCard?.terminacion"></span></div>
                  </div>
-                 <button @click="processPayment()" class="btn-primary-action">CONFIRMAR</button>
+                 <button @click="processPayment(false)" class="btn-primary-action">CONFIRMAR</button>
                  <button @click="step = 'card-list'" class="btn-link-action">Regresar</button>
                </div>
              </template>
           </div>
+
+          <div x-show="step === 'reference' || (loading && !selectedCard)">
+             <template x-if="loading">
+                <div style="padding: 2rem 0;"><div class="custom-loader"></div><p>Generando registro...</p></div>
+             </template>
+             <template x-if="!loading">
+               <div>
+                <div class="reference-visual-card">
+                   <p class="ref-label">REFERENCIA DE PAGO</p>
+                   <div class="ref-number-box">
+                     <span>0123 4567 8910 1112</span>
+                     <div class="barcode-sim"></div>
+                   </div>
+                   <div class="ref-footer">
+                     <span>Convenio: <strong>CIE 163721</strong></span>
+                     <span>Banco: <strong>BBVA</strong></span>
+                   </div>
+                </div>
+                <button @click="processPayment(true)" class="btn-primary-action">GUARDAR Y FINALIZAR</button>
+                <button @click="step = 'select-method'" class="btn-link-action">Volver</button>
+               </div>
+             </template>
+          </div>
+
         </div>
       </div>
     </div>
@@ -171,118 +215,38 @@ const tarjetasExistentes = [
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
   :root { --primary: #112d26; --accent: #c4a47c; --bg: #f9fbfb; --white: #ffffff; --text-muted: #64748b; }
-  
-  body { background: var(--bg); font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
-  .page-wrapper { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
-
-  /* HEADER */
+  .page-wrapper { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; font-family: 'Plus Jakarta Sans', sans-serif; }
   .main-header { background: var(--primary); border-radius: 24px; padding: 2.5rem; color: white; margin-bottom: 2.5rem; }
   .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
-  .user-profile { display: flex; align-items: center; gap: 1rem; }
-  .avatar { width: 55px; height: 55px; background: var(--accent); border-radius: 15px; display: grid; place-items: center; color: var(--primary); font-weight: 800; font-size: 1.2rem; }
-  .welcome-text h1 { margin: 0; font-size: 1.8rem; }
-  .balance-summary { text-align: right; }
+  .avatar { width: 55px; height: 55px; background: var(--accent); border-radius: 15px; display: grid; place-items: center; color: var(--primary); font-weight: 800; }
   .balance-summary .amount { display: block; font-size: 2rem; font-weight: 800; color: var(--accent); }
-
-  /* --- CORRECCIÓN DE LA TARJETA (MANTENIENDO TU DISEÑO) --- */
-  .modern-card { 
-    background: white; border-radius: 20px; padding: 1.5rem; 
-    display: flex; justify-content: space-between; align-items: center; 
-    margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); 
-    border: 1px solid #f1f5f9;
-  }
-  .card-left { display: flex; align-items: center; gap: 1.2rem; } /* Flex para alinear indicador y texto */
-  
-  .status-indicator { width: 5px; height: 50px; border-radius: 10px; flex-shrink: 0; }
+  .modern-card { background: white; border-radius: 20px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; }
+  .status-indicator { width: 5px; height: 50px; border-radius: 10px; }
   .status-indicator.urgent { background: #eb4d4b; }
   .status-indicator.upcoming { background: #6ab04c; }
-
-  .card-details-text h3 { margin: 0 0 4px 0; font-size: 1.1rem; color: var(--primary); font-weight: 700; }
-  .date-row { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.9rem; }
-  
-  .card-right { text-align: right; display: flex; align-items: center; gap: 1.5rem; }
-  .price { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
-  .pay-button { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-  .pay-button:hover { background: #1a453a; }
-
-  /* MODAL */
+  .pay-button { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 12px; font-weight: 700; cursor: pointer; }
   .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; }
   .modal-backdrop { position: absolute; inset: 0; background: rgba(17, 45, 38, 0.6); backdrop-filter: blur(8px); }
-  .modal-sheet { position: relative; background: white; width: 100%; max-width: 450px; border-radius: 30px; overflow: hidden; z-index: 10001; }
+  .modal-sheet { position: relative; background: white; width: 100%; max-width: 450px; border-radius: 30px; overflow: hidden; }
   .sheet-body { padding: 2rem; text-align: center; }
-  .sheet-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 10px; margin: 12px auto 0; display: none; }
-
   .grand-total-display { font-size: 3rem; font-weight: 800; color: var(--primary); margin: 0; }
-  .concept-tag { color: var(--accent); font-weight: 700; font-size: 0.9rem; }
-
-  .modern-options-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem; }
-  .modern-option-item { display: flex; align-items: center; padding: 1.2rem; border: 2px solid #f1f5f9; border-radius: 20px; background: white; cursor: pointer; text-align: left; }
+  .modern-option-item { display: flex; align-items: center; padding: 1.2rem; border: 2px solid #f1f5f9; border-radius: 20px; background: white; cursor: pointer; text-align: left; width: 100%; margin-bottom: 1rem; }
   .m-option-icon { width: 45px; height: 45px; border-radius: 14px; display: grid; place-items: center; margin-right: 1rem; font-size: 1.3rem; }
   .blue-grad { background: #e0f2fe; }
   .gold-grad { background: #fef3c7; }
-
-  /* REFERENCIA */
-  .reference-visual-card { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 24px; padding: 1.5rem; margin-bottom: 1rem; }
-  .barcode-digits { font-family: monospace; font-size: 1.3rem; font-weight: 800; color: var(--primary); display: block; }
-  .barcode-lines { font-size: 1.2rem; letter-spacing: 3px; color: #94a3b8; margin-bottom: 1rem; }
-  .ref-data-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 5px; }
-
-  .btn-primary-action { width: 100%; background: var(--primary); color: white; padding: 1.1rem; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; margin-top: 1rem; }
-  .btn-link-action { width: 100%; background: transparent; color: var(--text-muted); padding: 0.8rem; border: none; cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
-
+  .btn-primary-action { width: 100%; background: var(--primary); color: white; padding: 1.1rem; border-radius: 15px; border: none; font-weight: 800; cursor: pointer; }
+  .btn-link-action { width: 100%; background: transparent; color: var(--text-muted); border: none; cursor: pointer; text-decoration: underline; margin-top: 10px; }
   .modern-card-pill { display: flex; align-items: center; padding: 1rem; border: 2px solid #f1f5f9; border-radius: 18px; margin-bottom: 0.8rem; cursor: pointer; }
-  .pill-logo { height: 18px; margin-right: 1rem; }
-
-  /* ANIMACIONES */
-  .modal-anim-enter { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-  .modal-anim-start { opacity: 0; transform: scale(0.9) translateY(40px); }
-  .modal-anim-end { opacity: 1; transform: scale(1) translateY(0); }
-
+  .custom-loader { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+  .reference-visual-card { background: #112d26; color: white; padding: 1.5rem; border-radius: 20px; margin-bottom: 1.5rem; text-align: left; }
+  .ref-number-box { background: white; color: black; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; text-align: center; }
+  .barcode-sim { height: 30px; background: repeating-linear-gradient(90deg, #000, #000 2px, #fff 2px, #fff 4px); margin-top: 5px; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  [x-cloak] { display: none !important; }
   @media (max-width: 768px) {
-    .page-wrapper { padding: 1rem; }
-    .main-header { padding: 1.5rem; border-radius: 20px; margin-bottom: 1.5rem; }
-    .header-content { flex-direction: column; text-align: center; gap: 1rem; }
-    .user-profile { gap: 0.8rem; }
-    .avatar { width: 48px; height: 48px; font-size: 1rem; }
-    .welcome-text h1 { font-size: 1.5rem; }
-    .balance-summary { text-align: center; width: 100%; padding: 0.8rem 1.2rem; border-radius: 18px; }
-    .balance-summary .amount { font-size: 1.8rem; }
-    .modern-card { padding: 1.2rem; flex-direction: column; gap: 1.2rem; text-align: center; border-radius: 18px; }
-    .card-left { flex-direction: row; text-align: left; width: 100%; gap: 1rem; }
-    .status-indicator { width: 4px; height: 40px; }
-    .card-details-text h3 { font-size: 1rem; }
-    .date-row { font-size: 0.85rem; }
-    .card-right { width: 100%; justify-content: space-between; gap: 1rem; }
-    .price { font-size: 1.2rem; }
-    .pay-button { padding: 0.7rem 1.2rem; font-size: 0.85rem; }
-    
     .modal-overlay { align-items: flex-end; }
     .modal-sheet { border-radius: 28px 28px 0 0; max-width: 100%; }
-    .sheet-handle { display: block; }
-    .sheet-body { padding: 1.5rem; }
-    .grand-total-display { font-size: 2.5rem; }
-    .concept-tag { font-size: 0.8rem; }
-    .modern-options-list { gap: 0.8rem; margin-top: 1rem; }
-    .modern-option-item { padding: 1rem; border-radius: 16px; }
-    .m-option-icon { width: 40px; height: 40px; font-size: 1.1rem; }
-    .m-option-info strong { font-size: 0.9rem; }
-    .reference-visual-card { padding: 1.2rem; border-radius: 20px; }
-    .barcode-digits { font-size: 1.1rem; }
-    .barcode-lines { font-size: 1rem; }
-    .ref-data-row { font-size: 0.8rem; }
-    .btn-primary-action { padding: 1rem; border-radius: 12px; font-size: 0.9rem; }
-    .btn-link-action { padding: 0.7rem; font-size: 0.85rem; }
-    .modern-card-pill { padding: 0.8rem; border-radius: 14px; }
-    .pill-info .p-type { font-size: 0.8rem; }
-    .modal-step-header { padding-bottom: 1rem; }
-    .cards-scroller { max-height: 200px; overflow-y: auto; }
-    .confirm-summary-ui { padding: 1rem; }
-    .summary-box { padding: 0.8rem; border-radius: 12px; }
-    .s-row { font-size: 0.85rem; }
-    .loading-ui p { font-size: 0.9rem; }
-    .modal-anim-start { transform: translateY(100%); }
+    .modern-card { flex-direction: column; text-align: center; gap: 1rem; }
   }
-  [x-cloak] { display: none !important; }
 </style>

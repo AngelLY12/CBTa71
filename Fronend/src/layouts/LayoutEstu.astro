@@ -37,6 +37,7 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
         .content-fade-in { animation: fadeIn 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* ESTILO ACTIVO SEGÚN TU IMAGEN */
         .nav-active {
             background-color: white;
             color: var(--PRIMARY_COLOR) !important;
@@ -44,6 +45,7 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-left: 5px solid var(--ACCENT_COLOR);
             padding-left: 1rem;
+            border-radius: 12px; /* Redondeado para que parezca una pastilla */
         }
         .nav-inactive:hover { background-color: rgba(255, 255, 255, 0.1); }
         
@@ -66,7 +68,9 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
         fixed inset-0 w-full max-w-[250px] h-full transition-transform-fast sidebar-closed
         md:fixed md:top-0 md:flex md:h-screen md:w-[250px] md:shadow-lg md:rounded-r-xl">
     
-        <button id="close-sidebar-button" class="md:hidden absolute top-3 right-3 p-2 rounded-full bg-white/20 text-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M18 6l-12 12M6 6l12 12"/></svg></button>
+        <button id="close-sidebar-button" class="md:hidden absolute top-3 right-3 p-2 rounded-full bg-white/20 text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M18 6l-12 12M6 6l12 12"/></svg>
+        </button>
         
         <div class="flex items-center gap-4 mb-10 pt-3 border-b border-white/10 pb-4">
             <div class="h-10 w-10">
@@ -87,19 +91,19 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
                     </a>
                 </li>
                 <li>
-                    <a href="/Estudiante/Tarjetas" data-path="/Estudiante/PortalEstudiante/Tarjetas" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
+                    <a href="/Estudiante/Tarjetas" data-path="/Estudiante/Tarjetas" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                         Mis Tarjetas
                     </a>
                 </li>
                 <li>
-                    <a href="/Estudiante/Adeudos" data-path="/Estudiante/PortalEstudiante/Adeudos" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
+                    <a href="/Estudiante/Adeudos" data-path="/Estudiante/Adeudos" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         Pagos Pendientes
                     </a>
                 </li>
                 <li>
-                    <a href="/Estudiante/Historial" data-path="/Estudiante/PortalEstudiante/Historial" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
+                    <a href="/Estudiante/Historial" data-path="/Estudiante/Historial" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         Historial
                     </a>
@@ -118,7 +122,9 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
     </nav>
 
     <main class="flex-1 p-4 md:p-8 md:ml-[250px] relative">
-        <button id="open-sidebar-button" class="md:hidden fixed top-4 left-4 p-3 rounded-xl bg-[#2e594d] text-white shadow-xl z-40"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+        <button id="open-sidebar-button" class="md:hidden fixed top-4 left-4 p-3 rounded-xl bg-[#2e594d] text-white shadow-xl z-40">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
         <div class="h-16 md:hidden"></div> 
         <div class="bg-white p-6 md:p-10 rounded-[2rem] shadow-2xl content-fade-in min-h-[calc(100vh-4rem)]">
             <slot />
@@ -126,7 +132,6 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
     </main>
 
     <script is:inline>
-        // Mismo script de control (automáticamente reconocerá el nuevo enlace de Historial)
         const sidebar = document.getElementById('sidebar-menu');
         const openButton = document.getElementById('open-sidebar-button');
         const closeButton = document.getElementById('close-sidebar-button');
@@ -135,12 +140,18 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
         const inactiveClass = 'nav-inactive';
 
         function setActiveLink() {
+            // Normalizar la ruta actual quitando la barra final
             let currentPath = window.location.pathname.replace(/\/$/, "");
+            
             navLinks.forEach(link => {
-                const linkPath = link.getAttribute('data-path');
+                const linkPath = link.getAttribute('data-path').replace(/\/$/, "");
                 link.classList.remove(activeClass, inactiveClass);
-                if (linkPath === currentPath) link.classList.add(activeClass);
-                else link.classList.add(inactiveClass);
+                
+                if (linkPath === currentPath) {
+                    link.classList.add(activeClass);
+                } else {
+                    link.classList.add(inactiveClass);
+                }
             });
         }
 
@@ -164,7 +175,10 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
 
         openButton?.addEventListener('click', openSidebar);
         closeButton?.addEventListener('click', closeSidebar);
-        navLinks.forEach(link => link.addEventListener('click', () => { if (window.innerWidth < 768) closeSidebar(); }));
+        
+        navLinks.forEach(link => link.addEventListener('click', () => { 
+            if (window.innerWidth < 768) closeSidebar(); 
+        }));
 
         const handleResize = () => {
             if (window.innerWidth >= 768) {
@@ -178,7 +192,12 @@ const TEXT_COLOR_DARK = '#374151';  // Texto principal
         };
 
         window.addEventListener('resize', handleResize);
-        window.addEventListener('load', () => { handleResize(); setActiveLink(); });
+        window.addEventListener('load', () => { 
+            handleResize(); 
+            setActiveLink(); 
+        });
+        
+        // Importante para Astro con transiciones de página
         document.addEventListener("astro:after-swap", setActiveLink);
     </script>
 </body>
