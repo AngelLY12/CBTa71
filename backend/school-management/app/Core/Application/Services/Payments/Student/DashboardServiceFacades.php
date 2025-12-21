@@ -1,10 +1,9 @@
 <?php
 namespace App\Core\Application\Services\Payments\Student;
 
-use App\Core\Application\DTO\Response\General\DashboardDataUserResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\Payment\PaymentsSummaryResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
-use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Payments\Student\Dashboard\OverduePaymentsUseCase;
 use App\Core\Application\UseCases\Payments\Student\Dashboard\PaymentHistoryUseCase;
@@ -33,7 +32,7 @@ class DashboardServiceFacades {
         return $this->cache($key,$forceRefresh ,fn() => $this->pending->execute($user->id, $onlyThisYear));
     }
 
-    public function paymentsMade(bool $onlyThisYear, User $user, bool $forceRefresh): string {
+    public function paymentsMade(bool $onlyThisYear, User $user, bool $forceRefresh): PaymentsSummaryResponse {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":payments:$user->id:$onlyThisYear");
         return $this->cache($key,$forceRefresh ,fn() => $this->payments->execute($user->id, $onlyThisYear));
     }
@@ -47,12 +46,6 @@ class DashboardServiceFacades {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":history:$user->id:$perPage:$page:$onlyThisYear");
         return $this->cache($key,$forceRefresh ,fn() => $this->history->execute($user->id, $perPage, $page, $onlyThisYear));
 
-    }
-    public function getDashboardData(bool $onlyThisYear, User $user, bool $forceRefresh): DashboardDataUserResponse {
-        return GeneralMapper::toDashboardDataUserResponse(
-            $this->paymentsMade($onlyThisYear,$user, $forceRefresh),
-            $this->pendingPaymentAmount($onlyThisYear,$user, $forceRefresh),
-            $this->overduePayments($onlyThisYear, $user, $forceRefresh));
     }
 
     public function refreshAll(): void

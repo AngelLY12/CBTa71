@@ -6,6 +6,7 @@ use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
+use App\Core\Application\DTO\Response\General\ImportResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
@@ -27,7 +28,7 @@ use App\Core\Application\UseCases\Admin\ShowAllUsersUseCase;
 use App\Core\Application\UseCases\Admin\SyncPermissionsUseCase;
 use App\Core\Application\UseCases\Admin\SyncRoleUseCase;
 use App\Core\Application\UseCases\Admin\TemporaryDisableUserUseCase;
-use App\Core\Application\UseCases\Admin\UpdateStudentDeatilUseCase;
+use App\Core\Application\UseCases\Admin\UpdateStudentDeatilsUseCase;
 use App\Core\Application\UseCases\Jobs\PromoteStudentsUseCase;
 use App\Core\Application\UseCases\User\RegisterUseCase;
 use App\Core\Domain\Entities\Permission;
@@ -45,7 +46,7 @@ class AdminServiceFacades
     private array $requestCache = [];
     public function __construct(
         private FindStudentDetailUseCase        $find_student,
-        private UpdateStudentDeatilUseCase      $update_student,
+        private UpdateStudentDeatilsUseCase     $update_student,
         private AttachStudentDetailUserCase     $attach,
         private RegisterUseCase                 $register,
         private BulkImportUsersUseCase          $import,
@@ -55,7 +56,7 @@ class AdminServiceFacades
         private ActivateUserUseCase             $activate,
         private DeleteLogicalUserUseCase        $delete,
         private DisableUserUseCase              $disable,
-        private TemporaryDisableUserUseCase $temporaryDisable,
+        private TemporaryDisableUserUseCase     $temporaryDisable,
         private FindAllRolesUseCase             $roles,
         private FindAllPermissionsUseCase       $permissions,
         private FindRoleByIdUseCase             $role,
@@ -102,14 +103,14 @@ class AdminServiceFacades
         return $user;
     }
 
-    public function importUsers(array $rows):int
+    public function importUsers(array $rows): ImportResponse
     {
         $import=$this->import->execute($rows);
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $import;
     }
 
-    public function importStudents(array $rows):int
+    public function importStudents(array $rows): ImportResponse
     {
         $import=$this->importStudentDetail->execute($rows);
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
