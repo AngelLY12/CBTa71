@@ -19,30 +19,29 @@ class FindEntity
  *         @OA\Schema(type="integer", example=1)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Concepto encontrado correctamente.",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(property="concept", ref="#/components/schemas/DomainPaymentConcept")
- *             ),
- *             @OA\Property(property="message", type="string", example="Concepto encontrado.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Concepto no encontrado",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="El concepto solicitado no existe.")
- *         )
- *     ),
- *     @OA\Response(response=401, description="No autenticado"),
- *     @OA\Response(response=403, description="No autorizado"),
- *     @OA\Response(response=500, description="Error inesperado")
+ *          response=200,
+ *          description="Concepto encontrado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function getConcept(){}
@@ -63,30 +62,29 @@ public function getConcept(){}
  *         @OA\Schema(type="integer", example=5)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Pago encontrado correctamente.",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(property="payment", ref="#/components/schemas/DomainPayment")
- *             ),
- *             @OA\Property(property="message", type="string", example="Pago encontrado.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Pago no encontrado",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="El pago solicitado no existe.")
- *         )
- *     ),
- *     @OA\Response(response=401, description="No autenticado"),
- *     @OA\Response(response=403, description="No autorizado"),
- *     @OA\Response(response=500, description="Error inesperado")
+ *          response=200,
+ *          description="Pago encontrado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="payment",
+ *                              ref="#/components/schemas/DomainPayment"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function getPayment(){}

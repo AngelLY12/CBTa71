@@ -33,34 +33,32 @@ class Debts
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Pagos obtenidos correctamente desde Stripe",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="payments",
- *                     type="array",
- *                     @OA\Items(ref="#/components/schemas/StripePaymentsResponse")
- *                 )
- *             ),
- *             @OA\Property(property="message", type="string", example="Pagos obtenidos correctamente.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación en los parámetros enviados"
- *     ),
- *     @OA\Response(
- *         response=409,
- *         description="Recurso no encontrado"
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error de Stripe"
- *     )
+ *          response=200,
+ *          description="Pagos obtenidos correctamente desde Stripe",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="payments",
+ *                              type="array",
+ *                              @OA\Items(ref="#/components/schemas/StripePaymentsResponse")
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=502, description="Error de Stripe", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function stripe(){}
@@ -80,32 +78,31 @@ public function stripe(){}
  *         )
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Pago validado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="validated_payment",
- *                     ref="#/components/schemas/PaymentValidateResponse"
- *                 )
- *             ),
- *             @OA\Property(property="message", type="string", example="Pago validado correctamente.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación en los datos enviados"
- *     ),
- *     @OA\Response(
- *         response=409,
- *         description="Recurso no encontrado"
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error de Stripe"
+ *          response=200,
+ *          description="Pago validado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="validated_payment",
+ *                              ref="#/components/schemas/PaymentValidateResponse"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=502, description="Error de Stripe", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  *     )
  * )
  */
@@ -148,30 +145,38 @@ public function validate(){}
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Lista de pagos pendientes obtenida correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="pending_payments",
- *                     allOf={
- *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
- *                         @OA\Schema(
- *                             @OA\Property(
- *                                 property="items",
- *                                 type="array",
- *                                 @OA\Items(ref="#/components/schemas/ConceptNameAndAmountResponse")
- *                             )
- *                         )
- *                     }
- *                 )
- *             ),
- *             @OA\Property(property="message", type="string", nullable=true, example=null)
- *         )
- *     )
+ *          response=200,
+ *          description="Lista de pagos pendientes obtenida correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="pending_payments",
+ *                              allOf={
+ *                                  @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+ *                                  @OA\Schema(
+ *                                      @OA\Property(
+ *                                          property="items",
+ *                                          type="array",
+ *                                          @OA\Items(ref="#/components/schemas/ConceptNameAndAmountResponse")
+ *                                      )
+ *                                  )
+ *                              }
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function index(){}

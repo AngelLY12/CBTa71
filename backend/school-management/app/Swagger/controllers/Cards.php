@@ -20,17 +20,26 @@ class Cards
  *         @OA\Schema(type="string", example="pm_1P7E89AjcPzVqRkV")
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Método de pago eliminado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="message", type="string", example="Método de pago eliminado correctamente")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Método de pago no encontrado"
- *     ),
+ *          response=200,
+ *          description="Método de pago eliminado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Método de pago eliminado correctamente"
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  *
  * )
  */
@@ -46,20 +55,30 @@ public function deleteCard(){}
  *     operationId="addUserCard",
  *     security={{"bearerAuth":{}}},
  *     @OA\Response(
- *         response=201,
- *         description="Sesión de registro de método de pago creada exitosamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(
- *                     property="cards",
- *                     type="array",
- *                     description="Url del checkout para agregar tarjeta",
- *                     @OA\Items(ref="#/components/schemas/SetupCardResponse")
- *                 )
- *             )
- *         )
- *     ),
+ *          response=201,
+ *          description="Sesión de registro de método de pago creada exitosamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="checkout_url",
+ *                              type="string",
+ *                              description="Url del checkout para agregar tarjeta",
+ *                              example="https://checkout.stripe.com/c/pay/cs_test_xxx"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  *
  * )
  */
@@ -89,37 +108,37 @@ public function createCard(){}
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Lista de métodos de pago obtenida correctamente.",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="cards",
- *                     type="array",
- *                     description="Lista de métodos de pago del usuario",
- *                     @OA\Items(ref="#/components/schemas/DisplayPaymentMethodResponse")
- *                 )
- *             ),
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 nullable=true,
- *                 example="No se encontraron métodos de pago."
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="No autorizado - Token inválido o ausente"
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor"
- *     )
+ *          response=200,
+ *          description="Lista de métodos de pago obtenida correctamente.",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="cards",
+ *                              type="array",
+ *                              description="Lista de métodos de pago del usuario",
+ *                              @OA\Items(ref="#/components/schemas/DisplayPaymentMethodResponse")
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          nullable=true,
+ *                          example="No se encontraron métodos de pago."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function getCards(){}

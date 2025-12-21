@@ -15,27 +15,27 @@ class Parents
  *         @OA\JsonContent(ref="#/components/schemas/SendInviteRequest")
  *     ),
  *     @OA\Response(
- *         response=201,
- *         description="Invitación enviada",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="message", type="string", example="Invitation enviada con exito"),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(property="token", type="string", example="uuid-token"),
- *                 @OA\Property(property="expires_at", type="string", format="date-time", example="2025-11-27T12:34:56Z")
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="El correo es obligatorio")
- *         )
- *     )
+ *          response=201,
+ *          description="Invitación enviada",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(property="token", type="string", example="uuid-token"),
+ *                          @OA\Property(property="expires_at", type="string", format="date-time", example="2025-11-27T12:34:56Z")
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function invite(){}
@@ -52,21 +52,15 @@ public function invite(){}
  *         @OA\JsonContent(ref="#/components/schemas/AcceptInviteRequest")
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Invitación aceptada",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="message", type="string", example="La invitación ha sido aceptada")
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="El token es obligatorio")
- *         )
- *     )
+ *          response=200,
+ *          description="Invitación aceptada",
+ *          @OA\JsonContent(ref="#/components/schemas/SuccessResponse")
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function accept(){}
@@ -87,23 +81,31 @@ public function accept(){}
  *     ),
  *
  *     @OA\Response(
- *         response=200,
- *         description="",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="children",
- *                     type="array",
- *                     description="Lista de hijos del usuario",
- *                     @OA\Items(ref="#/components/schemas/ParentChildrenResponse")
- *                 )
- *             ),
- *             @OA\Property(property="message", type="string", example="Datos obtenidos")
- *         )
- *     ),
+ *          response=200,
+ *          description="Hijos obtenidos correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="children",
+ *                              type="array",
+ *                              description="Lista de hijos del usuario",
+ *                              @OA\Items(ref="#/components/schemas/ParentChildrenResponse")
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  *
  * )
  */

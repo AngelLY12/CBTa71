@@ -38,28 +38,38 @@ class PaymentConcepts
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Listado de conceptos de pago obtenido exitosamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(
- *                     property="concepts",
- *                     allOf={
- *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
- *                         @OA\Schema(
- *                             @OA\Property(
- *                                 property="items",
- *                                 type="array",
- *                                 @OA\Items(ref="#/components/schemas/DomainPaymentConcept")
- *                             )
- *                         )
- *                     }
- *                 )
- *             ),
- *             @OA\Property(property="message", type="string", nullable=true)
- *         )
- *     )
+ *          response=200,
+ *          description="Listado de conceptos de pago obtenido exitosamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concepts",
+ *                              allOf={
+ *                                  @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+ *                                  @OA\Schema(
+ *                                      @OA\Property(
+ *                                          property="items",
+ *                                          type="array",
+ *                                          @OA\Items(ref="#/components/schemas/DomainPaymentConcept")
+ *                                      )
+ *                                  )
+ *                              }
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function concepts(){}
@@ -77,46 +87,31 @@ public function concepts(){}
  *         @OA\JsonContent(ref="#/components/schemas/StorePaymentConceptRequest")
  *     ),
  *     @OA\Response(
- *         response=201,
- *         description="Concepto de pago creado exitosamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="concept",
- *                     ref="#/components/schemas/DomainPaymentConcept"
- *                 )
- *             ),
- *             @OA\Property(property="message", type="string", example="Concepto de pago creado con éxito.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error en la validación de datos",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Error en la validación de datos."),
- *             @OA\Property(property="errors", type="object", description="Errores de validación por campo")
- *         )
- *     ),
- *     @OA\Response(
- *         response=409,
- *         description="Conflicto en los datos",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Conflicto en los datos.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Recurso no encontrado",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Recurso no encontrado.")
- *         )
- *     )
+ *          response=201,
+ *          description="Concepto de pago creado exitosamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function createConcept(){}
@@ -141,23 +136,31 @@ public function createConcept(){}
  *         @OA\JsonContent(ref="#/components/schemas/UpdatePaymentConceptRequest")
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Concepto actualizado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(
- *                     property="concept",
- *                     ref="#/components/schemas/DomainPaymentConcept"
- *                 )
- *
- *             ),
- *             @OA\Property(property="message", type="string", example="Concepto de pago actualizado correctamente.")
- *         )
- *     ),
- *     @OA\Response(response=422, description="Error en la validación de datos"),
- *     @OA\Response(response=409, description="Conflicto en los datos"),
- *     @OA\Response(response=404, description="Recurso no encontrado")
+ *          response=200,
+ *          description="Concepto actualizado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function updateConcept(){}
@@ -171,21 +174,30 @@ public function updateConcept(){}
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  *     @OA\Response(
- *         response=200,
- *         description="Concepto finalizado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(
- *                     property="concept",
- *                     ref="#/components/schemas/DomainPaymentConcept"
- *                 )
- *
- *             ),
- *             @OA\Property(property="message", type="string", example="Concepto de pago finalizado correctamente.")
- *         )
- *     ),
- *     @OA\Response(response=409, description="Conflicto en los datos")
+ *          response=200,
+ *          description="Concepto finalizado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function finalizeConcept(){}
@@ -199,21 +211,30 @@ public function finalizeConcept(){}
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  *     @OA\Response(
- *         response=200,
- *         description="Concepto deshabilitado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(
- *                     property="concept",
- *                     ref="#/components/schemas/DomainPaymentConcept"
- *                 )
- *
- *             ),
- *             @OA\Property(property="message", type="string", example="Concepto de pago deshabilitado correctamente.")
- *         )
- *     ),
- *     @OA\Response(response=409, description="Conflicto en los datos")
+ *          response=200,
+ *          description="Concepto deshabilitado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function disableConcept(){}
@@ -227,21 +248,30 @@ public function disableConcept(){}
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  *     @OA\Response(
- *         response=200,
- *         description="Concepto activado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(
- *                     property="concept",
- *                     ref="#/components/schemas/DomainPaymentConcept"
- *                 )
- *
- *             ),
- *             @OA\Property(property="message", type="string", example="Concepto de pago habilitado correctamente.")
- *         )
- *     ),
- *     @OA\Response(response=409, description="Conflicto en los datos")
+ *          response=200,
+ *          description="Concepto activado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function activateConcept(){}
@@ -254,7 +284,17 @@ public function activateConcept(){}
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
- *     @OA\Response(response=200, description="Concepto de pago eliminado correctamente")
+ *     @OA\Response(
+ *          response=200,
+ *          description="Concepto de pago eliminado correctamente",
+ *          @OA\JsonContent(ref="#/components/schemas/SuccessResponse")
+ *      ),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function deleteConcept(){}
@@ -267,21 +307,30 @@ public function deleteConcept(){}
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Response(
- *         response=200,
- *         description="Concepto eliminado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(
- *                     property="concept",
- *                     ref="#/components/schemas/DomainPaymentConcept"
- *                 )
- *
- *             ),
- *             @OA\Property(property="message", type="string", example="Concepto de pago eliminado correctamente.")
- *         )
- *     ),
- *     @OA\Response(response=409, description="Conflicto en los datos")
+  *          response=200,
+  *          description="Concepto eliminado correctamente",
+  *          @OA\JsonContent(
+  *              allOf={
+  *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+  *                  @OA\Schema(
+  *                      @OA\Property(
+  *                          property="data",
+  *                          type="object",
+  *                          @OA\Property(
+  *                              property="concept",
+  *                              ref="#/components/schemas/DomainPaymentConcept"
+  *                          )
+  *                      )
+  *                  )
+  *              }
+  *          )
+  *      ),
+  *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+  *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+  *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+  *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+  *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+  *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function deleteLogicalConcept(){}
