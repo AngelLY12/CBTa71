@@ -36,4 +36,11 @@ class CleanDeleteUsersJob implements ShouldQueue
         }
 
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló eliminando usuarios", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

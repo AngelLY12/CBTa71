@@ -35,4 +35,11 @@ class PromoteStudentsJob implements ShouldQueue
             Log::warning('Promoción no ejecutada automáticamente: ' . $e->getMessage());
         }
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló incrementando semestres", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

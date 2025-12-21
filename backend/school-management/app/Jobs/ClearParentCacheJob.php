@@ -31,4 +31,11 @@ class ClearParentCacheJob implements ShouldQueue
         $cacheService->clearParentCache($this->userId);
         Log::info("Cache de parent limpiado correctamente");
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló limpiando cache de padre/tutor: {$this->userId}", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

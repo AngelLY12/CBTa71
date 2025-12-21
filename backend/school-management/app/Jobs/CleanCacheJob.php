@@ -9,6 +9,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class CleanCacheJob implements ShouldQueue
 {
@@ -34,6 +35,12 @@ class CleanCacheJob implements ShouldQueue
         $cache->clearPrefix(CachePrefix::CAREERS->value);
         $cache->clearPrefix(CachePrefix::PARENT->value);
 
+    }
 
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló limpiando cache general", [
+            'error' => $exception->getMessage()
+        ]);
     }
 }

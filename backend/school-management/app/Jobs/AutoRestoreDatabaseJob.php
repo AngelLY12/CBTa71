@@ -36,4 +36,11 @@ class AutoRestoreDatabaseJob implements ShouldQueue
 
         }
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló restaurando base de datos", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

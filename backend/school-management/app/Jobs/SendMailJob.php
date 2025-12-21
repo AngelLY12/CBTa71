@@ -19,14 +19,16 @@ class SendMailJob implements ShouldQueue
 
     protected Mailable $mailable;
     protected string $recipientEmail;
+    protected ?string $jobType = null;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(Mailable $mailable, string $recipientEmail)
+    public function __construct(Mailable $mailable, string $recipientEmail,  ?string $jobType = null)
     {
         $this->mailable = $mailable;
         $this->recipientEmail = $recipientEmail;
+        $this->jobType = $jobType;
     }
     public function retryUntil()
     {
@@ -40,18 +42,83 @@ class SendMailJob implements ShouldQueue
     {
         try {
             Mail::to($this->recipientEmail)->send($this->mailable);
-            Log::info("Correo enviado exitosamente a {$this->recipientEmail}");
+            $logContext = [
+                'email' => $this->recipientEmail,
+                'job_type' => $this->jobType,
+                'mailable' => get_class($this->mailable)
+            ];
+
+            Log::info("Correo enviado exitosamente", $logContext);
         } catch (\Throwable $e) {
-           $message = $e->getMessage();
-
-            if (str_contains($message, '429') || str_contains($message, 'Too Many Requests')) {
-                Log::warning("Rate limit detectado al enviar correo a {$this->recipientEmail}, reintentando en 10s...");
-                $this->release(10);
-                return;
-            }
-
-            Log::error("Error al enviar correo a {$this->recipientEmail}: {$message}");
-            throw $e;
+            $this->handleError($e);
         }
+    }
+
+    private function handleError(\Throwable $e): void
+    {
+        $message = $e->getMessage();
+        $logContext = [
+            'email' => $this->recipientEmail,
+            'job_type' => $this->jobType,
+            'mailable' => get_class($this->mailable),
+            'error' => $message,
+            'attempt' => $this->attempts()
+        ];
+
+        if ($this->isRateLimitError($message)) {
+            Log::warning("Rate limit detectado", $logContext);
+
+            $delay = min(300, pow(2, $this->attempts()) * 10); // 10, 40, 90, 160, 300 segundos
+            $this->release($delay);
+            return;
+        }
+
+        Log::error("Error al enviar correo", $logContext);
+
+        if ($this->isTransientError($message)) {
+            $this->release(30);
+            return;
+        }
+
+        if ($this->isPermanentError($message)) {
+            Log::error("Error permanente, no se reintentará", $logContext);
+            return;
+        }
+
+        throw $e;
+    }
+
+    private function isRateLimitError(string $message): bool
+    {
+        return str_contains($message, '429') ||
+            str_contains($message, 'Too Many Requests') ||
+            str_contains($message, 'rate limit');
+    }
+
+    private function isTransientError(string $message): bool
+    {
+        return str_contains($message, 'Connection') ||
+            str_contains($message, 'timeout') ||
+            str_contains($message, 'temporarily') ||
+            str_contains($message, 'retry');
+    }
+
+    private function isPermanentError(string $message): bool
+    {
+        return str_contains($message, 'Invalid address') ||
+            str_contains($message, 'Mailbox not found') ||
+            str_contains($message, 'User unknown') ||
+            str_contains($message, '550') ||
+            str_contains($message, '554');
+    }
+
+    public static function forUser(Mailable $mailable, string $recipientEmail, ?string $jobType = null): self
+    {
+        return new self($mailable, $recipientEmail, $jobType);
+    }
+
+    public static function fromBulkRetry(Mailable $mailable, string $recipientEmail): self
+    {
+        return new self($mailable, $recipientEmail, 'bulk_retry');
     }
 }

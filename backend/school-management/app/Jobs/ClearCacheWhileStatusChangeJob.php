@@ -36,4 +36,12 @@ class ClearCacheWhileStatusChangeJob implements ShouldQueue
         $cacheService->clearCacheWhileConceptChangeStatus($this->userId, $this->status);
         Log::info("Cache de staff limpiado correctamente");
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló limpiando cache de usuario al actualizar concepto: {$this->userId}", [
+            'error' => $exception->getMessage()
+        ]);
+    }
+
 }

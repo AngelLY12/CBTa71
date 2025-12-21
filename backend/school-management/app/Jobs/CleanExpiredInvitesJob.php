@@ -35,4 +35,11 @@ class CleanExpiredInvitesJob implements ShouldQueue
             Log::info("No se encontraron invitaciones expiradas.");
         }
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló eliminando invitaciones expiradas", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

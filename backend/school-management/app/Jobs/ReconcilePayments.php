@@ -9,6 +9,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
 class ReconcilePayments implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -38,6 +40,13 @@ class ReconcilePayments implements ShouldQueue
             'updated'   => $result->updated,
             'notified'  => $result->notified,
             'failed'    => $result->failed,
+        ]);
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló reconciliando pagos", [
+            'error' => $exception->getMessage()
         ]);
     }
 }

@@ -35,4 +35,10 @@ class CleanDeleteConceptsJob implements ShouldQueue
 
         }
     }
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló eliminando conceptos", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }
