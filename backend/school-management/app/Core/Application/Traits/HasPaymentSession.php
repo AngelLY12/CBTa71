@@ -21,7 +21,7 @@ trait HasPaymentSession
     ) {
 
     }
-    private function handlePaymentSession($session, array $fields)
+    public function handlePaymentSession($session, array $fields)
     {
         $payment = $this->pqRepo->findBySessionId($session->id);
         if(!$payment){
@@ -29,16 +29,16 @@ trait HasPaymentSession
             throw new ModelNotFoundException("No se encontró el pago con session_id={$session->id}");
         }
         $user = $this->userRepo->getUserByStripeCustomer($session->customer);
-
+        $status=$fields['status'];
+        $received=$status===PaymentStatus::PAID ? bcdiv((string)($session->amount_received ?? 0), '100', 2) : null;
+        $fields['amount_received']=$received;
         $payment=$this->paymentRepo->update($payment->id,$fields);
         if($payment->status===PaymentStatus::PAID){
            $data = MailMapper::toPaymentCreatedEmailDTO($payment, $user->fullName(), $user->email);
            $mail = new PaymentCreatedMail($data);
-           SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
+           SendMailJob::forUser($mail, $user->email,'stripe_session')->delay(now()->addSeconds(rand(1, 5)));
         }
         ClearStudentCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));;
         return $payment;
     }
-
-
 }

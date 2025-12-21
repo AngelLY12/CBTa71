@@ -26,7 +26,6 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $pc = $this->findOrFail($conceptId);
         $pc->update($data);
-        $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
     }
 
@@ -78,6 +77,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
                 $pc->users()->syncWithoutDetaching($chunk);
             }
         }
+        $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
 
     }
@@ -90,6 +90,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         }else{
             $pc->careers()->syncWithoutDetaching($careerIds);
         }
+        $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
 
     }
@@ -102,15 +103,67 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             $pc->paymentConceptSemesters()->delete();
         }
         foreach ($semesters as $semester) {
-        $pc->paymentConceptSemesters()->updateOrCreate(
-            [
-                'payment_concept_id' => $pc->id,
-                'semestre' => $semester
-            ],
-            ['semestre' => $semester]
-        );
-    }
+                $pc->paymentConceptSemesters()->updateOrCreate(
+                    [
+                        'payment_concept_id' => $pc->id,
+                        'semestre' => $semester
+                    ],
+                    ['semestre' => $semester]
+                );
+        }
+        $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
+    }
+
+    public function attachToExceptionStudents(int $conceptId, UserIdListDTO $userIds, bool $replaceRelations = false): PaymentConcept
+    {
+        $pc= $this->findOrFail($conceptId);
+        if($replaceRelations)
+        {
+            $pc->exceptions()->delete();
+        }
+        foreach (array_chunk($userIds->userIds, 50) as $chunk) {
+            foreach ($chunk as $userId) {
+                $pc->exceptions()->updateOrCreate(
+                    [
+                        'payment_concept_id' => $pc->id,
+                        'user_id' => $userId
+                    ],
+                    ['user_id' => $userId]
+                );
+            }
+        }
+        $pc->refresh();
+        return PaymentConceptMapper::toDomain($pc);
+
+    }
+
+    public function attachToApplicantTag(int $conceptId, array $tags, bool $replaceRelations = false): PaymentConcept
+    {
+        $pc = $this->findOrFail($conceptId);
+        if($replaceRelations)
+        {
+            $pc->applicantTypes()->delete();
+        }
+
+        foreach ($tags as $tag) {
+            $pc->applicantTypes()->updateOrCreate(
+                [
+                    'payment_concept_id' => $pc->id,
+                    'tag' => $tag
+                ],
+                ['tag' => $tag]
+            );
+        }
+        $pc->refresh();
+        return PaymentConceptMapper::toDomain($pc);
+
+
+    }
+
+    public function detachFromExceptionStudents(int $conceptId): void
+    {
+        $this->findOrFail($conceptId)->exceptions()->delete();
     }
 
     public function detachFromSemester(int $conceptId): void
@@ -127,7 +180,13 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $this->findOrFail($conceptId)->users()->detach();
     }
-     private function findOrFail(int $id): EloquentPaymentConcept
+
+    public function detachFromApplicantTag(int $conceptId): void
+    {
+        $this->findOrFail($conceptId)->applicantTypes()->delete();
+    }
+
+    private function findOrFail(int $id): EloquentPaymentConcept
     {
         return EloquentPaymentConcept::findOrFail($id);
     }
@@ -139,5 +198,15 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             ->where('status', PaymentConceptStatus::ELIMINADO)
             ->where('updated_at', '<', $thresholdDate)
             ->delete();
+    }
+
+    public function finalizePaymentConcepts(): int
+    {
+        $today = Carbon::today();
+
+        return EloquentPaymentConcept::where('status', PaymentConceptStatus::ACTIVO)
+            ->whereDate('end_date', '<', $today)
+            ->update(['status' => PaymentConceptStatus::FINALIZADO]);
+
     }
 }

@@ -30,11 +30,21 @@ namespace App\Core\Application\DTO\Response\User;
  *         @OA\Property(property="removed", type="array", @OA\Items(type="string"), example={"guest"})
  *     ),
  *     @OA\Property(
- *         property="totalUpdated",
- *         type="integer",
- *         description="Número total de usuarios actualizados",
- *         example=3
- *     )
+ *          property="metadata",
+ *          type="object",
+ *          description="Datos extra sobre la operación",
+ *          @OA\Property(property="totalFound", type="integer",  description="Número total de usuarios encontrados", example=30),
+ *          @OA\Property(property="totalUpdated", type="integer",  description="Número total de usuarios afectados", example=20),
+ *          @OA\Property(property="failed", type="integer", description="Número total de usuarios no afectados por fallo", example=10),
+ *          @OA\Property(
+ *              property="operations",
+ *              type="object",
+ *              description="Operaciones realizadas",
+ *              @OA\Property(property="roles_removed", type="array", @OA\Items(type="string"), example={"student"}),
+ *              @OA\Property(property="roles_added", type="array", @OA\Items(type="string"), example={"guest"}),
+ *              @OA\Property(property="chunks_processed", type="integer", example=5)
+ *          ),
+ *     ),
  * )
  */
 class UserWithUpdatedRoleResponse
@@ -43,7 +53,7 @@ class UserWithUpdatedRoleResponse
         public readonly ?array $fullNames,
         public readonly ?array $curps,
         public readonly ?array $updatedRoles,
-        public readonly int $totalUpdated
+        public readonly ?array $metadata
     )
     {
 

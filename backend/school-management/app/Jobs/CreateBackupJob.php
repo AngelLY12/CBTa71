@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
 class CreateBackupJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -26,5 +28,11 @@ class CreateBackupJob implements ShouldQueue
     public function handle(): void
     {
         Artisan::call('backup:run --only-db --only-to-disk=google --verbose');
+    }
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló creando backup", [
+            'error' => $exception->getMessage()
+        ]);
     }
 }

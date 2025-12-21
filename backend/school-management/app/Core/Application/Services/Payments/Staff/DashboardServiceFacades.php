@@ -2,11 +2,12 @@
 
 namespace App\Core\Application\Services\Payments\Staff;
 
-use App\Core\Application\DTO\Response\General\DashboardDataResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\General\StripePayoutResponse;
+use App\Core\Application\DTO\Response\Payment\FinancialSummaryResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
-use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Application\Traits\HasCache;
+use App\Core\Application\UseCases\Payments\Staff\Dashboard\CreatePayoutUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Dashboard\GetAllConceptsUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Dashboard\GetAllStudentsUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Dashboard\PaymentsMadeUseCase;
@@ -22,9 +23,11 @@ class DashboardServiceFacades{
         private GetAllStudentsUseCase $students,
         private PaymentsMadeUseCase $payments,
         private GetAllConceptsUseCase $concepts,
+        private CreatePayoutUseCase $payout,
         private CacheService $service
     )
     {
+        $this->setCacheService($service);
     }
 
     public function pendingPaymentAmount(bool $onlyThisYear, bool $forceRefresh): PendingSummaryResponse
@@ -41,7 +44,7 @@ class DashboardServiceFacades{
     }
 
 
-    public function paymentsMade(bool $onlyThisYear, bool $forceRefresh):string
+    public function paymentsMade(bool $onlyThisYear, bool $forceRefresh):FinancialSummaryResponse
     {
         $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value . ":payments:$onlyThisYear");
         return $this->cache($key,$forceRefresh ,fn() => $this->payments->execute($onlyThisYear));
@@ -49,17 +52,16 @@ class DashboardServiceFacades{
 
     public function getAllConcepts(bool $onlyThisYear, int $perPage, int $page, bool $forceRefresh):PaginatedResponse
     {
-        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value . ":concepts:$onlyThisYear");
+        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value . ":concepts:$perPage:$page:$onlyThisYear");
         return $this->cache($key,$forceRefresh ,fn() => $this->concepts->execute($onlyThisYear, $perPage, $page));
 
     }
 
-    public function getData(bool $onlyThisYear, bool $forceRefresh):DashboardDataResponse
+    public function createPayout(): StripePayoutResponse
     {
-        return GeneralMapper::toDashboardDataResponse(
-            $this->paymentsMade($onlyThisYear, $forceRefresh),
-            $this->pendingPaymentAmount($onlyThisYear, $forceRefresh),
-            $this->getAllStudents($onlyThisYear, $forceRefresh));
+        $create= $this->payout->execute();
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value . ":payments:true");
+        return $create;
     }
 
     public function refreshAll(): void

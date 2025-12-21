@@ -110,7 +110,7 @@ class RegisterUserRequest extends FormRequest
                 'string',
                 'in:' . implode(',', array_map(fn($case) => $case->value, UserGender::cases())),
             ],
-            'curp' => 'required|string',
+            'curp' => 'required|string|max:18',
             'address' => 'sometimes|required|array',
             'blood_type'   => [
                 'sometimes',
@@ -129,6 +129,13 @@ class RegisterUserRequest extends FormRequest
 
     public function prepareForValidation()
     {
+        $this->merge([
+            'name' => $this->has('name') ? strip_tags($this->name) : null,
+            'last_name' => $this->has('last_name') ? strip_tags($this->last_name) : null,
+            'phone_number' => $this->has('phone_number') ? strip_tags($this->phone_number) : null,
+            'curp' => $this->has('curp') ? strip_tags($this->curp) : null,
+        ]);
+
         if ($this->has('gender')) {
             $this->merge([
                 'gender' => strtolower($this->gender),

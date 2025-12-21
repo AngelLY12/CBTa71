@@ -2,6 +2,7 @@
 
 namespace App\Core\Domain\Entities;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Carbon\Carbon;
@@ -22,7 +23,9 @@ use Carbon\Carbon;
  *     @OA\Property(property="is_global", type="boolean", example=true),
  *     @OA\Property(property="userIds", type="array", @OA\Items(type="integer"), example={1,2,3}),
  *     @OA\Property(property="careerIds", type="array", @OA\Items(type="integer"), example={1,2}),
- *     @OA\Property(property="semesters", type="array", @OA\Items(type="integer"), example={1,2,3})
+ *     @OA\Property(property="semesters", type="array", @OA\Items(type="integer"), example={1,2,3}),
+ *     @OA\Property(property="exceptionUserIds", type="array", @OA\Items(type="integer"), example={1,2,3}),
+ *     @OA\Property(property="applicantTags", type="array", @OA\Items(ref="#/components/schemas/PaymentConceptApplicantType"))
  * )
  */
 class PaymentConcept
@@ -43,8 +46,12 @@ class PaymentConcept
         private array $userIds = [],
         /** @var Career[] */
         private array $careerIds = [],
-        private array $semesters = []
+        private array $semesters = [],
+        private array $exceptionUserIds = [],
+        /** @var PaymentConceptApplicantType[] */
+        private array $applicantTags =[]
     ) {}
+
 
     public function isActive(): bool
     {
@@ -80,6 +87,36 @@ class PaymentConcept
         return $today >= $this->start_date;
     }
 
+    public function hasUser(int $userId): bool
+    {
+        return in_array($userId, $this->userIds, true);
+    }
+
+    public function hasCareer(int $careerId): bool
+    {
+        return in_array($careerId, $this->careerIds, true);
+    }
+
+    public function hasSemester(int|string $semester): bool
+    {
+        return in_array((string) $semester, array_map('strval', $this->semesters), true);
+    }
+
+    public function hasExceptionForUser(int $userId): bool
+    {
+        return in_array($userId, $this->exceptionUserIds, true);
+    }
+
+    public function hasTag(PaymentConceptApplicantType|string $tag): bool
+    {
+        $tagValue = $tag instanceof PaymentConceptApplicantType ? $tag->value : $tag;
+
+        return in_array($tagValue, $this->applicantTags, true);
+    }
+
+
+
+
     public function setUserIds(array $ids): void { $this->userIds = $ids; }
     public function getUserIds(): array { return $this->userIds; }
 
@@ -88,5 +125,11 @@ class PaymentConcept
 
     public function setSemesters(array $semesters): void { $this->semesters = $semesters; }
     public function getSemesters(): array { return $this->semesters; }
+
+    public function setExceptionUsersIds(array $ids): void {$this->exceptionUserIds = $ids;}
+    public function getExceptionUsersIds(): array {return $this->exceptionUserIds;}
+
+    public function setApplicantTag(array $applicantTags): void { $this->applicantTags = $applicantTags; }
+    public function getApplicantTag(): array { return $this->applicantTags; }
 
 }

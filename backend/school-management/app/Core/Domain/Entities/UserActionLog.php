@@ -13,4 +13,15 @@ class UserActionLog
     )
     {
     }
+
+    public function toArray(): array
+    {
+        return [
+            'userId' => $this->userId,
+            'roles' => $this->roles,
+            'ip' => $this->ip,
+            'method' => $this->method,
+            'url' => $this->url,
+        ];
+    }
 }

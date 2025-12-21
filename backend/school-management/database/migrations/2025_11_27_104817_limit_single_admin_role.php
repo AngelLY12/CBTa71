@@ -21,6 +21,9 @@ return new class extends Migration
         Schema::table('model_has_roles', function (Blueprint $table) use ($adminRoleId) {
             $table->unique(['role_id'], 'unique_admin_role')
                 ->whereRaw("role_id = {$adminRoleId}");
+            $table->index(['role_id', 'model_type']);
+            $table->index(['model_id','role_id']);
+            $table->index('role_id');
         });
     }
 

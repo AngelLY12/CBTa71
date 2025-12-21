@@ -54,6 +54,17 @@ class PaymentConcept extends Model
         return $this->hasMany(PaymentConceptSemester::class);
     }
 
+    public function exceptions()
+    {
+        return $this->hasMany(ConceptException::class, 'payment_concept_id');
+    }
+
+    public function applicantTypes()
+    {
+        return $this->hasMany(PaymentConceptApplicantTag::class, 'payment_concept_id');
+    }
+
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

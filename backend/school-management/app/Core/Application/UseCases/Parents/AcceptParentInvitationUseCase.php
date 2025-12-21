@@ -36,14 +36,12 @@ class AcceptParentInvitationUseCase
         {
             throw new UserNotFoundException();
         }
-        $hasParentRole= $this->userQRepo->hasRole($parent->id,UserRoles::PARENT->value);
+        $hasParentRole= $parent->isParent();
         if (!$hasParentRole) {
             $this->userRepo->assignRole($parent->id,UserRoles::PARENT->value);
         }
-        $parentRoles= $this->userQRepo->findUserRoles($parent->id);
-        $studentRoles= $this->userQRepo->findUserRoles($student->id);
-        $parentRole = collect($parentRoles)->firstWhere('name', UserRoles::PARENT->value);
-        $studentRole = collect($studentRoles)->firstWhere('name', UserRoles::STUDENT->value);
+        $parentRole = $parent->getRole(UserRoles::PARENT->value);
+        $studentRole = $student->getRole(UserRoles::STUDENT->value);
         $data=[
             'parentId' => $parent->id,
             'studentId' => $student->id,

@@ -14,10 +14,11 @@ class EnumMapper
     public static function fromStripe(string $stripeStatus): PaymentStatus
     {
             return match ($stripeStatus) {
-            'paid' => PaymentStatus::PAID,
-            'unpaid' =>PaymentStatus::UNPAID,
-            'succeeded' => PaymentStatus::SUCCEEDED,
-            'requires_action' => PaymentStatus::REQUIRES_ACTION,
+                'paid', 'no_payment_required'  => PaymentStatus::PAID,
+                'unpaid' =>PaymentStatus::UNPAID,
+                'succeeded' => PaymentStatus::SUCCEEDED,
+                'requires_action' => PaymentStatus::REQUIRES_ACTION,
+
 
             default => PaymentStatus::DEFAULT,
         };

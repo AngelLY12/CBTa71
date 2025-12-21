@@ -3,20 +3,20 @@ namespace App\Core\Infraestructure\Repositories\Command\Stripe;
 
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Utils\Validators\StripeValidator;
-use App\Exceptions\StripeGatewayException;
-use App\Exceptions\ValidationException;
+use App\Exceptions\ServerError\StripeGatewayException;
+use App\Exceptions\Validation\PayoutValidationException;
 use InvalidArgumentException;
-use Stripe\Charge;
-use Stripe\Stripe;
+use Stripe\Balance;
 use Stripe\Checkout\Session;
 use Stripe\Customer;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\RateLimitException;
-use Stripe\PaymentIntent;
-use Stripe\SetupIntent;
 use Stripe\PaymentMethod as StripePaymentMethod;
+use Stripe\Payout;
+use Stripe\Stripe;
 
 class StripeGateway implements StripeGatewayInterface
 {
@@ -79,21 +79,7 @@ class StripeGateway implements StripeGatewayInterface
 
     }
 
-    public function getSetupIntentFromSession(string $sessionId)
-    {
-        StripeValidator::validateStripeId($sessionId,'cs','ID de la sesión');
-        try{
-            $session = Session::retrieve($sessionId);
-            if (empty($session->setup_intent)) return null;
-
-            return SetupIntent::retrieve($session->setup_intent);
-        }catch (ApiErrorException $e) {
-            logger()->error("Stripe error retrieving setup_intent from session: " . $e->getMessage());
-            throw new StripeGatewayException("Error trayendo el intent de la sesión", 500);
-        }
-    }
-
-     public function createCheckoutSession(User $user, PaymentConcept $concept): Session
+     public function createCheckoutSession(User $user, PaymentConcept $paymentConcept, string $amount): Session
     {
         $customerId = $this->createStripeUser($user);
         try{
@@ -104,13 +90,13 @@ class StripeGateway implements StripeGatewayInterface
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'mxn',
-                    'product_data' => ['name' => $concept->concept_name],
-                    'unit_amount' =>(int) round($concept->amount * 100),
+                    'product_data' => ['name' => $paymentConcept->concept_name],
+                    'unit_amount' => (int) bcmul($amount, '100', 0),
                 ],
                 'quantity' => 1,
             ]],
             'payment_method_types' => ['card', 'oxxo', 'customer_balance'],
-            'metadata' => ['payment_concept_id' => $concept->id, 'concept_name' => $concept->concept_name],
+            'metadata' => ['payment_concept_id' => $paymentConcept->id, 'concept_name' => $paymentConcept->concept_name],
             'payment_method_options' => [
                 'card' => ['setup_future_usage' => 'off_session'],
                 'customer_balance' => [
@@ -135,17 +121,6 @@ class StripeGateway implements StripeGatewayInterface
 
     }
 
-    public function retrievePaymentMethod(string $paymentMethodId)
-    {
-        StripeValidator::validateStripeId($paymentMethodId,'pm','método de pago');
-        try {
-            return StripePaymentMethod::retrieve($paymentMethodId);
-        } catch (ApiErrorException $e) {
-            logger()->error("Stripe error retrieving PaymentMethod {$paymentMethodId}: " . $e->getMessage());
-            throw new StripeGatewayException("Error obteniendo el método de pago", 500);
-        }
-    }
-
     public function deletePaymentMethod(string $paymentMethodId): bool
     {
         StripeValidator::validateStripeId($paymentMethodId,'pm','método de pago');
@@ -161,83 +136,78 @@ class StripeGateway implements StripeGatewayInterface
         }
 
     }
-    public function getIntentAndCharge(string $paymentIntentId): array
-   {
-        StripeValidator::validateStripeId($paymentIntentId,'pi','payment intent');
-        try {
-            $intent = PaymentIntent::retrieve($paymentIntentId, [
-                'expand' => ['charges', 'latest_charge'],
-            ]);
-
-            if (!$intent) {
-                throw new ValidationException("Intent no encontrado en Stripe: {$paymentIntentId}");
-            }
-
-            $charge = $intent->charges->data[0] ?? null;
-            if (!$charge && isset($intent->latest_charge) && $intent->latest_charge) {
-                $charge = Charge::retrieve($intent->latest_charge);
-            }
-
-            logger()->info("🔎 Intent {$paymentIntentId}: status={$intent->status}, charge_id=" . ($charge->id ?? 'null'));
-
-            return [$intent, $charge];
-        } catch (ApiErrorException $e) {
-            logger()->error("Stripe error retrieving intent/charge: " . $e->getMessage());
-            throw new StripeGatewayException("Error obteniendo los datos", 500);
-        }
-    }
-
-
-    public function getStudentPaymentsFromStripe(User $user, ?int $year): array
-    {
-        $params = [
-            'limit' => 100,
-            'customer' => $user->stripe_customer_id,
-        ];
-
-        if ($year) {
-            $params['created'] = [
-                'gte' => strtotime("{$year}-01-01 00:00:00"),
-                'lte' => strtotime("{$year}-12-31 23:59:59"),
-            ];
-        }
-        try {
-            $allSessions = [];
-            $lastId = null;
-            do {
-                if ($lastId) {
-                    $params['starting_after'] = $lastId;
-                }
-
-                $sessions = Session::all($params);
-
-                $allSessions = array_merge($allSessions, $sessions->data);
-
-                $lastId = end($sessions->data)->id ?? null;
-
-            } while ($lastId && count($sessions->data) === $params['limit']);
-
-            return $allSessions;
-        } catch (ApiErrorException $e) {
-            logger()->error("Stripe error fetching sessions: " . $e->getMessage());
-            throw new StripeGatewayException("Error obteniendo los pagos del estudiante", 500);
-        }
-    }
-
-    public function getPaymentIntentFromSession(string $sessionId): PaymentIntent
+    public function expireSessionIfPending(string $sessionId): bool
     {
         StripeValidator::validateStripeId($sessionId,'cs','ID de la sesión');
         try {
             $session = Session::retrieve($sessionId);
-            if (!$session->payment_intent) {
-                throw new ValidationException("Session sin payment_intent: {$sessionId}");
+
+            if (in_array($session->payment_status, PaymentStatus::nonPaidStatuses())) {
+                $session->expire();
+                return true;
             }
 
-            return PaymentIntent::retrieve($session->payment_intent);
-        } catch (ApiErrorException $e) {
-            logger()->error("Stripe error retrieving payment intent from session: " . $e->getMessage());
-            throw new StripeGatewayException("Error obteniendo los datos", 500);
+            return false;
+        } catch (\Exception $e) {
+            logger()->warning("No se pudo expirar la sesión {$sessionId}: " . $e->getMessage());
+            return false;
         }
+    }
 
+    public function createPayout(): array
+    {
+        try
+        {
+            $balance = Balance::retrieve();
+            $totalAvailableMxn = 0;
+            foreach ($balance->available as $item) {
+                if ($item->currency === 'mxn') {
+                    $totalAvailableMxn = bcadd($totalAvailableMxn, $item->amount, 0);
+                }
+            }
+
+            $minimumPayout = 10000;
+            if (bccomp($totalAvailableMxn, $minimumPayout, 0) === -1) {
+                $availableFormatted = number_format(bcdiv($totalAvailableMxn, 100, 2), 2);
+                throw new PayoutValidationException("Fondos insuficientes. Disponible: $" .
+                    $availableFormatted . " MXN. " .
+                    "Mínimo requerido: $100.00 MXN");
+            }
+            $payout = Payout::create([
+                'amount' => intval($totalAvailableMxn),
+                'currency' => 'mxn',
+                'description' => 'Payout manual de la escuela',
+            ]);
+
+            logger()->info('Payout creado exitosamente', [
+                'payout_id' => $payout->id,
+                'amount' => bcdiv($payout->amount, 100, 2),
+                'arrival_date' => date('Y-m-d', $payout->arrival_date),
+            ]);
+
+
+            return [
+                'success' => true,
+                'payout_id' => $payout->id,
+                'amount' => bcdiv($payout->amount, 100, 2),
+                'currency' => $payout->currency,
+                'arrival_date' => date('Y-m-d', $payout->arrival_date),
+                'status' => $payout->status,
+                'available_before_payout' =>bcdiv($totalAvailableMxn, 100, 2),
+            ];
+
+        }
+        catch (ApiErrorException $e) {
+            logger()->error('Error de Stripe al crear payout', [
+                'error' => $e->getMessage(),
+            ]);
+            throw new StripeGatewayException('Error al crear payout: ' . $e->getMessage());
+        }
+        catch (\Exception $e) {
+            logger()->error('Error inesperado al crear payout', [
+                'error' => $e->getMessage(),
+            ]);
+            throw new StripeGatewayException('Error inesperado: ' . $e->getMessage());
+        }
     }
 }

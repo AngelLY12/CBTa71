@@ -24,7 +24,7 @@ class GetParentChildrenUseCase
         {
             throw new UserNotFoundException();
         }
-        if (!$this->userQRepo->hasRole($parentId, UserRoles::PARENT->value)) {
+        if (!$parent->isParent()) {
             throw new UserInvalidRoleException();
         }
 

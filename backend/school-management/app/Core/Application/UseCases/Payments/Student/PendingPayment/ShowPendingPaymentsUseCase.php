@@ -4,7 +4,7 @@ namespace App\Core\Application\UseCases\Payments\Student\PendingPayment;
 
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
-use App\Exceptions\UserInactiveException;
+use App\Exceptions\Unauthorized\UserInactiveException;
 
 class ShowPendingPaymentsUseCase
 {

@@ -16,6 +16,7 @@ class PaymentsService{
         private CacheService $service
     )
     {
+        $this->setCacheService($service);
     }
     public function showAllPayments(?string $search, int $perPage, int $page,  bool $forceRefresh): PaginatedResponse
     {

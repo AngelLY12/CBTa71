@@ -30,4 +30,11 @@ class ClearStudentCacheJob implements ShouldQueue
         $cacheService->clearStudentCache($this->userId);
         Log::info("Cache de estudiante limpiado correctamente");
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló limpiando cache de estudiante: {$this->userId}", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

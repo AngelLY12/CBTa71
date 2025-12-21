@@ -9,6 +9,7 @@ use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Infraestructure\Mappers\PaymentMapper;
 use App\Models\Payment as EloquentPayment;
 use Generator;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
@@ -31,19 +32,63 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         return $payment ? PaymentMapper::toDomain($payment) : null;
     }
 
-    public function sumPaymentsByUserYear(int $userId): string {
-        $total = EloquentPayment::where('user_id', $userId)
-        ->whereYear('created_at', now()->year)
-        ->sum('amount');
+    private function getMonthlyAggregation(Builder $query): array
+    {
+        $results = $query->selectRaw("
+        DATE_FORMAT(created_at, '%Y-%m') as month,
+        SUM(amount_received) as month_total
+    ")
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
-        return number_format($total, 2, '.', '');
+        $total = $results->sum('month_total');
+
+        return [
+            'total' => number_format($total, 2, '.', ''),
+            'by_month' => $results->pluck('month_total', 'month')
+                ->map(fn($amount) => number_format($amount, 2, '.', ''))
+                ->toArray()
+        ];
     }
 
-    public function getPaymentHistory(int $userId, int $perPage, int $page): LengthAwarePaginator
+    public function sumPaymentsByUserYear(int $userId, bool $onlyThisYear): array
     {
-         return EloquentPayment::where('user_id', $userId)
-        ->select('id', 'concept_name', 'amount', 'created_at')
-        ->orderBy('created_at','desc')
+        $query = EloquentPayment::where('user_id', $userId)
+            ->whereNotNull('amount_received');
+
+        if ($onlyThisYear) {
+            $query->whereBetween('created_at', [
+                now()->startOfYear(),
+                now()->endOfYear()
+            ]);
+        }
+
+        return $this->getMonthlyAggregation($query);
+    }
+
+    public function getAllPaymentsMade(bool $onlyThisYear): array
+    {
+        $query = EloquentPayment::query()->whereNotNull('amount_received');
+
+        if ($onlyThisYear) {
+            $query->whereBetween('created_at', [
+                now()->startOfYear(),
+                now()->endOfYear()
+            ]);
+        }
+
+        return $this->getMonthlyAggregation($query);
+    }
+
+    public function getPaymentHistory(int $userId, int $perPage, int $page, bool $onlyThisYear): LengthAwarePaginator
+    {
+         $query= EloquentPayment::where('user_id', $userId)
+        ->select('id', 'concept_name', 'amount', 'amount_received', 'status' ,'created_at');
+        if ($onlyThisYear) {
+            $query->whereYear('created_at', now()->year);
+        }
+        return $query->orderBy('created_at','desc')
         ->paginate($perPage, ['*'], 'page', $page)
         ->through(fn($p) => MappersPaymentMapper::toHistoryResponse($p));
     }
@@ -51,21 +96,15 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     public function getPaymentHistoryWithDetails(int $userId, int $perPage, int $page): LengthAwarePaginator
     {
         return EloquentPayment::where('user_id', $userId)
-            ->select('id', 'concept_name', 'amount', 'status','payment_intent_id','url','payment_method_details', 'created_at')
+            ->select('id', 'concept_name', 'amount', 'amount_received','status','payment_intent_id','url','payment_method_details', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page)
             ->through(fn($p) => MappersPaymentMapper::toDetailResponse($p));
     }
 
 
-    public function getAllPaymentsMade(bool $onlyThisYear): string
-    {
-       $query = EloquentPayment::query();
-        if ($onlyThisYear) {
-            $query->whereYear('created_at', now()->year);
-        }
-        return number_format($query->sum('amount'), 2, '.', '');
-    }
+
+
 
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment
     {
@@ -83,16 +122,16 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     {
         return EloquentPayment::with([
             'user:id,name,last_name',
-            'paymentConcept:id,concept_name'
         ])
-        ->when($search, function ($q) use ($search) {
+            ->select('id', 'user_id', 'concept_name', 'amount', 'amount_received', 'payment_method_details', 'created_at')
+            ->latest('payments.created_at')
+            ->when($search, function ($q) use ($search) {
             $q->whereHas('user', fn($sub) =>
                 $sub->where('name', 'like', "%$search%")
                     ->orWhere('last_name', 'like', "%$search%")
                     ->orWhere('email', 'like', "%$search%")
-            )->orWhereHas('paymentConcept', fn($sub) =>
-                $sub->where('concept_name', 'like', "%$search%")
-            );
+            )->orWhere('concept_name', 'like', "%$search%");
+
         })
         ->paginate($perPage, ['*'], 'page', $page)
         ->through(fn($p) => MappersPaymentMapper::toListItemResponse($p));
@@ -104,10 +143,26 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
      */
     public function getPaidWithinLastMonthCursor(): Generator
     {
-        foreach (EloquentPayment::where('status', PaymentStatus::PAID)
-                ->where('created_at', '>=', now()->subMonths(1))
+        foreach (EloquentPayment::whereIn('status', PaymentStatus::reconcilableStatuses())
+                     ->whereBetween('created_at', [
+                         now()->subMonth(),
+                         now()->subMinutes(10),
+                     ])
                 ->cursor() as $model) {
             yield PaymentMapper::toDomain($model);
         }
+    }
+
+    public function getLastPaymentForConcept(int $userId, int $conceptId, array $allowedStatuses = []): ?Payment
+    {
+        $query = EloquentPayment::query()
+            ->where('user_id', $userId)
+            ->where('payment_concept_id', $conceptId);
+
+        if (!empty($allowedStatuses)) {
+            $query->whereIn('status', $allowedStatuses);
+        }
+
+        return PaymentMapper::toDomain($query->orderByDesc('id')->first());
     }
 }

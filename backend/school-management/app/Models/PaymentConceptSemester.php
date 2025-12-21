@@ -8,13 +8,12 @@ use App\Models\PaymentConcept;
 
 class PaymentConceptSemester extends Model
 {
-
+    protected $table = 'payment_concept_semester';
     use HasFactory;
     protected $fillable = [
         'payment_concept_id',
         'semestre'
     ];
-    protected $table = 'payment_concept_semester';
     public function paymentConcept(){
         return $this->belongsTo(PaymentConcept::class);
     }

@@ -17,12 +17,12 @@ namespace App\Swagger;
  * )
  *
  * @OA\Server(
- *     url="http://localhost:9000/api",
+ *     url="http://localhost:80",
  *     description="Servidor local"
  * )
  *
  * @OA\Server(
- *     url="https://nginx-production-728f.up.railway.app/api",
+ *     url="https://nginx-production-728f.up.railway.app",
  *     description="Servidor de producción"
  * )
  */

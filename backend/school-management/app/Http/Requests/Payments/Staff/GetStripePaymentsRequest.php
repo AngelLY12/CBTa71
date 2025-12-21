@@ -56,6 +56,12 @@ class GetStripePaymentsRequest extends FormRequest
 
      public function prepareForValidation()
     {
+        if ($this->filled('search')) {
+            $this->merge([
+                'search' => strip_tags($this->search),
+            ]);
+        }
+
         if ($this->has('forceRefresh')) {
             $this->merge([
                 'forceRefresh' => filter_var($this->forceRefresh, FILTER_VALIDATE_BOOLEAN),

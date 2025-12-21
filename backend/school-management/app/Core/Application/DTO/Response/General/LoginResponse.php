@@ -35,6 +35,7 @@ class LoginResponse
         public readonly ?string $access_token,
         public readonly ?string $refresh_token,
         public readonly ?string $token_type,
+        public readonly ?array $user_data
     )
     {
 

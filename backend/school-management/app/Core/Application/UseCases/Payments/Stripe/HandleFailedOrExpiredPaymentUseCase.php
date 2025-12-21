@@ -3,6 +3,7 @@
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
 use App\Core\Application\Mappers\MailMapper;
+use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
@@ -47,7 +48,7 @@ class HandleFailedOrExpiredPaymentUseCase
             ];
 
             $mail = new PaymentFailedMail(MailMapper::toPaymentFailedEmailDTO($data));
-            SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
+            SendMailJob::forUser($mail, $user->email,'failed_or_expired_payment')->delay(now()->addSeconds(rand(1, 5)));
             $this->paymentRepo->delete($payment->id);
             ClearStudentCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));;
             return true;

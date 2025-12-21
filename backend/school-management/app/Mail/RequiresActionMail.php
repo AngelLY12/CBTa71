@@ -25,14 +25,15 @@ class RequiresActionMail extends Mailable
        try {
         $url=null;
         $reference=null;
-            if (isset($this->data->payment_method_options['oxxo'])) {
+        $amount = bcdiv((string) $this->data->amount, '100', 2);
+           if (isset($this->data->payment_method_options['oxxo'])) {
                 $reference=$this->data->next_action['oxxo_display_details']['number'];
                 $url=$this->data->next_action['oxxo_display_details']['hosted_voucher_url'];
                 $expirationDays=$this->data->payment_method_options['oxxo']['expires_after_days'];
                 $headerTitle = 'Instrucciones para completar tu pago en OXXO';
                 $messageIntro = 'Para completar tu pago, acude a cualquier tienda OXXO y presenta el código de referencia en el voucher:';
                 $messageDetails = "
-                    <p><strong>Monto:</strong> $" . number_format($this->data->amount / 100, 2) . "</p>
+                    <p><strong>Monto:</strong> $" . number_format($amount, 2) . "</p>
                     <p><strong>Número de referencia:</strong> {$reference}</p>
                     <p><strong>Voucher:</strong> <a href='{$url}' target='_blank'>Ver voucher</a></p>
                     <p>Tu pago será actualizado automáticamente una vez que completes la operación en la tienda OXXO.</p>
@@ -44,7 +45,7 @@ class RequiresActionMail extends Mailable
                 $headerTitle = 'Instrucciones para completar tu pago por transferencia bancaria';
                 $messageIntro = 'Para completar tu pago, realiza una transferencia bancaria utilizando los siguientes datos:';
                 $messageDetails = "
-                    <p><strong>Monto:</strong> $" . number_format($this->data->amount / 100, 2) . "</p>
+                    <p><strong>Monto:</strong> $" . number_format($amount, 2) . "</p>
                     <p><strong>Referencia:</strong> {$reference}</p>
                     <p><strong>Instrucciones:</strong> <a href='{$url}' target='_blank'>Ver instrucciones</a></p>
                     <p>Tu pago será actualizado automáticamente una vez que la transferencia sea recibida.</p>

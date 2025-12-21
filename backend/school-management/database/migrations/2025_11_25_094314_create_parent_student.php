@@ -15,14 +15,17 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('parent_id');
             $table->unsignedBigInteger('student_id');
-            $table->unsignedBigInteger('parent_role_id');
-            $table->unsignedBigInteger('student_role_id');
+            $table->unsignedBigInteger('parent_role_id')->nullable();
+            $table->unsignedBigInteger('student_role_id')->nullable();
             $table->foreign('parent_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('student_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('parent_role_id')->references('id')->on('roles');
-            $table->foreign('student_role_id')->references('id')->on('roles');
+            $table->foreign('parent_role_id')->references('id')->on('roles')->onDelete('set null');
+            $table->foreign('student_role_id')->references('id')->on('roles')->onDelete('set null');
             $table->string('relationship',50)->nullable();
             $table->unique(['parent_id', 'student_id']);
+            $table->index('parent_id');
+            $table->index('student_id');
+            $table->index(['student_id', 'parent_id']);
             $table->timestamps();
         });
 
@@ -34,11 +37,13 @@ return new class extends Migration
             $table->timestamp('expires_at');
             $table->timestamp('used_at')->nullable();
             $table->unsignedBigInteger('created_by');
-
             $table->timestamps();
-
             $table->foreign('student_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
+            $table->index('student_id');
+            $table->index('email');
+            $table->index('expires_at');
+            $table->index('used_at');
         });
     }
 

@@ -28,40 +28,31 @@ class PendingPayment
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Pagos pendientes obtenidos correctamente.",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="pending_payments",
- *                     type="array",
- *                     @OA\Items(ref="#/components/schemas/PendingPaymentConceptsResponse")
- *                 )
- *             ),
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 nullable=true,
- *                 example="No hay pagos pendientes para el usuario."
- *             )
- *         )
- *     ),
- *
- *     @OA\Response(
- *         response=401,
- *         description="No autorizado - Token inválido o ausente."
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación en los parámetros enviados."
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor."
- *     )
+ *          response=200,
+ *          description="Pagos pendientes obtenidos correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="pending_payments",
+ *                              type="array",
+ *                              @OA\Items(ref="#/components/schemas/PendingPaymentConceptsResponse")
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function pending(){}
@@ -85,43 +76,32 @@ public function pending(){}
  *     ),
  *
  *     @OA\Response(
- *         response=201,
- *         description="Intento de pago generado correctamente.",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="url_checkout",
- *                     type="string",
- *                     example="https://checkout.stripe.com/pay/cs_test_a1b2c3d4e5"
- *                 )
- *             ),
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 example="El intento de pago se generó con éxito."
- *             )
- *         )
- *     ),
- *
- *     @OA\Response(
- *         response=403,
- *         description="No está permitido realizar esta acción."
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Recurso no encontrado."
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación en los datos enviados."
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor."
- *     )
+ *          response=201,
+ *          description="Intento de pago generado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="url_checkout",
+ *                              type="string",
+ *                              example="https://checkout.stripe.com/pay/cs_test_a1b2c3d4e5"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=502, description="Error de Stripe", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function payConcept(){}
@@ -151,40 +131,31 @@ public function payConcept(){}
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Pagos vencidos obtenidos correctamente.",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="pending_payments",
- *                     type="array",
- *                     @OA\Items(ref="#/components/schemas/PendingPaymentConceptsResponse")
- *                 )
- *             ),
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 nullable=true,
- *                 example="No hay pagos vencidos para el usuario."
- *             )
- *         )
- *     ),
- *
- *     @OA\Response(
- *         response=401,
- *         description="No autorizado - Token inválido o ausente."
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación en los parámetros enviados."
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor."
- *     )
+ *          response=200,
+ *          description="Pagos vencidos obtenidos correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="pending_payments",
+ *                              type="array",
+ *                              @OA\Items(ref="#/components/schemas/PendingPaymentConceptsResponse")
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function overdue(){}

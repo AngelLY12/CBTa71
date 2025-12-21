@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Response;
  */
 class DebtsController extends Controller
 {
-
     protected DebtsServiceFacades $debtsService;
 
     public function __construct(DebtsServiceFacades $debtsService)
@@ -25,7 +24,6 @@ class DebtsController extends Controller
         $this->debtsService=$debtsService;
 
     }
-
     public function index(PaginationWithSearchRequest $request)
     {
         $search = $request->validated()['search'] ?? null;
@@ -39,8 +37,6 @@ class DebtsController extends Controller
             empty($pendingPayments->items) ? 'No hay pagos pendientes registrados.' : null
         );
     }
-
-
    public function validatePayment(ValidatePaymentRequest $request)
     {
         $data = $request->validated();
@@ -55,8 +51,6 @@ class DebtsController extends Controller
             'Pago validado correctamente.'
         );
     }
-
-    
     public function getStripePayments(GetStripePaymentsRequest $request)
     {
         $data = $request->validated();
@@ -72,5 +66,4 @@ class DebtsController extends Controller
             empty($payments) ? 'No hay pagos registrados.' : null
         );
     }
-
 }

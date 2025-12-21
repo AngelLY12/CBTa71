@@ -6,13 +6,16 @@ use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
+use App\Core\Application\DTO\Response\General\ImportResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
+use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Admin\ActivateUserUseCase;
 use App\Core\Application\UseCases\Admin\AttachStudentDetailUserCase;
+use App\Core\Application\UseCases\Admin\BulkImportStudentDetailsUseCase;
 use App\Core\Application\UseCases\Admin\BulkImportUsersUseCase;
 use App\Core\Application\UseCases\Admin\DeleteLogicalUserUseCase;
 use App\Core\Application\UseCases\Admin\DisableUserUseCase;
@@ -24,7 +27,8 @@ use App\Core\Application\UseCases\Admin\FindStudentDetailUseCase;
 use App\Core\Application\UseCases\Admin\ShowAllUsersUseCase;
 use App\Core\Application\UseCases\Admin\SyncPermissionsUseCase;
 use App\Core\Application\UseCases\Admin\SyncRoleUseCase;
-use App\Core\Application\UseCases\Admin\UpdateStudentDeatilUseCase;
+use App\Core\Application\UseCases\Admin\TemporaryDisableUserUseCase;
+use App\Core\Application\UseCases\Admin\UpdateStudentDeatilsUseCase;
 use App\Core\Application\UseCases\Jobs\PromoteStudentsUseCase;
 use App\Core\Application\UseCases\User\RegisterUseCase;
 use App\Core\Domain\Entities\Permission;
@@ -33,6 +37,7 @@ use App\Core\Domain\Entities\StudentDetail;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Cache\AdminCacheSufix;
 use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Infraestructure\Cache\CacheService;
 
 class AdminServiceFacades
@@ -40,26 +45,28 @@ class AdminServiceFacades
     use HasCache;
     private array $requestCache = [];
     public function __construct(
-        private FindStudentDetailUseCase $find_student,
-        private UpdateStudentDeatilUseCase $update_student,
-        private AttachStudentDetailUserCase $attach,
-        private RegisterUseCase $register,
-        private BulkImportUsersUseCase $import,
-        private SyncPermissionsUseCase $sync,
-        private ShowAllUsersUseCase $show,
-        private ActivateUserUseCase $activate,
-        private DeleteLogicalUserUseCase $delete,
-        private DisableUserUseCase $disable,
-        private FindAllRolesUseCase $roles,
-        private FindAllPermissionsUseCase $permissions,
-        private FindRoleByIdUseCase $role,
-        private FindPermissionByIdUseCase $permission,
-        private SyncRoleUseCase $syncRoles,
+        private FindStudentDetailUseCase        $find_student,
+        private UpdateStudentDeatilsUseCase     $update_student,
+        private AttachStudentDetailUserCase     $attach,
+        private RegisterUseCase                 $register,
+        private BulkImportUsersUseCase          $import,
+        private BulkImportStudentDetailsUseCase $importStudentDetail,
+        private SyncPermissionsUseCase          $sync,
+        private ShowAllUsersUseCase             $show,
+        private ActivateUserUseCase             $activate,
+        private DeleteLogicalUserUseCase        $delete,
+        private DisableUserUseCase              $disable,
+        private TemporaryDisableUserUseCase     $temporaryDisable,
+        private FindAllRolesUseCase             $roles,
+        private FindAllPermissionsUseCase       $permissions,
+        private FindRoleByIdUseCase             $role,
+        private FindPermissionByIdUseCase       $permission,
+        private SyncRoleUseCase                 $syncRoles,
         private PromoteStudentsUseCase $promote,
         private CacheService $service
     )
     {
-
+        $this->setCacheService($service);
     }
     public function attachStudentDetail(CreateStudentDetailDTO $create): User
     {
@@ -74,7 +81,7 @@ class AdminServiceFacades
         return $this->find_student->execute($user_id);
     }
 
-    public function promoteStudentes(): array
+    public function promoteStudentes(): PromotedStudentsResponse
     {
         $promote=$this->promote->execute();
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
@@ -96,16 +103,23 @@ class AdminServiceFacades
         return $user;
     }
 
-    public function importUsers(array $rows):int
+    public function importUsers(array $rows): ImportResponse
     {
         $import=$this->import->execute($rows);
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $import;
     }
-    public function showAllUsers(int $perPage, int $page, bool $forceRefresh): PaginatedResponse
+
+    public function importStudents(array $rows): ImportResponse
     {
-        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage");
-        return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page));
+        $import=$this->importStudentDetail->execute($rows);
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        return $import;
+    }
+    public function showAllUsers(int $perPage, int $page, bool $forceRefresh, UserStatus $status): PaginatedResponse
+    {
+        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage:$status->value");
+        return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page, $status));
     }
     public function syncPermissions(UpdateUserPermissionsDTO $dto):array
     {
@@ -136,6 +150,13 @@ class AdminServiceFacades
      public function disableUsers(array $ids): UserChangedStatusResponse
     {
         $users=$this->disable->execute($ids);
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        return $users;
+    }
+
+    public function temporaryDisableUsers(array $ids): UserChangedStatusResponse
+    {
+        $users=$this->temporaryDisable->execute($ids);
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $users;
     }

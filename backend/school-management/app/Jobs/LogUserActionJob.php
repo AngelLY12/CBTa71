@@ -32,10 +32,16 @@ class LogUserActionJob implements ShouldQueue
     {
         try{
             $log=$create->execute($this->user, $this->request);
-            Log::info('UserActionLog creado: ' . $log);
+            Log::info('UserActionLog creado', $log->toArray());
         }catch (\Throwable $e) {
             Log::warning('No se pudo crear el log: ' . $e->getMessage());
         }
 
+    }
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló creando log de acción", [
+            'error' => $exception->getMessage()
+        ]);
     }
 }

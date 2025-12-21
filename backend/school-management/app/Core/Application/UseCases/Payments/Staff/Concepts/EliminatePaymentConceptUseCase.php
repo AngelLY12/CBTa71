@@ -6,10 +6,13 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotFound\ConceptNotFoundException;
-use App\Jobs\ClearCacheWhileStatusChangeJob;
+use App\Jobs\ClearCacheForUsersJob;
 
 class EliminatePaymentConceptUseCase
 {
+    private const CHUNK_SIZE = 500;
+    private const CACHE_DELAY_MIN = 1;
+    private const CACHE_DELAY_MAX = 10;
     public function __construct(
         private PaymentConceptRepInterface $pcRepo,
         private PaymentConceptQueryRepInterface $pcqRepo,
@@ -24,11 +27,21 @@ class EliminatePaymentConceptUseCase
         if(!$concept){
             throw new ConceptNotFoundException();
         }
-        $users=$this->uqRepo->getRecipients($concept,$concept->applies_to->value);
-        foreach ($users as $user)
-        {
-            ClearCacheWhileStatusChangeJob::dispatch($user->id, PaymentConceptStatus::ELIMINADO)->delay(now()->addSeconds(rand(1, 10)));
-        }
+        $userIds = $this->uqRepo->getRecipientsIds($concept, $concept->applies_to->value);
+        $this->dispatchCacheClearJobs($userIds);
         $this->pcRepo->delete($conceptId);
+    }
+    private function dispatchCacheClearJobs(array $userIds): void
+    {
+        if (empty($userIds)) {
+            return;
+        }
+
+        foreach (array_chunk($userIds, self::CHUNK_SIZE) as $chunk) {
+            ClearCacheForUsersJob::forConceptStatus($chunk, PaymentConceptStatus::ELIMINADO)
+                ->delay(now()->addSeconds(
+                    rand(self::CACHE_DELAY_MIN, self::CACHE_DELAY_MAX)
+                ));
+        }
     }
 }

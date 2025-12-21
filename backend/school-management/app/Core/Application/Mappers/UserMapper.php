@@ -5,6 +5,7 @@ namespace App\Core\Application\Mappers;
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
+use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
@@ -131,10 +132,15 @@ class UserMapper{
         return new UserWithPendingSumamaryResponse(
             userId: $studentSummary['user_id'] ?? null,
             fullName: $studentSummary['name'] ?? null,
+            roles: $studentSummary['roles'] ?? null,
             semestre: $studentSummary['semestre'] ?? null,
             career_name: $studentSummary['career'] ?? null,
             num_pending: $studentSummary['total_count'] ?? null,
-            total_amount_pending: $studentSummary['total_amount'] ?? null
+            num_expired: $studentSummary['expired_count'] ?? null,
+            total_amount_pending: $studentSummary['total_amount'] ?? null,
+            total_paid: $studentSummary['total_paid'] ?? null,
+            expired_amount: $studentSummary['expired_amount'] ?? null,
+            num_paid: $studentSummary['total_paid_concepts'] ?? null,
         );
     }
 
@@ -149,14 +155,14 @@ class UserMapper{
         );
     }
 
-    public static function toUserUpdatedPermissionsResponse(?EloquentUser $user=null, array $permissions, ?string $role=null, int $totalUpdated): UserWithUpdatedPermissionsResponse
+    public static function toUserUpdatedPermissionsResponse(?EloquentUser $user=null, array $permissions, ?string $role=null, array $metadata): UserWithUpdatedPermissionsResponse
     {
         return new UserWithUpdatedPermissionsResponse(
             fullName: $user?->name && $user?->last_name ? "{$user->name} {$user->last_name}" : null,
             curp: $user?->curp ?? null,
-            role: $role,
+            role: $role ?? null,
             updatedPermissions: $permissions,
-            totalUpdated: $totalUpdated ?? 0
+            metadata: $metadata ?? []
         );
     }
     public static function toUpdateUserRoleDTO(array $data): UpdateUserRoleDTO
@@ -174,16 +180,23 @@ class UserMapper{
             fullNames:$data['names'] ?? [],
             curps: $data['curps'] ?? [],
             updatedRoles:$data['roles'] ?? [],
-            totalUpdated: $data['totalUpdated'] ?? 0
+            metadata: $data['metadata'] ?? []
         );
     }
 
     public static function toUserChangedStatusResponse(array $data): UserChangedStatusResponse
     {
         return new UserChangedStatusResponse(
-            updatedUsers: $data['users'],
             newStatus: $data['status'],
             totalUpdated: $data['total'] ?? 0
+        );
+    }
+
+    public static function toPromotedStudentsResponse(array $data): PromotedStudentsResponse
+    {
+        return new PromotedStudentsResponse(
+            promotedStudents: $data['promotedStudents'] ?? 0,
+            desactivatedStudents: $data['desactivatedStudents'] ?? 0,
         );
     }
 

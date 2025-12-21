@@ -17,16 +17,34 @@ class Careers
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Lista de carreras",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="careers", type="array", @OA\Items(ref="#/components/schemas/DomainCareer"))
- *             ),
- *             @OA\Property(property="message", type="string", example="Carreras encontradas.")
- *         )
- *     )
+ *          response=200,
+ *          description="Lista de carreras",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="careers",
+ *                              type="array",
+ *                              @OA\Items(ref="#/components/schemas/DomainCareer")
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Carreras encontradas."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function getCareers(){}
@@ -52,16 +70,34 @@ public function getCareers(){}
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Carrera encontrada",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="career", ref="#/components/schemas/DomainCareer")
- *             ),
- *             @OA\Property(property="message", type="string", example="Carrera encontrada.")
- *         )
- *     )
+ *          response=200,
+ *          description="Carrera encontrada",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="career",
+ *                              ref="#/components/schemas/DomainCareer"
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Carrera encontrada."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function getCareer(){}
@@ -77,16 +113,35 @@ public function getCareer(){}
  *         @OA\JsonContent(ref="#/components/schemas/CreateCareerRequest")
  *     ),
  *     @OA\Response(
- *         response=201,
- *         description="Carrera creada exitosamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="career", ref="#/components/schemas/DomainCareer")
- *             ),
- *             @OA\Property(property="message", type="string", example="Carrera creada.")
- *         )
- *     )
+ *          response=201,
+ *          description="Carrera creada exitosamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="career",
+ *                              ref="#/components/schemas/DomainCareer"
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Carrera creada."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=400, description="Solicitud incorrecta", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=422, description="Validación fallida", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function createCareer(){}
@@ -109,16 +164,36 @@ public function createCareer(){}
  *         @OA\JsonContent(ref="#/components/schemas/UpdateCareerRequest")
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Carrera actualizada exitosamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="updated", ref="#/components/schemas/DomainCareer")
- *             ),
- *             @OA\Property(property="message", type="string", example="Carrera actualizada.")
- *         )
- *     )
+ *          response=200,
+ *          description="Carrera actualizada exitosamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="updated",
+ *                              ref="#/components/schemas/DomainCareer"
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Carrera actualizada."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=400, description="Solicitud incorrecta", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=422, description="Validación fallida", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function updateCareer(){}
@@ -137,13 +212,26 @@ public function updateCareer(){}
  *         @OA\Schema(type="integer", example=1)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Carrera eliminada exitosamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="message", type="string", example="Carrera eliminada con éxito.")
- *         )
- *     )
+ *          response=200,
+ *          description="Carrera eliminada exitosamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Carrera eliminada con éxito."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function deleteCareer(){}

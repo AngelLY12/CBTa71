@@ -43,48 +43,39 @@ class PaymentHistory
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Historial de pagos obtenido correctamente.",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="payment_history",
- *                     allOf={
- *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
- *                         @OA\Schema(
- *                             @OA\Property(
- *                                 property="items",
- *                                 type="array",
- *                                 @OA\Items(ref="#/components/schemas/PaymentDetailResponse")
- *                             )
- *                         )
- *                     }
- *                 )
- *             ),
- *             @OA\Property(
- *                 property="message",
- *                 type="string",
- *                 nullable=true,
- *                 example="No hay historial de pagos para este usuario."
- *             )
- *         )
- *     ),
- *
- *     @OA\Response(
- *         response=401,
- *         description="No autorizado - Token inválido o ausente."
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación en los parámetros enviados."
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor."
- *     )
+ *          response=200,
+ *          description="Historial de pagos obtenido correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="payment_history",
+ *                              allOf={
+ *                                  @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+ *                                  @OA\Schema(
+ *                                      @OA\Property(
+ *                                          property="items",
+ *                                          type="array",
+ *                                          @OA\Items(ref="#/components/schemas/PaymentDetailResponse")
+ *                                      )
+ *                                  )
+ *                              }
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function history(){}

@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Core\Domain\Utils\Validators;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
+use App\Core\Domain\Enum\User\UserRoles;
+use App\Exceptions\Conflict\UserExplicitlyExcludedException;
 use Carbon\Carbon;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
@@ -26,37 +29,76 @@ use App\Exceptions\Validation\ConceptMissingNameException;
 use App\Exceptions\Validation\ConceptNotStartedException;
 use App\Exceptions\Validation\ConceptStartDateTooEarlyException;
 use App\Exceptions\Validation\ConceptStartDateTooFarException;
+use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
+use App\Exceptions\Conflict\ConceptAppliesToConflictException;
+use App\Exceptions\Conflict\StudentsAndExceptionsOverlapException;
 
 class PaymentConceptValidator{
 
-        public static function ensureConceptIsActiveAndValid(PaymentConcept $concept, User $user)
+    public static function ensureConceptIsActiveAndValid(PaymentConcept $concept, User $user)
+    {
+        self::ensureConceptIsPayable($concept);
+
+        if ($concept->hasExceptionForUser($user->id)) {
+            throw new UserExplicitlyExcludedException();
+        }
+
+        if (!self::userIsAllowedForConcept($concept, $user)) {
+            throw new UserNotAllowedException();
+        }
+    }
+
+    private static function ensureConceptIsPayable(PaymentConcept $concept): void
     {
         if (!$concept->isActive()) {
             throw new ConceptInactiveException();
         }
 
-        if (!$concept->hasStarted() || $concept->isExpired()) {
+        if (!$concept->hasStarted()) {
+            throw new ConceptNotStartedException('El concepto no ha iniciado.');
+        }
+
+        if ($concept->isExpired()) {
             throw new ConceptExpiredException();
         }
+    }
 
+    private static function userIsAllowedForConcept(PaymentConcept $concept, User $user): bool
+    {
         $student = $user->studentDetail;
 
-        $allowed =
-            $concept->is_global
-            || ($student && in_array($student->career_id, $concept->getCareerIds()))
-            || ($student && in_array($student->semestre, $concept->getSemesters()))
-            || in_array($user->id, $concept->getUserIds())
-            || $user->isActive();
-
-        if (!$allowed) {
-            throw new UserNotAllowedException();
+        if ($concept->is_global && $user->hasRole(UserRoles::STUDENT->value)) {
+            return true;
         }
+
+        if ($concept->hasUser($user->id)) {
+            return true;
+        }
+
+        if ($student && $concept->hasCareer($student->career_id)) {
+            return true;
+        }
+
+        if ($student && $concept->hasSemester($student->semestre)) {
+            return true;
+        }
+
+        if ($user->isApplicant() && $concept->hasTag(PaymentConceptApplicantType::APPLICANT)) {
+            return true;
+        }
+
+        if ($user->isNewStudent() && $concept->hasTag(PaymentConceptApplicantType::NO_STUDENT_DETAILS)) {
+            return true;
+        }
+
+        return false;
     }
+
 
     public static function ensureConceptHasStarted(PaymentConcept $concept)
     {
         if (!$concept->hasStarted()) {
-            throw new ConceptNotStartedException();
+            throw new ConceptNotStartedException('El concepto no ha iniciado, no puede ser finalizado.');
         }
     }
 
@@ -94,13 +136,28 @@ class PaymentConceptValidator{
         }
     }
 
+    public static function ensureCreatePaymentDTOIsValid(CreatePaymentConceptDTO $dto)
+    {
+        if ($dto->is_global && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
+            throw new ConceptAppliesToConflictException();
+        }
+        $intersection = array_intersect(
+            (array)$dto->students,
+            (array)$dto->exceptionStudents
+        );
+
+        if (!empty($intersection)) {
+            throw new StudentsAndExceptionsOverlapException();
+        }
+    }
+
     public static function ensureConceptHasRequiredFields(PaymentConcept $concept)
     {
         if (empty($concept->concept_name)) {
             throw new ConceptMissingNameException();
         }
 
-        if ($concept->amount === null || $concept->amount < 10) {
+        if ($concept->amount === null || bccomp($concept->amount, '10', 2) === -1) {
             throw new ConceptInvalidAmountException();
         }
 

@@ -6,6 +6,7 @@ use App\Core\Application\Traits\HasCache;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Core\Infraestructure\Cache\CacheService;
 use App\Exceptions\NotFound\UserNotFoundException;
 
 class FindUserUseCase
@@ -14,8 +15,10 @@ class FindUserUseCase
 
     public function __construct(
         private UserQueryRepInterface $uqRepo,
+        CacheService $service
     )
     {
+        $this->setCacheService($service);
     }
     public function execute(bool $forceRefresh): User
     {

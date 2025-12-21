@@ -26,19 +26,6 @@ class DashboardController extends Controller
     }
 
 
-    public function getData(DashboardRequest $request)
-    {
-        $data = $this->dashboardService->getData(
-            $request->validated()['only_this_year'] ?? false,
-            $request->validated()['forceRefresh'] ?? false
-        );
-
-        return Response::success(
-            ['statistics' => $data]
-        );
-    }
-
-
     public function pendingPayments(DashboardRequest $request)
     {
         $data = $this->dashboardService->pendingPaymentAmount($request->validated()['only_this_year'] ?? false,
@@ -67,7 +54,7 @@ class DashboardController extends Controller
             $request->validated()['forceRefresh'] ?? false);
 
         return Response::success(
-            ['total_earning' => $total]
+            ['payments_data' => $total]
         );
     }
 
@@ -87,13 +74,19 @@ class DashboardController extends Controller
             ['concepts' => $concepts]
         );
     }
-    
+
+    public function payout()
+    {
+        $response=$this->dashboardService->createPayout();
+        return Response::success(['payout'=>$response], 'Se completo el procesamiento de payout');
+    }
+
     public function refreshDashboard()
     {
         $this->dashboardService->refreshAll();
         return Response::success(
             null,
-            'Dashboard cache limpiado con éxito'
+            'Cache del Dashboard limpiado con éxito'
         );
     }
 

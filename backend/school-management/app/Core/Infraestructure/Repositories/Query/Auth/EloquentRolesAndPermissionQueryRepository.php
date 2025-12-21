@@ -41,13 +41,13 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
         if (!empty($role)) {
             $users = User::role($role)
                 ->with('roles')
-                ->get(['id','name','last_name','curp']);
+                ->get(['curp']);
         }
 
         if (!empty($curps)) {
             $users = User::with('roles')
                 ->whereIn('curp', $curps)
-                ->get(['id','name','last_name','curp']);
+                ->get(['curp']);
         }
 
         if ($users->isEmpty()) return [];
@@ -66,18 +66,22 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
                     if ($roleName === UserRoles::SUPERVISOR->value) {
                         $q->orWhere('belongs_to', 'administration');
                     }
+                    if($roleName === UserRoles::STUDENT->value){
+                        $q->orWhere('belongs_to', $roleName . '-payment');
+                    }
                 })
                 ->select('id','name','type')
                 ->get()
                 ->map(fn($permission) => RolesAndPermissionMapper::toPermissionDomain($permission));
-
+            $usersCount = $usersOfRole->count();
             $result[] = [
                 'role' => $roleName,
-                'users' => $usersOfRole->map(fn($u) => [
-                    'id' => $u->id,
-                    'fullName' => $u->name . ' ' . $u->last_name,
-                    'curp' => $u->curp
-                ])->toArray(),
+                'users' => [
+                    'count' => $usersCount,
+                    'curps' => $usersCount <= 15
+                        ? $usersOfRole->pluck('curp')->values()->toArray()
+                        : []
+                ],
                 'permissions' => $permissions->toArray()
             ];
         }
@@ -93,7 +97,10 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
                   ->orWhere('belongs_to', 'global-payment');
                   if ($role === UserRoles::SUPERVISOR->value) {
                         $q->orWhere('belongs_to', 'administration');
-                    }
+                  }
+                if($role === UserRoles::STUDENT->value){
+                    $q->orWhere('belongs_to', $role . '-payment');
+                }
             })
             ->pluck('id')
             ->toArray();

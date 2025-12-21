@@ -9,16 +9,28 @@ class DashboardStaff
  *     path="/api/v1/dashboard-staff/refresh",
  *     summary="Limpiar el caché del dashboard",
  *     description="Forza el borrado del caché en todos los datos del dashboard.",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Response(
- *         response=200,
- *         description="Caché limpiado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="message", type="string", example="Dashboard cache limpiado con éxito")
- *         )
- *     )
+ *          response=200,
+ *          description="Caché limpiado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Dashboard cache limpiado con éxito"
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function refresh(){}
@@ -29,7 +41,7 @@ public function refresh(){}
  *     path="/api/v1/dashboard-staff/concepts",
  *     summary="Obtener todos los conceptos de pago",
  *     description="Devuelve una lista paginada de conceptos de pago visibles en el panel del personal. Permite filtrar por año actual y forzar actualización del caché.",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="only_this_year",
@@ -60,30 +72,37 @@ public function refresh(){}
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Lista de conceptos obtenida correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(
- *                     property="concepts",
- *                     allOf={
- *                         @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
- *                         @OA\Schema(
- *                             @OA\Property(
- *                                 property="items",
- *                                 type="array",
- *                                 @OA\Items(ref="#/components/schemas/ConceptsToDashboardResponse")
- *                             )
- *                         )
- *                     }
- *                 )
- *             ),
- *             @OA\Property(property="message", type="string", nullable=true)
- *         )
- *     )
+ *          response=200,
+ *          description="Lista de conceptos obtenida correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concepts",
+ *                              allOf={
+ *                                  @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+ *                                  @OA\Schema(
+ *                                      @OA\Property(
+ *                                          property="items",
+ *                                          type="array",
+ *                                          @OA\Items(ref="#/components/schemas/ConceptsToDashboardResponse")
+ *                                      )
+ *                                  )
+ *                              }
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function concepts(){}
@@ -93,7 +112,7 @@ public function concepts(){}
  * @OA\Get(
  *     path="/api/v1/dashboard-staff/payments-made",
  *     summary="Obtener monto total de pagos realizados",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="only_this_year",
@@ -108,31 +127,28 @@ public function concepts(){}
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Monto total de pagos realizados obtenido correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="total_earning", type="string", example=325000.00)
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="No autenticado",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="No estás autenticado.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Ocurrió un error al obtener los pagos pendientes.")
- *         )
- *     )
+ *          response=200,
+ *          description="Monto total de pagos realizados obtenido correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="payments_data",
+ *                              ref="#/components/schemas/FinancialSummaryResponse"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function payments(){}
@@ -142,7 +158,7 @@ public function payments(){}
  * @OA\Get(
  *     path="/api/v1/dashboard-staff/students",
  *     summary="Obtener el número total de estudiantes",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="only_this_year",
@@ -157,31 +173,29 @@ public function payments(){}
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Número total de estudiantes obtenido correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="total_students", type="integer", example=1500)
- *             )
- *         )
- *     ),
- *      @OA\Response(
- *         response=401,
- *         description="No autenticado",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="No estás autenticado.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Ocurrió un error al obtener los pagos pendientes.")
- *         )
- *     )
+ *          response=200,
+ *          description="Número total de estudiantes obtenido correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="total_students",
+ *                              type="integer",
+ *                              example=1500
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function students(){}
@@ -192,7 +206,7 @@ public function students(){}
  *     path="/api/v1/dashboard-staff/pending-payments",
  *     summary="Obtener cantidad y monto total de pagos pendientes",
  *     description="Devuelve el total de conceptos pendientes de pago, incluyendo cantidad y monto total. Se puede filtrar por el año actual y forzar la actualización del caché.",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
  *         name="only_this_year",
@@ -209,86 +223,70 @@ public function students(){}
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Totales de pagos pendientes obtenidos correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="total_pending", ref="#/components/schemas/PendingSummaryResponse")
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="No autenticado",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="No estás autenticado.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Ocurrió un error al obtener los pagos pendientes.")
- *         )
- *     )
+ *          response=200,
+ *          description="Totales de pagos pendientes obtenidos correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="total_pending",
+ *                              ref="#/components/schemas/PendingSummaryResponse"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
  * )
  */
 public function pending(){}
 
-
 /**
- * @OA\Get(
- *     path="/api/v1/dashboard-staff/data",
- *     summary="Obtener estadísticas generales del dashboard",
- *     description="Devuelve estadísticas generales como totales, montos y datos de rendimiento. Se puede filtrar por año actual y forzar actualización del caché.",
- *     tags={"Dashboard"},
- *     security={{"bearerAuth":{}}},
- *     @OA\Parameter(
- *         name="only_this_year",
- *         in="query",
- *         description="Si es true, filtra los datos al año actual",
- *         required=false,
- *         @OA\Schema(type="boolean", example=true)
- *     ),
- *     @OA\Parameter(
- *         name="forceRefresh",
- *         in="query",
- *         description="Si es true, fuerza la actualización del caché",
- *         required=false,
- *         @OA\Schema(type="boolean", example=false)
- *     ),
+ * @OA\Post(
+ *     path="/api/v1/dashboard-staff/payout",
+ *     summary="Crear un payout con todo el balance disponible",
+ *     description="Crea un payout en Stripe transfiriendo TODO el balance disponible en MXN a la cuenta bancaria registrada. Requiere un mínimo de $100.00 MXN disponibles.",
+ *     tags={"Dashboard Staff", "Payouts"},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Response(
- *         response=200,
- *         description="Datos del dashboard obtenidos correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="statistics", ref="#/components/schemas/DashboardDataResponse")
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="No autenticado",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="No estás autenticado.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Error interno del servidor",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado al obtener los datos.")
- *         )
- *     )
+ *          response=200,
+ *          description="Payout creado exitosamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="payout",
+ *                              ref="#/components/schemas/StripePayoutResponse"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=400, description="Solicitud incorrecta", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=422, description="Validación fallida", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=502, description="Error de Stripe", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *
  * )
- */ 
-public function data(){}
+ */
+public function payouts()
+{}
 
 
 }

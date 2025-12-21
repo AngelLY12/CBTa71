@@ -8,22 +8,22 @@ use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\UserValidator;
+use App\Jobs\ClearStaffCacheJob;
 
-class DisableUserUseCase
+class DisableUserUseCase extends BaseChangeUserStatusUseCase
 {
-    public function __construct(
-        private UserRepInterface $userRepo,
-        private UserQueryRepInterface $uqRepo,
-    )
+    protected function getTargetStatus(): UserStatus
     {
+        return UserStatus::BAJA;
     }
 
-    public function execute(array $ids): UserChangedStatusResponse
+    protected function validateUsers(iterable $users): void
     {
-        $users = $this->uqRepo->findByIds($ids);
-        foreach($users as $user){
-            UserValidator::ensureValidStatusTransition($user, EnumMapper::toUserStatus('baja'));
+        foreach ($users as $user) {
+            UserValidator::ensureValidStatusTransition(
+                $user,
+                UserStatus::BAJA
+            );
         }
-        return $this->userRepo->changeStatus($ids, UserStatus::BAJA->value);
     }
 }

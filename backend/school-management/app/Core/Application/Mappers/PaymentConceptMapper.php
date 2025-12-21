@@ -8,12 +8,32 @@ use App\Core\Application\DTO\Response\PaymentConcept\ConceptNameAndAmountRespons
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptsToDashboardResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingPaymentConceptsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
+use App\Core\Domain\Entities\PaymentConcept as EntitiesPaymentConcept;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Models\PaymentConcept;
+use App\Models\PaymentConceptApplicantTag;
 use Carbon\Carbon;
 
 class PaymentConceptMapper{
+
+
+    public static function toDomain(CreatePaymentConceptDTO $dto): EntitiesPaymentConcept
+    {
+        return new EntitiesPaymentConcept(
+            id: null,
+            concept_name: $dto->concept_name,
+            description: $dto->description,
+            status: $dto->status,
+            start_date: $dto->start_date,
+            end_date: $dto->end_date,
+            amount: $dto->amount,
+            applies_to: $dto->appliesTo,
+            is_global: $dto->is_global
+        );
+    }
+
    public static function toCreateConceptDTO(array $data): CreatePaymentConceptDTO
     {
         $statusEnum = isset($data['status'])
@@ -23,6 +43,7 @@ class PaymentConceptMapper{
         $appliesToEnum = isset($data['applies_to'])
             ? PaymentConceptAppliesTo::from(strtolower($data['applies_to']))
             : PaymentConceptAppliesTo::TODOS;
+
 
         return new CreatePaymentConceptDTO(
             concept_name: $data['concept_name'],
@@ -35,7 +56,9 @@ class PaymentConceptMapper{
             appliesTo: $appliesToEnum,
             semesters: $data['semestres'] ?? [],
             careers: $data['careers'] ?? [],
-            students: $data['students'] ?? []
+            students: $data['students'] ?? [],
+            exceptionStudents: $data['exceptionStudents'] ?? [],
+            applicantTags: $data['applicantTags'] ?? [],
         );
     }
 
@@ -59,7 +82,10 @@ class PaymentConceptMapper{
             careers: $data['careers'] ?? [],
             students: $data['students'] ?? [],
             appliesTo: $data['applies_to'] ?? null,
-            replaceRelations: $data['replaceRelations']
+            replaceRelations: $data['replaceRelations'],
+            exceptionStudents: $data['exceptionStudents'] ?? [],
+            replaceExceptions: $data['replaceExceptions'],
+            applicantTags: $data['applicantTags'] ?? [],
         );
     }
 

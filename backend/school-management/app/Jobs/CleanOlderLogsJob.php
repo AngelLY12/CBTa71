@@ -36,4 +36,11 @@ class CleanOlderLogsJob implements ShouldQueue
             Log::info("No se encontraron logs para eliminar.");
         }
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló eliminando logs viejos", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

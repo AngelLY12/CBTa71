@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class CheckUserStatusJob implements ShouldQueue
 {
@@ -30,12 +31,19 @@ class CheckUserStatusJob implements ShouldQueue
      */
     public function handle(CacheService $service): void
     {
-   
+
         if (method_exists($this->user, 'tokens')) {
             $this->user->tokens()->delete();
             $this->user->refreshTokens()->delete();
 
         }
         $service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$this->user->id");
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló verificando estatus del usuario", [
+            'error' => $exception->getMessage()
+        ]);
     }
 }

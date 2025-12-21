@@ -14,6 +14,7 @@ class EloquentPaymentMethodRepository implements PaymentMethodRepInterface
     public function create(PaymentMethod $paymentMethod):PaymentMethod
     {
         $pm = EloquentPaymentMethod::create(PaymentMethodMapper::toPersistence($paymentMethod));
+        $pm->refresh();
         return PaymentMethodMapper::toDomain($pm);
     }
 

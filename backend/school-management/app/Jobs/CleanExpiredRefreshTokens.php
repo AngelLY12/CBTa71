@@ -36,4 +36,11 @@ class CleanExpiredRefreshTokens implements ShouldQueue
             Log::info("No se encontraron tokens expirados o revocados para eliminar.");
         }
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló eliminando refresh tokens", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

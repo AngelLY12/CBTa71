@@ -37,4 +37,11 @@ class CleanExpiredTokensJob implements ShouldQueue
             Log::info("No se encontraron tokens expirados o revocados para eliminar.");
         }
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical("Job falló limpiando tokens de acceso expirados", [
+            'error' => $exception->getMessage()
+        ]);
+    }
 }

@@ -22,6 +22,7 @@ class UpdateUserServiceFacades
             private UserQueryRepInterface $userRepo
 )
     {
+        $this->setCacheService($service);
     }
 
     public function updateUser(int $userId, array $fields): User

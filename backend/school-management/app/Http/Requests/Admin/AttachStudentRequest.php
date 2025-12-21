@@ -68,12 +68,21 @@ class AttachStudentRequest extends FormRequest
             'user_id' => 'required|int',
             'user_id.*' => ['exists:users,id'],
             'career_id' => 'required|int',
-            'career_id' => ['exists:careers,id'],
+            'career_id.*' => ['exists:careers,id'],
             'n_control' => 'required|string',
             'semestre' => 'required|int',
             'group' => 'required|string',
             'workshop' => 'required|string'
         ];
+    }
+
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'n_control' => strip_tags($this->n_control),
+            'group' => strip_tags($this->group),
+            'workshop' => strip_tags($this->workshop),
+        ]);
     }
 
     public function messages(): array

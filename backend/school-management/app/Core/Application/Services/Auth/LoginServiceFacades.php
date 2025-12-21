@@ -7,6 +7,8 @@ use App\Core\Application\DTO\Response\General\LoginResponse;
 use App\Core\Application\UseCases\Auth\LoginUseCase;
 use App\Core\Application\UseCases\User\RegisterUseCase;
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\Cache\AdminCacheSufix;
+use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Infraestructure\Cache\CacheService;
 
 class LoginServiceFacades
@@ -27,7 +29,7 @@ class LoginServiceFacades
    public function register(CreateUserDTO $user): User
    {
         $user= $this->register->execute($user);
-        $this->service->clearKey('admin', 'users:all');
+        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $user;
    }
 }

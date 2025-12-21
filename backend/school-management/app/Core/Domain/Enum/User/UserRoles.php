@@ -10,9 +10,19 @@ enum UserRoles: string
     case UNVERIFIED = 'unverified';
     case ADMIN = 'admin';
     case SUPERVISOR = 'supervisor';
-    
+    case APPLICANT = 'applicant';
+
     public static function values(): array
     {
         return array_map(fn($role) => $role->value, self::cases());
     }
+
+    public static function students(): array
+    {
+        return [
+            self::STUDENT->value,
+            self::APPLICANT->value,
+        ];
+    }
+
 }

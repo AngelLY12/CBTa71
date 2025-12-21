@@ -36,9 +36,6 @@ class LogoutUseCase
         });
         $roles = $user->roles()->pluck('name')->toArray();
         $userId = $user->id;
-        if (in_array(UserRoles::ADMIN->value, $roles) || in_array(UserRoles::SUPERVISOR->value,$roles)) {
-            $this->service->clearPrefix(CachePrefix::ADMIN->value);
-        }
 
         if (in_array(UserRoles::PARENT->value, $roles)) {
             ClearParentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
@@ -51,5 +48,6 @@ class LogoutUseCase
         $this->service->clearKey(CachePrefix::USER->value, $userId);
 
     }
+
 
 }

@@ -8,7 +8,7 @@ use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
-use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
+use App\Core\Domain\Repositories\Query\Stripe\StripeGatewayQueryInterface;
 use App\Core\Infraestructure\Cache\CacheService;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +16,7 @@ class FinalizeSetupSessionUseCase
 {
     public function __construct(
         private PaymentMethodRepInterface $pmRepo,
-        private StripeGatewayInterface $stripe,
+        private StripeGatewayQueryInterface $stripe,
         private CacheService $service
     ) {
 

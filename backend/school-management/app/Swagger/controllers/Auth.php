@@ -13,21 +13,30 @@ class Auth
  *     operationId="sendEmailVerificationNotification",
  *     security={{"bearerAuth":{}}},
  *     @OA\Response(
- *         response=200,
- *         description="Enlace de verificación enviado exitosamente",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="status", type="string", example="verification-link-sent")
- *         )
- *     ),
- *     @OA\Response(
- *         response=302,
- *         description="Redirección al dashboard si el email ya está verificado"
- *     ),
- *     @OA\Response(
- *         response=401,
- *         description="No autenticado"
- *     )
+ *          response=200,
+ *          description="Enlace de verificación enviado exitosamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(property="status", type="string", example="verification-link-sent")
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=302,
+ *          description="Redirección al dashboard si el email ya está verificado"
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="No autenticado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
  * )
  */
 public function emailVerificationNotify(){}
@@ -52,11 +61,26 @@ public function emailVerificationNotify(){}
 *         )
 *     ),
 *     @OA\Response(
-*         response=200,
-*         description="Contraseña actualizada correctamente",
-*         @OA\JsonContent(@OA\Property(property="status", type="string", example="passwords.reset"))
-*     ),
-*     @OA\Response(response=422, description="Validación fallida o token inválido")
+ *          response=200,
+ *          description="Contraseña actualizada correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(property="status", type="string", example="passwords.reset")
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Validación fallida o token inválido",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
 * )
 */
 public function resetPassword(){}
@@ -79,11 +103,26 @@ public function resetPassword(){}
 *         )
 *     ),
 *     @OA\Response(
-*         response=200,
-*         description="Enlace de restablecimiento enviado correctamente",
-*         @OA\JsonContent(@OA\Property(property="status", type="string", example="passwords.sent"))
-*     ),
-*     @OA\Response(response=422, description="Email no válido o usuario no encontrado")
+ *          response=200,
+ *          description="Enlace de restablecimiento enviado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(property="status", type="string", example="passwords.sent")
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Email no válido o usuario no encontrado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
 * )
 */
 public function forgotPassword(){}
@@ -111,8 +150,15 @@ public function forgotPassword(){}
 *         description="Hash de verificación enviado por correo",
 *         @OA\Schema(type="string", example="hash_generado_por_laravel")
 *     ),
-*     @OA\Response(response=302, description="Redirige al frontend con ?verified=1"),
-*     @OA\Response(response=401, description="No autenticado"),
+*     @OA\Response(
+ *          response=302,
+ *          description="Redirige al frontend con ?verified=1"
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="No autenticado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
 *     security={{"bearerAuth":{}}}
 * )
 */
@@ -134,45 +180,41 @@ public function emailVerification(){}
 *     ),
 *
 *     @OA\Response(
-*         response=201,
-*         description="Usuario creado con éxito",
-*         @OA\JsonContent(
-*             type="object",
-*             @OA\Property(property="success", type="boolean", example=true),
-*             @OA\Property(property="data", type="object",
-*                 @OA\Property(property="user", ref="#/components/schemas/DomainUser")
-*             ),
-*             @OA\Property(property="message", type="string", example="El usuario ha sido creado con éxito.")
-*         )
-*     ),
-*
-*     @OA\Response(
-*         response=422,
-*         description="Error en la validación de datos",
-*         @OA\JsonContent(
-*             type="object",
-*             @OA\Property(property="success", type="boolean", example=false),
-*             @OA\Property(
-*                 property="errors",
-*                 type="object",
-*                 description="Listado de errores de validación",
-*                 example={
-*                     "email": {"El campo email es obligatorio."},
-*                     "password": {"El campo password debe tener al menos 6 caracteres."}
-*                 }
-*             ),
-*             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
-*         )
-*     ),
-*
-*     @OA\Response(
-*         response=500,
-*         description="Error inesperado en el servidor",
-*         @OA\JsonContent(
-*             @OA\Property(property="success", type="boolean", example=false),
-*             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
-*         )
-*     )
+ *          response=201,
+ *          description="Usuario creado con éxito",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="user",
+ *                              ref="#/components/schemas/DomainUser"
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="El usuario ha sido creado con éxito."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *
+ *      @OA\Response(
+ *          response=422,
+ *          description="Error en la validación de datos",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *
+ *      @OA\Response(
+ *          response=500,
+ *          description="Error inesperado en el servidor",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
 * )
 */
 public function register(){}
@@ -193,56 +235,47 @@ public function register(){}
  *     ),
  *
  *     @OA\Response(
- *         response=200,
- *         description="Inicio de sesión exitoso",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="user_tokens", ref="#/components/schemas/LoginResponse")
- *             ),
- *             @OA\Property(property="message", type="string", example="Inicio de sesión exitoso.")
- *         )
- *     ),
+ *          response=200,
+ *          description="Inicio de sesión exitoso",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="user_tokens",
+ *                              ref="#/components/schemas/LoginResponse"
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Inicio de sesión exitoso."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
  *
- *     @OA\Response(
- *         response=422,
- *         description="Error en la validación de datos",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(
- *                 property="errors",
- *                 type="object",
- *                 description="Listado de errores de validación",
- *                 example={
- *                     "email": {"El campo email es obligatorio."},
- *                     "password": {"El campo password es obligatorio."}
- *                 }
- *             ),
- *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
- *         )
- *     ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Error en la validación de datos",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
  *
- *     @OA\Response(
- *         response=401,
- *         description="Credenciales incorrectas",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Credenciales incorrectas.")
- *         )
- *     ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="Credenciales incorrectas",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
  *
- *     @OA\Response(
- *         response=500,
- *         description="Error inesperado del servidor",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
- *         )
- *     )
+ *      @OA\Response(
+ *          response=500,
+ *          description="Error inesperado del servidor",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
  * )
  */
 public function login(){}
@@ -262,55 +295,47 @@ public function login(){}
  *         )
  *     ),
  *    @OA\Response(
- *         response=200,
- *         description="Tokens renovados con exito",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="user_tokens", ref="#/components/schemas/LoginResponse")
- *             ),
- *             @OA\Property(property="message", type="string", example="Tokens renovados.")
- *         )
- *     ),
+ *          response=200,
+ *          description="Tokens renovados con exito",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="user_tokens",
+ *                              ref="#/components/schemas/LoginResponse"
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Tokens renovados."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
  *
- *     @OA\Response(
- *         response=422,
- *         description="Error en la validación de datos",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(
- *                 property="errors",
- *                 type="object",
- *                 description="Listado de errores de validación",
- *                 example={
- *                     "refresh_token": {"El refresh token es obligatorio."},
- *                 }
- *             ),
- *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
- *         )
- *     ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Error en la validación de datos",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
  *
- *     @OA\Response(
- *         response=401,
- *         description="Credenciales incorrectas",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Credenciales incorrectas.")
- *         )
- *     ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="Credenciales incorrectas",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
  *
- *     @OA\Response(
- *         response=500,
- *         description="Error inesperado del servidor",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
- *         )
- *     )
+ *      @OA\Response(
+ *          response=500,
+ *          description="Error inesperado del servidor",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
  * )
  */
 public function refreshTokens(){}
@@ -332,46 +357,26 @@ public function refreshTokens(){}
  *         @OA\Schema(type="string", example="def50200fcdcb15b13e...")
  *     ),
  *     @OA\Response(
- *         response=204,
- *         description="Sesión cerrada exitosamente (sin contenido)"
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error en la validación de datos",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(
- *                 property="errors",
- *                 type="object",
- *                 description="Listado de errores de validación",
- *                 example={
- *                     "refresh_token": {"El refresh token es es invalido o incorrecto."},
- *                 }
- *             ),
- *             @OA\Property(property="message", type="string", example="Error en la validación de datos.")
- *         )
- *     ),
+ *          response=204,
+ *          description="Sesión cerrada exitosamente (sin contenido)"
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Error en la validación de datos",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
  *
- *     @OA\Response(
- *         response=401,
- *         description="Credenciales incorrectas",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Credenciales incorrectas.")
- *         )
- *     ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="Credenciales incorrectas",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
  *
- *     @OA\Response(
- *         response=500,
- *         description="Error inesperado del servidor",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="Ocurrió un error inesperado.")
- *         )
- *     )
+ *      @OA\Response(
+ *          response=500,
+ *          description="Error inesperado del servidor",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
  * )
  */
 public function logout(){}

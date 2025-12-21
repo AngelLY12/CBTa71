@@ -4,8 +4,9 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
+use App\Jobs\ClearStaffCacheJob;
 
-class UpdateStudentDeatilUseCase
+class UpdateStudentDeatilsUseCase
 {
     public function __construct(
         private StudentDetailReInterface $repo
@@ -15,6 +16,8 @@ class UpdateStudentDeatilUseCase
 
     public function execute(int $userId, array $fields): User
     {
-        return $this->repo->updateStudentDetails($userId, $fields);
+        $update=$this->repo->updateStudentDetails($userId, $fields);
+        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
+        return $update;
     }
 }

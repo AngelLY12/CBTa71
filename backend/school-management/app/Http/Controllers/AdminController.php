@@ -9,12 +9,13 @@ use App\Http\Requests\Admin\AttachStudentRequest;
 use App\Http\Requests\Admin\ChangeUserStatusRequest;
 use App\Http\Requests\Admin\FindPermissionsRequest;
 use App\Http\Requests\Admin\RegisterUserRequest;
+use App\Http\Requests\Admin\ShowUsersPaginationRequest;
 use App\Http\Requests\Admin\UpdatePermissionsRequest;
 use App\Http\Requests\Admin\UpdateRolesRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Http\Requests\General\ForceRefreshRequest;
-use App\Http\Requests\General\PaginationRequest;
 use App\Http\Requests\ImportUsersRequest;
+use App\Imports\StudentDetailsImport;
 use App\Imports\UsersImport;
 use Illuminate\Support\Facades\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -55,7 +56,7 @@ class AdminController extends Controller
         return Response::success(['affected' => $promotion], 'Se ejecutó la promoción de usuarios correctamente.');
 
     }
-    
+
     public function attachStudent(AttachStudentRequest $request)
     {
         $data= $request->validated();
@@ -85,12 +86,20 @@ class AdminController extends Controller
     public function import(ImportUsersRequest $request)
     {
         $file= $request->file('file');
+        $import=new UsersImport($this->service);
+        Excel::import($import,$file);
+        $result = $import->getImportResult();
+        return Response::success(['summary' => $result], 'Usuarios importados correctamente.');
 
-        Excel::import(new UsersImport($this->service),$file);
+    }
 
-        return Response::success(null, 'Usuarios importados correctamente.');
-
-
+    public function importStudents(ImportUsersRequest $request)
+    {
+        $file= $request->file('file');
+        $import= new StudentDetailsImport($this->service);
+        Excel::import($import,$file);
+        $result = $import->getImportResult();
+        return Response::success(['summary' => $result], 'Detalles de estudiantes importados correctamente.');
     }
 
     public function updatePermissions(UpdatePermissionsRequest $request)
@@ -103,12 +112,13 @@ class AdminController extends Controller
 
     }
 
-    public function index(PaginationRequest $request)
+    public function index(ShowUsersPaginationRequest $request)
     {
         $forceRefresh = $request->boolean('forceRefresh');
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
-        $users=$this->service->showAllUsers($perPage, $page,$forceRefresh);
+        $status=$request->validated()['status'] ?? null;
+        $users=$this->service->showAllUsers($perPage, $page,$forceRefresh, $status);
         return Response::success(['users' => $users], 'Usuarios encontrados.');
 
     }
@@ -147,6 +157,15 @@ class AdminController extends Controller
         $updated=$this->service->disableUsers($ids);
 
         return Response::success(['disable_users' => $updated], 'Estatus de usuarios actualizados correctamente.');
+
+    }
+
+    public function temporaryDisableUsers(ChangeUserStatusRequest $request)
+    {
+        $ids = $request->validated()['ids'];
+        $updated=$this->service->temporaryDisableUsers($ids);
+
+        return Response::success(['temporary_disable_users' => $updated], 'Estatus de usuarios actualizados correctamente.');
 
     }
 

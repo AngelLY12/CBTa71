@@ -21,7 +21,6 @@ class EloquentParentStudentRepository implements ParentStudentRepInterface
         ->where('student_id', $studentId)
         ->firstOrFail();
         $eloquent->update($fields);
-        $eloquent->refresh();
         return ParentStudentMapper::toDomain($eloquent);
     }
     public function delete(int $parentId, int $studentId): void

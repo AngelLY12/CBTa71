@@ -14,16 +14,44 @@ class Users
  *         @OA\JsonContent(ref="#/components/schemas/UpdateUserRequest")
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Usuario actualizado correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="data", type="object",
- *                 @OA\Property(property="user", ref="#/components/schemas/DomainUser")
- *             ),
- *             @OA\Property(property="message", type="string", example="El usuario ha sido actualizado con éxito.")
- *         )
- *     )
+ *          response=200,
+ *          description="Usuario actualizado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="user",
+ *                              ref="#/components/schemas/DomainUser"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Errores de validación",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=400,
+ *          description="Error en la solicitud",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="No autenticado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="No autorizado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
  * )
  */
 public function updateUser(){}
@@ -41,13 +69,30 @@ public function updateUser(){}
  *         )
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Contraseña actualizada correctamente",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(property="message", type="string", example="Password actualizada con éxito")
- *         )
- *     )
+ *          response=200,
+ *          description="Contraseña actualizada correctamente",
+ *          @OA\JsonContent(ref="#/components/schemas/SuccessResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Errores de validación",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=400,
+ *          description="Contraseña actual incorrecta",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="No autenticado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="No autorizado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
  * )
  */
 public function updatePassword(){}
@@ -69,31 +114,50 @@ public function updatePassword(){}
  *         @OA\Schema(type="boolean", example=false)
  *     ),
  *     @OA\Response(
- *         response=200,
- *         description="Usuario autenticado encontrado correctamente.",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="success", type="boolean", example=true),
- *             @OA\Property(
- *                 property="data",
- *                 type="object",
- *                 @OA\Property(property="user", ref="#/components/schemas/DomainUser")
- *             ),
- *             @OA\Property(property="message", type="string", example="Usuario encontrado.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=404,
- *         description="Usuario no encontrado",
- *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
- *             @OA\Property(property="message", type="string", example="No se encontró el usuario autenticado.")
- *         )
- *     ),
- *     @OA\Response(response=401, description="No autenticado"),
- *     @OA\Response(response=403, description="No autorizado"),
- *     @OA\Response(response=500, description="Error inesperado")
- * )
+ *          response=200,
+ *          description="Usuario autenticado encontrado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="user",
+ *                              ref="#/components/schemas/DomainUser"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Usuario no encontrado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="No autenticado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="No autorizado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=429,
+ *          description="Demasiadas solicitudes",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=500,
+ *          description="Error interno del servidor",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
+ *  )
  */
 public function getUser(){}
 
