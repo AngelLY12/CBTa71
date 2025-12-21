@@ -3,13 +3,11 @@
 namespace App\Core\Application\Mappers;
 
 use App\Core\Application\DTO\Request\General\LoginDTO;
-use App\Core\Application\DTO\Response\General\DashboardDataResponse;
-use App\Core\Application\DTO\Response\General\DashboardDataUserResponse;
 use App\Core\Application\DTO\Response\General\LoginResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\General\StripePaymentsResponse;
-use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
+use App\Core\Application\DTO\Response\General\StripePayoutResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Stripe\Checkout\Session;
 
@@ -57,23 +55,6 @@ class GeneralMapper{
             );
     }
 
-    public static function toDashboardDataResponse(int $ganancias, PendingSummaryResponse $pendientes, int $alumnos):DashboardDataResponse
-    {
-        return new DashboardDataResponse(
-            earnings:$ganancias ?? null,
-            pending:$pendientes ?? null,
-            students:$alumnos ?? null
-        );
-    }
-    public static function toDashboardDataUserResponse(int $realizados, PendingSummaryResponse $pendientes, PendingSummaryResponse $vencidos):DashboardDataUserResponse
-    {
-        return new DashboardDataUserResponse(
-            completed:$realizados ?? null,
-            pending:$pendientes ?? null,
-            overdue:$vencidos ?? null
-        );
-    }
-
     public static function toPermissionsByUsers(array $data): PermissionsByUsers
     {
         return new PermissionsByUsers(
@@ -81,5 +62,10 @@ class GeneralMapper{
             users: $data['users'],
             permissions: $data['permissions']
         );
+    }
+
+    public static function toStripePayoutResponse(array $data):StripePayoutResponse
+    {
+        return StripePayoutResponse::fromArray($data);
     }
 }

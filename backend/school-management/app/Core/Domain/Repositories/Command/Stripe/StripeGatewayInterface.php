@@ -13,6 +13,7 @@ interface StripeGatewayInterface{
     public function createCheckoutSession(User $user, PaymentConcept $paymentConcept, string $amount):Session;
     public function deletePaymentMethod(string $paymentMethodId):bool;
     public function expireSessionIfPending(string $sessionId): bool;
+    public function createPayout(): array;
 
 
 
