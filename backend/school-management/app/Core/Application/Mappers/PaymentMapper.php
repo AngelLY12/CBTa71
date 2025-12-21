@@ -3,10 +3,12 @@
 namespace App\Core\Application\Mappers;
 
 
+use App\Core\Application\DTO\Response\Payment\FinancialSummaryResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentDataResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentDetailResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentHistoryResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentListItemResponse;
+use App\Core\Application\DTO\Response\Payment\PaymentsSummaryResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentValidateResponse;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -36,14 +38,15 @@ class PaymentMapper{
         );
     }
 
-    public static function toHistoryResponse(array $payment): PaymentHistoryResponse
+    public static function toHistoryResponse(Payment $payment): PaymentHistoryResponse
     {
         return new PaymentHistoryResponse(
-            id: $payment['id'] ?? null,
-            concept: $payment['concept_name'] ?? null,
-            amount: $payment['amount'] ?? null,
-            amount_received: $payment['amount_received'] ?? null,
-            date: $payment['created_at'] ? date('Y-m-d H:i:s', strtotime($payment['created_at'])): null
+            id: $payment->id ?? null,
+            concept: $payment->concept_name ?? null,
+            amount: $payment->amount ?? null,
+            amount_received: $payment->amount_received ?? null,
+            status: $payment->status->value ?? null,
+            date: $payment->created_at ? date('Y-m-d H:i:s', strtotime($payment->created_at)): null
         );
     }
 
@@ -107,5 +110,38 @@ class PaymentMapper{
             fullName: $payment->user->name . ' ' . $payment->user->last_name ?? null,
         );
     }
+
+    public static function toFinancialSummaryResponse(
+        $totalPayments, $paymentsBySemester, $totalPayouts,
+        $totalFees, $payoutsBySemester, $totalAvailable, $totalPending,
+        $availableBySource, $pendingBySource, $availablePercentage,
+        $pendingPercentage, $netReceivedPercentage, $feePercentage): FinancialSummaryResponse
+    {
+        return new FinancialSummaryResponse(
+            totalPayments: $totalPayments,
+            totalPayouts: $totalPayouts,
+            totalFees: $totalFees,
+            paymentsBySemester: $paymentsBySemester,
+            payoutsBySemester: $payoutsBySemester,
+            totalBalanceAvailable: $totalAvailable,
+            totalBalancePending: $totalPending,
+            availablePercentage: $availablePercentage,
+            pendingPercentage: $pendingPercentage,
+            netReceivedPercentage: $netReceivedPercentage,
+            feePercentage: $feePercentage,
+            totalBalanceAvailableBySource: $availableBySource,
+            totalBalancePendingBySource: $pendingBySource,
+        );
+
+    }
+
+    public static function toPaymentsSummaryResponse(array $data): PaymentsSummaryResponse
+    {
+        return new PaymentsSummaryResponse(
+            totalPayments: $data['total'],
+            paymentsByMonth: $data['by_month'],
+        );
+    }
+
 
 }
