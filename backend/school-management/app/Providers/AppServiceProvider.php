@@ -151,9 +151,12 @@ class AppServiceProvider extends ServiceProvider
             return response()->json($payload, $status);
         });
 
-        Response::macro('error', function ($message = null, $status = 400, $errors = null) {
+        Response::macro('error', function ($message = null, $status = 400, $errors = null, string $code=null) {
             $payload = ['success' => false];
 
+            if(!is_null($code) && $code !== '') {
+                $payload['error_code'] = $code;
+            }
             if (!is_null($message) && $message !== '') {
                 $payload['message'] = $message;
             }
