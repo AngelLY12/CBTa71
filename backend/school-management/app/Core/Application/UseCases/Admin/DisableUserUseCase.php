@@ -10,23 +10,20 @@ use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\UserValidator;
 use App\Jobs\ClearStaffCacheJob;
 
-class DisableUserUseCase
+class DisableUserUseCase extends BaseChangeUserStatusUseCase
 {
-    public function __construct(
-        private UserRepInterface $userRepo,
-        private UserQueryRepInterface $uqRepo,
-    )
+    protected function getTargetStatus(): UserStatus
     {
+        return UserStatus::BAJA;
     }
 
-    public function execute(array $ids): UserChangedStatusResponse
+    protected function validateUsers(iterable $users): void
     {
-        $users = $this->uqRepo->findByIds($ids);
-        foreach($users as $user){
-            UserValidator::ensureValidStatusTransition($user, UserStatus::BAJA);
+        foreach ($users as $user) {
+            UserValidator::ensureValidStatusTransition(
+                $user,
+                UserStatus::BAJA
+            );
         }
-        $changed= $this->userRepo->changeStatus($ids, UserStatus::BAJA->value);
-        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
-        return $changed;
     }
 }
