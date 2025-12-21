@@ -3,7 +3,7 @@
 namespace App\Core\Domain\Utils\Validators;
 
 use App\Core\Domain\Entities\User;
-use App\Exceptions\ValidationException;
+use App\Exceptions\Validation\ValidationException;
 
 class StripeValidator
 {

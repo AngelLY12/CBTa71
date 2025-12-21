@@ -10,8 +10,7 @@ use App\Exceptions\Conflict\UserAlreadyDisabledException;
 use App\Exceptions\Conflict\UserCannotBeDisabledException;
 use App\Exceptions\Conflict\UserCannotBeUpdatedException;
 use App\Exceptions\Conflict\UserConflictStatusException;
-use App\Exceptions\NotAllowed\UserInactiveException;
-use App\Exceptions\NotAllowed\UserNotAllowedException;
+use App\Exceptions\Unauthorized\UserInactiveException;
 
 class UserValidator
 {

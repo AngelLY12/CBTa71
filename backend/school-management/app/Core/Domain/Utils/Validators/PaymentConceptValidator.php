@@ -2,6 +2,8 @@
 
 namespace App\Core\Domain\Utils\Validators;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
+use App\Core\Domain\Enum\User\UserRoles;
+use App\Exceptions\Conflict\UserExplicitlyExcludedException;
 use Carbon\Carbon;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
@@ -35,34 +37,68 @@ class PaymentConceptValidator{
 
     public static function ensureConceptIsActiveAndValid(PaymentConcept $concept, User $user)
     {
-        if (!$concept->isActive()) {
-            throw new ConceptInactiveException();
+        self::ensureConceptIsPayable($concept);
+
+        if ($concept->hasExceptionForUser($user->id)) {
+            throw new UserExplicitlyExcludedException();
         }
 
-        if (!$concept->hasStarted() || $concept->isExpired()) {
-            throw new ConceptExpiredException();
-        }
-
-        $student = $user->studentDetail;
-
-        $allowed =
-            $concept->is_global
-            || ($student && in_array($student->career_id, $concept->getCareerIds()))
-            || ($student && in_array($student->semestre, $concept->getSemesters()))
-            || in_array($user->id, $concept->getUserIds())
-            || ($user->isApplicant() && $concept->hasTag(PaymentConceptApplicantType::APPLICANT))
-            || ($user->isNewStudent() && $concept->hasTag(PaymentConceptApplicantType::NO_STUDENT_DETAILS))
-            || $user->isActive();
-
-        if (!$allowed) {
+        if (!self::userIsAllowedForConcept($concept, $user)) {
             throw new UserNotAllowedException();
         }
     }
 
+    private static function ensureConceptIsPayable(PaymentConcept $concept): void
+    {
+        if (!$concept->isActive()) {
+            throw new ConceptInactiveException();
+        }
+
+        if (!$concept->hasStarted()) {
+            throw new ConceptNotStartedException('El concepto no ha iniciado.');
+        }
+
+        if ($concept->isExpired()) {
+            throw new ConceptExpiredException();
+        }
+    }
+
+    private static function userIsAllowedForConcept(PaymentConcept $concept, User $user): bool
+    {
+        $student = $user->studentDetail;
+
+        if ($concept->is_global && $user->hasRole(UserRoles::STUDENT->value)) {
+            return true;
+        }
+
+        if ($concept->hasUser($user->id)) {
+            return true;
+        }
+
+        if ($student && $concept->hasCareer($student->career_id)) {
+            return true;
+        }
+
+        if ($student && $concept->hasSemester($student->semestre)) {
+            return true;
+        }
+
+        if ($user->isApplicant() && $concept->hasTag(PaymentConceptApplicantType::APPLICANT)) {
+            return true;
+        }
+
+        if ($user->isNewStudent() && $concept->hasTag(PaymentConceptApplicantType::NO_STUDENT_DETAILS)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
     public static function ensureConceptHasStarted(PaymentConcept $concept)
     {
         if (!$concept->hasStarted()) {
-            throw new ConceptNotStartedException();
+            throw new ConceptNotStartedException('El concepto no ha iniciado, no puede ser finalizado.');
         }
     }
 
