@@ -28,23 +28,6 @@ class DashboardController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
-    public function index(DashboardRequest $request, ?int $id=null)
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $onlyThisYear = $request->validated()['only_this_year'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
-
-        if (!$targetUser) {
-            return Response::error('Acceso no permitido', 403);
-        }
-        $data = $this->dashboardService->getDashboardData($onlyThisYear,UserMapper::toDomain($targetUser), $forceRefresh);
-
-        return Response::success(['statistics' => $data]);
-
-    }
-
     public function pending(DashboardRequest $request, ?int $id=null)
     {
         /** @var \App\Models\User $user */
@@ -78,7 +61,7 @@ class DashboardController extends Controller
 
         $data = $this->dashboardService->paymentsMade($onlyThisYear,UserMapper::toDomain($targetUser), $forceRefresh);
 
-        return Response::success(['total_paid' => $data]);
+        return Response::success(['paid_data' => $data]);
 
     }
 

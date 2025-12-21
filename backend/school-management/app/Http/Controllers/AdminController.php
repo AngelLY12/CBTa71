@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Core\Application\Mappers\StudentDetailMapper;
 use App\Core\Application\Mappers\UserMapper;
 use App\Core\Application\Services\Admin\AdminServiceFacades;
-use App\Core\Domain\Enum\User\UserStatus;
 use App\Http\Requests\Admin\AttachStudentRequest;
 use App\Http\Requests\Admin\ChangeUserStatusRequest;
 use App\Http\Requests\Admin\FindPermissionsRequest;
@@ -15,7 +14,6 @@ use App\Http\Requests\Admin\UpdatePermissionsRequest;
 use App\Http\Requests\Admin\UpdateRolesRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Http\Requests\General\ForceRefreshRequest;
-use App\Http\Requests\General\PaginationRequest;
 use App\Http\Requests\ImportUsersRequest;
 use App\Imports\StudentDetailsImport;
 use App\Imports\UsersImport;
@@ -90,8 +88,8 @@ class AdminController extends Controller
         $file= $request->file('file');
         $import=new UsersImport($this->service);
         Excel::import($import,$file);
-
-        return Response::success(['total_imported' => $import->insertedCount], 'Usuarios importados correctamente.');
+        $result = $import->getImportResult();
+        return Response::success(['summary' => $result], 'Usuarios importados correctamente.');
 
     }
 
@@ -100,7 +98,8 @@ class AdminController extends Controller
         $file= $request->file('file');
         $import= new StudentDetailsImport($this->service);
         Excel::import($import,$file);
-        return Response::success(['total_imported' => $import->insertedCount], 'Detalles de estudiantes importados correctamente.');
+        $result = $import->getImportResult();
+        return Response::success(['summary' => $result], 'Detalles de estudiantes importados correctamente.');
     }
 
     public function updatePermissions(UpdatePermissionsRequest $request)

@@ -3,10 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Core\Domain\Utils\Validators\UserValidator;
-use App\Core\Infraestructure\Cache\CacheService;
 use App\Core\Infraestructure\Mappers\UserMapper;
-use App\Exceptions\NotAllowed\UserInactiveException;
-use App\Exceptions\NotAllowed\UserNotAllowedException;
+use App\Exceptions\Unauthorized\UserInactiveException;
 use App\Jobs\CheckUserStatusJob;
 use App\Jobs\ClearStudentCacheJob;
 use Closure;
