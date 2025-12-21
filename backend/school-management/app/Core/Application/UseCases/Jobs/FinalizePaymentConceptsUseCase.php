@@ -13,8 +13,8 @@ class FinalizePaymentConceptsUseCase
 
     }
 
-    public function execute(): void
+    public function execute(): int
     {
-        $this->finalize->finalizePaymentConcepts();
+        return $this->finalize->finalizePaymentConcepts();
     }
 }
