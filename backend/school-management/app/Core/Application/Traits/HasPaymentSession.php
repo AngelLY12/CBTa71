@@ -36,7 +36,7 @@ trait HasPaymentSession
         if($payment->status===PaymentStatus::PAID){
            $data = MailMapper::toPaymentCreatedEmailDTO($payment, $user->fullName(), $user->email);
            $mail = new PaymentCreatedMail($data);
-           SendMailJob::dispatch($mail, $user->email)->delay(now()->addSeconds(rand(1, 5)));
+           SendMailJob::forUser($mail, $user->email,'stripe_session')->delay(now()->addSeconds(rand(1, 5)));
         }
         ClearStudentCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));;
         return $payment;

@@ -8,11 +8,10 @@ use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
-use App\Core\Infraestructure\Cache\CacheService;
 use App\Exceptions\NotFound\ExceptionStudentsNotFoundException;
 use App\Exceptions\NotFound\StudentsNotFoundException;
-use App\Jobs\ClearCacheWhileStatusChangeJob;
-use App\Jobs\SendMailJob;
+use App\Jobs\ClearCacheForUsersJob;
+use App\Jobs\SendBulkMailJob;
 use App\Mail\NewConceptMail;
 
 trait HasPaymentConcept
@@ -44,16 +43,36 @@ trait HasPaymentConcept
     }
 
     public function notifyRecipients(PaymentConcept $concept, array $recipients): void {
-        foreach($recipients as $user) {
-            ClearCacheWhileStatusChangeJob::dispatch($user->id, $concept->status)->delay(now()->addSeconds(rand(1, 10)));
-            $data = [
-                'recipientName'=>$user->name,
-                'recipientEmail' => $user->email,
-                'concept_name' => $concept->concept_name,
-                'amount' => $concept->amount,
-                'end_date' => $concept->end_date
-            ];
-            SendMailJob::dispatch(new NewConceptMail(MailMapper::toNewPaymentConceptEmailDTO($data)), $user->email)->delay(now()->addSeconds(rand(1, 5)));
+        if (empty($recipients)) {
+            return;
+        }
+        $chunks = array_chunk($recipients, 50);
+
+        foreach ($chunks as $chunk) {
+            $userIds = array_map(fn($user) => $user->id, $chunk);
+            ClearCacheForUsersJob::forConceptStatus($userIds, $concept->status)
+                ->delay(now()->addSeconds(rand(1, 10)));
+
+            $mailables = [];
+            $recipientEmails = [];
+
+            foreach ($chunk as $user) {
+                $data = [
+                    'recipientName' => $user->name,
+                    'recipientEmail' => $user->email,
+                    'concept_name' => $concept->concept_name,
+                    'amount' => $concept->amount,
+                    'end_date' => $concept->end_date
+                ];
+
+                $mailables[] = new NewConceptMail(
+                    MailMapper::toNewPaymentConceptEmailDTO($data)
+                );
+                $recipientEmails[] = $user->email;
+            }
+
+            SendBulkMailJob::forRecipients($mailables, $recipientEmails, 'concept_notification')
+                ->delay(now()->addSeconds(rand(5, 15)));
         }
     }
 }

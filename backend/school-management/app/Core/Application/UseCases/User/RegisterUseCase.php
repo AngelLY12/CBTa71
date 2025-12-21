@@ -43,11 +43,12 @@ class RegisterUseCase
                 'password'       => $password
             ];
 
-            SendMailJob::dispatch(
+            SendMailJob::forUser(
                 new CreatedUserMail(
                     MailMapper::toNewUserCreatedEmailDTO($dtoData)
                 ),
-                $user->email
+                $user->email,
+                'register_user'
             )->delay(now()->addSeconds(rand(1, 5)));
 
     }

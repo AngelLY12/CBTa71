@@ -6,7 +6,7 @@ use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Domain\Repositories\Query\Stripe\StripeGatewayQueryInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotFound\UserNotFoundException;
-use App\Exceptions\ValidationException;
+use App\Exceptions\Validation\ValidationException;
 
 class GetPaymentsFromStripeUseCase
 {

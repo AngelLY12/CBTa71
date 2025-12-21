@@ -11,9 +11,9 @@ use App\Core\Domain\Repositories\Query\User\ParentStudentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\Conflict\RelationAlreadyExistsException;
 use App\Exceptions\NotFound\UserNotFoundException;
+use App\Exceptions\Validation\ValidationException;
 use App\Jobs\SendMailJob;
 use App\Mail\SendParentInviteEmail;
-use Illuminate\Validation\ValidationException;
 
 class SendParentInviteUseCase
 {
@@ -56,11 +56,12 @@ class SendParentInviteUseCase
                 'token'       => $token
             ];
 
-            SendMailJob::dispatch(
+            SendMailJob::forUser(
                 new SendParentInviteEmail(
                     MailMapper::toSendParentInviteEmail($dtoData)
                 ),
-                $user->email
+                $user->email,
+                'parent_invitation'
             )->delay(now()->addSeconds(rand(1, 5)));
 
     }

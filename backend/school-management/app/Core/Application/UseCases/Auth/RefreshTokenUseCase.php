@@ -7,6 +7,7 @@ use App\Core\Domain\Repositories\Command\Auth\RefreshTokenRepInterface;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\TokenValidator;
+use App\Core\Domain\Utils\Validators\UserValidator;
 
 class RefreshTokenUseCase
 {
@@ -23,6 +24,7 @@ class RefreshTokenUseCase
         $refreshToken= $this->refresh->findByToken($refreshTokenValue);
         TokenValidator::ensureIsTokenValid($refreshToken);
         $user = $this->uqRepo->findById($refreshToken->user_id);
+        UserValidator::ensureUserIsActive($user);
         $this->refresh->revokeRefreshToken($refreshTokenValue);
         $userRoles= $user->getRoleNames();
         $userData=$this->formatUserData($userRoles, $user->fullName(), $user->id);
