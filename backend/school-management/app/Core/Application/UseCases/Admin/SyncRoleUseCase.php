@@ -16,6 +16,7 @@ use Illuminate\Support\Collection;
 
 class SyncRoleUseCase
 {
+    private const CHUNK_SIZE = 100;
     public function __construct(
         private RolesAndPermissionsRepInterface $repo,
         private RolesAndPermissosQueryRepInterface $rpqRepo,
@@ -28,7 +29,7 @@ class SyncRoleUseCase
     public function execute(UpdateUserRoleDTO $dto): UserWithUpdatedRoleResponse
     {
         $updated=$this->updateRoleToMany($dto);
-        if (empty($updated))
+        if ($updated === null)
         {
             throw new UsersNotFoundForUpdateException();
         }
@@ -41,7 +42,9 @@ class SyncRoleUseCase
             return null;
         }
 
-        $users = $this->uqRepo->getUsersByCurp($dto->curps);
+        $users = $this->uqRepo->getUsersByCurpCursor($dto->curps);
+
+        $users = $this->processUsersFromGenerator($users);
 
         if ($users->isEmpty()) {
             return null;
@@ -57,35 +60,99 @@ class SyncRoleUseCase
         if (!$adminRole) {
             throw new RoleNotFoundException();
         }
-        if ($this->rpqRepo->hasAdminAssignError($adminRole->id, $rolesToAddIds, $users)
-            || $this->rpqRepo->hasAdminRemoveError($adminRole->id, $rolesToRemoveIds, $users)
-            || $this->rpqRepo->hasAdminMissingError($adminRole->id, $rolesToRemoveIds, $rolesToAddIds)
-        ) {
+        if ($this->hasAdminErrors($adminRole->id, $rolesToAddIds, $rolesToRemoveIds, $users)) {
             throw new AdminRoleNotAllowedException();
         }
-
-        $unverifiedRole = $this->rpqRepo->findRoleByName(UserRoles::UNVERIFIED->value);
-        if ($unverifiedRole) {
-            $rolesToRemoveIds[] = $unverifiedRole->id;
-            $rolesToRemoveIds = array_unique($rolesToRemoveIds);
-        }
-        $this->repo->syncRoles($users, $rolesToAddIds, $rolesToRemoveIds);
-        $data = $this->formatData($users, $dto);
+        $rolesToRemoveIds = $this->handleUnverifiedRole($rolesToRemoveIds);
+        $totalSync= $this->syncRolesInChunks($users, $rolesToAddIds, $rolesToRemoveIds);
+        $data = $this->formatData($users, $dto, $totalSync);
 
         return UserMapper::toUserWithUptadedRoleResponse($data);
 
     }
 
-    private function formatData(Collection $users, UpdateUserRoleDTO $dto): array
+    private function processUsersFromGenerator(\Generator $usersGenerator): Collection
+    {
+        $users = collect();
+        $hasUsers = false;
+
+        foreach ($usersGenerator as $user) {
+            $hasUsers = true;
+            $users->push($user);
+        }
+
+        return $hasUsers ? $users : collect();
+    }
+
+    private function hasAdminErrors(
+        int $adminRoleId,
+        array $rolesToAddIds,
+        array $rolesToRemoveIds,
+        Collection $users
+    ): bool {
+        return $this->rpqRepo->hasAdminAssignError($adminRoleId, $rolesToAddIds, $users)
+            || $this->rpqRepo->hasAdminRemoveError($adminRoleId, $rolesToRemoveIds, $users)
+            || $this->rpqRepo->hasAdminMissingError($adminRoleId, $rolesToRemoveIds, $rolesToAddIds);
+    }
+
+    private function handleUnverifiedRole(array $rolesToRemoveIds): array
+    {
+        $unverifiedRole = $this->rpqRepo->findRoleByName(UserRoles::UNVERIFIED->value);
+
+        if ($unverifiedRole) {
+            $rolesToRemoveIds[] = $unverifiedRole->id;
+            $rolesToRemoveIds = array_unique($rolesToRemoveIds);
+        }
+
+        return $rolesToRemoveIds;
+    }
+
+    private function syncRolesInChunks(Collection $users, array $rolesToAddIds, array $rolesToRemoveIds): array
+    {
+        $totalResult = [
+            'removed' => 0,
+            'added' => 0,
+            'users_affected' => 0,
+            'total_chunks' => 0
+        ];
+
+        $callback = function (Collection $chunk) use ($rolesToAddIds, $rolesToRemoveIds, &$totalResult) {
+            $resultado = $this->repo->syncRoles($chunk, $rolesToAddIds, $rolesToRemoveIds);
+
+            $totalResult['removed'] += $resultado['removed'];
+            $totalResult['added'] += $resultado['added'];
+            $totalResult['users_affected'] += $resultado['users_affected'];
+            $totalResult['total_chunks']++;
+        };
+
+        if ($users->count() > self::CHUNK_SIZE) {
+            $users->chunk(self::CHUNK_SIZE)->each($callback);
+        } else {
+            $callback($users);
+        }
+
+        return $totalResult;
+    }
+
+    private function formatData(Collection $users, UpdateUserRoleDTO $dto,  array $totalSync): array
     {
         return [
             'names' => $users->map(fn($u) => "{$u->name} {$u->last_name}")->toArray(),
-            'curps' => $users->pluck('curp')->toArray(),
+            'curps' => $users->take(10)->pluck('curp')->toArray(),
             'roles' => [
                 'added' => $dto->rolesToAdd ?? [],
                 'removed' => $dto->rolesToRemove ?? [],
             ],
-            'totalUpdated' => $users->count(),
+            'metadata' => [
+                'totalFound' => $users->count(),
+                'totalUpdated' => $totalSync['users_affected'],
+                'failed' => $users->count() - $totalSync['users_affected'],
+                'operations' => [
+                    'roles_removed' => $totalSync['removed'],
+                    'roles_added' => $totalSync['added'],
+                    'chunks_processed' => $totalSync['total_chunks'],
+                ]
+            ],
         ];
     }
 }
