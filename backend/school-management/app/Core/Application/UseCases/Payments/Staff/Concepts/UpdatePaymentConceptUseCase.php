@@ -3,7 +3,6 @@
 namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
-use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Traits\HasPaymentConcept;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
@@ -19,9 +18,6 @@ use App\Exceptions\NotFound\StudentsNotFoundException;
 use App\Exceptions\Validation\ApplicantTagInvalidException;
 use App\Exceptions\Validation\CareerSemesterInvalidException;
 use App\Exceptions\Validation\SemestersNotFoundException;
-use App\Jobs\ClearCacheWhileStatusChangeJob;
-use App\Jobs\SendMailJob;
-use App\Mail\NewConceptMail;
 use Illuminate\Support\Facades\DB;
 
 class UpdatePaymentConceptUseCase
