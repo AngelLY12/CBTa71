@@ -87,7 +87,7 @@ public function registerUser(){}
  *                      @OA\Property(
  *                          property="message",
  *                          type="string",
- *                          example="El usuario ha sido creado con éxito."
+ *                          example="Se ejecutó la promoción de usuarios correctamente."
  *                      )
  *                  )
  *              }
