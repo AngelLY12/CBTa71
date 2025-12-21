@@ -12,4 +12,8 @@ interface StripeGatewayQueryInterface
     public function getIntentAndCharge(string $paymentIntentId): array;
     public function getStudentPaymentsFromStripe(User $user, ?int $year): array;
     public function getPaymentIntentFromSession(string $sessionId): PaymentIntent;
+    public function getBalanceFromStripe(): array;
+    public function getPayoutsFromStripe(bool $onlyThisYear = false): array;
+    public function getIntentsAndChargesBatch(array $paymentIntentIds): array;
+
 }

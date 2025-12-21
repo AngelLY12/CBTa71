@@ -23,9 +23,20 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
         return $eloquentStudentDetails ? StudentDetailMapper::toDomain($eloquentStudentDetails): null;
     }
 
-    public function insertStudentDetails(array $studentDetails): void {
+    public function insertStudentDetails(array $studentDetails): int {
         if (!empty($studentDetails)) {
-            DB::table('student_details')->insertOrIgnore($studentDetails);
+            return DB::table('student_details')->insert($studentDetails);
+        }
+        return 0;
+    }
+
+    public function insertSingleStudentDetail(array $detail): bool
+    {
+        try {
+            DB::table('student_details')->insert($detail);
+            return true;
+        } catch (\Exception $e) {
+            throw $e;
         }
     }
 

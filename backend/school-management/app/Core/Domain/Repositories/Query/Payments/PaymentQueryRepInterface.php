@@ -10,10 +10,10 @@ interface PaymentQueryRepInterface{
     public function findBySessionId(string $sessionId): ?Payment;
     public function findById(int $id): ?Payment;
     public function findByIntentId(string $intentId): ?Payment;
-    public function sumPaymentsByUserYear(int $userId, bool $onlyThisYear): string;
+    public function sumPaymentsByUserYear(int $userId, bool $onlyThisYear): array;
     public function getPaymentHistory(int $userId, int $perPage, int $page, bool $onlyThisYear): LengthAwarePaginator;
     //Dashboard Staff
-    public function getAllPaymentsMade(bool $onlyThisYear):string;
+    public function getAllPaymentsMade(bool $onlyThisYear):array;
     //Others
     public function getPaymentHistoryWithDetails(int $userId, int $perPage, int $page): LengthAwarePaginator;
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment;

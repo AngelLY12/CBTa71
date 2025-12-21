@@ -6,14 +6,17 @@ use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Utils\Validators\StripeValidator;
-use App\Exceptions\StripeGatewayException;
+use App\Exceptions\ServerError\StripeGatewayException;
+use App\Exceptions\Validation\PayoutValidationException;
 use InvalidArgumentException;
-use Stripe\Stripe;
+use Stripe\Balance;
 use Stripe\Checkout\Session;
 use Stripe\Customer;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\RateLimitException;
 use Stripe\PaymentMethod as StripePaymentMethod;
+use Stripe\Payout;
+use Stripe\Stripe;
 
 class StripeGateway implements StripeGatewayInterface
 {
@@ -148,6 +151,63 @@ class StripeGateway implements StripeGatewayInterface
         } catch (\Exception $e) {
             logger()->warning("No se pudo expirar la sesión {$sessionId}: " . $e->getMessage());
             return false;
+        }
+    }
+
+    public function createPayout(): array
+    {
+        try
+        {
+            $balance = Balance::retrieve();
+            $totalAvailableMxn = 0;
+            foreach ($balance->available as $item) {
+                if ($item->currency === 'mxn') {
+                    $totalAvailableMxn = bcadd($totalAvailableMxn, $item->amount, 0);
+                }
+            }
+
+            $minimumPayout = 10000;
+            if (bccomp($totalAvailableMxn, $minimumPayout, 0) === -1) {
+                $availableFormatted = number_format(bcdiv($totalAvailableMxn, 100, 2), 2);
+                throw new PayoutValidationException("Fondos insuficientes. Disponible: $" .
+                    $availableFormatted . " MXN. " .
+                    "Mínimo requerido: $100.00 MXN");
+            }
+            $payout = Payout::create([
+                'amount' => intval($totalAvailableMxn),
+                'currency' => 'mxn',
+                'description' => 'Payout manual de la escuela',
+            ]);
+
+            logger()->info('Payout creado exitosamente', [
+                'payout_id' => $payout->id,
+                'amount' => bcdiv($payout->amount, 100, 2),
+                'arrival_date' => date('Y-m-d', $payout->arrival_date),
+            ]);
+
+
+            return [
+                'success' => true,
+                'payout_id' => $payout->id,
+                'amount' => bcdiv($payout->amount, 100, 2),
+                'currency' => $payout->currency,
+                'arrival_date' => date('Y-m-d', $payout->arrival_date),
+                'status' => $payout->status,
+                'available_before_payout' =>bcdiv($totalAvailableMxn, 100, 2),
+            ];
+
+        }
+        catch (ApiErrorException $e) {
+            logger()->error('Error de Stripe al crear payout', [
+                'error' => $e->getMessage(),
+            ]);
+            throw new StripeGatewayException('Error al crear payout: ' . $e->getMessage());
+        }
+        catch (\Exception $e) {
+            logger()->error('Error inesperado al crear payout', [
+                'error' => $e->getMessage(),
+            ]);
+            throw new StripeGatewayException('Error inesperado: ' . $e->getMessage());
         }
     }
 }

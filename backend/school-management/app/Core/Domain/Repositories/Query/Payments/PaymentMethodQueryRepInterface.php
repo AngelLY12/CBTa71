@@ -8,6 +8,7 @@ interface PaymentMethodQueryRepInterface
 {
     public function findById(int $id):?PaymentMethod;
     public function findByStripeId(string $stripeId): ?PaymentMethod;
+    public function findByStripeIds(array $stripeIds): array;
     public function getByUserId(int $userId): array;
 
 }

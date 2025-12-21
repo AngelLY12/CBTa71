@@ -73,8 +73,18 @@ class EloquentUserRepository implements UserRepInterface
     }
 
     public function insertManyUsers(array $usersData): Collection {
-        EloquentUser::insert($usersData);
-        return EloquentUser::whereIn('email', collect($usersData)->pluck('email'))->get();
+        DB::table('users')->insert($usersData);
+        $emails = collect($usersData)->pluck('email')->toArray();
+        return EloquentUser::whereIn('email', $emails)->get();
+    }
+
+    public function insertSingleUser(array $userData): User
+    {
+        try {
+            return EloquentUser::create($userData);
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 
     public function deletionEliminateUsers(): int
@@ -89,33 +99,21 @@ class EloquentUserRepository implements UserRepInterface
     public function changeStatus(array $userIds, string $status): UserChangedStatusResponse
     {
         if (empty($userIds)) {
-            return new UserChangedStatusResponse([], $status, 0);
+            return new UserChangedStatusResponse($status, 0);
         }
 
         $affected = EloquentUser::whereIn('id', $userIds)
+            ->where('status', '!=', $status)
             ->update(['status' => $status, 'updated_at' => now()]);
 
-        $usersData = [];
-        EloquentUser::whereIn('id', $userIds)
-            ->where('status', $status)
-            ->select(['name', 'last_name', 'curp', 'status'])
-            ->chunk(500, function ($usersChunk) use (&$usersData) {
-                foreach ($usersChunk as $user) {
-                    $usersData[] = [
-                        'name'   => "{$user->name} {$user->last_name}",
-                        'curp'   => $user->curp,
-                        'status' => $user->status
-                    ];
-                }
-            });
+        if ($affected === 0) {
+            return new UserChangedStatusResponse($status, 0);
+        }
 
-        $data = [
-            'users'  => $usersData,
+        return AppUserMapper::toUserChangedStatusResponse([
             'status' => $status,
             'total'  => $affected
-        ];
-
-        return AppUserMapper::toUserChangedStatusResponse($data);
+        ]);
     }
 
 

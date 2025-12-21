@@ -7,7 +7,7 @@ use App\Core\Domain\Entities\RefreshToken;
 interface RefreshTokenRepInterface
 {
     public function findByToken(string $token): ?RefreshToken;
-    public function revokeRefreshToken(string $refreshTokenValue): void;
+    public function revokeRefreshToken(string $refreshTokenValue): ?RefreshToken;
     public function update(int $tokenId,  array $fields): RefreshToken;
     public function delete(int $tokenId): void;
     public function deletionInvalidTokens(): int;

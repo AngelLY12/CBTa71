@@ -103,6 +103,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                         ) as amount
                     ')
                 ])
+            ->latest('payment_concepts.created_at')
             ->get();
 
         return $rows->map(fn($pc) => MappersPaymentConceptMapper::toPendingPaymentConceptResponse($pc->toArray()))->toArray();
@@ -148,7 +149,6 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
             if ($onlyThisYear) {
                 $query->whereYear('created_at', now()->year);
             }
-
          $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $paginator->getCollection()->transform(fn($pc) => MappersPaymentConceptMapper::toConceptsToDashboardResponse($pc));
@@ -167,8 +167,10 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'users.id as user_id',
                 DB::raw("CONCAT(users.name, ' ', users.last_name) as user_name"),
                 'pending_concepts.concept_name',
-                'pending_concepts.amount'
+                'pending_concepts.amount',
+                'pending_concepts.created_at'
             )
+            ->latest('pending_concepts.created_at')
             ->get();
 
         return $rows->map(fn($r) => MappersPaymentConceptMapper::toConceptNameAndAmoutResonse([

@@ -12,6 +12,8 @@ interface UserRepInterface{
     public function update(int $userId, array $fields):User;
     public function changeStatus(array $userIds,string $status): UserChangedStatusResponse;
     public function insertManyUsers(array $usersData): Collection;
+    public function insertSingleUser(array $userData): User;
+
     public function deletionEliminateUsers(): int;
     public function createToken(int $userId, string $name): string;
     public function assignRole(int $userId, string $role): bool;

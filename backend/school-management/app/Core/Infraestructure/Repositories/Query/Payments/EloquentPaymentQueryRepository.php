@@ -9,6 +9,7 @@ use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Infraestructure\Mappers\PaymentMapper;
 use App\Models\Payment as EloquentPayment;
 use Generator;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
@@ -31,20 +32,59 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         return $payment ? PaymentMapper::toDomain($payment) : null;
     }
 
-    public function sumPaymentsByUserYear(int $userId, bool $onlyThisYear): string {
-        $query = EloquentPayment::where('user_id', $userId);
-        if ($onlyThisYear) {
-            $query->whereYear('created_at', now()->year);
-        }
-        $total=$query->sum('amount_received');
+    private function getMonthlyAggregation(Builder $query): array
+    {
+        $results = $query->selectRaw("
+        DATE_FORMAT(created_at, '%Y-%m') as month,
+        SUM(amount_received) as month_total
+    ")
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
-        return number_format($total, 2, '.', '');
+        $total = $results->sum('month_total');
+
+        return [
+            'total' => number_format($total, 2, '.', ''),
+            'by_month' => $results->pluck('month_total', 'month')
+                ->map(fn($amount) => number_format($amount, 2, '.', ''))
+                ->toArray()
+        ];
+    }
+
+    public function sumPaymentsByUserYear(int $userId, bool $onlyThisYear): array
+    {
+        $query = EloquentPayment::where('user_id', $userId)
+            ->whereNotNull('amount_received');
+
+        if ($onlyThisYear) {
+            $query->whereBetween('created_at', [
+                now()->startOfYear(),
+                now()->endOfYear()
+            ]);
+        }
+
+        return $this->getMonthlyAggregation($query);
+    }
+
+    public function getAllPaymentsMade(bool $onlyThisYear): array
+    {
+        $query = EloquentPayment::query()->whereNotNull('amount_received');
+
+        if ($onlyThisYear) {
+            $query->whereBetween('created_at', [
+                now()->startOfYear(),
+                now()->endOfYear()
+            ]);
+        }
+
+        return $this->getMonthlyAggregation($query);
     }
 
     public function getPaymentHistory(int $userId, int $perPage, int $page, bool $onlyThisYear): LengthAwarePaginator
     {
          $query= EloquentPayment::where('user_id', $userId)
-        ->select('id', 'concept_name', 'amount', 'amount_received' ,'created_at');
+        ->select('id', 'concept_name', 'amount', 'amount_received', 'status' ,'created_at');
         if ($onlyThisYear) {
             $query->whereYear('created_at', now()->year);
         }
@@ -63,14 +103,8 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     }
 
 
-    public function getAllPaymentsMade(bool $onlyThisYear): string
-    {
-       $query = EloquentPayment::query();
-        if ($onlyThisYear) {
-            $query->whereYear('created_at', now()->year);
-        }
-        return number_format($query->sum('amount_received'), 2, '.', '');
-    }
+
+
 
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment
     {
@@ -90,6 +124,7 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
             'user:id,name,last_name',
         ])
             ->select('id', 'user_id', 'concept_name', 'amount', 'amount_received', 'payment_method_details', 'created_at')
+            ->latest('payments.created_at')
             ->when($search, function ($q) use ($search) {
             $q->whereHas('user', fn($sub) =>
                 $sub->where('name', 'like', "%$search%")

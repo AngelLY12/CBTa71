@@ -20,14 +20,16 @@ interface UserQueryRepInterface{
     public function findActiveStudents(?string $search, int $perPage, int $page): LengthAwarePaginator;
     public function findBySearch(string $search): ?User;
     public function getRecipients(PaymentConcept $concept, string $appliesTo): array;
+    public function getRecipientsIds(PaymentConcept $concept, string $appliesTo): array;
+
     public function hasRole(int $userId, string $role):bool;
     public function getStudentsWithPendingSummary(array $userIds): array;
     public function findAllUsers(int $perPage, int $page, ?UserStatus $status = null): LengthAwarePaginator;
     public function findAuthUser(): ?User;
-    public function findByIds(array $ids): iterable;
+    public function findByIds(array $ids): Collection;
     public function findUserRoles(int $userId): array;
     public function findModelEntity(int $userId): ModelsUser;
-    public function getUsersByRole(string $role): Collection;
-    public function getUsersByCurp(array $curps): Collection;
+    public function getUsersByRoleCursor(string $role): \Generator;
+    public function getUsersByCurpCursor(array $curps): \Generator;
 
 }

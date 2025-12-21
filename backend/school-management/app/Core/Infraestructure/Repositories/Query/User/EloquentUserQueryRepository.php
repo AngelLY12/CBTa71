@@ -113,12 +113,16 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                     });
             });
         }
+        $query->orderBy('users.name', 'asc')
+            ->orderBy('users.last_name', 'asc');
         return $query->paginate($perPage, ['*'], 'page', $page);
     }
 
-    public function getRecipients(PaymentConcept $concept, string $appliesTo): array
+    public function getRecipientsIds(PaymentConcept $concept, string $appliesTo): array
     {
-        $usersQuery = EloquentUser::query()->where('status', UserStatus::ACTIVO)->select('id', 'name', 'last_name', 'email');
+        $usersQuery = EloquentUser::query()
+            ->where('status', UserStatus::ACTIVO)
+            ->select('id');
 
         $usersQuery = match($appliesTo) {
             PaymentConceptAppliesTo::CARRERA->value => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {
@@ -129,7 +133,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             }),
             PaymentConceptAppliesTo::CARRERA_SEMESTRE->value => $usersQuery->whereHas('studentDetail', function($q) use ($concept){
                 $q->whereIn('career_id', $concept->getCareerIds())
-                ->whereIn('semester', $concept->getSemesters());
+                    ->whereIn('semester', $concept->getSemesters());
             }),
             PaymentConceptAppliesTo::ESTUDIANTES->value => $usersQuery->whereIn('id', $concept->getUserIds()),
             PaymentConceptAppliesTo::TODOS->value => $usersQuery,
@@ -143,14 +147,32 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             $usersQuery->whereNotIn('id', $exceptionIds);
         }
 
+        return $usersQuery->pluck('id')->toArray();
+    }
+
+    public function getRecipients(PaymentConcept $concept, string $appliesTo): array
+    {
+        $userIds = $this->getRecipientIds($concept, $appliesTo);
+        if (empty($userIds)) {
+            return [];
+        }
+
         $recipients = [];
-        $usersQuery->chunk(100, function($users) use (&$recipients) {
+        foreach (array_chunk($userIds, 100) as $chunk) {
+            $users = EloquentUser::whereIn('id', $chunk)
+                ->select(['id', 'name', 'last_name', 'email'])
+                ->orderBy('name')
+                ->orderBy('last_name')
+                ->get();
+
             foreach ($users as $user) {
                 $recipients[] = MappersUserMapper::toRecipientDTO($user->toArray());
             }
-        });
+        }
+
         return $recipients;
     }
+
 
     public function hasRole(int $userId, string $role): bool
     {
@@ -221,6 +243,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                 'paid_totals.total_paid',
                 'paid_totals.total_paid_concepts'
             )
+            ->orderBy('full_name', 'asc')
             ->get();
 
         return $rows->map(fn($r) => MappersUserMapper::toUserWithPendingSummaryResponse([
@@ -252,6 +275,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             $q->where('status', $status->value)
             )
         ->select('id','name','last_name','email','curp', 'phone_number','address','blood_type', 'status')
+            ->latest('users.created_at')
         ->paginate($perPage, ['*'], 'page', $page);
 
         $paginator->getCollection()->transform(function ($user) {
@@ -294,28 +318,43 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return optional($user, fn($user) => UserMapper::toDomain($user));
     }
 
-    public function findByIds(array $ids): iterable
+    public function findByIds(array $ids): Collection
     {
-        if(empty($ids))
-        {
-            return [];
+        if (empty($ids)) {
+            return collect();
         }
-         return EloquentUser::whereIn('id', $ids)
-        ->lazy()
-        ->map(fn($user) => UserMapper::toDomain($user));
+
+        return EloquentUser::whereIn('id', $ids)
+            ->select(['id', 'name', 'last_name', 'curp', 'status'])
+            ->cursor()
+            ->map(fn($user) => UserMapper::toDomain($user))
+            ->collect();
+
     }
     public function findModelEntity(int $userId): EloquentUser
     {
         return EloquentUser::findOrFail($userId);
     }
 
-    public function getUsersByRole(string $role): Collection
+    public function getUsersByRoleCursor(string $role): \Generator
     {
-        return EloquentUser::role($role)->get(['id', 'name', 'last_name', 'curp']);
+        foreach (EloquentUser::role($role)
+                     ->select('id', 'name', 'last_name', 'curp')
+                     ->with('roles:id,name')
+            ->orderBy('id')
+                     ->cursor() as $user) {
+            yield $user;
+        }
     }
 
-    public function getUsersByCurp(array $curps): Collection
+    public function getUsersByCurpCursor(array $curps): \Generator
     {
-        return EloquentUser::whereIn('curp', $curps)->get(['id', 'name', 'last_name', 'curp']);
+        foreach (EloquentUser::whereIn('curp', $curps)
+                     ->select('id', 'name', 'last_name', 'curp')
+                     ->with('roles:id,name')
+                     ->orderBy('id')
+                     ->cursor() as $user) {
+            yield $user;
+        }
     }
 }

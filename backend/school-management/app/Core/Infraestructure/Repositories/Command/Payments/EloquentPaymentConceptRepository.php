@@ -200,11 +200,11 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             ->delete();
     }
 
-    public function finalizePaymentConcepts(): void
+    public function finalizePaymentConcepts(): int
     {
         $today = Carbon::today();
 
-        EloquentPaymentConcept::where('status', PaymentConceptStatus::ACTIVO)
+        return EloquentPaymentConcept::where('status', PaymentConceptStatus::ACTIVO)
             ->whereDate('end_date', '<', $today)
             ->update(['status' => PaymentConceptStatus::FINALIZADO]);
 
