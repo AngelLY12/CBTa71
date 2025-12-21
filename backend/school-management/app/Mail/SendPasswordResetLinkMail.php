@@ -2,40 +2,37 @@
 
 namespace App\Mail;
 
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use MailerSend\Helpers\Builder\Personalization;
 use MailerSend\LaravelDriver\MailerSendTrait;
 
-class SendVerifyEmail extends Mailable
+class SendPasswordResetLinkMail extends Mailable
 {
     use Queueable, SerializesModels, MailerSendTrait;
 
     protected $notifiable;
-    protected $verifyUrl;
+    protected $resetUrl;
 
-    public function __construct($notifiable, $verifyUrl)
+    public function __construct($notifiable, $resetUrl)
     {
         $this->notifiable = $notifiable;
-        $this->verifyUrl = $verifyUrl;
+        $this->resetUrl = $resetUrl;
     }
 
     public function build()
     {
-
         $messageDetails = "
-            <p>Para verificar tu correo, haz clic en el siguiente enlace:</p>
-            <p><a href=\"{$this->verifyUrl}\" target=\"_blank\">Verificar mi email</a></p>
-            <p>Si no creaste esta cuenta, ignora este mensaje.</p>
+            <p><a href=\"{$this->resetUrl}\" target=\"_blank\">Verificar mi email</a></p>
+            <p>Si no solicitaste restablecer la contraseña ignora este mensaje.</p>
         ";
 
         $personalization = [
             new Personalization($this->notifiable->email, [
                 'greeting' => "Hola {$this->notifiable->name}",
-                'header_title' => 'Verifica tu correo electrónico',
-                'message_intro' => 'Para completar el proceso de registro debes hacer la verificación de correo.',
+                'header_title' => 'Recuperar contraseña',
+                'message_intro' => 'Para restablecer tu contraseña debes ingresar al link.',
                 'message_details' => $messageDetails,
                 'message_footer' => 'Este enlace expirará en 60 minutos.',
             ])
@@ -47,6 +44,5 @@ class SendVerifyEmail extends Mailable
         );
 
     }
-
 
 }
