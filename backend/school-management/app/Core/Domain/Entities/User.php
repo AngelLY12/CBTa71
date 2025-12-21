@@ -29,7 +29,7 @@ use Carbon\Carbon;
  *     @OA\Property(property="registration_date", type="string", format="date-time", nullable=true, example="2024-01-15T12:34:56Z"),
  *     @OA\Property(property="status", ref="#/components/schemas/UserStatus", nullable=true, example="activo"),
  *     @OA\Property(property="studentDetail", ref="#/components/schemas/DomainStudentDetail", nullable=true),
- *     @OA\Property(property="roles", type="array", nullable=true, @OA\Items(ref="#/components/schemas/DomainStudentDetail")),
+ *     @OA\Property(property="roles", type="array", nullable=true, @OA\Items(ref="#/components/schemas/Role")),
  *     @OA\Property(property="emailVerified", type="boolean", description="Indica si el correo del usuario ya ha sido verificado"),
  * )
  */

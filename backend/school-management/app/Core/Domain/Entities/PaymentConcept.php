@@ -52,6 +52,7 @@ class PaymentConcept
         private array $applicantTags =[]
     ) {}
 
+
     public function isActive(): bool
     {
         return $this->status === PaymentConceptStatus::ACTIVO;
@@ -86,12 +87,33 @@ class PaymentConcept
         return $today >= $this->start_date;
     }
 
+    public function hasUser(int $userId): bool
+    {
+        return in_array($userId, $this->userIds, true);
+    }
+
+    public function hasCareer(int $careerId): bool
+    {
+        return in_array($careerId, $this->careerIds, true);
+    }
+
+    public function hasSemester(int|string $semester): bool
+    {
+        return in_array((string) $semester, array_map('strval', $this->semesters), true);
+    }
+
+    public function hasExceptionForUser(int $userId): bool
+    {
+        return in_array($userId, $this->exceptionUserIds, true);
+    }
+
     public function hasTag(PaymentConceptApplicantType|string $tag): bool
     {
         $tagValue = $tag instanceof PaymentConceptApplicantType ? $tag->value : $tag;
 
         return in_array($tagValue, $this->applicantTags, true);
     }
+
 
 
 

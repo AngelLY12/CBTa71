@@ -36,4 +36,9 @@ class RefreshToken
         return !$this->revoked && !$this->isExpired();
     }
 
+    public function isRevoked(): bool
+    {
+        return $this->revoked;
+    }
+
 }
