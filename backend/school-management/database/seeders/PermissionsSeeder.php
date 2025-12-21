@@ -17,7 +17,6 @@ class PermissionsSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
          $permissionsStudent = [
             'role' =>[
-                'view own financial overview',
                 'view own pending concepts summary',
                 'view own paid concepts summary',
                 'view own overdue concepts summary',
@@ -36,7 +35,6 @@ class PermissionsSeeder extends Seeder
 
         $permissionsStaff=[
             'role' =>[
-                'view all financial overview',
                 'view all pending concepts summary',
                 'view all students summary',
                 'view all paid concepts summary',
@@ -57,6 +55,7 @@ class PermissionsSeeder extends Seeder
                 'validate debt',
                 'view students',
                 'view stripe-payments',
+                'create payout'
             ],
         ];
 

@@ -39,11 +39,10 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('parents')->middleware(['throttle:5,1', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['role:student|admin',])->post('/invite',[ParentsController::class, 'sendInvitation']);
         Route::middleware(['role:parent'])->post('/invite/accept',[ParentsController::class, 'acceptInvitation']);
-        Route::middleware(['role:parent'])->get('/get-children',[ParentsController::class,'getParetChildren']);
+        Route::middleware(['role:parent'])->get('/get-children/{id}',[ParentsController::class,'getParetChildren']);
     });
 
     Route::prefix('dashboard')->middleware(['role:student|parent', 'throttle:global', 'log.action', 'user.status'])->group(function (){
-        Route::middleware('permission:view own financial overview')->get('/data/{id}',[DashboardController::class,'index']);
         Route::middleware('permission:view own pending concepts summary')->get('/pending/{id}',[DashboardController::class,'pending']);
         Route::middleware('permission:view own paid concepts summary')->get('/paid/{id}',[DashboardController::class,'paid']);
         Route::middleware('permission:view own overdue concepts summary')->get('/overdue/{id}',[DashboardController::class,'overdue']);
@@ -65,13 +64,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
 
     });
 
-    Route::prefix('dashboard-staff')->middleware(['role:financial-staff', 'throttle:global', 'log.action', 'user.status'])->group(function(){
-        Route::middleware('permission:view all financial overview')->get('/data',[StaffDashboardController::class,'getData']);
-        Route::middleware('permission:view all pending concepts summary')->get('/pending',[StaffDashboardController::class,'pendingPayments']);
-        Route::middleware('permission:view all students summary')->get('/students',[StaffDashboardController::class,'allStudents']);
-        Route::middleware('permission:view all paid concepts summary')->get('/payments',[StaffDashboardController::class,'paymentsMade']);
-        Route::middleware('permission:view concepts history')->get('/concepts',[StaffDashboardController::class,'allConcepts']);
-        Route::middleware('permission:refresh all dashboard')->post('/refresh',[StaffDashboardController::class,'refreshDashboard']);
+    Route::prefix('dashboard-staff')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
+        Route::middleware(['permission:view all pending concepts summary', 'throttle:global'])->get('/pending',[StaffDashboardController::class,'pendingPayments']);
+        Route::middleware(['permission:view all students summary', 'throttle:global'])->get('/students',[StaffDashboardController::class,'allStudents']);
+        Route::middleware(['permission:view all paid concepts summary', 'throttle:global'])->get('/payments',[StaffDashboardController::class,'paymentsMade']);
+        Route::middleware(['permission:view concepts history', 'throttle:global'])->get('/concepts',[StaffDashboardController::class,'allConcepts']);
+        Route::middleware(['permission:create payout', 'throttle:5,1'])->post('/payout',[StaffDashboardController::class,'payout']);
+        Route::middleware(['permission:refresh all dashboard', 'throttle:5,1'])->post('/refresh',[StaffDashboardController::class,'refreshDashboard']);
     });
     Route::prefix('concepts')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['permission:view concepts', 'throttle:global'])->get('/', [ConceptsController::class, 'index']);
