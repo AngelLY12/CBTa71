@@ -5470,7 +5470,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "concept": {
-                                                            "$ref": "#/components/schemas/DomainPaymentConcept"
+                                                            "$ref": "#/components/schemas/CreatePaymentConceptResponse"
                                                         }
                                                     },
                                                     "type": "object"
@@ -5606,7 +5606,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "concept": {
-                                                            "$ref": "#/components/schemas/DomainPaymentConcept"
+                                                            "$ref": "#/components/schemas/UpdatePaymentConceptResponse"
                                                         }
                                                     },
                                                     "type": "object"
@@ -8606,6 +8606,106 @@
                 },
                 "type": "object"
             },
+            "CreatePaymentConceptResponse": {
+                "required": [
+                    "id",
+                    "conceptName",
+                    "status",
+                    "appliesTo",
+                    "amount",
+                    "startDate",
+                    "endDate",
+                    "affectedStudentsCount",
+                    "message",
+                    "createdAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "conceptName": {
+                        "type": "string",
+                        "example": "Matrícula 2024"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "pending"
+                        ],
+                        "example": "active"
+                    },
+                    "appliesTo": {
+                        "type": "string",
+                        "enum": [
+                            "career",
+                            "semester",
+                            "students",
+                            "career_semester",
+                            "tag",
+                            "all"
+                        ],
+                        "example": "career"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pago de matrícula del semestre",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1500
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-01-15"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-02-15"
+                    },
+                    "affectedStudentsCount": {
+                        "type": "integer",
+                        "example": 245
+                    },
+                    "metadata": {
+                        "properties": {
+                            "is_global": {
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "exception_count": {
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "career_count": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "semester_count": {
+                                "type": "integer",
+                                "example": 2
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Concepto creado exitosamente. Afecta a 245 estudiante(s)"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-10 10:30:00"
+                    }
+                },
+                "type": "object"
+            },
             "PendingPaymentConceptsResponse": {
                 "properties": {
                     "id": {
@@ -8662,6 +8762,136 @@
                         "type": "integer",
                         "example": 3,
                         "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdatePaymentConceptResponse": {
+                "required": [
+                    "id",
+                    "conceptName",
+                    "status",
+                    "appliesTo",
+                    "amount",
+                    "startDate",
+                    "endDate",
+                    "metadata",
+                    "message",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "conceptName": {
+                        "type": "string",
+                        "example": "Matrícula 2024"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "pending"
+                        ],
+                        "example": "active"
+                    },
+                    "appliesTo": {
+                        "type": "string",
+                        "enum": [
+                            "career",
+                            "semester",
+                            "students",
+                            "career_semester",
+                            "tag",
+                            "all"
+                        ],
+                        "example": "career"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pago de matrícula del semestre",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1500
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-01-15"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-02-15"
+                    },
+                    "metadata": {
+                        "properties": {
+                            "is_global": {
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "exception_count": {
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "career_count": {
+                                "type": "integer",
+                                "example": 3
+                            },
+                            "semester_count": {
+                                "type": "integer",
+                                "example": 2
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Concepto actualizado: Ahora aplica a career. Se agregaron 2 careers"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-12 14:45:00"
+                    },
+                    "changes": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "field": {
+                                    "type": "string",
+                                    "example": "applies_to"
+                                },
+                                "old": {
+                                    "type": "string",
+                                    "example": "students"
+                                },
+                                "new": {
+                                    "type": "string",
+                                    "example": "career"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "example": "applies_to_changed"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "newlyAffectedCount": {
+                        "description": "Estudiantes nuevos afectados (puede ser negativo)",
+                        "type": "integer",
+                        "example": 45
+                    },
+                    "previouslyAffectedCount": {
+                        "description": "Estudiantes afectados antes de la actualización",
+                        "type": "integer",
+                        "example": 200
                     }
                 },
                 "type": "object"

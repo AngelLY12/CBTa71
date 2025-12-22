@@ -98,7 +98,7 @@ public function concepts(){}
  *                          type="object",
  *                          @OA\Property(
  *                              property="concept",
- *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                              ref="#/components/schemas/CreatePaymentConceptResponse"
  *                          )
  *                      )
  *                  )
@@ -147,7 +147,7 @@ public function createConcept(){}
  *                          type="object",
  *                          @OA\Property(
  *                              property="concept",
- *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                              ref="#/components/schemas/UpdatePaymentConceptResponse"
  *                          )
  *                      )
  *                  )
