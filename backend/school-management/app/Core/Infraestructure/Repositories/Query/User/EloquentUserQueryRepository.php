@@ -15,6 +15,7 @@ use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Infraestructure\Mappers\RolesAndPermissionMapper;
 use App\Core\Infraestructure\Traits\HasPendingQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -124,7 +125,59 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             ->where('status', UserStatus::ACTIVO)
             ->select('id');
 
-        $usersQuery = match($appliesTo) {
+        $this->matchRecipients($usersQuery, $concept, $appliesTo);
+
+
+        return $usersQuery->pluck('id')->toArray();
+    }
+
+    public function hasAnyRecipient(PaymentConcept $concept, string $appliesTo): bool
+    {
+        $usersQuery = EloquentUser::query()
+            ->where('status', UserStatus::ACTIVO)
+            ->select(DB::raw('1'));
+
+        $this->matchRecipients($usersQuery, $concept, $appliesTo);
+
+        $exceptionIds = $concept->getExceptionUsersIds();
+        if (!empty($exceptionIds)) {
+            $usersQuery->whereNotIn('id', $exceptionIds);
+        }
+        return $usersQuery->exists();
+    }
+
+    public function getRecipients(PaymentConcept $concept, string $appliesTo): array
+    {
+        $usersQuery = EloquentUser::query()
+            ->where('status', UserStatus::ACTIVO)
+            ->select(['id', 'name', 'last_name', 'email']);
+
+
+        $this->matchRecipients($usersQuery, $concept, $appliesTo);
+
+        $recipients = [];
+        $page = 1;
+        $pageSize = 100;
+
+        do {
+            $users = $usersQuery->forPage($page, $pageSize)
+                ->orderBy('name')
+                ->orderBy('last_name')
+                ->get();
+
+            foreach ($users as $user) {
+                $recipients[] = MappersUserMapper::toRecipientDTO($user->toArray());
+            }
+
+            $page++;
+        } while ($users->count() === $pageSize);
+
+        return $recipients;
+    }
+
+    private function matchRecipients(Builder &$usersQuery, PaymentConcept $concept, string $appliesTo): void
+    {
+        match($appliesTo) {
             PaymentConceptAppliesTo::CARRERA->value => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {
                 $q->whereIn('career_id', $concept->getCareerIds());
             }),
@@ -140,6 +193,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             PaymentConceptAppliesTo::TAG->value => $usersQuery->whereHas('applicantTypes', function($q) use ($concept) {
                 $q->whereIn('tag', $concept->getApplicantTag());
             }),
+            default => null,
         };
 
         $exceptionIds = $concept->getExceptionUsersIds();
@@ -147,30 +201,6 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             $usersQuery->whereNotIn('id', $exceptionIds);
         }
 
-        return $usersQuery->pluck('id')->toArray();
-    }
-
-    public function getRecipients(PaymentConcept $concept, string $appliesTo): array
-    {
-        $userIds = $this->getRecipientIds($concept, $appliesTo);
-        if (empty($userIds)) {
-            return [];
-        }
-
-        $recipients = [];
-        foreach (array_chunk($userIds, 100) as $chunk) {
-            $users = EloquentUser::whereIn('id', $chunk)
-                ->select(['id', 'name', 'last_name', 'email'])
-                ->orderBy('name')
-                ->orderBy('last_name')
-                ->get();
-
-            foreach ($users as $user) {
-                $recipients[] = MappersUserMapper::toRecipientDTO($user->toArray());
-            }
-        }
-
-        return $recipients;
     }
 
 

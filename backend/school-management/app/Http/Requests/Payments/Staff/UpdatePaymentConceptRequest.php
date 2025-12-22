@@ -101,6 +101,12 @@ use Illuminate\Foundation\Http\FormRequest;
  *         example=true
  *     ),
  *     @OA\Property(
+ *          property="removeAllExceptions",
+ *          type="boolean",
+ *          description="Indica si se deben eliminar todas las exceptions",
+ *          example=true
+ *      ),
+ *     @OA\Property(
  *          property="applicantTags",
  *          type="array",
  *          description="Array de casos especiales para aplicar un concepto (opcional)",
@@ -147,6 +153,7 @@ class UpdatePaymentConceptRequest extends FormRequest
             'exceptionStudents.*'  => 'string',
             'replaceRelations' => 'sometimes|required|boolean',
             'replaceExceptions' => 'sometimes|required|boolean',
+            'removeAllExceptions' => 'sometimes|required|boolean',
             'applicantTags' => 'nullable|array',
             'applicantTags.*' => 'string|in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptApplicantType::cases())),
 
@@ -177,6 +184,7 @@ class UpdatePaymentConceptRequest extends FormRequest
             'exceptionStudents.*.string'  => 'Cada exceptionStudent debe ser una cadena válida.',
             'replaceRelations.boolean' => 'replaceRelations debe ser booleano.',
             'replaceExceptions.boolean' => 'replaceExceptions debe ser booleano.',
+            'removeAllExceptions.boolean' => 'removeAllExceptions debe ser booleano.',
             'applicantTags.array' => 'ApplicantTags debe ser un arreglo.',
             'applicantTags.*.string' => 'Cada applicantTag debe ser una cadena válida.',
             'applicantTags.*.in' => 'Cada applicantTag debe ser uno de los valores permitidos: ' . implode(', ', array_map(fn($case) => $case->value, PaymentConceptApplicantType::cases())),
@@ -213,6 +221,11 @@ class UpdatePaymentConceptRequest extends FormRequest
         if ($this->has('replaceExceptions')) {
             $this->merge([
                 'replaceExceptions' => filter_var($this->replaceExceptions, FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
+        if ($this->has('removeAllExceptions')) {
+            $this->merge([
+                'removeAllExceptions' => filter_var($this->removeAllExceptions, FILTER_VALIDATE_BOOLEAN),
             ]);
         }
 

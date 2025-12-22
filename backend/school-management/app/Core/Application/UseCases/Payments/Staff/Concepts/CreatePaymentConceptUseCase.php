@@ -17,7 +17,9 @@ use App\Exceptions\NotFound\StudentsNotFoundException;
 use App\Exceptions\Validation\ApplicantTagInvalidException;
 use App\Exceptions\Validation\CareerSemesterInvalidException;
 use App\Exceptions\Validation\SemestersNotFoundException;
+use App\Jobs\ProcessPaymentConceptRecipientsJob;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CreatePaymentConceptUseCase
 {
@@ -32,9 +34,8 @@ class CreatePaymentConceptUseCase
     }
 
     public function execute(CreatePaymentConceptDTO $dto): PaymentConcept {
-        return DB::transaction(function() use ($dto) {
-            $dto->is_global = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
-            PaymentConceptValidator::ensureCreatePaymentDTOIsValid($dto);
+        $this->preValidateRecipients($dto);
+        $paymentConcept= DB::transaction(function() use ($dto) {
             $pc = PaymentConceptMapper::toDomain($dto);
             PaymentConceptValidator::ensureConceptHasRequiredFields($pc);
 
@@ -46,14 +47,26 @@ class CreatePaymentConceptUseCase
 
             $paymentConcept=$this->attachAppliesTo($dto, $paymentConcept);
 
-            $recipients = $this->uqRepo->getRecipients($paymentConcept, $dto->appliesTo->value);
-            if(empty($recipients)){
+            $hasRecipients = $this->hasAnyRecipientFast($paymentConcept, $dto->appliesTo);
+            if (!$hasRecipients) {
                 throw new RecipientsNotFoundException();
             }
-            $this->notifyRecipients($paymentConcept,$recipients);
 
             return $paymentConcept;
         });
+        ProcessPaymentConceptRecipientsJob::forConcept($paymentConcept->id, $dto->appliesTo->value)->delay(now()->addSeconds(rand(1, 10)));
+        return $paymentConcept;
+    }
+
+    private function preValidateRecipients(CreatePaymentConceptDTO $dto): void
+    {
+        $dto->is_global = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
+        PaymentConceptValidator::ensureCreatePaymentDTOIsValid($dto);
+    }
+
+    private function hasAnyRecipientFast(PaymentConcept $concept, PaymentConceptAppliesTo $appliesTo): bool
+    {
+        return $this->uqRepo->hasAnyRecipient($concept, $appliesTo->value);
     }
 
     private function attachAppliesTo(CreatePaymentConceptDTO $dto, PaymentConcept $paymentConcept): PaymentConcept

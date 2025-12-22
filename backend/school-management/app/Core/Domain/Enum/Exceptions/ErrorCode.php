@@ -29,6 +29,7 @@ namespace App\Core\Domain\Enum\Exceptions;
  *         "CONCEPT_CANNOT_BE_DISABLED",
  *         "CONCEPT_CANNOT_BE_FINALIZED",
  *         "CONCEPT_CANNOT_BE_UPDATED",
+ *         "REMOVE_EXCEPTIONS_AND_EXCEPTION_STUDENT_OVERLAP",
  *         "CONCEPT_CONFLICT_STATUS",
  *         "PAYMENT_ALREADY_EXISTS",
  *         "PROMOTION_ALREADY_EXECUTED",
@@ -87,7 +88,8 @@ namespace App\Core\Domain\Enum\Exceptions;
  *         "CONCEPT_START_DATE_TOO_FAR",
  *         "PAYMENT_METHOD_NOT_SUPPORTED",
  *         "SEMESTERS_NOT_FOUND",
- *         "PAYOUT_VALIDATION"
+ *         "PAYOUT_VALIDATION",
+ *         "REQUIRED_FOR_APPLIES_TO"
  *     },
  *     description="Códigos de error estandarizados del sistema",
  *     example="VALIDATION_ERROR"
@@ -137,6 +139,7 @@ enum ErrorCode:string
     case USER_CANNOT_BE_UPDATED = 'USER_CANNOT_BE_UPDATED';
     case USER_CONFLICT_STATUS = 'USER_CONFLICT_STATUS';
     case USER_EXPLICITLY_EXCLUDED = 'USER_EXPLICITLY_EXCLUDED';
+    case REMOVE_EXCEPTIONS_AND_EXCEPTION_STUDENT_OVERLAP = 'REMOVE_EXCEPTIONS_AND_EXCEPTION_STUDENT_OVERLAP' ;
 
     // ========== CARPETA: NotAllowed (7) ==========
     case ADMIN_ROLE_NOT_ALLOWED = 'ADMIN_ROLE_NOT_ALLOWED';
@@ -193,6 +196,7 @@ enum ErrorCode:string
     case PAYMENT_METHOD_NOT_SUPPORTED = 'PAYMENT_METHOD_NOT_SUPPORTED';
     case SEMESTERS_NOT_FOUND = 'SEMESTERS_NOT_FOUND';
     case PAYOUT_VALIDATION = 'PAYOUT_VALIDATION';
+    case REQUIRED_FOR_APPLIES_TO = 'REQUIRED_FOR_APPLIES_TO';
 
 
 }

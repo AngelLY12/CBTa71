@@ -75,16 +75,21 @@ class PaymentConceptMapper{
                 }
             }
         }
+        $appliesToEnum = isset($data['applies_to'])
+            ? PaymentConceptAppliesTo::from(strtolower($data['applies_to']))
+            : PaymentConceptAppliesTo::TODOS;
+
         return new UpdatePaymentConceptDTO(
             id: (int) $data['id'],
             fieldsToUpdate: $fieldsToUpdate,
             semesters: $data['semestres'] ?? [],
             careers: $data['careers'] ?? [],
             students: $data['students'] ?? [],
-            appliesTo: $data['applies_to'] ?? null,
+            appliesTo: $appliesToEnum,
             replaceRelations: $data['replaceRelations'],
             exceptionStudents: $data['exceptionStudents'] ?? [],
             replaceExceptions: $data['replaceExceptions'],
+            removeAllExceptions: $data['removeAllExceptions'],
             applicantTags: $data['applicantTags'] ?? [],
         );
     }

@@ -59,7 +59,8 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 *       ),
  *     @OA\Property(property="appliesTo", ref="#/components/schemas/PaymentConceptAppliesTo", nullable=true, example="todos", description="A quién aplica el concepto"),
  *     @OA\Property(property="replaceRelations", type="boolean", example=false, description="Si es true, reemplaza las relaciones existentes con las nuevas"),
- *     @OA\Property(property="replaceExceptions", type="boolean", example=false, description="Si es true, reemplaza los estudiantes a los que no aplica el concepto")
+ *     @OA\Property(property="replaceExceptions", type="boolean", example=false, description="Si es true, reemplaza los estudiantes a los que no aplica el concepto"),
+ *     @OA\Property(property="removeAllExceptions", type="boolean", example=false, description="Si es true, elimina los estudiantes a los que no aplicaba el concepto")
  * )
  */
 class UpdatePaymentConceptDTO
@@ -74,6 +75,7 @@ class UpdatePaymentConceptDTO
         public bool $replaceRelations = false,
         public array|string|null $exceptionStudents = null,
         public bool $replaceExceptions = false,
+        public bool $removeAllExceptions = false,
         public array|string|null $applicantTags = null,
     ) {}
 }

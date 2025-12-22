@@ -1,9 +1,13 @@
 <?php
 
 namespace App\Core\Domain\Utils\Validators;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\User\UserRoles;
+use App\Exceptions\Conflict\RemoveExceptionsAndExceptionStudentsOverlapException;
 use App\Exceptions\Conflict\UserExplicitlyExcludedException;
+use App\Exceptions\Validation\RequiredForAppliesToException;
 use Carbon\Carbon;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
@@ -141,13 +145,93 @@ class PaymentConceptValidator{
         if ($dto->is_global && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
             throw new ConceptAppliesToConflictException();
         }
-        $intersection = array_intersect(
-            (array)$dto->students,
-            (array)$dto->exceptionStudents
-        );
+        if(!empty($dto->students) && !empty($dto->exceptionStudents)){
+            $intersection = array_intersect(
+                (array)$dto->students,
+                (array)$dto->exceptionStudents
+            );
 
-        if (!empty($intersection)) {
-            throw new StudentsAndExceptionsOverlapException();
+            if (!empty($intersection)) {
+                throw new StudentsAndExceptionsOverlapException();
+            }
+        }
+        if ($dto->appliesTo) {
+            self::validateAppliesToConsistency($dto);
+        }
+    }
+
+    public static function ensureUpdatePaymentConceptDTOIsValid(UpdatePaymentConceptDTO $dto)
+    {
+        if (($dto->fieldsToUpdate['is_global'] ?? false) && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
+            throw new ConceptAppliesToConflictException();
+        }
+        if(!empty($dto->students) && !empty($dto->exceptionStudents)){
+            $intersection = array_intersect(
+                (array)$dto->students,
+                (array)$dto->exceptionStudents
+            );
+
+            if (!empty($intersection)) {
+                throw new StudentsAndExceptionsOverlapException();
+            }
+        }
+        if ($dto->removeAllExceptions) {
+            if (!empty($dto->exceptionStudents)) {
+                throw new RemoveExceptionsAndExceptionStudentsOverlapException(
+                    'No se puede enviar removeAllExceptions y exceptionStudents simultáneamente'
+                );
+            }
+
+            if ($dto->replaceExceptions !== null) {
+                throw new RemoveExceptionsAndExceptionStudentsOverlapException(
+                    'No se puede enviar removeAllExceptions y replaceExceptions simultáneamente'
+                );
+            }
+
+        }
+        if ($dto->appliesTo) {
+            self::validateAppliesToConsistency($dto);
+        }
+
+    }
+
+    private static function validateAppliesToConsistency(UpdatePaymentConceptDTO|CreatePaymentConceptDTO $dto): void
+    {
+        $appliesTo = $dto->appliesTo;
+
+        switch ($appliesTo) {
+            case PaymentConceptAppliesTo::CARRERA:
+                if (empty($dto->careers)) {
+                    throw new RequiredForAppliesToException('Debes agregar carreras si es un concepto aplicable a carrera');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::SEMESTRE:
+                if (empty($dto->semesters)) {
+                    throw new RequiredForAppliesToException('Debes agregar semestres si es un concepto aplicable a semestre');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::ESTUDIANTES:
+                if (empty($dto->students)) {
+                    throw new RequiredForAppliesToException('Desbes agregar estudiantes si es un concepto aplicable a estudiante');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::CARRERA_SEMESTRE:
+                if (empty($dto->careers) || empty($dto->semesters)) {
+                    throw new RequiredForAppliesToException('Debes agregar carreras y semestres si es un concepto aplicable a carrera-semestre');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::TAG:
+                if (empty($dto->applicantTags)) {
+                    throw new RequiredForAppliesToException('Debes agregar tags si es un concepto aplicable a casos especiales');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::TODOS:
+                break;
         }
     }
 

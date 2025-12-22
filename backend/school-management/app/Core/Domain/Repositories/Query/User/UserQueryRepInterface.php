@@ -21,7 +21,7 @@ interface UserQueryRepInterface{
     public function findBySearch(string $search): ?User;
     public function getRecipients(PaymentConcept $concept, string $appliesTo): array;
     public function getRecipientsIds(PaymentConcept $concept, string $appliesTo): array;
-
+    public function hasAnyRecipient(PaymentConcept $concept, string $appliesTo): bool;
     public function hasRole(int $userId, string $role):bool;
     public function getStudentsWithPendingSummary(array $userIds): array;
     public function findAllUsers(int $perPage, int $page, ?UserStatus $status = null): LengthAwarePaginator;
