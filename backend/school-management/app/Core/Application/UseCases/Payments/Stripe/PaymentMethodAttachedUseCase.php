@@ -9,6 +9,7 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
+use App\Exceptions\DomainException;
 use Illuminate\Support\Facades\DB;
 
 class PaymentMethodAttachedUseCase
@@ -23,31 +24,52 @@ class PaymentMethodAttachedUseCase
 
     }
     public function execute($obj){
+        try {
 
-        if (!$obj) {
-            logger()->error("PaymentMethod no encontrado: {$obj->id}");
-            throw new \InvalidArgumentException('El PaymentMethod es nulo.');
-        }
-        $paymentMethodId = $obj->id;
-        $pm=$this->pmqRepo->findByStripeId($paymentMethodId);
-        if ($pm) {
-            logger()->info("El método de pago {$paymentMethodId} ya existe");
+
+            if (!$obj) {
+                logger()->error("PaymentMethod no encontrado: objeto nulo");
+                return false;
+            }
+            $paymentMethodId = $obj->id;
+            $pm = $this->pmqRepo->findByStripeId($paymentMethodId);
+            if ($pm) {
+                logger()->info("El método de pago {$paymentMethodId} ya existe");
+                return true;
+            }
+            $user = $this->userRepo->getUserByStripeCustomer($obj->customer);
+            $pmDomain = new PaymentMethod(
+                user_id: $user->id,
+                stripe_payment_method_id: $paymentMethodId,
+                brand: $obj->card->brand,
+                last4: $obj->card->last4,
+                exp_month: $obj->card->exp_month,
+                exp_year: $obj->card->exp_year,
+            );
+            DB::transaction(function () use ($pmDomain) {
+                $this->pmRepo->create($pmDomain);
+
+            });
+            $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
+            return true;
+        }catch (DomainException $e) {
+            logger()->warning("Excepción de dominio en webhook: " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'use_case' => static::class
+            ]);
             return false;
-        }
-        $user = $this->userRepo->getUserByStripeCustomer($obj->customer);
-        $pmDomain = new PaymentMethod(
-            user_id: $user->id,
-            stripe_payment_method_id: $paymentMethodId,
-            brand: $obj->card->brand,
-            last4:  $obj->card->last4,
-            exp_month:  $obj->card->exp_month,
-            exp_year: $obj->card->exp_year,
-        );
-        DB::transaction(function() use ($pmDomain) {
-            $this->pmRepo->create($pmDomain);
 
-        });
-        $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
-        return true;
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            logger()->warning("Excepción de validación en webhook: " . $e->getMessage());
+            return false;
+
+        } catch (\Exception $e) {
+            logger()->error("Error inesperado en webhook: " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'use_case' => static::class,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 }

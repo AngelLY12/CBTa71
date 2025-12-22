@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Students;
 
 use App\Core\Application\Services\Payments\Stripe\WebhookServiceFacades;
 use Illuminate\Http\Request;
+use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 use App\Http\Controllers\Controller;
 use App\Jobs\ReconcilePayments;
@@ -76,9 +77,14 @@ class WebhookController extends Controller
             logger()->warning("Recurso no encontrado en webhook: " . $e->getMessage());
             return Response::error('Recurso no encontrado', 404);
 
-        } catch (\Exception $e) {
+        }
+        catch (SignatureVerificationException $e) {
+            return Response::error('Firma inválida', 400);
+
+        }catch (\Exception $e) {
             logger()->error('Stripe Webhook Error: ' . $e->getMessage());
             return Response::error('Error interno', 500);
         }
+
     }
 }
