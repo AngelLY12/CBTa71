@@ -8,6 +8,7 @@ use App\Core\Domain\Enum\User\UserRoles;
 use App\Exceptions\Conflict\RemoveExceptionsAndExceptionStudentsOverlapException;
 use App\Exceptions\Conflict\UserExplicitlyExcludedException;
 use App\Exceptions\Validation\RequiredForAppliesToException;
+use App\Exceptions\Validation\ValidationException;
 use Carbon\Carbon;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
@@ -36,6 +37,7 @@ use App\Exceptions\Validation\ConceptStartDateTooFarException;
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Exceptions\Conflict\ConceptAppliesToConflictException;
 use App\Exceptions\Conflict\StudentsAndExceptionsOverlapException;
+use http\Exception\InvalidArgumentException;
 
 class PaymentConceptValidator{
 
@@ -134,9 +136,23 @@ class PaymentConceptValidator{
         }
     }
 
-    public static function ensureConceptIsValidToUpdate(PaymentConcept $concept){
+    public static function ensureConceptIsValidToUpdate(UpdatePaymentConceptDTO $dto, PaymentConcept $concept){
         if (!$concept->status->isUpdatable()) {
             throw new ConceptCannotBeUpdatedException();
+        }
+        if ($dto->appliesTo === PaymentConceptAppliesTo::ESTUDIANTES
+            && !empty($dto->exceptionStudents)
+        ) {
+            throw new ValidationException(
+                'No se pueden agregar excepciones cuando el concepto aplica a estudiantes específicos'
+            );
+        }
+        if ($concept->applies_to === PaymentConceptAppliesTo::ESTUDIANTES
+            && !empty($dto->exceptionStudents)
+        ) {
+            throw new ValidationException(
+                'No se pueden agregar excepciones a un concepto que ya aplica a estudiantes específicos'
+            );
         }
     }
 
@@ -154,6 +170,13 @@ class PaymentConceptValidator{
             if (!empty($intersection)) {
                 throw new StudentsAndExceptionsOverlapException();
             }
+        }
+        if ($dto->appliesTo === PaymentConceptAppliesTo::ESTUDIANTES
+            && !empty($dto->exceptionStudents)
+        ) {
+            throw new ValidationException(
+                'No se pueden agregar excepciones cuando el concepto aplica a estudiantes específicos'
+            );
         }
         if ($dto->appliesTo) {
             self::validateAppliesToConsistency($dto);
@@ -189,10 +212,15 @@ class PaymentConceptValidator{
             }
 
         }
+        if($dto->appliesTo === PaymentConceptAppliesTo::ESTUDIANTES && !empty($dto->exceptionStudents))
+        {
+            throw new ValidationException(
+                'No se pueden agregar excepciones cuando el concepto aplica a estudiantes específicos'
+            );
+        }
         if ($dto->appliesTo) {
             self::validateAppliesToConsistency($dto);
         }
-
     }
 
     private static function validateAppliesToConsistency(UpdatePaymentConceptDTO|CreatePaymentConceptDTO $dto): void

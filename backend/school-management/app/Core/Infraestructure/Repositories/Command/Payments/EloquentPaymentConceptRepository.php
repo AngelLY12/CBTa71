@@ -19,6 +19,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         PaymentConceptMapper::toPersistence($concept)
         );
         $pc->refresh();
+        $pc->load(['careers', 'users', 'paymentConceptSemesters', 'exceptions', 'applicantTypes']);
         return PaymentConceptMapper::toDomain($pc);
     }
 
@@ -26,6 +27,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $pc = $this->findOrFail($conceptId);
         $pc->update($data);
+        $pc->load(['careers', 'users', 'paymentConceptSemesters', 'exceptions', 'applicantTypes']);
         return PaymentConceptMapper::toDomain($pc);
     }
 
@@ -64,19 +66,13 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     public function attachToUsers(int $conceptId, UserIdListDTO $userIds, bool $replaceRelations=false): PaymentConcept
     {
         $pc = $this->findOrFail($conceptId);
-        $chunkSize = 50;
 
         if($replaceRelations){
-           $pc->users()->detach();
-
-            foreach (array_chunk($userIds->userIds, $chunkSize) as $chunk) {
-                $pc->users()->attach($chunk);
-            }
+            $pc->users()->sync($userIds->userIds);
         }else{
-            foreach (array_chunk($userIds->userIds, $chunkSize) as $chunk) {
-                $pc->users()->syncWithoutDetaching($chunk);
-            }
+            $pc->users()->syncWithoutDetaching($userIds->userIds);
         }
+
         $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
 
@@ -100,17 +96,20 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $pc = $this->findOrFail($conceptId);
         if ($replaceRelations) {
-            $pc->paymentConceptSemesters()->delete();
+            $pc->paymentConceptSemesters()->where('payment_concept_id', $pc->id)->delete();
         }
-        foreach ($semesters as $semester) {
-                $pc->paymentConceptSemesters()->updateOrCreate(
-                    [
-                        'payment_concept_id' => $pc->id,
-                        'semestre' => $semester
-                    ],
-                    ['semestre' => $semester]
-                );
-        }
+        $data = array_map(fn($semester) => [
+            'payment_concept_id' => $pc->id,
+            'semestre' => $semester,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], $semesters);
+
+        $pc->paymentConceptSemesters()->upsert(
+            $data,
+            ['payment_concept_id', 'semestre'],
+            ['semestre']
+        );
         $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
     }
@@ -120,19 +119,11 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         $pc= $this->findOrFail($conceptId);
         if($replaceRelations)
         {
-            $pc->exceptions()->delete();
+            $pc->exceptions()->sync($userIds->userIds);
+        }else{
+            $pc->exceptions()->syncWithoutDetaching($userIds->userIds);
         }
-        foreach (array_chunk($userIds->userIds, 50) as $chunk) {
-            foreach ($chunk as $userId) {
-                $pc->exceptions()->updateOrCreate(
-                    [
-                        'payment_concept_id' => $pc->id,
-                        'user_id' => $userId
-                    ],
-                    ['user_id' => $userId]
-                );
-            }
-        }
+
         $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
 
@@ -146,24 +137,26 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             $pc->applicantTypes()->delete();
         }
 
-        foreach ($tags as $tag) {
-            $pc->applicantTypes()->updateOrCreate(
-                [
-                    'payment_concept_id' => $pc->id,
-                    'tag' => $tag
-                ],
-                ['tag' => $tag]
-            );
-        }
+        $data = array_map(fn($tag) => [
+            'payment_concept_id' => $pc->id,
+            'tag' => $tag,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], $tags);
+
+        $pc->applicantTypes()->upsert(
+            $data,
+            ['payment_concept_id', 'tag'],
+            ['tag']
+        );
         $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
-
 
     }
 
     public function detachFromExceptionStudents(int $conceptId): void
     {
-        $this->findOrFail($conceptId)->exceptions()->delete();
+        $this->findOrFail($conceptId)->exceptions()->detach();
     }
 
     public function detachFromSemester(int $conceptId): void
@@ -188,7 +181,8 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
 
     private function findOrFail(int $id): EloquentPaymentConcept
     {
-        return EloquentPaymentConcept::findOrFail($id);
+        return EloquentPaymentConcept::with(['careers', 'users', 'paymentConceptSemesters', 'exceptions', 'applicantTypes'])
+        ->findOrFail($id);
     }
 
     public function cleanDeletedConcepts(): int

@@ -28,7 +28,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
     public function findById(int $userId): ?User
     {
-        return optional(EloquentUser::find($userId),fn($eloquent)=>UserMapper::toDomain($eloquent));
+        return optional(EloquentUser::with('roles')->find($userId),fn($eloquent)=>UserMapper::toDomain($eloquent));
     }
 
     public function findUserRoles(int $userId): array
@@ -57,7 +57,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
     public function findUserByEmail(string $email): ?User
     {
-        $user=EloquentUser::where('email',$email)->first();
+        $user=EloquentUser::with('roles')->where('email',$email)->first();
         return $user ? UserMapper::toDomain($user): null;
 
     }
@@ -131,6 +131,37 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return $usersQuery->pluck('id')->toArray();
     }
 
+    public function getRecipientsFromIds(array $ids): array
+    {
+        if(empty($ids))
+        {
+            return [];
+        }
+        $usersQuery = EloquentUser::query()
+            ->whereIn('id', $ids)
+            ->where('status', UserStatus::ACTIVO)
+            ->select(['id', 'name', 'last_name', 'email']);
+
+        $recipients = [];
+        $page = 1;
+        $pageSize = 100;
+
+        do {
+            $users = $usersQuery->forPage($page, $pageSize)
+                ->orderBy('name')
+                ->orderBy('last_name')
+                ->get();
+
+            foreach ($users as $user) {
+                $recipients[] = MappersUserMapper::toRecipientDTO($user->toArray());
+            }
+
+            $page++;
+        } while ($users->count() === $pageSize);
+
+        return $recipients;
+    }
+
     public function hasAnyRecipient(PaymentConcept $concept, string $appliesTo): bool
     {
         $usersQuery = EloquentUser::query()
@@ -139,10 +170,6 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
         $this->matchRecipients($usersQuery, $concept, $appliesTo);
 
-        $exceptionIds = $concept->getExceptionUsersIds();
-        if (!empty($exceptionIds)) {
-            $usersQuery->whereNotIn('id', $exceptionIds);
-        }
         return $usersQuery->exists();
     }
 

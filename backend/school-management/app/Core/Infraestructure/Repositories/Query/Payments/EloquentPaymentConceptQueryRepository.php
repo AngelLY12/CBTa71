@@ -27,7 +27,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     public function findById(int $id): ?PaymentConcept
     {
-        return optional(EloquentPaymentConcept::find($id), fn($pc) => PaymentConceptMapper::toDomain($pc));
+        return optional(EloquentPaymentConcept::with(['careers', 'users', 'paymentConceptSemesters', 'exceptions', 'applicantTypes'])->find($id), fn($pc) => PaymentConceptMapper::toDomain($pc));
     }
     public function getPendingPaymentConcepts(User $user, bool $onlyThisYear): PendingSummaryResponse {
         $query = $this->basePaymentConcept($user)

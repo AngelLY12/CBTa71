@@ -59,7 +59,7 @@ class EloquentUserRepository implements UserRepInterface
 
     public function assignRole(int $userId, string $role): bool
     {
-        $user = EloquentUser::find($userId);
+        $user = EloquentUser::with('roles')->find($userId);
 
         if (! $user) {
             return false;

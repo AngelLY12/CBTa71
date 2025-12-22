@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Core\Application\UseCases\Jobs\ProcessPaymentConceptRecipientsUseCase;
-use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

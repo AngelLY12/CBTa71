@@ -31,4 +31,5 @@ class ProcessPaymentConceptRecipientsUseCase
         $this->notifyRecipients($paymentConcept,$recipients);
     }
 
+
 }

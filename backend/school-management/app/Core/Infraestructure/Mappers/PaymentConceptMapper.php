@@ -20,11 +20,26 @@ class PaymentConceptMapper{
             applies_to:$paymentConcept->applies_to,
             is_global:$paymentConcept->is_global
         );
-        $domain->setCareerIds($paymentConcept->careers->pluck('id')->toArray());
-        $domain->setUserIds($paymentConcept->users->pluck('id')->toArray());
-        $domain->setSemesters($paymentConcept->paymentConceptSemesters->pluck('semestre')->toArray());
-        $domain->setExceptionUsersIds($paymentConcept->exceptions->pluck('user_id')->toArray());
-        $domain->setApplicantTag($paymentConcept->applicantTypes->pluck('tag')->toArray());
+        if($paymentConcept->careers)
+        {
+            $domain->setCareerIds($paymentConcept->careers->pluck('id')->toArray());
+        }
+        if($paymentConcept->users){
+            $domain->setUserIds($paymentConcept->users->pluck('id')->toArray());
+
+        }
+        if($paymentConcept->paymentConceptSemesters)
+        {
+            $domain->setSemesters($paymentConcept->paymentConceptSemesters->pluck('semestre')->toArray());
+        }
+        if($paymentConcept->exceptions)
+        {
+            $domain->setExceptionUsersIds($paymentConcept->exceptions->pluck('user_id')->toArray());
+        }
+        if($paymentConcept->applicantTypes)
+        {
+            $domain->setApplicantTag($paymentConcept->applicantTypes->pluck('tag')->toArray());
+        }
 
         return $domain;
     }

@@ -6,8 +6,10 @@ use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptNameAndAmountResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptsToDashboardResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingPaymentConceptsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptResponse;
 use App\Core\Domain\Entities\PaymentConcept as EntitiesPaymentConcept;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
@@ -132,6 +134,57 @@ class PaymentConceptMapper{
             user_name: $data['user_name'] ?? null,
             concept_name: $data['concept_name'] ?? null,
             amount:$data['amount'] ?? null
+        );
+    }
+
+    public static function toCreatePaymentConceptResponse(\App\Core\Domain\Entities\PaymentConcept $paymentConcept, int $affectedCount): CreatePaymentConceptResponse
+    {
+        return new CreatePaymentConceptResponse(
+            id: $paymentConcept->id,
+            conceptName: $paymentConcept->concept_name,
+            status: $paymentConcept->status->value,
+            appliesTo: $paymentConcept->applies_to->value,
+            description: $paymentConcept->description,
+            amount: $paymentConcept->amount,
+            startDate: $paymentConcept->start_date->format('Y-m-d'),
+            endDate: $paymentConcept->end_date->format('Y-m-d'),
+            affectedStudentsCount: $affectedCount,
+            metadata: [
+                'is_global' => $paymentConcept->is_global,
+                'exception_count' => count($paymentConcept->getExceptionUsersIds()),
+                'career_count' => count($paymentConcept->getCareerIds()),
+                'semester_count' => count($paymentConcept->getSemesters()),
+            ],
+            message: sprintf(
+                'Concepto creado exitosamente. Afecta a %d estudiante(s)',
+                $affectedCount
+            ),
+            createdAt: now()->format('Y-m-d H:i:s'),
+        );
+    }
+
+    public static function toUpdatePaymentConceptResponse(\App\Core\Domain\Entities\PaymentConcept $newPaymentConcept, array $data): UpdatePaymentConceptResponse
+    {
+        return new UpdatePaymentConceptResponse(
+            id: $newPaymentConcept->id,
+            conceptName: $newPaymentConcept->concept_name,
+            status: $newPaymentConcept->status->value,
+            appliesTo: $newPaymentConcept->applies_to->value,
+            description: $newPaymentConcept->description,
+            amount: $newPaymentConcept->amount,
+            startDate: $newPaymentConcept->start_date->format('Y-m-d'),
+            endDate: $newPaymentConcept->end_date->format('Y-m-d'),
+            metadata: [
+                'is_global' => $newPaymentConcept->is_global,
+                'exception_count' => count($newPaymentConcept->getExceptionUsersIds()),
+                'career_count' => count($newPaymentConcept->getCareerIds()),
+                'semester_count' => count($newPaymentConcept->getSemesters()),
+            ],
+            message: $data['message'] ?? null,
+            updatedAt: now()->format('Y-m-d H:i:s'),
+            changes: $data['changes'] ?? [],
+            newlyAffectedCount: $data['newlyAffectedCount'],
+            previouslyAffectedCount: $data['previouslyAffectedCount'],
         );
     }
 }

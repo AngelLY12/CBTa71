@@ -3,6 +3,7 @@
 namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
+use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Application\Traits\HasPaymentConcept;
@@ -33,7 +34,7 @@ class CreatePaymentConceptUseCase
         $this->setRepository($uqRepo);
     }
 
-    public function execute(CreatePaymentConceptDTO $dto): PaymentConcept {
+    public function execute(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {
         $this->preValidateRecipients($dto);
         $paymentConcept= DB::transaction(function() use ($dto) {
             $pc = PaymentConceptMapper::toDomain($dto);
@@ -54,8 +55,9 @@ class CreatePaymentConceptUseCase
 
             return $paymentConcept;
         });
+        $affectedCount = count($this->uqRepo->getRecipientsIds($paymentConcept, $dto->appliesTo->value));
         ProcessPaymentConceptRecipientsJob::forConcept($paymentConcept->id, $dto->appliesTo->value)->delay(now()->addSeconds(rand(1, 10)));
-        return $paymentConcept;
+        return PaymentConceptMapper::toCreatePaymentConceptResponse($paymentConcept, $affectedCount);
     }
 
     private function preValidateRecipients(CreatePaymentConceptDTO $dto): void
@@ -109,6 +111,7 @@ class CreatePaymentConceptUseCase
                 }else{
                     throw new ApplicantTagInvalidException();
                 }
+                break;
             case PaymentConceptAppliesTo::TODOS:
                 break;
             default:
