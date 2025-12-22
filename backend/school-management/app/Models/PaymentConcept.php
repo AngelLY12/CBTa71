@@ -39,11 +39,11 @@ class PaymentConcept extends Model
     }
 
     public function careers(){
-        return $this->belongsToMany(Career::class);
+        return $this->belongsToMany(Career::class)->withTimestamps();
     }
 
     public function users(){
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class)->withTimestamps();
     }
 
     public function payments(){
@@ -56,7 +56,12 @@ class PaymentConcept extends Model
 
     public function exceptions()
     {
-        return $this->hasMany(ConceptException::class, 'payment_concept_id');
+        return $this->belongsToMany(
+            User::class,
+            'concept_exceptions',
+            'payment_concept_id',
+            'user_id'
+        )->withTimestamps();
     }
 
     public function applicantTypes()

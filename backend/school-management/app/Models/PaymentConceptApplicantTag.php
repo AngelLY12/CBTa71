@@ -11,7 +11,7 @@ class PaymentConceptApplicantTag extends Model
         'payment_concept_id',
         'tag'
     ];
-    protected $table = 'payment_concept_semester';
+    protected $table = 'payment_concept_applicant_tags';
     public function paymentConcept(){
         return $this->belongsTo(PaymentConcept::class);
     }
