@@ -43,6 +43,7 @@ class UpdatePaymentConceptUseCase
                 $dto->fieldsToUpdate['applies_to'] = $dto->appliesTo;
             } else if (isset($dto->fieldsToUpdate['is_global']) && $dto->fieldsToUpdate['is_global'] === true) {
                 $dto->appliesTo = PaymentConceptAppliesTo::TODOS;
+                $dto->fieldsToUpdate['applies_to'] = $dto->appliesTo;
             }
 
             $existingConcept = $this->pcqRepo->findById($dto->id);
@@ -52,13 +53,14 @@ class UpdatePaymentConceptUseCase
             }
             $oldRecipientIds=$this->uqRepo->getRecipientsIds($existingConcept,$existingConcept->applies_to->value);
             PaymentConceptValidator::ensureConceptIsValidToUpdate($dto,$existingConcept);
-            $paymentConcept = $this->pcRepo->update($existingConcept->id, $dto->fieldsToUpdate);
+            $paymentConcept = !empty($dto->fieldsToUpdate)
+                ? $this->pcRepo->update($existingConcept->id, $dto->fieldsToUpdate)
+                : $existingConcept;
             if($dto->removeAllExceptions)
             {
                 $this->pcRepo->detachFromExceptionStudents($paymentConcept->id);
             }
 
-            PaymentConceptValidator::ensureConceptHasRequiredFields($paymentConcept);
             if ($dto->exceptionStudents) {
                 $userIdListDTO = $this->getUserIdListDTO($dto, true);
                 $paymentConcept = $this->pcRepo->attachToExceptionStudents(
