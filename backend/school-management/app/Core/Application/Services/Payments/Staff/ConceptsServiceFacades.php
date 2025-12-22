@@ -5,6 +5,8 @@ namespace App\Core\Application\Services\Payments\Staff;
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptResponse;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\ActivatePaymentConceptUseCase;
@@ -43,15 +45,15 @@ class ConceptsServiceFacades{
         return $this->cache($key,$forceRefresh ,fn() => $this->show->execute($status, $perPage, $page));
     }
 
-     public function createPaymentConcept(CreatePaymentConceptDTO $dto): PaymentConcept {
+     public function createPaymentConcept(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {
         $concept = $this->create->execute($dto);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status}");
         return $concept;
     }
 
-    public function updatePaymentConcept(UpdatePaymentConceptDTO $dto): PaymentConcept {
+    public function updatePaymentConcept(UpdatePaymentConceptDTO $dto): UpdatePaymentConceptResponse {
         $concept = $this->update->execute($dto);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status->value}");
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status}");
         return $concept;
     }
 
