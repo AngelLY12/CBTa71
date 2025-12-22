@@ -7,6 +7,7 @@ use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Exceptions\NotFound\PaymentNotFountException;
 use App\Jobs\ClearStudentCacheJob;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentCreatedMail;
@@ -26,7 +27,7 @@ trait HasPaymentSession
         $payment = $this->pqRepo->findBySessionId($session->id);
         if(!$payment){
             logger()->warning("No se encontró el pago con session_id={$session->id}");
-            throw new ModelNotFoundException("No se encontró el pago con session_id={$session->id}");
+            throw new PaymentNotFountException();
         }
         $user = $this->userRepo->getUserByStripeCustomer($session->customer);
         $status=$fields['status'];
