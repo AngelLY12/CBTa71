@@ -7587,6 +7587,11 @@
                         "description": "Si es true, reemplaza los estudiantes a los que no aplica el concepto",
                         "type": "boolean",
                         "example": false
+                    },
+                    "removeAllExceptions": {
+                        "description": "Si es true, elimina los estudiantes a los que no aplicaba el concepto",
+                        "type": "boolean",
+                        "example": false
                     }
                 },
                 "type": "object"
@@ -9654,6 +9659,7 @@
                     "USER_CANNOT_BE_UPDATED",
                     "USER_CONFLICT_STATUS",
                     "USER_EXPLICITLY_EXCLUDED",
+                    "REMOVE_EXCEPTIONS_AND_EXCEPTION_STUDENT_OVERLAP",
                     "ADMIN_ROLE_NOT_ALLOWED",
                     "INVALID_CURRENT_PASSWORD",
                     "INVALID_INVITATION",
@@ -9699,7 +9705,8 @@
                     "CONCEPT_START_DATE_TOO_FAR",
                     "PAYMENT_METHOD_NOT_SUPPORTED",
                     "SEMESTERS_NOT_FOUND",
-                    "PAYOUT_VALIDATION"
+                    "PAYOUT_VALIDATION",
+                    "REQUIRED_FOR_APPLIES_TO"
                 ],
                 "example": "VALIDATION_ERROR"
             },
@@ -10635,6 +10642,11 @@
                     },
                     "replaceExceptions": {
                         "description": "Indica si se deben reemplazar las relaciones de exceptions",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "removeAllExceptions": {
+                        "description": "Indica si se deben eliminar todas las exceptions",
                         "type": "boolean",
                         "example": true
                     },
