@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
-use App\Notifications\PaymentConceptUpdated;
+use App\Notifications\PaymentConceptUpdatedFields;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,22 +13,18 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-class SendBroadcastNotificationsJob implements ShouldQueue
+class SendConceptUpdatedFieldsNotificationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected array $userIds;
     protected int $conceptId;
     protected array $changes;
+
     /**
      * Create a new job instance.
      */
-    public function __construct(array $userIds,
-                                int $conceptId,
-                                array $changes,
-                                )
+    public function __construct(int $conceptId, array $changes)
     {
-        $this->userIds = $userIds;
         $this->conceptId = $conceptId;
         $this->changes = $changes;
     }
@@ -38,27 +34,30 @@ class SendBroadcastNotificationsJob implements ShouldQueue
      */
     public function handle(UserQueryRepInterface $uqRepo, PaymentConceptQueryRepInterface $pcqRepo): void
     {
-        if (empty($this->userIds)) {
+
+        $concept=$pcqRepo->findById($this->conceptId);
+        $userIds=$uqRepo->getRecipientsIds($concept, $concept->applies_to->value);
+
+        if (empty($userIds)) {
             Log::info('No user IDs to notify', ['concept_id' => $this->conceptId]);
             return;
         }
 
-        $users=$uqRepo->findByIds($this->userIds);
+        $users=$uqRepo->findByIds($userIds);
 
         if ($users->isEmpty()) {
             Log::warning('No users found for broadcast notifications', [
-                'user_ids' => $this->userIds,
+                'user_ids' => $userIds,
                 'concept_id' => $this->conceptId
             ]);
             return;
         }
 
-        $concept=$pcqRepo->findById($this->conceptId);
         $chunkSize = 500;
         $totalNotified = 0;
 
         foreach ($users->chunk($chunkSize) as $chunk) {
-            Notification::send($chunk, new PaymentConceptUpdated($concept, $this->changes));
+            Notification::send($chunk, new PaymentConceptUpdatedFields($concept, $this->changes));
             $totalNotified += $chunk->count();
 
             if ($chunk->count() === $chunkSize) {
@@ -74,19 +73,17 @@ class SendBroadcastNotificationsJob implements ShouldQueue
         ]);
 
     }
-
     public function failed(\Throwable $exception): void
     {
         Log::error('Failed to send broadcast notifications', [
             'concept_id' => $this->conceptId,
-            'user_ids_count' => count($this->userIds),
             'error' => $exception->getMessage(),
             'trace' => $exception->getTraceAsString()
         ]);
     }
 
-    public static function forStudents(array $userIds, int $conceptId, array $changes): self
+    public static function forStudents(int $conceptId, array $changes): self
     {
-        return new self($userIds, $conceptId, $changes);
+        return new self($conceptId, $changes);
     }
 }

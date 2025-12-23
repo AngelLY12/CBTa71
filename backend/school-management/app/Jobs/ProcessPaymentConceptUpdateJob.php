@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\UseCases\Jobs\ProcessUpdateConceptRecipientsUseCase;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
@@ -19,13 +20,13 @@ class ProcessPaymentConceptUpdateJob implements ShouldQueue
 
     protected int $newPaymentConceptId;
     protected ?PaymentConcept $oldPaymentConcept;
-    protected UpdatePaymentConceptDTO $dto;
+    protected UpdatePaymentConceptRelationsDTO $dto;
     protected string $appliesTo;
     protected array $oldRecipientIds;
     /**
      * Create a new job instance.
      */
-    public function __construct(int $newPaymentConceptId, PaymentConcept $oldPaymentConcept, UpdatePaymentConceptDTO $dto, string $appliesTo, array $oldRecipientIds)
+    public function __construct(int $newPaymentConceptId, PaymentConcept $oldPaymentConcept, UpdatePaymentConceptRelationsDTO $dto, string $appliesTo, array $oldRecipientIds)
     {
         $this->newPaymentConceptId = $newPaymentConceptId;
         $this->oldPaymentConcept = $oldPaymentConcept;
@@ -71,7 +72,7 @@ class ProcessPaymentConceptUpdateJob implements ShouldQueue
         ]);
     }
 
-    public static function forUpdateConcept(int $newPaymentConceptId, PaymentConcept $oldPaymentConcept, array $oldRecipientIds ,UpdatePaymentConceptDTO $dto, string $status): self
+    public static function forUpdateConcept(int $newPaymentConceptId, PaymentConcept $oldPaymentConcept, array $oldRecipientIds ,UpdatePaymentConceptRelationsDTO $dto, string $status): self
     {
         return new self($newPaymentConceptId, $oldPaymentConcept, $dto, $status, $oldRecipientIds);
     }

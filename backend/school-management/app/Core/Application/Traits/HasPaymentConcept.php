@@ -4,6 +4,7 @@ namespace App\Core\Application\Traits;
 
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -24,7 +25,7 @@ trait HasPaymentConcept
         $this->repository = $repository;
     }
 
-    public function getUserIdListDTO(CreatePaymentConceptDTO|UpdatePaymentConceptDTO $dto, bool $exceptions=false): UserIdListDTO
+    public function getUserIdListDTO(CreatePaymentConceptDTO|UpdatePaymentConceptRelationsDTO $dto, bool $exceptions=false): UserIdListDTO
     {
         $list = $exceptions
             ? (array) ($dto->exceptionStudents ?? [])

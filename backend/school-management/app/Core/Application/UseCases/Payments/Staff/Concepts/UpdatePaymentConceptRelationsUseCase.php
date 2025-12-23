@@ -2,8 +2,8 @@
 
 namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
-use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
-use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptResponse;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
+use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptRelationsResponse;
 use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Application\Traits\HasPaymentConcept;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -12,7 +12,6 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
-use App\Exceptions\Conflict\ConceptAppliesToConflictException;
 use App\Exceptions\NotFound\CareersNotFoundException;
 use App\Exceptions\NotFound\ConceptNotFoundException;
 use App\Exceptions\NotFound\RecipientsNotFoundException;
@@ -20,12 +19,10 @@ use App\Exceptions\NotFound\StudentsNotFoundException;
 use App\Exceptions\Validation\ApplicantTagInvalidException;
 use App\Exceptions\Validation\CareerSemesterInvalidException;
 use App\Exceptions\Validation\SemestersNotFoundException;
-use App\Jobs\ProcessPaymentConceptRecipientsJob;
 use App\Jobs\ProcessPaymentConceptUpdateJob;
-use App\Jobs\SendBroadcastNotificationsJob;
 use Illuminate\Support\Facades\DB;
 
-class UpdatePaymentConceptUseCase
+class UpdatePaymentConceptRelationsUseCase
 {
     use HasPaymentConcept;
     public function __construct(
@@ -36,15 +33,13 @@ class UpdatePaymentConceptUseCase
     {
         $this->setRepository($uqRepo);
     }
-     public function execute(UpdatePaymentConceptDTO $dto): UpdatePaymentConceptResponse {
+    public function execute(UpdatePaymentConceptRelationsDTO $dto): UpdatePaymentConceptRelationsResponse {
         $this->preValidateUpdate($dto);
         [$newPaymentConcept, $oldPaymentConcept, $oldRecipientIds]= DB::transaction(function() use ($dto) {
             if (isset($dto->appliesTo)) {
-                $dto->fieldsToUpdate['is_global'] = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
-                $dto->fieldsToUpdate['applies_to'] = $dto->appliesTo;
-            } else if (isset($dto->fieldsToUpdate['is_global']) && $dto->fieldsToUpdate['is_global'] === true) {
+                $dto->is_global = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
+            } else if (isset($dto->is_global) && $dto->is_global === true) {
                 $dto->appliesTo = PaymentConceptAppliesTo::TODOS;
-                $dto->fieldsToUpdate['applies_to'] = $dto->appliesTo;
             }
 
             $existingConcept = $this->pcqRepo->findById($dto->id);
@@ -53,9 +48,11 @@ class UpdatePaymentConceptUseCase
                 throw new ConceptNotFoundException();
             }
             $oldRecipientIds=$this->uqRepo->getRecipientsIds($existingConcept,$existingConcept->applies_to->value);
-            PaymentConceptValidator::ensureConceptIsValidToUpdate($dto,$existingConcept);
-            $paymentConcept = !empty($dto->fieldsToUpdate)
-                ? $this->pcRepo->update($existingConcept->id, $dto->fieldsToUpdate)
+            PaymentConceptValidator::ensureConsistencyAppliesToToUpdate($dto,$existingConcept);
+
+            $fieldsToUpdate = $this->validFields($dto);
+            $paymentConcept = !empty($fieldsToUpdate)
+                ? $this->pcRepo->update($existingConcept->id, $fieldsToUpdate)
                 : $existingConcept;
             if($dto->removeAllExceptions)
             {
@@ -71,35 +68,51 @@ class UpdatePaymentConceptUseCase
                 );
             }
             if($dto->appliesTo){
-                $paymentConcept=$this->attachAppliesTo($dto,$paymentConcept);
-                $finalAppliesTo = $paymentConcept->applies_to->value;
-                $hasRecipients = $this->uqRepo->hasAnyRecipient($paymentConcept, $finalAppliesTo);
+                $hasRecipients = $this->uqRepo->hasAnyRecipient($paymentConcept, $paymentConcept->applies_to->value);
 
                 if (!$hasRecipients) {
                     throw new RecipientsNotFoundException();
                 }
+                $paymentConcept=$this->attachAppliesTo($dto,$paymentConcept);
+
             }
 
             return [$paymentConcept,$existingConcept, $oldRecipientIds];
         });
-
         ProcessPaymentConceptUpdateJob::forUpdateConcept(
-                $newPaymentConcept->id,
-                $oldPaymentConcept,
-                $oldRecipientIds,
-                $dto,
-                $newPaymentConcept->appliesTo->value,
+            $newPaymentConcept->id,
+            $oldPaymentConcept,
+            $oldRecipientIds,
+            $dto,
+            $newPaymentConcept->appliesTo->value,
         )->delay(now()->addSeconds(rand(1, 10)));
 
 
-         return $this->formattResponse($newPaymentConcept,$oldPaymentConcept,$dto,$oldRecipientIds);
+
+        return $this->formattResponse($newPaymentConcept,$oldPaymentConcept,$oldRecipientIds);
     }
 
-    private function formattResponse(PaymentConcept $newPaymentConcept, PaymentConcept $oldPaymentConcept, UpdatePaymentConceptDTO $dto, array $oldRecipientIds): UpdatePaymentConceptResponse
+    private function validFields(UpdatePaymentConceptRelationsDTO $dto): array
+    {
+        $allowedFields = ['is_global', 'applies_to'];
+        $fieldsToUpdate = [];
+
+        foreach ($dto->toArray() as $key => $value) {
+            if (!in_array($key, $allowedFields)) {
+                continue;
+            }
+            if ($value !== null && $value !== '' && $value !== []) {
+                $fieldsToUpdate[$key] = $value;
+            }
+        }
+        return $fieldsToUpdate;
+    }
+
+    private function formattResponse(PaymentConcept $newPaymentConcept, PaymentConcept $oldPaymentConcept, array $oldRecipientIds): UpdatePaymentConceptRelationsResponse
     {
         $newRecipientIds = $this->uqRepo->getRecipientsIds($newPaymentConcept, $newPaymentConcept->applies_to->value);
         $oldAffectedCount= count($oldRecipientIds);
-        $changes=$this->calculateChanges($oldPaymentConcept,$newPaymentConcept,$dto);
+        $changes=$this->calculateChanges($oldPaymentConcept,$newPaymentConcept);
         $newlyAddedIds = array_diff($newRecipientIds, $oldRecipientIds);
         $removedIds = array_diff($oldRecipientIds, $newRecipientIds);
         $keptIds = array_intersect($oldRecipientIds, $newRecipientIds);
@@ -114,75 +127,17 @@ class UpdatePaymentConceptUseCase
                 'previouslyAffectedCount' => $oldAffectedCount
             ],
         ];
-        if ($this->shouldNotifyForChanges($changes) && !empty($newlyAddedIds)) {
-            SendBroadcastNotificationsJob::forStudents(
-                $this->determineUsersToNotify($changes,$newRecipientIds,$newlyAddedIds),
-                $newPaymentConcept->id,
-                $changes
-            )->delay(now()->addSeconds(rand(1, 10)));
-        }
-        return PaymentConceptMapper::toUpdatePaymentConceptResponse($newPaymentConcept, $data);
+
+        return PaymentConceptMapper::toUpdatePaymentConceptRelationsResponse($newPaymentConcept, $data);
     }
 
-    private function determineUsersToNotify(array $changes, array $newRecipientIds, array $newlyAddedIds): array
-    {
-        foreach ($changes as $change) {
-            if ($change['type'] === 'field_update' && in_array($change['field'], ['amount', 'concept_name', 'start_date', 'end_date'])) {
-                return $newRecipientIds;
-            }
-            if ($change['type'] === 'applies_to_changed') {
-                return $newRecipientIds;
-            }
-        }
-
-        return $newlyAddedIds;
-    }
-
-    private function shouldNotifyForChanges(array $changes): bool
-    {
-        $importantFields = ['amount', 'concept_name', 'start_date', 'end_date', 'status'];
-
-        foreach ($changes as $change) {
-            if ($change['type'] === 'applies_to_changed') {
-                return true;
-            }
-            if ($change['type'] === 'field_update' && in_array($change['field'], $importantFields)) {
-                return true;
-            }
-            if($change['type'] === 'exceptions_update')
-            {
-                return true;
-            }
-            if($change['type'] === 'relation_update')
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     private function calculateChanges(
         PaymentConcept $oldConcept,
         PaymentConcept $newConcept,
-        UpdatePaymentConceptDTO $dto
     ): array {
         $changes = [];
 
-        $basicFields = ['concept_name', 'description', 'amount', 'start_date', 'end_date', 'status', 'is_global'];
-        foreach ($basicFields as $field) {
-            $oldValue = $oldConcept->$field;
-            $newValue = $newConcept->$field;
-
-            if ($oldValue != $newValue) {
-                $changes[] = [
-                    'field' => $field,
-                    'old' => $oldValue,
-                    'new' => $newValue,
-                    'type' => 'field_update'
-                ];
-            }
-        }
         if ($oldConcept->applies_to !== $newConcept->applies_to) {
             $changes[] = [
                 'field' => 'applies_to',
@@ -280,60 +235,60 @@ class UpdatePaymentConceptUseCase
         };
     }
 
-    private function preValidateUpdate(UpdatePaymentConceptDTO $dto): void
+    private function preValidateUpdate(UpdatePaymentConceptRelationsDTO $dto): void
     {
         PaymentConceptValidator::ensureUpdatePaymentConceptDTOIsValid($dto);
     }
 
-    private function attachAppliesTo(UpdatePaymentConceptDTO $dto,PaymentConcept $paymentConcept): PaymentConcept
+    private function attachAppliesTo(UpdatePaymentConceptRelationsDTO $dto,PaymentConcept $paymentConcept): PaymentConcept
     {
         $detachFlags = $this->determineDetachFlags($paymentConcept->applies_to);
 
-            switch($paymentConcept->applies_to) {
-                case PaymentConceptAppliesTo::CARRERA:
-                    if ($dto->careers) {
-                        $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers,$dto->replaceRelations);
-                    } else {
-                        throw new CareersNotFoundException();
-                    }
-                    break;
-                case PaymentConceptAppliesTo::SEMESTRE:
+        switch($paymentConcept->applies_to) {
+            case PaymentConceptAppliesTo::CARRERA:
+                if ($dto->careers) {
+                    $paymentConcept=$this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers,$dto->replaceRelations);
+                } else {
+                    throw new CareersNotFoundException();
+                }
+                break;
+            case PaymentConceptAppliesTo::SEMESTRE:
 
-                    if ($dto->semesters) {
-                        $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters, $dto->replaceRelations);
-                    }else{
-                        throw new SemestersNotFoundException();
-                    }
-                    break;
-                case PaymentConceptAppliesTo::ESTUDIANTES:
-                    if ($dto->students) {
-                        $userIdListDTO = $this->getUserIdListDTO($dto);
-                        $paymentConcept=$this->pcRepo->attachToUsers($paymentConcept->id, $userIdListDTO, $dto->replaceRelations);
+                if ($dto->semesters) {
+                    $paymentConcept=$this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters, $dto->replaceRelations);
+                }else{
+                    throw new SemestersNotFoundException();
+                }
+                break;
+            case PaymentConceptAppliesTo::ESTUDIANTES:
+                if ($dto->students) {
+                    $userIdListDTO = $this->getUserIdListDTO($dto);
+                    $paymentConcept=$this->pcRepo->attachToUsers($paymentConcept->id, $userIdListDTO, $dto->replaceRelations);
 
-                    }else{
-                        throw new StudentsNotFoundException();
-                    }
-                    break;
-                case PaymentConceptAppliesTo::CARRERA_SEMESTRE:
-                    if($dto->careers && $dto->semesters){
-                        $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers, $dto->replaceRelations);
-                        $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters, $dto->replaceRelations);
-                    }else {
-                        throw new CareerSemesterInvalidException();
-                    }
-                    break;
-                case PaymentConceptAppliesTo::TODOS:
-                    $paymentConcept->is_global = true;
-                    break;
-                case PaymentConceptAppliesTo::TAG:
-                    if($dto->applicantTags)
-                    {
-                        $paymentConcept = $this->pcRepo->attachToApplicantTag($paymentConcept->id, $dto->applicantTags ,$dto->replaceRelations);
-                    }else
-                    {
-                        throw new ApplicantTagInvalidException();
-                    }
-            }
+                }else{
+                    throw new StudentsNotFoundException();
+                }
+                break;
+            case PaymentConceptAppliesTo::CARRERA_SEMESTRE:
+                if($dto->careers && $dto->semesters){
+                    $paymentConcept = $this->pcRepo->attachToCareer($paymentConcept->id, $dto->careers, $dto->replaceRelations);
+                    $paymentConcept = $this->pcRepo->attachToSemester($paymentConcept->id, $dto->semesters, $dto->replaceRelations);
+                }else {
+                    throw new CareerSemesterInvalidException();
+                }
+                break;
+            case PaymentConceptAppliesTo::TODOS:
+                $paymentConcept->is_global = true;
+                break;
+            case PaymentConceptAppliesTo::TAG:
+                if($dto->applicantTags)
+                {
+                    $paymentConcept = $this->pcRepo->attachToApplicantTag($paymentConcept->id, $dto->applicantTags ,$dto->replaceRelations);
+                }else
+                {
+                    throw new ApplicantTagInvalidException();
+                }
+        }
         $this->applyDetachments($paymentConcept->id, $detachFlags);
 
         return $paymentConcept;
@@ -401,5 +356,4 @@ class UpdatePaymentConceptUseCase
             $this->pcRepo->detachFromExceptionStudents($conceptId);
         }
     }
-
 }

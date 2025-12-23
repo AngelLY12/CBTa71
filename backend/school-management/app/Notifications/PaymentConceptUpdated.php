@@ -43,7 +43,7 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
             'changes' => $this->getFilteredChanges(),
             'action' => $this->determineMainChangeType(),
             'type' => 'payment_concept_changed',
-            'priority' => $this->getPriority(),
+            'priority' => 'high',
             'created_at' => now()->toISOString(),
         ];
     }
@@ -73,7 +73,7 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
         $mainChangeType = $this->determineMainChangeType();
 
         return match($mainChangeType) {
-            'field_update', 'relation_update' => 'Actualización del concepto de pago',
+            'relation_update' => 'Actualización del concepto de pago',
             'applies_to_changed' => 'Nuevo concepto de pago aplicado',
             'exceptions_update' => 'Actualización de las excepciones del concepto de pago',
             default => 'Actualización de concepto de pago'
@@ -82,10 +82,6 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
 
     private function determineMainChangeType(): string
     {
-        if (empty($this->changes)) {
-            return 'field_update';
-        }
-
         foreach ($this->changes as $change) {
             if ($change['type'] === 'applies_to_changed') {
                 return 'applies_to_changed';
@@ -108,31 +104,14 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
         $amount = number_format($this->paymentConcept->amount, 2);
 
         if (empty($this->changes)) {
-            return "El concepto '{$conceptName}' ({$amount} MXN) ha sido actualizado.";
+            return "El concepto '{$conceptName}' con monto ({$amount} MXN) ha sido actualizado.";
         }
 
         $changeMessages = [];
         $userId = $notifiable->id;
         foreach ($this->changes as $change) {
-            if ($change['field'] === 'amount') {
-                $oldAmount = number_format($change['old'], 2);
-                $newAmount = number_format($change['new'], 2);
-                $changeMessages[] = "Monto cambiado de {$oldAmount} a {$newAmount} MXN";
-            } elseif ($change['field'] === 'concept_name') {
-                $changeMessages[] = "Nombre cambiado de '{$change['old']}' a '{$change['new']}'";
-            } elseif ($change['field'] === 'start_date') {
-                $oldDate = \Carbon\Carbon::parse($change['old'])->format('d/m/Y');
-                $newDate = \Carbon\Carbon::parse($change['new'])->format('d/m/Y');
-                $changeMessages[] = "Fecha de inicio: {$oldDate} → {$newDate}";
-            } elseif ($change['field'] === 'end_date') {
-                $oldDate = \Carbon\Carbon::parse($change['old'])->format('d/m/Y');
-                $newDate = \Carbon\Carbon::parse($change['new'])->format('d/m/Y');
-                $changeMessages[] = "Fecha de fin: {$oldDate} → {$newDate}";
-            } elseif ($change['field'] === 'description') {
-                $changeMessages[] = "Descripción actualizada";
-            } elseif ($change['field'] === 'status') {
-                $changeMessages[] = "Estado cambiado de '{$change['old']}' a '{$change['new']}'";
-            } elseif ($change['field'] === 'is_global') {
+
+            if ($change['field'] === 'is_global') {
                 $globalStatus = $change['new'] ? 'global' : 'no global';
                 $changeMessages[] = "El concepto ahora es {$globalStatus}";
             } elseif ($change['type'] === 'applies_to_changed') {
@@ -163,6 +142,7 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
                     $changeMessages[] = "Fuiste eliminado de las excepciones del concepto de pago, ahora aplica a ti y debes pagar";
                 }
             }
+
         }
 
         $baseMessage = "El concepto '{$conceptName}' ({$amount} MXN) ha sido actualizado.";
@@ -182,25 +162,11 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
     }
     private function getFilteredChanges(): array
     {
-        $relevantFields = ['concept_name', 'amount', 'start_date', 'end_date', 'status'];
+        $relevantFields = ['relation_update', 'applies_to_changed', 'exceptions_update'];
 
         return array_filter($this->changes, function($change) use ($relevantFields) {
-            return in_array($change['field'], $relevantFields);
+            return in_array($change['type'], $relevantFields);
         });
-    }
-
-    private function getPriority(): string
-    {
-        foreach ($this->changes as $change) {
-            if ($change['field'] === 'amount' && abs($change['new'] - $change['old']) > 0) {
-                return 'high';
-            }
-            if ($change['field'] === 'status' && $change['new'] === 'inactive') {
-                return 'high';
-            }
-        }
-
-        return 'medium';
     }
 
 }

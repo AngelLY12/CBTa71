@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Students\WebhookController;
 use App\Http\Controllers\UpdateUserController;
 use App\Http\Controllers\NotificationController;
+use Illuminate\Support\Facades\Response;
+use App\Core\Domain\Enum\Exceptions\ErrorCode;
 
 //Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 //    return $request->user();
@@ -83,11 +85,12 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('concepts')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['permission:view concepts', 'throttle:global'])->get('/', [ConceptsController::class, 'index']);
         Route::middleware(['permission:create concepts', 'throttle:10,1'])->post('/', [ConceptsController::class, 'store']);
-        Route::middleware(['permission:update concepts', 'throttle:10,1'])->put('/{concept}', [ConceptsController::class, 'update']);
-        Route::middleware(['permission:update concepts', 'throttle:10,1'])->patch('/{concept}', [ConceptsController::class, 'update']);
+        Route::middleware(['permission:update concepts', 'throttle:10,1'])->put('/{id}', [ConceptsController::class, 'update']);
+        Route::middleware(['permission:update concepts', 'throttle:10,1'])->patch('/{id}', [ConceptsController::class, 'update']);
+        Route::middleware(['permission:update concepts', 'throttle:10,1'])->delete('/update-relations/{id}', [ConceptsController::class, 'updateRelations']);
         Route::middleware(['permission:finalize concepts', 'throttle:10,1'])->post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
         Route::middleware(['permission:disable concepts', 'throttle:10,1'])->post('/{concept}/disable', [ConceptsController::class, 'disable']);
-        Route::middleware(['permission:eliminate concepts', 'throttle:10,1'])->delete('/{concept}/eliminate', [ConceptsController::class, 'eliminate']);
+        Route::middleware(['permission:eliminate concepts', 'throttle:10,1'])->delete('/{id}/eliminate', [ConceptsController::class, 'eliminate']);
         Route::middleware(['permission:eliminate logical concept', 'throttle:10,1'])->post('/{concept}/eliminateLogical',[ConceptsController::class,'eliminateLogical']);
         Route::middleware(['permission:activate concept', 'throttle:10,1'])->post('/{concept}/activate',[ConceptsController::class,'activate']);
     });
@@ -125,8 +128,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:view student')->get('/get-student/{id}', [AdminController::class, 'findStudentDetail']);
         Route::middleware('permission:update student')->patch('/update-student/{id}',[AdminController::class,'updateStudentDetail']);
         Route::middleware('permission:promote student')->patch('/promote',[AdminController::class,'promotionStudents']);
-
-
     });
     Route::prefix('find')->middleware(['role:student|financial-staff|parent','throttle:global', 'log.action', 'user.status'])->group(function(){
         Route::middleware('permission:view concept')->get('/concept/{id}',[FindEntityController::class,'findConcept']);
@@ -151,7 +152,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
 });
 
 Route::fallback(function () {
-    return response()->json(['message' => 'Endpoint no encontrado'], 404);
+    return Response::error('No autenticado', 400, null, ErrorCode::BAD_REQUEST->value);
 });
 
 

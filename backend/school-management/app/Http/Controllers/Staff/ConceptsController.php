@@ -8,6 +8,7 @@ use App\Core\Application\Services\Payments\Staff\ConceptsServiceFacades;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Payments\Staff\ConceptsIndexRequest;
 use App\Http\Requests\Payments\Staff\StorePaymentConceptRequest;
+use App\Http\Requests\Payments\Staff\UpdatePaymentConceptRelationsRequest;
 use App\Http\Requests\Payments\Staff\UpdatePaymentConceptRequest;
 use App\Models\PaymentConcept;
 use Illuminate\Support\Facades\Response;
@@ -75,6 +76,20 @@ class ConceptsController extends Controller
         );
     }
 
+    public function updateRelations(UpdatePaymentConceptRelationsRequest $request, int $id)
+    {
+        $data = $request->validated();
+        $data['id'] = $id;
+        $dto = PaymentConceptMapper::toUpdateConceptRelationsDTO($data);
+
+        $updatedConcept = $this->conceptsService->updatePaymentConceptRelations($dto);
+
+        return Response::success(
+            ['concept' => $updatedConcept],
+            'Relaciones del Concepto de pago actualizadas correctamente.'
+        );
+    }
+
     public function finalize(PaymentConcept $concept)
     {
         $domainConcept = InfraPaymentConceptMapper::toDomain($concept);
@@ -108,9 +123,9 @@ class ConceptsController extends Controller
         );
     }
 
-    public function eliminate(int $conceptId)
+    public function eliminate(int $id)
     {
-        $this->conceptsService->eliminatePaymentConcept($conceptId);
+        $this->conceptsService->eliminatePaymentConcept($id);
 
          return Response::success(
             null,

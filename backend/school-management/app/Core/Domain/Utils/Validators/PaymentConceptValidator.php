@@ -2,6 +2,7 @@
 
 namespace App\Core\Domain\Utils\Validators;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\User\UserRoles;
@@ -136,7 +137,13 @@ class PaymentConceptValidator{
         }
     }
 
-    public static function ensureConceptIsValidToUpdate(UpdatePaymentConceptDTO $dto, PaymentConcept $concept){
+    public static function ensureConceptIsValidToUpdate(PaymentConcept $concept){
+        if (!$concept->status->isUpdatable()) {
+            throw new ConceptCannotBeUpdatedException();
+        }
+    }
+
+    public static function ensureConsistencyAppliesToToUpdate(UpdatePaymentConceptRelationsDTO $dto, PaymentConcept $concept){
         if (!$concept->status->isUpdatable()) {
             throw new ConceptCannotBeUpdatedException();
         }
@@ -158,9 +165,8 @@ class PaymentConceptValidator{
 
     public static function ensureCreatePaymentDTOIsValid(CreatePaymentConceptDTO $dto)
     {
-        if ($dto->is_global && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
-            throw new ConceptAppliesToConflictException();
-        }
+        self::appliesToConflictAndOverlap($dto);
+
         if(!empty($dto->students) && !empty($dto->exceptionStudents)){
             $intersection = array_intersect(
                 (array)$dto->students,
@@ -183,9 +189,13 @@ class PaymentConceptValidator{
         }
     }
 
-    public static function ensureUpdatePaymentConceptDTOIsValid(UpdatePaymentConceptDTO $dto)
-    {
-        if (($dto->fieldsToUpdate['is_global'] ?? false) && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
+    private static function appliesToConflictAndOverlap(CreatePaymentConceptDTO|UpdatePaymentConceptRelationsDTO $dto){
+        if (($dto->is_global) && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students) || !empty($dto->applicantTags)) ||
+            ($dto->students) && (!empty($dto->semesters) || !empty($dto->applicantTags) || !empty($dto->careers)) ||
+            ($dto->applicantTags) && (!empty($dto->semesters) || !empty($dto->careers) || !empty($dto->students)) ||
+            ($dto->semesters) && (!empty($dto->applicantTags) || !empty($dto->students)) ||
+            ($dto->careers) && (!empty($dto->applicantTags) || !empty($dto->students))
+        ) {
             throw new ConceptAppliesToConflictException();
         }
         if(!empty($dto->students) && !empty($dto->exceptionStudents)){
@@ -198,6 +208,12 @@ class PaymentConceptValidator{
                 throw new StudentsAndExceptionsOverlapException();
             }
         }
+    }
+
+    public static function ensureUpdatePaymentConceptDTOIsValid(UpdatePaymentConceptRelationsDTO $dto)
+    {
+        self::appliesToConflictAndOverlap($dto);
+
         if ($dto->removeAllExceptions) {
             if (!empty($dto->exceptionStudents)) {
                 throw new RemoveExceptionsAndExceptionStudentsOverlapException(
@@ -223,7 +239,7 @@ class PaymentConceptValidator{
         }
     }
 
-    private static function validateAppliesToConsistency(UpdatePaymentConceptDTO|CreatePaymentConceptDTO $dto): void
+    private static function validateAppliesToConsistency(UpdatePaymentConceptRelationsDTO|CreatePaymentConceptDTO $dto): void
     {
         $appliesTo = $dto->appliesTo;
 
@@ -307,6 +323,45 @@ class PaymentConceptValidator{
 
         if ($concept->end_date->gt($concept->start_date->clone()->addYears(5))) {
             throw new ConceptEndDateTooFarException();
+        }
+    }
+
+    public static function ensureUpdatedFieldsAreValid(PaymentConcept $original, array $fieldsToUpdate): void
+    {
+        if (isset($fieldsToUpdate['amount'])) {
+            if (bccomp($fieldsToUpdate['amount'], '10', 2) === -1) {
+                throw new ConceptInvalidAmountException();
+            }
+        }
+
+        if (isset($fieldsToUpdate['start_date'])) {
+            $today = today();
+            $oneMonthBefore = $today->clone()->subMonth();
+            $oneMonthAfter = $today->clone()->addMonth();
+
+            if ($fieldsToUpdate['start_date']->gt($oneMonthAfter)) {
+                throw new ConceptStartDateTooFarException();
+            }
+
+            if ($fieldsToUpdate['start_date']->lt($oneMonthBefore)) {
+                throw new ConceptStartDateTooEarlyException();
+            }
+        }
+
+        if (isset($fieldsToUpdate['end_date'])) {
+            $startDate = $fieldsToUpdate['start_date'] ?? $original->start_date;
+
+            if ($fieldsToUpdate['end_date']->lt($startDate)) {
+                throw new ConceptEndDateBeforeStartException();
+            }
+
+            if ($fieldsToUpdate['end_date']->lt(today())) {
+                throw new ConceptEndDateBeforeTodayException();
+            }
+
+            if ($fieldsToUpdate['end_date']->gt($startDate->clone()->addYears(5))) {
+                throw new ConceptEndDateTooFarException();
+            }
         }
     }
 }

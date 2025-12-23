@@ -4,11 +4,13 @@ namespace App\Core\Application\Mappers;
 
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptNameAndAmountResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptsToDashboardResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingPaymentConceptsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptRelationsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptResponse;
 use App\Core\Domain\Entities\PaymentConcept as EntitiesPaymentConcept;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
@@ -50,7 +52,7 @@ class PaymentConceptMapper{
         return new CreatePaymentConceptDTO(
             concept_name: $data['concept_name'],
             description: $data['description'] ?? null,
-            amount: $data['amount'],
+            amount: number_format($data['amount'], 2, '.', ''),
             status: $statusEnum,
             start_date: isset($data['start_date']) ? new Carbon($data['start_date']) : null,
             end_date: isset($data['end_date']) ? new Carbon($data['end_date']) : null,
@@ -67,7 +69,7 @@ class PaymentConceptMapper{
     public static function toUpdateConceptDTO(array $data): UpdatePaymentConceptDTO
     {
         $fieldsToUpdate = [];
-        $allowedFields = ['concept_name', 'description', 'status', 'start_date', 'end_date', 'amount', 'is_global'];
+        $allowedFields = ['concept_name', 'description', 'start_date', 'end_date', 'amount'];
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $data)) {
                 if (in_array($field, ['start_date', 'end_date']) && $data[$field] !== null) {
@@ -77,22 +79,37 @@ class PaymentConceptMapper{
                 }
             }
         }
-        $appliesToEnum = isset($data['applies_to'])
-            ? PaymentConceptAppliesTo::from(strtolower($data['applies_to']))
-            : PaymentConceptAppliesTo::TODOS;
 
         return new UpdatePaymentConceptDTO(
             id: (int) $data['id'],
-            fieldsToUpdate: $fieldsToUpdate,
-            semesters: $data['semestres'] ?? [],
+            concept_name: $fieldsToUpdate['concept_name'] ?? null,
+            description: $fieldsToUpdate['description'] ?? null,
+            start_date: $fieldsToUpdate['start_date'] ?? null,
+            end_date: $fieldsToUpdate['end_date'] ?? null,
+            amount: array_key_exists('amount', $fieldsToUpdate) ? number_format($fieldsToUpdate['amount'],2,'.','') : null,
+        );
+    }
+
+    public static function toUpdateConceptRelationsDTO(array $data): UpdatePaymentConceptRelationsDTO
+    {
+        $appliesToEnum = isset($data['applies_to'])
+            ? PaymentConceptAppliesTo::from(strtolower($data['applies_to']))
+            : null;
+        $applicantTagToEnum = isset($data['applicantTags'])
+            ? PaymentConceptAppliesTo::from(strtolower($data['applicantTags']))
+            : [];
+        return new UpdatePaymentConceptRelationsDTO(
+            id: (int) $data['id'],
+            semesters: $data['semesters'] ?? [],
             careers: $data['careers'] ?? [],
             students: $data['students'] ?? [],
             appliesTo: $appliesToEnum,
-            replaceRelations: $data['replaceRelations'],
+            is_global: $data['is_global'] ?? null,
+            replaceRelations: $data['replaceRelations'] ?? false,
             exceptionStudents: $data['exceptionStudents'] ?? [],
-            replaceExceptions: $data['replaceExceptions'],
-            removeAllExceptions: $data['removeAllExceptions'],
-            applicantTags: $data['applicantTags'] ?? [],
+            replaceExceptions: $data['replaceExceptions'] ?? false,
+            removeAllExceptions: $data['removeAllExceptions'] ?? false,
+            applicantTags:$applicantTagToEnum,
         );
     }
 
@@ -163,7 +180,7 @@ class PaymentConceptMapper{
         );
     }
 
-    public static function toUpdatePaymentConceptResponse(\App\Core\Domain\Entities\PaymentConcept $newPaymentConcept, array $data): UpdatePaymentConceptResponse
+    public static function toUpdatePaymentConceptResponse(EntitiesPaymentConcept $newPaymentConcept, array $data): UpdatePaymentConceptResponse
     {
         return new UpdatePaymentConceptResponse(
             id: $newPaymentConcept->id,
@@ -174,11 +191,22 @@ class PaymentConceptMapper{
             amount: $newPaymentConcept->amount,
             startDate: $newPaymentConcept->start_date->format('Y-m-d'),
             endDate: $newPaymentConcept->end_date->format('Y-m-d'),
+            message: $data['message'] ?? null,
+            updatedAt: now()->format('Y-m-d H:i:s'),
+            changes: $data['changes'] ?? [],
+        );
+    }
+    public static function toUpdatePaymentConceptRelationsResponse(EntitiesPaymentConcept $newPaymentConcept, array $data): UpdatePaymentConceptRelationsResponse
+    {
+        return new UpdatePaymentConceptRelationsResponse(
+            status: $newPaymentConcept->status->value,
             metadata: [
-                'is_global' => $newPaymentConcept->is_global,
+                'global_status' => $newPaymentConcept->is_global,
+                'students_count' => count($newPaymentConcept->getUserIds()),
                 'exception_count' => count($newPaymentConcept->getExceptionUsersIds()),
                 'career_count' => count($newPaymentConcept->getCareerIds()),
                 'semester_count' => count($newPaymentConcept->getSemesters()),
+                'tags' => [$newPaymentConcept->getApplicantTag()]
             ],
             message: $data['message'] ?? null,
             updatedAt: now()->format('Y-m-d H:i:s'),

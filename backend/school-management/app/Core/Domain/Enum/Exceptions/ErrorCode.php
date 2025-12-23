@@ -106,6 +106,7 @@ enum ErrorCode:string
     case DUPLICATE_ENTRY = 'DUPLICATE_ENTRY';
     case DATABASE_ERROR = 'DATABASE_ERROR';
     case NOT_FOUND = 'NOT_FOUND';  // ModelNotFoundException
+    case BAD_REQUEST = 'BAD_REQUEST';
     case INVALID_ARGUMENT = 'INVALID_ARGUMENT';
     case CARD_ERROR = 'CARD_ERROR';
     case RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED';

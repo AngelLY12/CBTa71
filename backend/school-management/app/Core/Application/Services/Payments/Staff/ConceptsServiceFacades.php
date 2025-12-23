@@ -4,10 +4,13 @@ namespace App\Core\Application\Services\Payments\Staff;
 
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptRelationsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptResponse;
 use App\Core\Application\Traits\HasCache;
+use App\Core\Application\UseCases\Payments\Staff\Concepts\UpdatePaymentConceptRelationsUseCase;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\ActivatePaymentConceptUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\CreatePaymentConceptUseCase;
@@ -16,7 +19,7 @@ use App\Core\Application\UseCases\Payments\Staff\Concepts\EliminateLogicalPaymen
 use App\Core\Application\UseCases\Payments\Staff\Concepts\EliminatePaymentConceptUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\FinalizePaymentConceptUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\ShowConceptsUseCase;
-use App\Core\Application\UseCases\Payments\Staff\Concepts\UpdatePaymentConceptUseCase;
+use App\Core\Application\UseCases\Payments\Staff\Concepts\UpdatePaymentConceptFieldsUseCase;
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Enum\Cache\StaffCacheSufix;
 use App\Core\Infraestructure\Cache\CacheService;
@@ -25,15 +28,16 @@ class ConceptsServiceFacades{
     use HasCache;
 
     public function __construct(
-        private ShowConceptsUseCase $show,
-        private CreatePaymentConceptUseCase $create,
-        private UpdatePaymentConceptUseCase $update,
-        private FinalizePaymentConceptUseCase $finalize,
-        private DisablePaymentConceptUseCase $disable,
-        private EliminatePaymentConceptUseCase $eliminate,
+        private ShowConceptsUseCase                   $show,
+        private CreatePaymentConceptUseCase           $create,
+        private UpdatePaymentConceptFieldsUseCase     $update,
+        private UpdatePaymentConceptRelationsUseCase $updateRelations,
+        private FinalizePaymentConceptUseCase         $finalize,
+        private DisablePaymentConceptUseCase          $disable,
+        private EliminatePaymentConceptUseCase        $eliminate,
         private EliminateLogicalPaymentConceptUseCase $eliminateLogical,
-        private ActivatePaymentConceptUseCase $activate,
-        private CacheService $service
+        private ActivatePaymentConceptUseCase         $activate,
+        private CacheService                          $service
     )
     {
         $this->setCacheService($service);
@@ -53,6 +57,13 @@ class ConceptsServiceFacades{
 
     public function updatePaymentConcept(UpdatePaymentConceptDTO $dto): UpdatePaymentConceptResponse {
         $concept = $this->update->execute($dto);
+        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status}");
+        return $concept;
+    }
+
+    public function updatePaymentConceptRelations(UpdatePaymentConceptRelationsDTO $dto): UpdatePaymentConceptRelationsResponse
+    {
+        $concept= $this->updateRelations->execute($dto);
         $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status}");
         return $concept;
     }
