@@ -43,6 +43,7 @@ class ProcessUpdateConceptRecipientsUseCase
             return;
         }
         $this->notifyRecipients($newPaymentConcept,$recipients);
+
         Log::info('Payment concept update notifications sent', [
             'concept_id' =>$newPaymentConcept->id,
             'reason' => $notificationDecision['reason'],

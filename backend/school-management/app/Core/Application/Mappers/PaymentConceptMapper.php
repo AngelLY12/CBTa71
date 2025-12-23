@@ -183,8 +183,7 @@ class PaymentConceptMapper{
             message: $data['message'] ?? null,
             updatedAt: now()->format('Y-m-d H:i:s'),
             changes: $data['changes'] ?? [],
-            newlyAffectedCount: $data['newlyAffectedCount'],
-            previouslyAffectedCount: $data['previouslyAffectedCount'],
+            affectedSummary: $data['affectedSummary'] ?? []
         );
     }
 }

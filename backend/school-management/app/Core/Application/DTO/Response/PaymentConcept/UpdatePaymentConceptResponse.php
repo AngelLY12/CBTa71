@@ -37,8 +37,18 @@ namespace App\Core\Application\DTO\Response\PaymentConcept;
  *             @OA\Property(property="type", type="string", example="applies_to_changed")
  *         )
  *     ),
- *     @OA\Property(property="newlyAffectedCount", type="integer", example=45, description="Estudiantes nuevos afectados (puede ser negativo)"),
- *     @OA\Property(property="previouslyAffectedCount", type="integer", example=200, description="Estudiantes afectados antes de la actualización")
+ *     @OA\Property(
+ *          property="affectedSummary",
+ *          type="array",
+ *          @OA\Items(
+ *              type="object",
+ *              @OA\Property(property="newlyAffectedCount", type="integer", example=50),
+ *              @OA\Property(property="removedCount", type="integer", example=10),
+ *              @OA\Property(property="keptCount", type="integer", example=0),
+ *              @OA\Property(property="totalAffectedCount", type="integer", example=60),
+ *              @OA\Property(property="previouslyAffectedCount", type="integer", example=20)
+ *          )
+ *      ),
  * )
  */
 class UpdatePaymentConceptResponse
@@ -56,8 +66,7 @@ class UpdatePaymentConceptResponse
         public readonly string $message,
         public readonly string $updatedAt,
         public readonly array $changes = [],
-        public readonly ?int $newlyAffectedCount = null,
-        public readonly ?int $previouslyAffectedCount = null
+        public readonly ?array $affectedSummary = []
     )
     {}
 

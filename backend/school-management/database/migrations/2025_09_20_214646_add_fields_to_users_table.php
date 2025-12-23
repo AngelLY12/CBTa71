@@ -31,15 +31,13 @@ return new class extends Migration
             $table->index(['status','email']);
             $table->index(['id', 'status']);
             $table->index(['name','last_name']);
-            $table->index(['status',\Illuminate\Support\Facades\DB::raw('YEAR(created_at)')]);
-
         });
         Schema::create('student_details', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
             $table->foreignIdFor(Career::class)->nullable()->constrained('careers')->onDelete('set null');
             $table->integer('n_control')->nullable()->unique();
-            $table->tinyInteger('semestre')->nullable()->index();
+            $table->tinyInteger('semestre')->nullable();
             $table->string('group', 10)->nullable();
             $table->string('workshop')->nullable();
             $table->timestamps();

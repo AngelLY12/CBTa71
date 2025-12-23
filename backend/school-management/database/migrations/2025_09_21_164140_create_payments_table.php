@@ -34,7 +34,7 @@ return new class extends Migration
             $table->index(['status', 'created_at']);
             $table->index(['payment_concept_id', 'user_id', 'id']);
             $table->index(['payment_concept_id', 'user_id', 'status']);
-            $table->index([\Illuminate\Support\Facades\DB::raw('YEAR(created_at)'), 'user_id'], 'idx_user_year'); // sumPaymentsByUserYear
+            $table->index(['created_at', 'user_id']);
 
         });
 

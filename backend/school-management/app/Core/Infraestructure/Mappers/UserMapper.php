@@ -29,10 +29,10 @@ class UserMapper{
             status: $user->status,
             emailVerified: $user->hasVerifiedEmail()
         );
-        if ($user->studentDetail) {
+        if ($user->relationLoaded('studentDetail')) {
             $domainUser->setStudentDetail(StudentDetailMapper::toDomain($user->studentDetail));
         }
-        if($user->roles)
+        if($user->relationLoaded('roles'))
         {
             foreach ($user->roles as $role){
                 $domainUser->addRole(RolesAndPermissionMapper::toRoleDomain($role));

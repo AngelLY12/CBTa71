@@ -15,10 +15,10 @@ use App\Http\Controllers\Students\DashboardController;
 use App\Http\Controllers\Students\CardsController;
 use App\Http\Controllers\Students\PaymentHistoryController;
 use App\Http\Controllers\Students\PendingPaymentController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Students\WebhookController;
 use App\Http\Controllers\UpdateUserController;
+use App\Http\Controllers\NotificationController;
 
 //Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 //    return $request->user();
@@ -35,6 +35,14 @@ Route::prefix('v1')->middleware('throttle:5,1')->group(function () {
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::post('/logout',[RefreshTokenController::class,'logout']);
+
+    Route::prefix('notifications')->middleware(['throttle:30,1'])->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread', [NotificationController::class, 'unread']);
+        Route::post('/mark-as-read', [NotificationController::class, 'markAsRead']);
+        Route::post('/mark-as-read/{id}', [NotificationController::class, 'markAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+    });
 
     Route::prefix('parents')->middleware(['throttle:5,1', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['role:student|admin',])->post('/invite',[ParentsController::class, 'sendInvitation']);

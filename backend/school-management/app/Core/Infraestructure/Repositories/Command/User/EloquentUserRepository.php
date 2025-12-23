@@ -91,10 +91,24 @@ class EloquentUserRepository implements UserRepInterface
     {
         $thresholdDate = Carbon::now()->subDays(30);
 
-        return DB::table('users')
-            ->where('status', '=', UserStatus::ELIMINADO)
-            ->where('updated_at', '<', $thresholdDate)
-            ->delete();
+        return DB::transaction(function () use ($thresholdDate) {
+            $userIds = DB::table('users')
+                ->where('status', '=', UserStatus::ELIMINADO)
+                ->where('updated_at', '<', $thresholdDate)
+                ->pluck('id');
+
+            if ($userIds->isEmpty()) {
+                return 0;
+            }
+            DB::table('notifications')
+                ->where('notifiable_type', 'App\Models\User')
+                ->whereIn('notifiable_id', $userIds)
+                ->delete();
+
+            return DB::table('users')
+                ->whereIn('id', $userIds)
+                ->delete();
+        });
     }
     public function changeStatus(array $userIds, string $status): UserChangedStatusResponse
     {

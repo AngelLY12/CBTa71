@@ -22,6 +22,7 @@ use App\Exceptions\Validation\CareerSemesterInvalidException;
 use App\Exceptions\Validation\SemestersNotFoundException;
 use App\Jobs\ProcessPaymentConceptRecipientsJob;
 use App\Jobs\ProcessPaymentConceptUpdateJob;
+use App\Jobs\SendBroadcastNotificationsJob;
 use Illuminate\Support\Facades\DB;
 
 class UpdatePaymentConceptUseCase
@@ -96,16 +97,69 @@ class UpdatePaymentConceptUseCase
 
     private function formattResponse(PaymentConcept $newPaymentConcept, PaymentConcept $oldPaymentConcept, UpdatePaymentConceptDTO $dto, array $oldRecipientIds): UpdatePaymentConceptResponse
     {
-        $newAffectedCount = count($this->uqRepo->getRecipientsIds($newPaymentConcept, $newPaymentConcept->applies_to->value));
+        $newRecipientIds = $this->uqRepo->getRecipientsIds($newPaymentConcept, $newPaymentConcept->applies_to->value);
         $oldAffectedCount= count($oldRecipientIds);
         $changes=$this->calculateChanges($oldPaymentConcept,$newPaymentConcept,$dto);
+        $newlyAddedIds = array_diff($newRecipientIds, $oldRecipientIds);
+        $removedIds = array_diff($oldRecipientIds, $newRecipientIds);
+        $keptIds = array_intersect($oldRecipientIds, $newRecipientIds);
         $data=[
             'message'=>$this->generateSuccessMessage($changes),
             'changes'=>$changes,
-            'newlyAffectedCount'=>$newAffectedCount - $oldAffectedCount,
-            'previouslyAffectedCount' => $oldAffectedCount
+            'affectedSummary' =>[
+                'newlyAffectedCount'=>count($newlyAddedIds),
+                'removedCount' => count($removedIds),
+                'keptCount' => count($keptIds),
+                'totalAffectedCount' => count($newlyAddedIds) + count($removedIds),
+                'previouslyAffectedCount' => $oldAffectedCount
+            ],
         ];
+        if ($this->shouldNotifyForChanges($changes) && !empty($newlyAddedIds)) {
+            SendBroadcastNotificationsJob::forStudents(
+                $this->determineUsersToNotify($changes,$newRecipientIds,$newlyAddedIds),
+                $newPaymentConcept->id,
+                $changes
+            )->delay(now()->addSeconds(rand(1, 10)));
+        }
         return PaymentConceptMapper::toUpdatePaymentConceptResponse($newPaymentConcept, $data);
+    }
+
+    private function determineUsersToNotify(array $changes, array $newRecipientIds, array $newlyAddedIds): array
+    {
+        foreach ($changes as $change) {
+            if ($change['type'] === 'field_update' && in_array($change['field'], ['amount', 'concept_name', 'start_date', 'end_date'])) {
+                return $newRecipientIds;
+            }
+            if ($change['type'] === 'applies_to_changed') {
+                return $newRecipientIds;
+            }
+        }
+
+        return $newlyAddedIds;
+    }
+
+    private function shouldNotifyForChanges(array $changes): bool
+    {
+        $importantFields = ['amount', 'concept_name', 'start_date', 'end_date', 'status'];
+
+        foreach ($changes as $change) {
+            if ($change['type'] === 'applies_to_changed') {
+                return true;
+            }
+            if ($change['type'] === 'field_update' && in_array($change['field'], $importantFields)) {
+                return true;
+            }
+            if($change['type'] === 'exceptions_update')
+            {
+                return true;
+            }
+            if($change['type'] === 'relation_update')
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function calculateChanges(
@@ -165,7 +219,7 @@ class UpdatePaymentConceptUseCase
                 'added' => array_diff($newExceptions, $oldExceptions),
                 'removed' => array_values($removedExceptions),
                 'type' => 'exceptions_update',
-                'note' => !empty($removedExceptions) && $dto->appliesTo === PaymentConceptAppliesTo::ESTUDIANTES
+                'note' => !empty($removedExceptions) && $newConcept->applies_to === PaymentConceptAppliesTo::ESTUDIANTES
                     ? 'Las excepciones fueron eliminadas automáticamente al cambiar a "aplica a estudiantes"'
                     : null
             ];

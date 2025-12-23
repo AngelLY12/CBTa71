@@ -57,6 +57,7 @@ trait HasPaymentConcept
             $recipientEmails = [];
 
             foreach ($chunk as $user) {
+
                 $data = [
                     'recipientName' => $user->name,
                     'recipientEmail' => $user->email,
