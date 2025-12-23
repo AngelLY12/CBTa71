@@ -6326,6 +6326,142 @@
                 ]
             }
         },
+        "/api/v1/concepts/update-relations/{id}": {
+            "put": {
+                "tags": [
+                    "Payment Concepts"
+                ],
+                "summary": "Actualizar relaciones de un concepto de pago",
+                "description": "Actualiza las relaciones de un concepto de pago existente.",
+                "operationId": "23cb63ffbd257020fd90c746e9beb630",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del concepto de pago",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePaymentConceptRelationsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Relaciones del concepto actualizadas correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "concept": {
+                                                            "$ref": "#/components/schemas/UpdatePaymentConceptRelationsResponse"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/concepts/{id}/finalize": {
             "post": {
                 "tags": [
@@ -8033,14 +8169,44 @@
                         "type": "integer",
                         "example": 1
                     },
-                    "fieldsToUpdate": {
-                        "description": "Campos del concepto a actualizar con sus nuevos valores",
-                        "type": "object",
-                        "example": {
-                            "concept_name": "Pago matrícula",
-                            "amount": "2000.00",
-                            "status": "activo"
-                        }
+                    "concept_name": {
+                        "type": "string",
+                        "example": "Pago de inscripción"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pago correspondiente al semestre 2025A",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "type": "string",
+                        "example": "1500.00"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-01",
+                        "nullable": true
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-31",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UpdatePaymentConceptRelationsDTO": {
+                "description": "Datos para actualizar un concepto de pago",
+                "required": [
+                    "id"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "ID del concepto a actualizar",
+                        "type": "integer",
+                        "example": 1
                     },
                     "semesters": {
                         "description": "Semestres asociados al concepto",
@@ -8127,6 +8293,10 @@
                         "description": "Si es true, elimina los estudiantes a los que no aplicaba el concepto",
                         "type": "boolean",
                         "example": false
+                    },
+                    "is_global": {
+                        "type": "boolean",
+                        "example": true
                     }
                 },
                 "type": "object"
@@ -9301,28 +9471,14 @@
                 },
                 "type": "object"
             },
-            "UpdatePaymentConceptResponse": {
+            "UpdatePaymentConceptRelationsResponse": {
                 "required": [
-                    "id",
-                    "conceptName",
                     "status",
-                    "appliesTo",
-                    "amount",
-                    "startDate",
-                    "endDate",
                     "metadata",
                     "message",
                     "updatedAt"
                 ],
                 "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 123
-                    },
-                    "conceptName": {
-                        "type": "string",
-                        "example": "Matrícula 2024"
-                    },
                     "status": {
                         "type": "string",
                         "enum": [
@@ -9331,38 +9487,6 @@
                             "pending"
                         ],
                         "example": "active"
-                    },
-                    "appliesTo": {
-                        "type": "string",
-                        "enum": [
-                            "career",
-                            "semester",
-                            "students",
-                            "career_semester",
-                            "tag",
-                            "all"
-                        ],
-                        "example": "career"
-                    },
-                    "description": {
-                        "type": "string",
-                        "example": "Pago de matrícula del semestre",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 1500
-                    },
-                    "startDate": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2024-01-15"
-                    },
-                    "endDate": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2024-02-15"
                     },
                     "metadata": {
                         "properties": {
@@ -9441,6 +9565,105 @@
                                 "previouslyAffectedCount": {
                                     "type": "integer",
                                     "example": 20
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "UpdatePaymentConceptResponse": {
+                "required": [
+                    "id",
+                    "conceptName",
+                    "status",
+                    "appliesTo",
+                    "amount",
+                    "startDate",
+                    "endDate",
+                    "metadata",
+                    "message",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "conceptName": {
+                        "type": "string",
+                        "example": "Matrícula 2024"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "pending"
+                        ],
+                        "example": "active"
+                    },
+                    "appliesTo": {
+                        "type": "string",
+                        "enum": [
+                            "career",
+                            "semester",
+                            "students",
+                            "career_semester",
+                            "tag",
+                            "all"
+                        ],
+                        "example": "career"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pago de matrícula del semestre",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1500
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-01-15"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2024-02-15"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Concepto actualizado: Ahora aplica a career. Se agregaron 2 careers"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-12 14:45:00"
+                    },
+                    "changes": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "field": {
+                                    "type": "string",
+                                    "example": "applies_to"
+                                },
+                                "old": {
+                                    "type": "string",
+                                    "example": "students"
+                                },
+                                "new": {
+                                    "type": "string",
+                                    "example": "career"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "example": "applies_to_changed"
                                 }
                             },
                             "type": "object"
@@ -10413,6 +10636,7 @@
                     "DUPLICATE_ENTRY",
                     "DATABASE_ERROR",
                     "NOT_FOUND",
+                    "BAD_REQUEST",
                     "INVALID_ARGUMENT",
                     "CARD_ERROR",
                     "RATE_LIMIT_EXCEEDED",
@@ -11328,41 +11552,8 @@
                 },
                 "type": "object"
             },
-            "UpdatePaymentConceptRequest": {
+            "UpdatePaymentConceptRelationsRequest": {
                 "properties": {
-                    "concept_name": {
-                        "description": "Nombre del concepto de pago",
-                        "type": "string",
-                        "maxLength": 50,
-                        "example": "Inscripción Semestral"
-                    },
-                    "description": {
-                        "description": "Descripción opcional del concepto",
-                        "type": "string",
-                        "maxLength": 100,
-                        "example": "Pago correspondiente al semestre agosto-diciembre"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/PaymentConceptStatus"
-                    },
-                    "start_date": {
-                        "description": "Fecha de inicio (YYYY-MM-DD)",
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-01-15"
-                    },
-                    "end_date": {
-                        "description": "Fecha de fin (opcional, YYYY-MM-DD)",
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-06-30"
-                    },
-                    "amount": {
-                        "description": "Monto del concepto",
-                        "type": "number",
-                        "minimum": 10,
-                        "example": 1800.5
-                    },
                     "is_global": {
                         "description": "Indica si aplica globalmente",
                         "type": "boolean",
@@ -11442,6 +11633,41 @@
                         "example": [
                             "applicants"
                         ]
+                    }
+                },
+                "type": "object"
+            },
+            "UpdatePaymentConceptRequest": {
+                "properties": {
+                    "concept_name": {
+                        "description": "Nombre del concepto de pago",
+                        "type": "string",
+                        "maxLength": 50,
+                        "example": "Inscripción Semestral"
+                    },
+                    "description": {
+                        "description": "Descripción opcional del concepto",
+                        "type": "string",
+                        "maxLength": 100,
+                        "example": "Pago correspondiente al semestre agosto-diciembre"
+                    },
+                    "start_date": {
+                        "description": "Fecha de inicio (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-15"
+                    },
+                    "end_date": {
+                        "description": "Fecha de fin (opcional, YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-06-30"
+                    },
+                    "amount": {
+                        "description": "Monto del concepto",
+                        "type": "number",
+                        "minimum": 10,
+                        "example": 1800.5
                     }
                 },
                 "type": "object"

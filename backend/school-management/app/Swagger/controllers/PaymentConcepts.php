@@ -165,6 +165,54 @@ public function createConcept(){}
  */
 public function updateConcept(){}
 
+/**
+ * @OA\Put(
+ *     path="/api/v1/concepts/update-relations/{id}",
+ *     summary="Actualizar relaciones de un concepto de pago",
+ *     description="Actualiza las relaciones de un concepto de pago existente.",
+ *     tags={"Payment Concepts"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID del concepto de pago",
+ *         @OA\Schema(type="integer", example=5)
+ *     ),
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(ref="#/components/schemas/UpdatePaymentConceptRelationsRequest")
+ *     ),
+ *     @OA\Response(
+ *          response=200,
+ *          description="Relaciones del concepto actualizadas correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/UpdatePaymentConceptRelationsResponse"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=422, description="Error de validación", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=409, description="Conflicto", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ * )
+ */
+public function updateRelations(){}
+
 
 /**
  * @OA\Post(
