@@ -64,6 +64,8 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
     {
         $model= $this->findModelByUserId($user_id);
         $model->update($fields);
+        unset($model->user->studentDetail);
+        $model->user->load('studentDetail');
         return UserMapper::toDomain($model->user);
     }
 

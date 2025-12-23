@@ -94,7 +94,8 @@ class PaymentMapper{
                 amount_received: $payment->amount_received ?? null,
                 status: $payment->status->value ?? null,
                 payment_intent_id: $payment->payment_intent_id ?? null,
-            )
+            ),
+            updatedAt: now()->format('Y-m-d H:i:s'),
         );
     }
 

@@ -11,10 +11,21 @@ namespace App\Core\Application\DTO\Response\PaymentConcept;
  *     @OA\Property(
  *         property="metadata",
  *         type="object",
- *         @OA\Property(property="is_global", type="boolean", example=false),
+ *         @OA\Property(property="concept_name", type="string", example="Cuota renscripción"),
+ *         @OA\Property(property="global_status", type="boolean", example=false),
+ *         @OA\Property(property="students_count", type="integer", example=5),
  *         @OA\Property(property="exception_count", type="integer", example=5),
  *         @OA\Property(property="career_count", type="integer", example=3),
- *         @OA\Property(property="semester_count", type="integer", example=2)
+ *         @OA\Property(property="semester_count", type="integer", example=2),
+ *         @OA\Property(
+ *          property="tags",
+ *          type="array",
+ *          @OA\Items(
+ *                  type="object",
+ *                  @OA\Property(property="tag_", type="string", example="no_student_details"),
+ *              )
+ *          ),
+ *
  *     ),
  *     @OA\Property(property="message", type="string", example="Concepto actualizado: Ahora aplica a career. Se agregaron 2 careers"),
  *     @OA\Property(property="updatedAt", type="string", format="date-time", example="2024-01-12 14:45:00"),

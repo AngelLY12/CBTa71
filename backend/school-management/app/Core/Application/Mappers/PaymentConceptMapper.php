@@ -5,6 +5,7 @@ namespace App\Core\Application\Mappers;
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptChangeStatusResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptNameAndAmountResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptsToDashboardResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
@@ -201,6 +202,7 @@ class PaymentConceptMapper{
         return new UpdatePaymentConceptRelationsResponse(
             status: $newPaymentConcept->status->value,
             metadata: [
+                'concept_name' => $newPaymentConcept->concept_name,
                 'global_status' => $newPaymentConcept->is_global,
                 'students_count' => count($newPaymentConcept->getUserIds()),
                 'exception_count' => count($newPaymentConcept->getExceptionUsersIds()),
@@ -212,6 +214,24 @@ class PaymentConceptMapper{
             updatedAt: now()->format('Y-m-d H:i:s'),
             changes: $data['changes'] ?? [],
             affectedSummary: $data['affectedSummary'] ?? []
+        );
+    }
+
+    public static function toConceptChangeStatusResponse(EntitiesPaymentConcept $paymentConcept, array $data): ConceptChangeStatusResponse
+    {
+        return new ConceptChangeStatusResponse(
+            conceptData: [
+                'id' => $paymentConcept->id,
+                'concept_name' => $paymentConcept->concept_name,
+                'status' => $paymentConcept->status->value,
+                'amount' => $paymentConcept->amount,
+                'start_date' => $paymentConcept->start_date->format('Y-m-d'),
+                'end_date' => $paymentConcept->end_date->format('Y-m-d'),
+                'applies_to' => $paymentConcept->applies_to->value,
+            ],
+            message: $data['message'] ?? null,
+            changes: $data['changes'] ?? [],
+            updatedAt: now()->format('Y-m-d H:i:s'),
         );
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptChangeStatusResponse;
+use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
@@ -21,8 +23,9 @@ abstract class BasePaymentConceptStatusUseCase
 
     abstract protected function getTargetStatus(): PaymentConceptStatus;
     abstract protected function getRepositoryMethod(): string;
+    abstract protected function getSuccessMessage(): string;
 
-    public function execute(PaymentConcept $concept): PaymentConcept
+    public function execute(PaymentConcept $concept): ConceptChangeStatusResponse
     {
         PaymentConceptValidator::ensureValidStatusTransition(
             $concept,
@@ -32,8 +35,27 @@ abstract class BasePaymentConceptStatusUseCase
         $userIds = $this->getAffectedUserIds($concept);
         $updatedConcept = $this->updateConceptStatus($concept);
         $this->dispatchCacheClearJobs($userIds);
-        return $updatedConcept;
+        return $this->formattResponse($concept, $updatedConcept);
     }
+
+    private function formattResponse(PaymentConcept $concept, PaymentConcept $updatedConcept): ConceptChangeStatusResponse
+    {
+        $data=[
+            'message' => $this->getSuccessMessage(),
+            'changes' => [
+                [
+                    'field' => 'status',
+                    'old' =>$concept->status->value,
+                    'new' => $updatedConcept->status->value,
+                    'type'=> 'status_change',
+                    'transition_type' => $this->getRepositoryMethod()
+                ]
+            ]
+        ];
+        return PaymentConceptMapper::toConceptChangeStatusResponse($updatedConcept,$data);
+    }
+
+
 
     protected function getAffectedUserIds(PaymentConcept $concept): array
     {

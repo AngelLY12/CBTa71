@@ -16,4 +16,8 @@ class ActivatePaymentConceptUseCase extends BasePaymentConceptStatusUseCase
     {
         return 'activate';
     }
+    protected function getSuccessMessage(): string
+    {
+        return 'El concepto fue activado correctamente';
+    }
 }

@@ -87,7 +87,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:create concepts', 'throttle:10,1'])->post('/', [ConceptsController::class, 'store']);
         Route::middleware(['permission:update concepts', 'throttle:10,1'])->put('/{id}', [ConceptsController::class, 'update']);
         Route::middleware(['permission:update concepts', 'throttle:10,1'])->patch('/{id}', [ConceptsController::class, 'update']);
-        Route::middleware(['permission:update concepts', 'throttle:10,1'])->delete('/update-relations/{id}', [ConceptsController::class, 'updateRelations']);
+        Route::middleware(['permission:update concepts', 'throttle:10,1'])->patch('/update-relations/{id}', [ConceptsController::class, 'updateRelations']);
         Route::middleware(['permission:finalize concepts', 'throttle:10,1'])->post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
         Route::middleware(['permission:disable concepts', 'throttle:10,1'])->post('/{concept}/disable', [ConceptsController::class, 'disable']);
         Route::middleware(['permission:eliminate concepts', 'throttle:10,1'])->delete('/{id}/eliminate', [ConceptsController::class, 'eliminate']);

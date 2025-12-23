@@ -6,6 +6,7 @@ use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptChangeStatusResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptRelationsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptResponse;
@@ -68,7 +69,7 @@ class ConceptsServiceFacades{
         return $concept;
     }
 
-    public function finalizePaymentConcept(PaymentConcept $concept): PaymentConcept {
+    public function finalizePaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse {
         $oldStatus = $concept->status;
         $result = $this->finalize->execute($concept);
         $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$oldStatus->value}");
@@ -76,7 +77,7 @@ class ConceptsServiceFacades{
         return $result;
     }
 
-    public function disablePaymentConcept(PaymentConcept $concept): PaymentConcept {
+    public function disablePaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse {
         $oldStatus = $concept->status;
         $result = $this->disable->execute($concept);
         $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$oldStatus->value}");
@@ -89,7 +90,7 @@ class ConceptsServiceFacades{
         $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list");
     }
 
-    public function activatePaymentConcept(PaymentConcept $concept):PaymentConcept
+    public function activatePaymentConcept(PaymentConcept $concept):ConceptChangeStatusResponse
     {
         $oldStatus = $concept->status;
         $result = $this->activate->execute($concept);
@@ -98,7 +99,7 @@ class ConceptsServiceFacades{
         return $result;
     }
 
-    public function eliminateLogicalPaymentConcept(PaymentConcept $concept): PaymentConcept{
+    public function eliminateLogicalPaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse{
         $result = $this->eliminateLogical->execute($concept);
         $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list");
         return $result;
