@@ -166,7 +166,7 @@ public function createConcept(){}
 public function updateConcept(){}
 
 /**
- * @OA\Put(
+ * @OA\Patch(
  *     path="/api/v1/concepts/update-relations/{id}",
  *     summary="Actualizar relaciones de un concepto de pago",
  *     description="Actualiza las relaciones de un concepto de pago existente.",
@@ -233,7 +233,7 @@ public function updateRelations(){}
  *                          type="object",
  *                          @OA\Property(
  *                              property="concept",
- *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                              ref="#/components/schemas/ConceptChangeStatusResponse"
  *                          )
  *                      )
  *                  )
@@ -270,7 +270,7 @@ public function finalizeConcept(){}
  *                          type="object",
  *                          @OA\Property(
  *                              property="concept",
- *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                              ref="#/components/schemas/ConceptChangeStatusResponse"
  *                          )
  *                      )
  *                  )
@@ -307,7 +307,7 @@ public function disableConcept(){}
  *                          type="object",
  *                          @OA\Property(
  *                              property="concept",
- *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                              ref="#/components/schemas/ConceptChangeStatusResponse"
  *                          )
  *                      )
  *                  )
@@ -366,7 +366,7 @@ public function deleteConcept(){}
   *                          type="object",
   *                          @OA\Property(
   *                              property="concept",
-  *                              ref="#/components/schemas/DomainPaymentConcept"
+  *                              ref="#/components/schemas/ConceptChangeStatusResponse"
   *                          )
   *                      )
   *                  )

@@ -6327,13 +6327,13 @@
             }
         },
         "/api/v1/concepts/update-relations/{id}": {
-            "put": {
+            "patch": {
                 "tags": [
                     "Payment Concepts"
                 ],
                 "summary": "Actualizar relaciones de un concepto de pago",
                 "description": "Actualiza las relaciones de un concepto de pago existente.",
-                "operationId": "23cb63ffbd257020fd90c746e9beb630",
+                "operationId": "6369d93134af7991e6ae7a8e010bd768",
                 "parameters": [
                     {
                         "name": "id",
@@ -6494,7 +6494,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "concept": {
-                                                            "$ref": "#/components/schemas/DomainPaymentConcept"
+                                                            "$ref": "#/components/schemas/ConceptChangeStatusResponse"
                                                         }
                                                     },
                                                     "type": "object"
@@ -6607,7 +6607,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "concept": {
-                                                            "$ref": "#/components/schemas/DomainPaymentConcept"
+                                                            "$ref": "#/components/schemas/ConceptChangeStatusResponse"
                                                         }
                                                     },
                                                     "type": "object"
@@ -6720,7 +6720,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "concept": {
-                                                            "$ref": "#/components/schemas/DomainPaymentConcept"
+                                                            "$ref": "#/components/schemas/ConceptChangeStatusResponse"
                                                         }
                                                     },
                                                     "type": "object"
@@ -6823,7 +6823,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "concept": {
-                                                            "$ref": "#/components/schemas/DomainPaymentConcept"
+                                                            "$ref": "#/components/schemas/ConceptChangeStatusResponse"
                                                         }
                                                     },
                                                     "type": "object"
@@ -9211,6 +9211,11 @@
                             }
                         ],
                         "nullable": true
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-12 14:45:00"
                     }
                 },
                 "type": "object"
@@ -9235,6 +9240,154 @@
                             "example": "15000.00",
                             "property": null
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "ConceptChangeStatusResponse": {
+                "title": "Respuesta de cambio de estado de concepto de pago",
+                "description": "Respuesta detallada al cambiar el estado de un concepto de pago",
+                "required": [
+                    "conceptData",
+                    "message",
+                    "changes",
+                    "updatedAt"
+                ],
+                "properties": {
+                    "conceptData": {
+                        "description": "Datos actualizados del concepto de pago",
+                        "required": [
+                            "id",
+                            "concept_name",
+                            "status",
+                            "amount",
+                            "start_date",
+                            "end_date",
+                            "applies_to"
+                        ],
+                        "properties": {
+                            "id": {
+                                "description": "ID del concepto",
+                                "type": "integer",
+                                "example": 123
+                            },
+                            "concept_name": {
+                                "description": "Nombre del concepto",
+                                "type": "string",
+                                "example": "Matrícula 2024"
+                            },
+                            "status": {
+                                "description": "Nuevo estado del concepto",
+                                "type": "string",
+                                "enum": [
+                                    "activo",
+                                    "inactivo",
+                                    "finalizado",
+                                    "cancelado",
+                                    "pendiente"
+                                ],
+                                "example": "finalizado"
+                            },
+                            "amount": {
+                                "description": "Monto del concepto",
+                                "type": "number",
+                                "format": "float",
+                                "example": 1500
+                            },
+                            "start_date": {
+                                "description": "Fecha de inicio",
+                                "type": "string",
+                                "format": "date",
+                                "example": "2024-01-15"
+                            },
+                            "end_date": {
+                                "description": "Fecha de fin",
+                                "type": "string",
+                                "format": "date",
+                                "example": "2024-12-31"
+                            },
+                            "applies_to": {
+                                "description": "A quién aplica el concepto",
+                                "type": "string",
+                                "enum": [
+                                    "todos",
+                                    "carrera",
+                                    "semestre",
+                                    "estudiantes",
+                                    "carrera_semestre",
+                                    "tag"
+                                ],
+                                "example": "carrera"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "description": "Mensaje descriptivo del resultado",
+                        "type": "string",
+                        "example": "Concepto 'Matrícula 2024' finalizado exitosamente"
+                    },
+                    "changes": {
+                        "description": "Lista de cambios realizados",
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "field",
+                                "old",
+                                "new",
+                                "type",
+                                "transition_type"
+                            ],
+                            "properties": {
+                                "field": {
+                                    "description": "Campo modificado",
+                                    "type": "string",
+                                    "example": "status"
+                                },
+                                "old": {
+                                    "description": "Valor anterior",
+                                    "type": "string",
+                                    "example": "activo"
+                                },
+                                "new": {
+                                    "description": "Valor nuevo",
+                                    "type": "string",
+                                    "example": "finalizado"
+                                },
+                                "type": {
+                                    "description": "Tipo de cambio",
+                                    "type": "string",
+                                    "example": "status_change"
+                                },
+                                "transition_type": {
+                                    "description": "Tipo de transición realizada",
+                                    "type": "string",
+                                    "enum": [
+                                        "activate",
+                                        "deactivate",
+                                        "finalize",
+                                        "cancel"
+                                    ],
+                                    "example": "finalize"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "example": [
+                            {
+                                "field": "status",
+                                "old": "activo",
+                                "new": "finalizado",
+                                "type": "status_change",
+                                "transition_type": "finalize"
+                            }
+                        ]
+                    },
+                    "updatedAt": {
+                        "description": "Fecha y hora de la actualización",
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-15T10:30:00Z"
                     }
                 },
                 "type": "object"
@@ -9490,9 +9643,17 @@
                     },
                     "metadata": {
                         "properties": {
-                            "is_global": {
+                            "concept_name": {
+                                "type": "string",
+                                "example": "Cuota renscripción"
+                            },
+                            "global_status": {
                                 "type": "boolean",
                                 "example": false
+                            },
+                            "students_count": {
+                                "type": "integer",
+                                "example": 5
                             },
                             "exception_count": {
                                 "type": "integer",
@@ -9505,6 +9666,18 @@
                             "semester_count": {
                                 "type": "integer",
                                 "example": 2
+                            },
+                            "tags": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "tag_": {
+                                            "type": "string",
+                                            "example": "no_student_details"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
                             }
                         },
                         "type": "object"
