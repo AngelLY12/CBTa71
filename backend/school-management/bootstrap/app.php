@@ -51,27 +51,29 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule){
-        $schedule->command('payments:dispatch-reconcile-payments-job')->everyTwoHours()->withoutOverlapping()->onOneServer();
-        $schedule->command('backup:dispatch-create-backup-job')->dailyAt('02:00');
+        $schedule->command('payments:dispatch-reconcile-payments-job')->everyTwoHours()->withoutOverlapping(30)->onOneServer();
+        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyFourHours();
+        $schedule->command('backup:clean')->dailyAt('23:50');
+        $schedule->command('concepts:dispatch-finalize-job')->dailyAt('00:05')->withoutOverlapping(30)->onOneServer();
+        $schedule->command('backup:dispatch-create-backup-job')->dailyAt('01:05') ->withoutOverlapping(120);
+        $schedule->command('db:auto-restore')->dailyAt('02:25')->withoutOverlapping(30);
+        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('03:25');
+        $schedule->command('users:dispatch-delete-users')->weekly()->at('04:25')->withoutOverlapping(30)->onOneServer();
+        $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('05:25')->withoutOverlapping(30)->onOneServer();
+        $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('05:55');
         $schedule->command('app:dispatch-promote-students-job')
-        ->dailyAt('23:55')
+        ->dailyAt('21:50')
         ->when(function () {
             $today = now();
             $lastDay = $today->endOfMonth()->day;
             $daysBeforeEnd = $lastDay - $today->day;
             return $daysBeforeEnd <= 8
                 && in_array($today->month, config('promotions.allowed_months'));
-        });
-        $schedule->command('cache:dispatch-clean-cache-job')->cron('0 0 1 */3 *');
-        $schedule->command('backup:clean')->dailyAt('02:30');
-        $schedule->command('logs:dispatch-clean-older-logs-job')->quarterly();
-        $schedule->command('db:auto-restore')->dailyAt('03:00');
-        $schedule->command('concepts:dispatch-finalize-job')->daily();
-        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyFourHours();
-        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('03:00');
-        $schedule->command('users:dispatch-delete-users')->weekly()->at('00:00');
-        $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('00:00');
-        $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('02:00');
+        })
+            ->withoutOverlapping(120)
+            ->onOneServer();
+        $schedule->command('logs:dispatch-clean-older-logs-job')->quarterly()->withoutOverlapping(120);
+        $schedule->command('cache:dispatch-clean-cache-job')->cron('0 0 1 */3 *')->withoutOverlapping(30);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
