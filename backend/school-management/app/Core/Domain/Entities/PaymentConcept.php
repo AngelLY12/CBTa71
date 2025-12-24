@@ -64,6 +64,11 @@ class PaymentConcept
             'amount'       => $this->amount,
             'applies_to'   => $this->applies_to,
             'is_global'    => $this->is_global,
+            'user_ids' => $this->getUserIds(),
+            'career_ids' => $this->getCareerIds(),
+            'semesters' => $this->getSemesters(),
+            'exception_user_ids' => $this->getExceptionUsersIds(),
+            'applicant_tags' => $this->getApplicantTag(),
         ];
     }
 
@@ -88,7 +93,12 @@ class PaymentConcept
             applies_to: $data['applies_to'] instanceof PaymentConceptAppliesTo
                 ? $data['applies_to']
                 : PaymentConceptAppliesTo::from($data['applies_to']),
-            is_global: $data['is_global']
+            is_global: $data['is_global'],
+            userIds: $data['user_ids'] ?? [],
+            careerIds: $data['career_ids'] ?? [],
+            semesters: $data['semesters'] ?? [],
+            exceptionUserIds: $data['exception_user_ids'] ?? [],
+            applicantTags: $data['applicant_tags'] ?? []
         );
     }
 

@@ -32,7 +32,7 @@ class SendConceptUpdatedFieldsNotification implements ShouldQueue
         $userIds=$this->uqRepo->getRecipientsIds($concept, $concept->applies_to->value);
 
         if (empty($event->userIds)) {
-            Log::info('No user IDs to notify', ['concept_id' => $this->conceptId]);
+            Log::info('No user IDs to notify', ['concept_id' => $event->conceptId]);
             return;
         }
 
@@ -55,10 +55,10 @@ class SendConceptUpdatedFieldsNotification implements ShouldQueue
         ]);
 
     }
-    public function failed(\Throwable $exception): void
+    public function failed(PaymentConceptUpdatedFields $event, \Throwable $exception): void
     {
         Log::error('Failed to send broadcast notifications', [
-            'concept_id' => $this->conceptId,
+            'concept_id' => $event->conceptId,
             'error' => $exception->getMessage(),
             'trace' => $exception->getTraceAsString()
         ]);

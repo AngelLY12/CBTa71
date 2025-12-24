@@ -52,4 +52,14 @@ class ProcessRecipientsUpdateListener implements ShouldQueue
             'applies_to' => $event->appliesTo
         ]);
     }
+
+    public function failed(PaymentConceptUpdatedRelations $event, \Throwable $exception): void
+    {
+        Log::critical('ProcessPaymentConceptRecipientsListener failed', [
+            'concept_id' => $event->newPaymentConceptId,
+            'applies_to' => $event->appliesTo,
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString()
+        ]);
+    }
 }

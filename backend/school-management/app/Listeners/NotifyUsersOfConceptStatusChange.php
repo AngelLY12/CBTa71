@@ -72,13 +72,29 @@ class NotifyUsersOfConceptStatusChange implements ShouldQueue
         }
 
         $relevantTransitions = [
-            PaymentConceptStatus::ACTIVO->value,
+            PaymentConceptStatus::ACTIVO->value => [
+                PaymentConceptStatus::FINALIZADO->value,
+                PaymentConceptStatus::DESACTIVADO->value,
+                PaymentConceptStatus::ELIMINADO->value,
+            ],
+            '*' => [PaymentConceptStatus::ACTIVO->value],
         ];
 
-        $isActivating = $newStatus === PaymentConceptStatus::ACTIVO->value;
-        $isDeactivating = $oldStatus === PaymentConceptStatus::ACTIVO->value
-            && $newStatus !== PaymentConceptStatus::ACTIVO->value;
+        $fromActive = $oldStatus === PaymentConceptStatus::ACTIVO->value
+            && in_array($newStatus, $relevantTransitions[PaymentConceptStatus::ACTIVO->value]);
 
-        return $isActivating || $isDeactivating;
+        $toActive = $newStatus === PaymentConceptStatus::ACTIVO->value;
+
+        return $fromActive || $toActive;
+    }
+    public function failed(PaymentConceptStatusChanged $event, \Throwable $exception): void
+    {
+        Log::critical('ProcessPaymentConceptRecipientsListener failed', [
+            'concept_id' => $event->conceptId,
+            'new_status' => $event->newStatus,
+            'old_status' => $event->oldStatus,
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString()
+        ]);
     }
 }

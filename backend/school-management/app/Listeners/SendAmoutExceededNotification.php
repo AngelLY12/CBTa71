@@ -7,6 +7,7 @@ use App\Events\AdministrationEvent;
 use App\Jobs\SendBulkMailJob;
 use App\Mail\CriticalAmountAlertMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class SendAmoutExceededNotification
 {
@@ -50,5 +51,14 @@ class SendAmoutExceededNotification
         SendBulkMailJob::forRecipients($mailables, $recipientEmails)
         ->onQueue('emails');
 
+    }
+    public function failed(AdministrationEvent $event, \Throwable $exception): void
+    {
+        Log::critical('ProcessPaymentConceptRecipientsListener failed', [
+            'concept_name' => $event->concept_name,
+            'action' => $event->action,
+            'error' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString()
+        ]);
     }
 }

@@ -78,58 +78,57 @@ class PaymentConceptStatusUpdated extends Notification
 
     private function getTitle(): string
     {
-        switch (true) {
-            case $this->oldStatus === PaymentConceptStatus::ACTIVO->value
-                && $this->newStatus !== PaymentConceptStatus::ACTIVO->value:
-                return match($this->newStatus) {
-                    PaymentConceptStatus::FINALIZADO->value => 'Concepto finalizado',
-                    PaymentConceptStatus::DESACTIVADO->value => 'Concepto pausado',
-                    PaymentConceptStatus::ELIMINADO->value => 'Concepto eliminado',
-                    default => 'Estado de concepto actualizado',
-                };
+        $titles = [
+            PaymentConceptStatus::ACTIVO->value => [
+                PaymentConceptStatus::FINALIZADO->value => 'Concepto finalizado',
+                PaymentConceptStatus::DESACTIVADO->value => 'Concepto pausado',
+                PaymentConceptStatus::ELIMINADO->value => 'Concepto eliminado',
+            ],
+            PaymentConceptStatus::FINALIZADO->value => [
+                PaymentConceptStatus::ACTIVO->value => 'Concepto reactivado',
+            ],
+            PaymentConceptStatus::DESACTIVADO->value => [
+                PaymentConceptStatus::ACTIVO->value => 'Concepto reactivado',
+            ],
+            PaymentConceptStatus::ELIMINADO->value => [
+                PaymentConceptStatus::ACTIVO->value => 'Concepto restaurado',
+            ],
+        ];
 
-            case $this->newStatus === PaymentConceptStatus::ACTIVO->value:
-                return match($this->oldStatus) {
-                    PaymentConceptStatus::FINALIZADO->value => 'Concepto reactivado',
-                    PaymentConceptStatus::DESACTIVADO->value => 'Concepto reactivado',
-                    PaymentConceptStatus::ELIMINADO->value => 'Concepto restaurado',
-                    default => 'Concepto activado',
-                };
+        return $titles[$this->oldStatus][$this->newStatus]
+            ?? 'Estado de concepto actualizado';
 
-            default:
-                return 'Estado de concepto actualizado';
-        }
     }
 
     private function getMessage(): string
     {
-        $conceptName = $this->concept['concept_name'];
+        $messages = [
+            PaymentConceptStatus::ACTIVO->value => [
+                PaymentConceptStatus::FINALIZADO->value =>
+                    "El concepto '{$this->concept['concept_name']}' ha sido FINALIZADO. Ya no se aceptan más pagos.",
+                PaymentConceptStatus::DESACTIVADO->value =>
+                    "El concepto '{$this->concept['concept_name']}' ha sido PAUSADO temporalmente.",
+                PaymentConceptStatus::ELIMINADO->value =>
+                    "El concepto '{$this->concept['concept_name']}' ha sido ELIMINADO del sistema.",
+            ],
+            PaymentConceptStatus::ACTIVO->value => [
+                'default' => "El concepto '{$this->concept['concept_name']}' está ahora ACTIVO y disponible para pago.",
+            ],
+        ];
 
-        switch (true) {
-            case $this->oldStatus === PaymentConceptStatus::ACTIVO->value
-                && $this->newStatus === PaymentConceptStatus::FINALIZADO->value:
-                return "El concepto '{$conceptName}' ha sido FINALIZADO. Ya no se aceptan más pagos.";
+        $message = $messages[$this->oldStatus][$this->newStatus]
+            ?? $messages[$this->newStatus]['default']
+            ?? "El concepto '{$this->concept['concept_name']}' cambió de {$this->oldStatus} a {$this->newStatus}.";
 
-            case $this->oldStatus === PaymentConceptStatus::ACTIVO->value
-                && $this->newStatus === PaymentConceptStatus::DESACTIVADO->value:
-                return "El concepto '{$conceptName}' ha sido PAUSADO temporalmente.";
-
-            case $this->oldStatus === PaymentConceptStatus::ACTIVO->value
-                && $this->newStatus === PaymentConceptStatus::ELIMINADO->value:
-                return "El concepto '{$conceptName}' ha sido ELIMINADO del sistema.";
-
-            case $this->newStatus === PaymentConceptStatus::ACTIVO->value:
-                $message = "El concepto '{$conceptName}' está ahora ACTIVO y disponible para pago.";
-
-                if ($this->concept['end_date']) {
-                    $message .= " Fecha límite: " . $this->concept['end_date']->format('d/m/Y');
-                }
-
-                return $message;
-
-            default:
-                return "El concepto '{$conceptName}' cambió de {$this->oldStatus} a {$this->newStatus}.";
+        if ($this->newStatus === PaymentConceptStatus::ACTIVO->value
+            && isset($this->concept['end_date'])) {
+            $endDate = $this->concept['end_date'] instanceof \Carbon\Carbon
+                ? $this->concept['end_date']
+                : \Carbon\Carbon::parse($this->concept['end_date']);
+            $message .= " Fecha límite: " . $endDate->format('d/m/Y');
         }
+
+        return $message;
     }
 
     /**

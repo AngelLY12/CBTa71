@@ -9,7 +9,6 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Jobs\SendConceptUpdatedRelationsNotificationJob;
 use Illuminate\Support\Facades\Log;
-use function Symfony\Component\String\b;
 
 class ProcessUpdateConceptRecipientsUseCase
 {

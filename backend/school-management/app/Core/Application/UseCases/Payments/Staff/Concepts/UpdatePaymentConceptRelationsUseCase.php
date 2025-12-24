@@ -83,7 +83,7 @@ class UpdatePaymentConceptRelationsUseCase
         event(new PaymentConceptUpdatedRelations(
             $newPaymentConcept->id,
             $oldPaymentConcept->toArray(),
-            $dto->toArray(),
+            $dto->toArrayEntire(),
             $newPaymentConcept->appliesTo->value,
             $oldRecipientIds,
         ));
