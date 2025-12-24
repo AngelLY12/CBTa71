@@ -9,6 +9,7 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Jobs\SendConceptUpdatedRelationsNotificationJob;
 use Illuminate\Support\Facades\Log;
+use function Symfony\Component\String\b;
 
 class ProcessUpdateConceptRecipientsUseCase
 {
@@ -63,7 +64,7 @@ class ProcessUpdateConceptRecipientsUseCase
 
 
         if (in_array('broadcast', $notificationDecision['notification_type']) && !empty($notificationDecision['newUserIds'])) {
-            $this->sendBroadcastForExceptions($newPaymentConcept, $notificationDecision['newUserIds']);
+            $this->sendBroadcastForNewUserIds($newPaymentConcept, $notificationDecision);
             Log::info('Payment concept broadcast notifications sent', [
                 'concept_id' => $newPaymentConcept->id,
                 'reason' => $notificationDecision['reason'],
@@ -71,26 +72,123 @@ class ProcessUpdateConceptRecipientsUseCase
                 'applies_to' => $newPaymentConcept->applies_to->value
             ]);
         }
+        if(in_array('broadcast', $notificationDecision['notification_type']) && empty($notificationDecision['newUserIds']))
+        {
+            $userIds=[];
+            foreach ($recipients as $recipient)
+            {
+                $userIds[]=$recipient->id;
+            }
+            $this->sendBroadcasteForAppliesChanged($newPaymentConcept, $oldPaymentConcept,$userIds, $notificationDecision);
+        }
     }
 
-    private function sendBroadcastForExceptions(PaymentConcept $concept, array $userIds): void
+    private function sendBroadcasteForAppliesChanged(PaymentConcept $newConcept, PaymentConcept $oldConcept ,array $userIds, array $notificationDecision): void
     {
-        $changes = [
-            [
-                'type' => 'exceptions_update',
-                'field' => 'exceptions',
-                'added' => $userIds,
-                'removed' => []
-            ]
-        ];
-
+        $changes=[];
+        switch ($notificationDecision['reason'])
+        {
+            case 'applies_to_changed':
+                $changes = [
+                    [
+                        'field' =>'applies_to',
+                        'type' => 'applies_to_changed',
+                        'old' => $oldConcept->applies_to->value,
+                        'new' => $newConcept->applies_to->value,
+                    ]
+                ];
+                break;
+        }
+        if($newConcept->is_global !== $oldConcept->is_global)
+        {
+            $changes = [
+                [
+                    'field' =>'is_global',
+                    'type' => 'applies_to_changed',
+                    'old' => $oldConcept->is_global,
+                    'new' => $newConcept->is_global,
+                ]
+            ];
+        }
         SendConceptUpdatedRelationsNotificationJob::forStudents(
             $userIds,
-            $concept->id,
+            $newConcept->id,
             $changes
         )->delay(now()->addSeconds(rand(1, 10)));
     }
 
+    private function sendBroadcastForNewUserIds(PaymentConcept $concept, array $notificationDecision): void
+    {
+        $changes = [];
+        switch ($notificationDecision['reason'])
+        {
+            case 'exceptions_removed':
+                $changes = [
+                    [
+                        'type' => 'exceptions_update',
+                        'field' => 'exceptions',
+                        'added' => [],
+                        'removed' => $notificationDecision['newUserIds']
+                    ]
+                ];
+                break;
+            case 'exceptions_added':
+                $changes = [
+                    [
+                        'type' => 'exceptions_update',
+                        'field' => 'exceptions',
+                        'added' => $notificationDecision['newUserIds'],
+                        'removed' => []
+                    ]
+                ];
+                break;
+            case 'careers_updated':
+                $changes = [
+                    [
+                        'type' => 'relation_update',
+                        'field' => 'careers',
+                        'added' => $notificationDecision['newUserIds'],
+                        'removed' => []
+                    ]
+                ];
+                break;
+            case 'semesters_updated':
+                $changes = [
+                    [
+                        'type' => 'relation_update',
+                        'field' => 'semesters',
+                        'added' => $notificationDecision['newUserIds'],
+                        'removed' => []
+                    ]
+                ];
+                break;
+            case 'students_updated':
+                $changes = [
+                    [
+                        'type' => 'relation_update',
+                        'field' => 'students',
+                        'added' => $notificationDecision['newUserIds'],
+                        'removed' => []
+                    ]
+                ];
+                break;
+            case 'tags_updated':
+                $changes = [
+                    [
+                        'type' => 'relation_update',
+                        'field' => 'applicant_tags',
+                        'added' => $notificationDecision['newUserIds'],
+                        'removed' => []
+                    ]
+                ];
+                break;
+        }
+        SendConceptUpdatedRelationsNotificationJob::forStudents(
+            $notificationDecision['newUserIds'],
+            $concept->id,
+            $changes
+        )->delay(now()->addSeconds(rand(1, 10)));
+    }
     private function shouldSendNotification(PaymentConcept $newPaymentConcept,array $oldRecipientIds,array $notificationData, UpdatePaymentConceptRelationsDTO $dto): array
     {
         $oldAppliesTo = $notificationData['old_applies_to'];
@@ -101,7 +199,7 @@ class ProcessUpdateConceptRecipientsUseCase
                 'should' => true,
                 'newUserIds' => [],
                 'reason' => 'applies_to_changed',
-                'notification_type' => ['email'],
+                'notification_type' => ['email', 'broadcast'],
                 'applies_to' => $newAppliesTo->value
             ];
         }
@@ -111,7 +209,7 @@ class ProcessUpdateConceptRecipientsUseCase
                 'should' => true,
                 'newUserIds' => $notificationData['old_exception_ids'],
                 'reason' => 'exceptions_removed',
-                'notification_type' => ['email'],
+                'notification_type' => ['email', 'broadcast'],
                 'applies_to' => $newAppliesTo->value
             ];
         }
@@ -142,7 +240,7 @@ class ProcessUpdateConceptRecipientsUseCase
                     'should' => true,
                     'newUserIds' => $newlyAddedIds,
                     'reason' => $this->determineRelationChangeReason($oldAppliesTo, $dto),
-                    'notification_type' => ['email'],
+                    'notification_type' => ['email', 'broadcast'],
                     'applies_to' => $newAppliesTo->value
                 ];
             }

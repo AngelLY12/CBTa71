@@ -5,6 +5,7 @@ namespace App\Core\Application\UseCases\Jobs;
 use App\Core\Application\Traits\HasPaymentConcept;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Jobs\SendConceptUpdatedRelationsNotificationJob;
 use Illuminate\Support\Facades\Log;
 
 class ProcessPaymentConceptRecipientsUseCase
@@ -29,6 +30,33 @@ class ProcessPaymentConceptRecipientsUseCase
             return;
         }
         $this->notifyRecipients($paymentConcept,$recipients);
+        $userIds=[];
+        foreach ($recipients as $recipient)
+        {
+            $userIds[]=$recipient->id;
+        }
+        $this->sendBroadcasteForCreatedConcept($paymentConcept, $userIds);
+        Log::info('Payment concept creation notifications sent', [
+            'concept_id' => $paymentConcept->id,
+            'applies_to' => $appliesTo,
+            'recipient_count' => count($recipients),
+            'broadcast_count' => count($userIds)
+        ]);
+    }
+
+    private function sendBroadcasteForCreatedConcept(PaymentConcept $newConcept, array $userIds): void
+    {
+        $changes = [
+            [
+                'type' => 'created_concept',
+                'field' => 'all_required_fields_added'
+            ]
+        ];
+        SendConceptUpdatedRelationsNotificationJob::forStudents(
+            $userIds,
+            $newConcept->id,
+            $changes
+        )->delay(now()->addSeconds(rand(1, 10)));
     }
 
 

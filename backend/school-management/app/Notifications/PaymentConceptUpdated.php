@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -73,6 +74,7 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
         $mainChangeType = $this->determineMainChangeType();
 
         return match($mainChangeType) {
+            'created_concept' => 'Concepto de pago creado',
             'relation_update' => 'Actualización del concepto de pago',
             'applies_to_changed' => 'Nuevo concepto de pago aplicado',
             'exceptions_update' => 'Actualización de las excepciones del concepto de pago',
@@ -92,6 +94,9 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
             if ($change['type'] === 'relation_update') {
                 return 'relation_update';
             }
+            if($change['type'] === 'created_concept'){
+                return 'created_concept';
+            }
         }
 
         return 'field_update';
@@ -108,9 +113,18 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
         }
 
         $changeMessages = [];
+        $createdMessage=[];
         $userId = $notifiable->id;
         foreach ($this->changes as $change) {
+            if($change['type'] === 'created_concept')
+            {
+                $startDate = $this->paymentConcept->start_date?->format('d/m/Y') ?? 'N/A';
+                $endDate = $this->paymentConcept->end_date?->format('d/m/Y') ?? 'N/A';
 
+                $createdMessage[] = "Nombre del concepto: {$conceptName}";
+                $createdMessage[] = "Monto: {$amount} MXN";
+                $createdMessage[] = "Válido del {$startDate} al {$endDate}";
+            }
             if ($change['field'] === 'is_global') {
                 $globalStatus = $change['new'] ? 'global' : 'no global';
                 $changeMessages[] = "El concepto ahora es {$globalStatus}";
@@ -119,15 +133,16 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
             } elseif ($change['type'] === 'relation_update') {
                 if($change['field'] === 'semesters')
                 {
-                    $changeMessages[] = "El ceoncepto ahora aplica al semestre {$change['added']}";
+                    $semesters = implode(', ', (array)$change['added']);
+                    $changeMessages[] = "El concepto ahora aplica al {$semesters} semestre";
                 }
                 if($change['field'] === 'applicant_tags')
                 {
-                    $changeMessages[] = "El concepto de pago ahora aplica al tag {$change['added']}";
+                    $changeMessages[] = "El concepto ahora aplica a tu tag particular";
                 }
                 if($change['field'] === 'students')
                 {
-                    $changeMessages[] = "El concepto de pago ahora aplica para ti}";
+                    $changeMessages[] = "El concepto de pago ahora aplica para ti";
                 }
                 if($change['field'] === 'careers')
                 {
@@ -145,7 +160,14 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
 
         }
 
-        $baseMessage = "El concepto '{$conceptName}' ({$amount} MXN) ha sido actualizado.";
+        if(!empty($createdMessage))
+        {
+            $message = "Concepto de pago creado. ";
+            $message .= "Detalles importantes: " . implode(", ", $createdMessage) . '.';
+            return $message;
+        }
+
+        $baseMessage = "El concepto '{$conceptName}' con monto ({$amount} MXN) ha sido actualizado.";
 
         if (!empty($changeMessages)) {
             $limitedChanges = array_slice($changeMessages, 0, 3);
@@ -162,7 +184,7 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
     }
     private function getFilteredChanges(): array
     {
-        $relevantFields = ['relation_update', 'applies_to_changed', 'exceptions_update'];
+        $relevantFields = ['relation_update', 'applies_to_changed', 'exceptions_update', 'created_concept'];
 
         return array_filter($this->changes, function($change) use ($relevantFields) {
             return in_array($change['type'], $relevantFields);
