@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;

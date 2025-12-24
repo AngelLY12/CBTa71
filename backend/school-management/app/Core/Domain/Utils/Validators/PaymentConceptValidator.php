@@ -281,11 +281,13 @@ class PaymentConceptValidator{
 
     public static function ensureConceptHasRequiredFields(PaymentConcept $concept)
     {
+        $minAmount = config('concepts.amount.min');
+        $maxAmount = config('concepts.amount.max');
         if (empty($concept->concept_name)) {
             throw new ConceptMissingNameException();
         }
-
-        if ($concept->amount === null || bccomp($concept->amount, '10', 2) === -1) {
+        if ($concept->amount === null ||bccomp($concept->amount, $minAmount, 2) === -1 ||
+            bccomp($concept->amount, $maxAmount, 2) === 1) {
             throw new ConceptInvalidAmountException();
         }
 
@@ -328,8 +330,13 @@ class PaymentConceptValidator{
 
     public static function ensureUpdatedFieldsAreValid(PaymentConcept $original, array $fieldsToUpdate): void
     {
+        $minAmount = config('concepts.amount.min');
+        $maxAmount = config('concepts.amount.max');
         if (isset($fieldsToUpdate['amount'])) {
-            if (bccomp($fieldsToUpdate['amount'], '10', 2) === -1) {
+            $isBelowMin = bccomp($fieldsToUpdate['amount'], $minAmount, 2) === -1;
+            $isAboveMax = bccomp($fieldsToUpdate['amount'], $maxAmount, 2) === 1;
+
+            if ($isBelowMin || $isAboveMax) {
                 throw new ConceptInvalidAmountException();
             }
         }

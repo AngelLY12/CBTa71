@@ -25,4 +25,9 @@ enum UserRoles: string
         ];
     }
 
+    public static function administrationRoles(): array
+    {
+        return [self::ADMIN->value, self::SUPERVISOR->value];
+    }
+
 }

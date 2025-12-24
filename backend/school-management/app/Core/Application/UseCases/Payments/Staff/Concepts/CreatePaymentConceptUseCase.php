@@ -12,6 +12,7 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
+use App\Events\AdministrationEvent;
 use App\Exceptions\NotFound\CareersNotFoundException;
 use App\Exceptions\NotFound\RecipientsNotFoundException;
 use App\Exceptions\NotFound\StudentsNotFoundException;
@@ -57,6 +58,15 @@ class CreatePaymentConceptUseCase
         });
         $affectedCount = count($this->uqRepo->getRecipientsIds($paymentConcept, $dto->appliesTo->value));
         ProcessPaymentConceptRecipientsJob::forConcept($paymentConcept->id, $dto->appliesTo->value)->delay(now()->addSeconds(rand(1, 10)));
+        if(bccomp($paymentConcept->amount, config('concepts.amount.notifications.threshold')) === 1)
+        {
+            event(new AdministrationEvent(
+                amount: $paymentConcept->amount,
+                id: $paymentConcept->id,
+                concept_name: $paymentConcept->concept_name,
+                action: "creó",
+            ));
+        }
         return PaymentConceptMapper::toCreatePaymentConceptResponse($paymentConcept, $affectedCount);
     }
 

@@ -50,8 +50,11 @@ use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentQueryRep
 use App\Core\Infraestructure\Repositories\Query\Stripe\StripeGatewayQuery;
 use App\Core\Infraestructure\Repositories\Query\User\EloquentParentStudentQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\User\EloquentUserQueryRepository;
+use App\Events\AdministrationEvent;
+use App\Listeners\SendAmoutExceededNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\URL;
@@ -65,6 +68,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        Event::listen(
+            AdministrationEvent::class,
+            SendAmoutExceededNotification::class
+        );
         $this->app->bind(StripeGatewayInterface::class, StripeGateway::class);
         $this->app->bind(StripeGatewayInterface::class, StripeGatewayQuery::class);
         $this->app->bind(PaymentMethodRepInterface::class, EloquentPaymentMethodRepository::class);

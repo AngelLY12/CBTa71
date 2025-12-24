@@ -76,7 +76,10 @@ class UpdatePaymentConceptRequest extends FormRequest
 //            'status'           => ['sometimes','required','string','in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptStatus::cases()))],
             'start_date'       => 'sometimes|required|date|date_format:Y-m-d',
             'end_date'         => 'nullable|date|date_format:Y-m-d',
-            'amount'           => 'sometimes|required|numeric|min:10',
+            'amount'           => ['sometimes','required','numeric',
+                                    'min:' . config('concepts.amount.min'),
+                                    'max:' . config('concepts.amount.max')],
+
 
         ];
     }

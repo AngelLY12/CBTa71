@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Models\User;
 use App\Notifications\PaymentConceptUpdatedFields;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -43,7 +44,7 @@ class SendConceptUpdatedFieldsNotificationJob implements ShouldQueue
             return;
         }
 
-        $users=$uqRepo->findByIds($userIds);
+        $users=User::whereIn('id', $userIds)->get();
 
         if ($users->isEmpty()) {
             Log::warning('No users found for broadcast notifications', [

@@ -9,6 +9,6 @@ class ConceptInvalidAmountException extends DomainException
 {
     public function __construct()
     {
-        parent::__construct(422, 'El monto del concepto debe ser mayor a 10.', ErrorCode::CONCEPT_INVALID_AMOUNT);
+        parent::__construct(422, 'El monto del concepto debe ser mayor a $10.00 y menor a $25000.00.', ErrorCode::CONCEPT_INVALID_AMOUNT);
     }
 }

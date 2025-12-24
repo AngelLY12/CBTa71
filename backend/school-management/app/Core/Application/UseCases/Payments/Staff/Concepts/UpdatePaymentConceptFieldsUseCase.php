@@ -9,6 +9,7 @@ use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
+use App\Events\AdministrationEvent;
 use App\Exceptions\NotFound\ConceptNotFoundException;
 use App\Exceptions\Validation\ValidationException;
 use App\Jobs\SendConceptUpdatedFieldsNotificationJob;
@@ -73,6 +74,15 @@ class UpdatePaymentConceptFieldsUseCase
                 $newPaymentConcept->id,
                 $changes
             )->delay(now()->addSeconds(rand(1, 10)));
+        }
+        if(bccomp($newPaymentConcept->amount, config('concepts.amount.notifications.threshold')) === 1)
+        {
+            event(new AdministrationEvent(
+                amount: $newPaymentConcept->amount,
+                id: $newPaymentConcept->id,
+                concept_name: $newPaymentConcept->concept_name,
+                action: "actualizó",
+            ));
         }
         return PaymentConceptMapper::toUpdatePaymentConceptResponse($newPaymentConcept, $data);
     }
