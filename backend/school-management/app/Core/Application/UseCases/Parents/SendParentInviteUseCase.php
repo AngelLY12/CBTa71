@@ -62,7 +62,8 @@ class SendParentInviteUseCase
                 ),
                 $user->email,
                 'parent_invitation'
-            )->delay(now()->addSeconds(rand(1, 5)));
+            )
+                ->onQueue('emails');
 
     }
 }

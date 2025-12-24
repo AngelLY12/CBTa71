@@ -6,19 +6,21 @@ use App\Core\Application\UseCases\Misc\CreateUserActionLogUseCase;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 
 class LogUserActionJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private User $user;
-    private Request $request;
+    private array $request;
     /**
      * Create a new job instance.
      */
-    public function __construct(User $user, Request $request)
+    public function __construct(User $user, array $request)
     {
         $this->user=$user;
         $this->request=$request;

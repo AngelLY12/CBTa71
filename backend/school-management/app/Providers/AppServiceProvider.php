@@ -51,7 +51,15 @@ use App\Core\Infraestructure\Repositories\Query\Stripe\StripeGatewayQuery;
 use App\Core\Infraestructure\Repositories\Query\User\EloquentParentStudentQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\User\EloquentUserQueryRepository;
 use App\Events\AdministrationEvent;
+use App\Events\PaymentConceptCreated;
+use App\Events\PaymentConceptStatusChanged;
+use App\Events\PaymentConceptUpdatedFields;
+use App\Events\PaymentConceptUpdatedRelations;
+use App\Listeners\NotifyUsersOfConceptStatusChange;
+use App\Listeners\ProcessRecipientsListener;
+use App\Listeners\ProcessRecipientsUpdateListener;
 use App\Listeners\SendAmoutExceededNotification;
+use App\Listeners\SendConceptUpdatedFieldsNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Event;
@@ -68,10 +76,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        Event::listen(
-            AdministrationEvent::class,
-            SendAmoutExceededNotification::class
-        );
+        Event::listen(AdministrationEvent::class, SendAmoutExceededNotification::class);
+        Event::listen(PaymentConceptStatusChanged::class, NotifyUsersOfConceptStatusChange::class);
+        Event::listen(PaymentConceptCreated::class,ProcessRecipientsListener::class);
+        Event::listen(PaymentConceptUpdatedFields::class,SendConceptUpdatedFieldsNotification::class);
+        Event::listen(PaymentConceptUpdatedRelations::class, ProcessRecipientsUpdateListener::class);
         $this->app->bind(StripeGatewayInterface::class, StripeGateway::class);
         $this->app->bind(StripeGatewayInterface::class, StripeGatewayQuery::class);
         $this->app->bind(PaymentMethodRepInterface::class, EloquentPaymentMethodRepository::class);

@@ -28,8 +28,8 @@ class CheckUserStatus
         } catch (UserInactiveException $e) {
             $user->currentAccessToken()?->delete();
             $user->currentRefreshToken()?->delete();
-            CheckUserStatusJob::dispatch($user);
-            ClearStudentCacheJob::dispatch($user->id);
+            CheckUserStatusJob::dispatch($user)->onQueue('default');
+            ClearStudentCacheJob::dispatch($user->id)->onQueue('cache');;
             throw $e;
         }
         return $next($request);

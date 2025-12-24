@@ -6,6 +6,7 @@ use App\Core\Application\DTO\Response\General\ReconciliationResult;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Traits\HasPaymentStripe;
 use App\Core\Domain\Entities\Payment;
+use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
@@ -16,6 +17,7 @@ use App\Exceptions\NotFound\PaymentMethodNotFoundException;
 use App\Exceptions\ServerError\PaymentNotificationException;
 use App\Jobs\ClearCacheForUsersJob;
 use App\Jobs\ClearStaffCacheJob;
+use App\Jobs\SendBulkMailJob;
 use App\Jobs\SendMailJob;
 use App\Mail\PaymentValidatedMail;
 
@@ -38,6 +40,7 @@ class ReconcilePaymentUseCase
         $affectedUsers = [];
         $paymentIntentIds = [];
         $payments = [];
+        $paymentsByUserId = [];
 
         foreach ($this->pqRepo->getPaidWithinLastMonthCursor() as $payment) {
             $paymentIntentIds[] = $payment->payment_intent_id;
@@ -86,9 +89,7 @@ class ReconcilePaymentUseCase
                 $newPayment = $this->updatePaymentWithStripeData($payment, $pi, $charge, $pm);
                 $result->updated++;
 
-                $this->notifyUser($newPayment);
-                $result->notified++;
-
+                $paymentsByUserId[$newPayment->user_id][] = $newPayment;
                 $affectedUsers[] = $newPayment->user_id;
 
             } catch (DomainException $e) {
@@ -101,45 +102,93 @@ class ReconcilePaymentUseCase
         }
 
         if ($result->updated > 0) {
-            ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
-            ClearCacheForUsersJob::forStudents(array_unique($affectedUsers))
-                ->delay(now()->addSeconds(10));
+            $this->clearCaches($affectedUsers);
         }
+        $this->notifyUsersBatch($paymentsByUserId);
 
         return $result;
 
     }
 
-    public function notifyUser(Payment $payment): void
+    private function notifyUsersBatch(array $paymentsByUserId): void
     {
-        try{
-            $user= $this->userRepo->findById($payment->user_id);
+        if (empty($paymentsByUserId)) {
+            return;
+        }
+
+        $userIds = array_keys($paymentsByUserId);
+        $users = $this->userRepo->findByIds($userIds);
+
+        $userMap = [];
+        foreach ($users as $user) {
+            $userMap[$user->id] = $user;
+        }
+        $mailables = [];
+        $recipientEmails = [];
+
+        foreach ($paymentsByUserId as $userId => $userPayments) {
+            $user = $userMap[$userId] ?? null;
             if (!$user) {
-                throw new PaymentNotificationException("Usuario con ID {$payment->user_id} no encontrado.");
+                continue;
             }
-            $details = $payment->payment_method_details ?? [];
 
-             $data = [
-                'recipientName' => $user->fullName(),
-                'recipientEmail' => $user->email,
-                'concept_name'       => $payment->concept_name,
-                'amount'             => $payment->amount,
-                 'amount_received'    => $payment->amount_received,
-                'payment_method_detail' => $details,
-                 'status' => $payment->status->value,
-                'url'                => $payment->url ?? null,
-                'payment_intent_id'  => $payment->payment_intent_id,
-            ];
+            foreach ($userPayments as $payment) {
+                $data = [
+                    'recipientName' => $user->fullName(),
+                    'recipientEmail' => $user->email,
+                    'concept_name' => $payment->concept_name,
+                    'amount' => $payment->amount,
+                    'amount_received' => $payment->amount_received,
+                    'payment_method_detail' => $payment->payment_method_details ?? [],
+                    'status' => $payment->status->value,
+                    'url' => $payment->url ?? null,
+                    'payment_intent_id' => $payment->payment_intent_id,
+                ];
 
-            $mail = new PaymentValidatedMail(MailMapper::toPaymentValidatedEmailDTO($data));
-            SendMailJob::forUser($mail, $user->email,'reconcile_payment')->delay(now()->addSeconds(rand(1, 5)));
+                $mailables[] = new PaymentValidatedMail(
+                    MailMapper::toPaymentValidatedEmailDTO($data)
+                );
+                $recipientEmails[] = $user->email;
+            }
+        }
 
-        }catch (DomainException $e) {
-            logger()->warning("[ReconcilePayment] {$e->getMessage()} (code: {$e->getCode()})");
-        } catch (\Throwable $e) {
-            logger()->error("Error al reconciliar el pago {$payment->id}: {$e->getMessage()}");
+        if (!empty($mailables)) {
+            $this->sendBulkEmails($mailables, $recipientEmails);
         }
     }
 
+    private function sendBulkEmails(array $mailables, array $recipientEmails): void
+    {
+        $chunkSize = 50;
+        $total = count($mailables);
+
+        for ($i = 0; $i < $total; $i += $chunkSize) {
+            $mailablesChunk = array_slice($mailables, $i, $chunkSize);
+            $emailsChunk = array_slice($recipientEmails, $i, $chunkSize);
+
+            SendBulkMailJob::forRecipients(
+                $mailablesChunk,
+                $emailsChunk,
+                'bulk_reconcile_payment'
+            )
+                ->onQueue('emails')
+                ->delay(now()->addSeconds(5));
+        }
+    }
+
+    private function clearCaches(array $affectedUsers): void
+    {
+        $uniqueUserIds = array_unique($affectedUsers);
+
+        foreach (array_chunk($uniqueUserIds, 100) as $chunk) {
+            ClearCacheForUsersJob::forStudents($chunk)
+                ->onQueue('cache')
+                ->delay(now()->addSeconds(5));
+        }
+
+        ClearStaffCacheJob::dispatch()
+            ->onQueue('cache')
+            ->delay(now()->addSeconds(5));
+    }
 
 }

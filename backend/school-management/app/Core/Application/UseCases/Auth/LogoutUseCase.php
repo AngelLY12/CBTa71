@@ -38,11 +38,13 @@ class LogoutUseCase
         $userId = $user->id;
 
         if (in_array(UserRoles::PARENT->value, $roles)) {
-            ClearParentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
+            ClearParentCacheJob::dispatch($userId)
+                ->onQueue('cache');
         }
 
         if (in_array(UserRoles::STUDENT->value, $roles)) {
-            ClearStudentCacheJob::dispatch($userId)->delay(now()->addSeconds(rand(1, 10)));
+            ClearStudentCacheJob::dispatch($userId)
+                ->onQueue('cache');
             $this->service->clearPrefix(CachePrefix::STUDENT->value . StudentCacheSufix::CARDS->value . ":*:$userId");
         }
         $this->service->clearKey(CachePrefix::USER->value, $userId);

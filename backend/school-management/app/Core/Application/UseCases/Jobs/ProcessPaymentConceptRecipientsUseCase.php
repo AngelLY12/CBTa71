@@ -56,7 +56,9 @@ class ProcessPaymentConceptRecipientsUseCase
             $userIds,
             $newConcept->id,
             $changes
-        )->delay(now()->addSeconds(rand(1, 10)));
+        )
+            ->onQueue('default')
+            ->delay(now()->addSeconds(5));
     }
 
 

@@ -55,9 +55,9 @@ class HandleFailedOrExpiredPaymentUseCase
                 ];
 
                 $mail = new PaymentFailedMail(MailMapper::toPaymentFailedEmailDTO($data));
-                SendMailJob::forUser($mail, $user->email, 'failed_or_expired_payment')->delay(now()->addSeconds(rand(1, 5)));
+                SendMailJob::forUser($mail, $user->email, 'failed_or_expired_payment')->onQueue('emails');
                 $this->paymentRepo->delete($payment->id);
-                ClearStudentCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));;
+                ClearStudentCacheJob::dispatch($user->id)->onQueue('cache');
                 return true;
             }
             return false;

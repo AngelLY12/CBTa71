@@ -16,7 +16,7 @@ class CreateUserActionLogUseCase
     {
     }
 
-    public function execute(User $user, Request $request): UserActionLog
+    public function execute(User $user, array $request): UserActionLog
     {
         $log=UserActionLogMapper::toDomain($user,$request);
         return $this->ulaRepo->create($log);

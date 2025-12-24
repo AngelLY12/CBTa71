@@ -265,7 +265,6 @@ class BulkImportStudentDetailsUseCase
 
     private function dispatchCacheClear(): void
     {
-        ClearStaffCacheJob::dispatch()
-            ->delay(now()->addSeconds(rand(5, 15)));
+        ClearStaffCacheJob::dispatch()->onQueue('cache');
     }
 }

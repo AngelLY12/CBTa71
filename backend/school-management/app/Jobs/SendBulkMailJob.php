@@ -124,6 +124,7 @@ class SendBulkMailJob implements ShouldQueue
         ]);
 
         SendMailJob::fromBulkRetry(clone $mailable, $recipientEmail)
+            ->onQueue('emails')
             ->delay(now()->addMinutes(1));
     }
 

@@ -49,7 +49,8 @@ class RegisterUseCase
                 ),
                 $user->email,
                 'register_user'
-            )->delay(now()->addSeconds(rand(1, 5)));
+            )
+                ->onQueue('emails');
 
     }
 }

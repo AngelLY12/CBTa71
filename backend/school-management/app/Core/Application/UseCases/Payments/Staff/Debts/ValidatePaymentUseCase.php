@@ -17,11 +17,6 @@ use App\Mail\PaymentValidatedMail;
 
 class ValidatePaymentUseCase{
 
-    private const CACHE_DELAY_MIN = 1;
-    private const CACHE_DELAY_MAX = 10;
-    private const EMAIL_DELAY_MIN = 1;
-    private const EMAIL_DELAY_MAX = 5;
-
     public function __construct(
         private PaymentValidationService $validationService
     )
@@ -52,14 +47,10 @@ class ValidatePaymentUseCase{
     private function dispatchCacheClearing(int $userId): void
     {
         ClearStudentCacheJob::dispatch($userId)
-            ->delay(now()->addSeconds(
-                rand(self::CACHE_DELAY_MIN, self::CACHE_DELAY_MAX)
-            ));
+            ->onQueue('cache');
 
         ClearStaffCacheJob::dispatch()
-            ->delay(now()->addSeconds(
-                rand(self::CACHE_DELAY_MIN, self::CACHE_DELAY_MAX)
-            ));
+            ->onQueue('cache');
     }
 
     private function sendValidationEmail(Payment $payment, User $student): void
@@ -79,9 +70,7 @@ class ValidatePaymentUseCase{
         );
 
         SendMailJob::forUser($mail, $student->email, 'validate_payment')
-            ->delay(now()->addSeconds(
-                rand(self::EMAIL_DELAY_MIN, self::EMAIL_DELAY_MAX)
-            ));
+            ->onQueue('emails');
     }
 
     private function buildResponse(Payment $payment, User $student): PaymentValidateResponse

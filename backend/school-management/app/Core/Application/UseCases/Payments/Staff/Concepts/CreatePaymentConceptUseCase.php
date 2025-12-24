@@ -13,15 +13,14 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
 use App\Events\AdministrationEvent;
+use App\Events\PaymentConceptCreated;
 use App\Exceptions\NotFound\CareersNotFoundException;
 use App\Exceptions\NotFound\RecipientsNotFoundException;
 use App\Exceptions\NotFound\StudentsNotFoundException;
 use App\Exceptions\Validation\ApplicantTagInvalidException;
 use App\Exceptions\Validation\CareerSemesterInvalidException;
 use App\Exceptions\Validation\SemestersNotFoundException;
-use App\Jobs\ProcessPaymentConceptRecipientsJob;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class CreatePaymentConceptUseCase
 {
@@ -57,7 +56,7 @@ class CreatePaymentConceptUseCase
             return $paymentConcept;
         });
         $affectedCount = count($this->uqRepo->getRecipientsIds($paymentConcept, $dto->appliesTo->value));
-        ProcessPaymentConceptRecipientsJob::forConcept($paymentConcept->id, $dto->appliesTo->value)->delay(now()->addSeconds(rand(1, 10)));
+        event(new PaymentConceptCreated($paymentConcept->id, $paymentConcept->appliesTo->value));
         if(bccomp($paymentConcept->amount, config('concepts.amount.notifications.threshold')) === 1)
         {
             event(new AdministrationEvent(

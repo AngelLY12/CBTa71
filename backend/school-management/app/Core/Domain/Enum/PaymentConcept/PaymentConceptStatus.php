@@ -24,7 +24,7 @@ enum PaymentConceptStatus: string
             self::ACTIVO => [self::FINALIZADO, self::DESACTIVADO, self::ELIMINADO,],
             self::FINALIZADO => [self::ACTIVO, self::ELIMINADO,],
             self::DESACTIVADO => [self::ACTIVO, self::ELIMINADO,],
-            self::ELIMINADO => [self::ACTIVO,],
+            self::ELIMINADO => [self::ACTIVO,self::DESACTIVADO,],
         };
     }
 

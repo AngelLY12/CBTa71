@@ -114,7 +114,9 @@ class ProcessUpdateConceptRecipientsUseCase
             $userIds,
             $newConcept->id,
             $changes
-        )->delay(now()->addSeconds(rand(1, 10)));
+        )
+            ->onQueue('default')
+            ->delay(now()->addSeconds(5));
     }
 
     private function sendBroadcastForNewUserIds(PaymentConcept $concept, array $notificationDecision): void
@@ -187,7 +189,9 @@ class ProcessUpdateConceptRecipientsUseCase
             $notificationDecision['newUserIds'],
             $concept->id,
             $changes
-        )->delay(now()->addSeconds(rand(1, 10)));
+        )
+            ->onQueue('default')
+            ->delay(now()->addSeconds(5));
     }
     private function shouldSendNotification(PaymentConcept $newPaymentConcept,array $oldRecipientIds,array $notificationData, UpdatePaymentConceptRelationsDTO $dto): array
     {

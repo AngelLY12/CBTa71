@@ -13,8 +13,6 @@ use Illuminate\Support\Collection;
 abstract class BaseChangeUserStatusUseCase
 {
     protected const CHUNK_SIZE = 500;
-    protected const CACHE_DELAY_MIN = 5;
-    protected const CACHE_DELAY_MAX = 15;
 
     public function __construct(
         protected UserRepInterface $userRepo,
@@ -68,9 +66,7 @@ abstract class BaseChangeUserStatusUseCase
     protected function dispatchCacheClear(): void
     {
         ClearStaffCacheJob::dispatch()
-            ->delay(now()->addSeconds(
-                rand(static::CACHE_DELAY_MIN, static::CACHE_DELAY_MAX)
-            ));
+            ->onQueue('cache');
     }
 
 }

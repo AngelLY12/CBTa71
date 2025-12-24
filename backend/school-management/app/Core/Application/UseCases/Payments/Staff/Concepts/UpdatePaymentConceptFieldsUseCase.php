@@ -10,9 +10,9 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
 use App\Events\AdministrationEvent;
+use App\Events\PaymentConceptUpdatedFields;
 use App\Exceptions\NotFound\ConceptNotFoundException;
 use App\Exceptions\Validation\ValidationException;
-use App\Jobs\SendConceptUpdatedFieldsNotificationJob;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -70,10 +70,7 @@ class UpdatePaymentConceptFieldsUseCase
             'changes'=>$changes,
         ];
         if ($this->shouldNotifyForChanges($changes)) {
-            SendConceptUpdatedFieldsNotificationJob::forStudents(
-                $newPaymentConcept->id,
-                $changes
-            )->delay(now()->addSeconds(rand(1, 10)));
+            event(new PaymentConceptUpdatedFields($newPaymentConcept->id, $changes));
         }
         if(bccomp($newPaymentConcept->amount, config('concepts.amount.notifications.threshold')) === 1)
         {

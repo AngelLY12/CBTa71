@@ -47,7 +47,8 @@ class SendAmoutExceededNotification
             );
             $recipientEmails[] = $recipient->email;
         }
-        SendBulkMailJob::forRecipients($mailables, $recipientEmails);
+        SendBulkMailJob::forRecipients($mailables, $recipientEmails)
+        ->onQueue('emails');
 
     }
 }

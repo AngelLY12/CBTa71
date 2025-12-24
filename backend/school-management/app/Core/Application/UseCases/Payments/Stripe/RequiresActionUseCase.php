@@ -63,8 +63,8 @@ class RequiresActionUseCase
             $this->paymentRepo->update($payment->id, ['status' => $objStatus->value, 'url' => $url ?? $payment->url]);
             if ($sendMail && $data) {
                 $mail = new RequiresActionMail(MailMapper::toRequiresActionEmailDTO($data));
-                SendMailJob::forUser($mail, $user->email, 'requires_action')->delay(now()->addSeconds(rand(1, 5)));
-                ClearStudentCacheJob::dispatch($user->id)->delay(now()->addSeconds(rand(1, 10)));
+                SendMailJob::forUser($mail, $user->email, 'requires_action')->onQueue('emails');
+                ClearStudentCacheJob::dispatch($user->id)->onQueue('cache');
                 return true;
             }
 

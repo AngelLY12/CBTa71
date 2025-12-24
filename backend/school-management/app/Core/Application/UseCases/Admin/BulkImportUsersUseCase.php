@@ -406,16 +406,16 @@ class BulkImportUsersUseCase
                 $mailables,
                 $recipientEmails,
                 'bulk_import_user_registration'
-            )->delay(now()->addSeconds($delaySeconds));
+            )
+                ->onQueue('emails')
+                ->delay(now()->addSeconds($delaySeconds));
         }
     }
 
     private function dispatchCacheClear(): void
     {
         ClearStaffCacheJob::dispatch()
-            ->delay(now()->addSeconds(
-                rand(self::CACHE_CLEAR_DELAY_MIN, self::CACHE_CLEAR_DELAY_MAX)
-            ));
+            ->onQueue('cache');
     }
 
 }

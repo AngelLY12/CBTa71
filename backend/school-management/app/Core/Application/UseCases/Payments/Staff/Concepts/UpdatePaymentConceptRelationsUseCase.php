@@ -12,6 +12,7 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
+use App\Events\PaymentConceptUpdatedRelations;
 use App\Exceptions\NotFound\CareersNotFoundException;
 use App\Exceptions\NotFound\ConceptNotFoundException;
 use App\Exceptions\NotFound\RecipientsNotFoundException;
@@ -19,7 +20,6 @@ use App\Exceptions\NotFound\StudentsNotFoundException;
 use App\Exceptions\Validation\ApplicantTagInvalidException;
 use App\Exceptions\Validation\CareerSemesterInvalidException;
 use App\Exceptions\Validation\SemestersNotFoundException;
-use App\Jobs\ProcessPaymentConceptUpdateJob;
 use Illuminate\Support\Facades\DB;
 
 class UpdatePaymentConceptRelationsUseCase
@@ -79,15 +79,14 @@ class UpdatePaymentConceptRelationsUseCase
 
             return [$paymentConcept,$existingConcept, $oldRecipientIds];
         });
-        ProcessPaymentConceptUpdateJob::forUpdateConcept(
+
+        event(new PaymentConceptUpdatedRelations(
             $newPaymentConcept->id,
-            $oldPaymentConcept,
-            $oldRecipientIds,
-            $dto,
+            $oldPaymentConcept->toArray(),
+            $dto->toArray(),
             $newPaymentConcept->appliesTo->value,
-        )->delay(now()->addSeconds(rand(1, 10)));
-
-
+            $oldRecipientIds,
+        ));
 
         return $this->formattResponse($newPaymentConcept,$oldPaymentConcept,$oldRecipientIds);
     }

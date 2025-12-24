@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
-use App\Models\User;
 use App\Notifications\PaymentConceptUpdated;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,7 +11,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class SendConceptUpdatedRelationsNotificationJob implements ShouldQueue
 {
@@ -44,32 +42,21 @@ class SendConceptUpdatedRelationsNotificationJob implements ShouldQueue
             return;
         }
 
-        $users=User::whereIn('id', $this->userIds)->get();
-
-        if ($users->isEmpty()) {
-            Log::warning('No users found for broadcast notifications', [
-                'user_ids' => $this->userIds,
-                'concept_id' => $this->conceptId
-            ]);
-            return;
-        }
-
         $concept=$pcqRepo->findById($this->conceptId);
-        $chunkSize = 500;
-        $totalNotified = 0;
+        $notification = new PaymentConceptUpdated($concept->toArray(), $this->changes);
 
-        foreach ($users->chunk($chunkSize) as $chunk) {
-            Notification::send($chunk, new PaymentConceptUpdated($concept, $this->changes));
-            $totalNotified += $chunk->count();
 
-            if ($chunk->count() === $chunkSize) {
-                usleep(100000);
-            }
+        foreach (array_chunk($this->userIds, 500) as $chunk) {
+            \App\Models\User::whereIn('id', $chunk)
+                ->each(function ($user) use ($notification) {
+                    $user->notify($notification);
+                });
+
+            usleep(100000);
         }
 
         Log::info('Broadcast notifications job completed', [
             'concept_id' => $this->conceptId,
-            'user_count' => $totalNotified,
             'changes_count' => count($this->changes),
             'queue' => $this->queue
         ]);

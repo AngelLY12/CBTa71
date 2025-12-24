@@ -19,7 +19,12 @@ class LogUserAction
         $response = $next($request);
 
         $user = $request->user();
-        LogUserActionJob::dispatch(user:$user, request:$request); 
+        $requestData=[
+            'ip' =>$request->ip(),
+            'method' =>$request->method(),
+            'url' =>$request->fullUrl(),
+        ];
+        LogUserActionJob::dispatch(user:$user, request:$requestData)->onQueue('default');
 
         return $response;
     }

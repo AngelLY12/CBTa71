@@ -83,4 +83,44 @@ class UpdatePaymentConceptRelationsDTO
         ];
     }
 
+    public function toArrayEntire(): array
+    {
+        return [
+            'id' => $this->id,
+            'semesters' => $this->semesters,
+            'careers' => $this->careers,
+            'students' => $this->students,
+            'applies_to' => $this->appliesTo instanceof PaymentConceptAppliesTo
+                ? $this->appliesTo->value
+                : $this->appliesTo,
+            'is_global' => $this->is_global,
+            'replace_relations' => $this->replaceRelations,
+            'exception_students' => $this->exceptionStudents,
+            'replace_exceptions' => $this->replaceExceptions,
+            'remove_all_exceptions' => $this->removeAllExceptions,
+            'applicant_tags' => $this->applicantTags,
+        ];
+    }
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            id: $data['id'],
+            semesters: $data['semesters'] ?? null,
+            careers: $data['careers'] ?? null,
+            students: $data['students'] ?? null,
+            appliesTo: isset($data['applies_to'])
+                ? ($data['applies_to'] instanceof PaymentConceptAppliesTo
+                    ? $data['applies_to']
+                    : PaymentConceptAppliesTo::tryFrom($data['applies_to']))
+                : null,
+            is_global: $data['is_global'] ?? false,
+            replaceRelations: $data['replace_relations'] ?? false,
+            exceptionStudents: $data['exception_students'] ?? null,
+            replaceExceptions: $data['replace_exceptions'] ?? false,
+            removeAllExceptions: $data['remove_all_exceptions'] ?? false,
+            applicantTags: $data['applicant_tags'] ?? null,
+        );
+    }
+
 }

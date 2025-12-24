@@ -52,7 +52,8 @@ trait HasPaymentConcept
         foreach ($chunks as $chunk) {
             $userIds = array_map(fn($user) => $user->id, $chunk);
             ClearCacheForUsersJob::forConceptStatus($userIds, $concept->status)
-                ->delay(now()->addSeconds(rand(1, 10)));
+                ->onQueue('cache')
+                ->delay(now()->addSeconds(5));
 
             $mailables = [];
             $recipientEmails = [];
@@ -74,7 +75,8 @@ trait HasPaymentConcept
             }
 
             SendBulkMailJob::forRecipients($mailables, $recipientEmails, 'concept_notification')
-                ->delay(now()->addSeconds(rand(5, 15)));
+                ->onQueue('emails')
+                ->delay(now()->addSeconds(5));
         }
     }
 }

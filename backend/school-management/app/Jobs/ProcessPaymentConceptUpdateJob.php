@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\UseCases\Jobs\ProcessUpdateConceptRecipientsUseCase;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -19,18 +18,18 @@ class ProcessPaymentConceptUpdateJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected int $newPaymentConceptId;
-    protected ?PaymentConcept $oldPaymentConcept;
-    protected UpdatePaymentConceptRelationsDTO $dto;
+    protected ?array $oldPaymentConceptArray;
+    protected array $dtoArray;
     protected string $appliesTo;
     protected array $oldRecipientIds;
     /**
      * Create a new job instance.
      */
-    public function __construct(int $newPaymentConceptId, PaymentConcept $oldPaymentConcept, UpdatePaymentConceptRelationsDTO $dto, string $appliesTo, array $oldRecipientIds)
+    public function __construct(int $newPaymentConceptId, array $oldPaymentConceptArray, array $dtoArray, string $appliesTo, array $oldRecipientIds)
     {
         $this->newPaymentConceptId = $newPaymentConceptId;
-        $this->oldPaymentConcept = $oldPaymentConcept;
-        $this->dto = $dto;
+        $this->oldPaymentConceptArray = $oldPaymentConceptArray;
+        $this->dtoArray = $dtoArray;
         $this->appliesTo = $appliesTo;
         $this->oldRecipientIds = $oldRecipientIds;
     }
@@ -47,14 +46,16 @@ class ProcessPaymentConceptUpdateJob implements ShouldQueue
             ]);
             return;
         }
-        if(!$this->oldPaymentConcept)
+        if(!$this->oldPaymentConceptArray)
         {
             Log::warning('Payment concept not found for notification job', [
                 'concept_id' => $this->newPaymentConceptId
             ]);
             return;
         }
-        $update->execute($newPaymentConcept, $this->oldPaymentConcept, $this->oldRecipientIds ,$this->dto, $this->appliesTo);
+        $oldPaymentConcept = PaymentConcept::fromArray($this->oldPaymentConceptArray);
+        $dto=UpdatePaymentConceptRelationsDTO::fromArray($this->dtoArray);
+        $update->execute($newPaymentConcept, $oldPaymentConcept, $this->oldRecipientIds ,$dto, $this->appliesTo);
         Log::info('Payment concept recipients processed', [
             'concept_id' => $this->newPaymentConceptId,
             'applies_to' => $this->appliesTo
@@ -72,8 +73,8 @@ class ProcessPaymentConceptUpdateJob implements ShouldQueue
         ]);
     }
 
-    public static function forUpdateConcept(int $newPaymentConceptId, PaymentConcept $oldPaymentConcept, array $oldRecipientIds ,UpdatePaymentConceptRelationsDTO $dto, string $status): self
+    public static function forUpdateConcept(int $newPaymentConceptId, array $oldPaymentConceptArray, array $oldRecipientIds ,array $dtoArray, string $status): self
     {
-        return new self($newPaymentConceptId, $oldPaymentConcept, $dto, $status, $oldRecipientIds);
+        return new self($newPaymentConceptId, $oldPaymentConceptArray, $dtoArray, $status, $oldRecipientIds);
     }
 }

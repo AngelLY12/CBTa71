@@ -26,7 +26,8 @@ class AttachStudentDetailUserCase
             throw new UserAlreadyHaveStudentDetailException();
         }
         $updatedUser=$this->sdRepo->attachStudentDetail($detail,$user);
-        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
+        ClearStaffCacheJob::dispatch()
+            ->onQueue('cache');
         return $updatedUser;
     }
 }

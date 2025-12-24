@@ -11,8 +11,7 @@ use App\Jobs\ClearCacheForUsersJob;
 class EliminatePaymentConceptUseCase
 {
     private const CHUNK_SIZE = 500;
-    private const CACHE_DELAY_MIN = 1;
-    private const CACHE_DELAY_MAX = 10;
+    private const CACHE_DELAY = 5;
     public function __construct(
         private PaymentConceptRepInterface $pcRepo,
         private PaymentConceptQueryRepInterface $pcqRepo,
@@ -39,9 +38,8 @@ class EliminatePaymentConceptUseCase
 
         foreach (array_chunk($userIds, self::CHUNK_SIZE) as $chunk) {
             ClearCacheForUsersJob::forConceptStatus($chunk, PaymentConceptStatus::ELIMINADO)
-                ->delay(now()->addSeconds(
-                    rand(self::CACHE_DELAY_MIN, self::CACHE_DELAY_MAX)
-                ));
+                ->onQueue('cache')
+                ->delay(now()->addSeconds(self::CACHE_DELAY));
         }
     }
 }

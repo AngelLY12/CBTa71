@@ -9,13 +9,13 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
+use App\Events\PaymentConceptStatusChanged;
 use App\Jobs\ClearCacheForUsersJob;
 
 abstract class BasePaymentConceptStatusUseCase
 {
     protected const CHUNK_SIZE = 500;
-    protected const CACHE_DELAY_MIN = 1;
-    protected const CACHE_DELAY_MAX = 10;
+    protected const CACHE_DELAY = 5;
     public function __construct(
         protected PaymentConceptRepInterface $pcRepo,
         protected UserQueryRepInterface $uqRepo
@@ -34,6 +34,7 @@ abstract class BasePaymentConceptStatusUseCase
 
         $userIds = $this->getAffectedUserIds($concept);
         $updatedConcept = $this->updateConceptStatus($concept);
+        $this->dispatchStatusChangedNotification($concept, $updatedConcept);
         $this->dispatchCacheClearJobs($userIds);
         return $this->formattResponse($concept, $updatedConcept);
     }
@@ -70,9 +71,15 @@ abstract class BasePaymentConceptStatusUseCase
 
         foreach (array_chunk($userIds, self::CHUNK_SIZE) as $chunk) {
             ClearCacheForUsersJob::forConceptStatus($chunk, $this->getTargetStatus())
-                ->delay(now()->addSeconds(
-                    rand(self::CACHE_DELAY_MIN, self::CACHE_DELAY_MAX)
-                ));
+                ->onQueue('cache')
+                ->delay(now()->addSeconds(self::CACHE_DELAY));
+        }
+    }
+
+    private function dispatchStatusChangedNotification(PaymentConcept $originalConcept, PaymentConcept $newConcept): void
+    {
+        if ($originalConcept->status !== $newConcept->status) {
+            event(new PaymentConceptStatusChanged($newConcept->id, $originalConcept->status->value, $newConcept->status->value));
         }
     }
     protected function updateConceptStatus(PaymentConcept $concept): PaymentConcept

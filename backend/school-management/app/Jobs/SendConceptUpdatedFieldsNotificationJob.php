@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
-use App\Models\User;
 use App\Notifications\PaymentConceptUpdatedFields;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -12,7 +11,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class SendConceptUpdatedFieldsNotificationJob implements ShouldQueue
 {
@@ -44,31 +42,20 @@ class SendConceptUpdatedFieldsNotificationJob implements ShouldQueue
             return;
         }
 
-        $users=User::whereIn('id', $userIds)->get();
+        $notification = new PaymentConceptUpdatedFields($concept->toArray(), $this->changes);
 
-        if ($users->isEmpty()) {
-            Log::warning('No users found for broadcast notifications', [
-                'user_ids' => $userIds,
-                'concept_id' => $this->conceptId
-            ]);
-            return;
-        }
 
-        $chunkSize = 500;
-        $totalNotified = 0;
+        foreach (array_chunk($this->userIds, 500) as $chunk) {
+            \App\Models\User::whereIn('id', $chunk)
+                ->each(function ($user) use ($notification) {
+                    $user->notify($notification);
+                });
 
-        foreach ($users->chunk($chunkSize) as $chunk) {
-            Notification::send($chunk, new PaymentConceptUpdatedFields($concept, $this->changes));
-            $totalNotified += $chunk->count();
-
-            if ($chunk->count() === $chunkSize) {
-                usleep(100000);
-            }
+            usleep(100000);
         }
 
         Log::info('Broadcast notifications job completed', [
             'concept_id' => $this->conceptId,
-            'user_count' => $totalNotified,
             'changes_count' => count($this->changes),
             'queue' => $this->queue
         ]);

@@ -30,7 +30,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
         return optional(EloquentPaymentConcept::with(['careers', 'users', 'paymentConceptSemesters', 'exceptions', 'applicantTypes'])->find($id), fn($pc) => PaymentConceptMapper::toDomain($pc));
     }
     public function getPendingPaymentConcepts(User $user, bool $onlyThisYear): PendingSummaryResponse {
-        $query = $this->basePaymentConcept($user)
+        $query = $this->basePaymentConcept($user,true, PaymentConceptStatus::ACTIVO )
             ->leftJoin('payments as p', function($join) use ($user) {
                 $join->on('p.payment_concept_id', '=', 'payment_concepts.id')
                     ->where('p.user_id', $user->id)
@@ -50,7 +50,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     public function getPendingPaymentConceptsWithDetails(User $user): array
     {
-        $rows = $this->basePaymentConcept($user)
+        $rows = $this->basePaymentConcept($user, true, PaymentConceptStatus::ACTIVO)
             ->leftJoin('payments as p', function($join) use ($user) {
                 $join->on('p.payment_concept_id', '=', 'payment_concepts.id')
                     ->where('p.user_id', $user->id)
@@ -124,7 +124,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     public function getAllPendingPaymentAmount(bool $onlyThisYear): PendingSummaryResponse
     {
-        $query = $this->basePaymentConcept(null, onlyActive: true)
+        $query = $this->basePaymentConcept(null, true, PaymentConceptStatus::ACTIVO )
             ->leftJoin('payments as p', function($join) {
                 $join->on('p.payment_concept_id', '=', 'payment_concepts.id')
                     ->whereNotIn('p.status', PaymentStatus::terminalStatuses());

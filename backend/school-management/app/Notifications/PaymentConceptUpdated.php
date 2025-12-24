@@ -3,18 +3,17 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
-class PaymentConceptUpdated extends Notification implements ShouldQueue
+class PaymentConceptUpdated extends Notification
 {
     use Queueable;
 
-    protected $paymentConcept;
+    protected array $paymentConcept;
     protected array $changes;
 
-    public function __construct($paymentConcept, array $changes)
+    public function __construct(array $paymentConcept, array $changes)
     {
         $this->paymentConcept = $paymentConcept;
         $this->changes = $changes;
@@ -35,11 +34,11 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
         return [
             'title' => $this->getTitle(),
             'message' => $this->getMessage($notifiable),
-            'concept_id' => $this->paymentConcept->id,
-            'concept_name' => $this->paymentConcept->concept_name,
-            'amount' => $this->paymentConcept->amount,
-            'start_date' => $this->paymentConcept->start_date?->toISOString(),
-            'end_date' => $this->paymentConcept->end_date?->toISOString(),
+            'concept_id' => $this->paymentConcept['id'],
+            'concept_name' => $this->paymentConcept['concept_name'],
+            'amount' => $this->paymentConcept['amount'],
+            'start_date' => $this->paymentConcept['start_date']?->toISOString(),
+            'end_date' => $this->paymentConcept['end_date']?->toISOString(),
             'changes' => $this->getFilteredChanges(),
             'action' => $this->determineMainChangeType(),
             'type' => 'payment_concept_changed',
@@ -104,8 +103,8 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
 
     private function getMessage(object $notifiable): string
     {
-        $conceptName = $this->paymentConcept->concept_name;
-        $amount = number_format($this->paymentConcept->amount, 2);
+        $conceptName = $this->paymentConcept['concept_name'];
+        $amount = number_format($this->paymentConcept['amount'], 2);
 
         if (empty($this->changes)) {
             return "El concepto '{$conceptName}' con monto ({$amount} MXN) ha sido actualizado.";
@@ -117,8 +116,8 @@ class PaymentConceptUpdated extends Notification implements ShouldQueue
         foreach ($this->changes as $change) {
             if($change['type'] === 'created_concept')
             {
-                $startDate = $this->paymentConcept->start_date?->format('d/m/Y') ?? 'N/A';
-                $endDate = $this->paymentConcept->end_date?->format('d/m/Y') ?? 'N/A';
+                $startDate = $this->paymentConcept['start_date']?->format('d/m/Y') ?? 'N/A';
+                $endDate = $this->paymentConcept['end_date']?->format('d/m/Y') ?? 'N/A';
 
                 $createdMessage[] = "Nombre del concepto: {$conceptName}";
                 $createdMessage[] = "Monto: {$amount} MXN";

@@ -8,13 +8,13 @@ use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PaymentConceptUpdatedFields extends Notification implements ShouldQueue
+class PaymentConceptUpdatedFields extends Notification
 {
     use Queueable;
-    protected $paymentConcept;
+    protected array $paymentConcept;
     protected array $changes;
 
-    public function __construct($paymentConcept, array $changes)
+    public function __construct(array $paymentConcept, array $changes)
     {
         $this->paymentConcept = $paymentConcept;
         $this->changes = $changes;
@@ -37,11 +37,11 @@ class PaymentConceptUpdatedFields extends Notification implements ShouldQueue
         return [
             'title' => $this->getTitle(),
             'message' => $this->getMessage($notifiable),
-            'concept_id' => $this->paymentConcept->id,
-            'concept_name' => $this->paymentConcept->concept_name,
-            'amount' => $this->paymentConcept->amount,
-            'start_date' => $this->paymentConcept->start_date?->toISOString(),
-            'end_date' => $this->paymentConcept->end_date?->toISOString(),
+            'concept_id' => $this->paymentConcept['id'],
+            'concept_name' => $this->paymentConcept['concept_name'],
+            'amount' => $this->paymentConcept['amount'],
+            'start_date' => $this->paymentConcept['start_date']?->toISOString(),
+            'end_date' => $this->paymentConcept['end_date']?->toISOString(),
             'changes' => $this->getFilteredChanges(),
             'type' => 'payment_concept_changed',
             'priority' => $this->getPriority(),
@@ -76,8 +76,8 @@ class PaymentConceptUpdatedFields extends Notification implements ShouldQueue
 
     private function getMessage(object $notifiable): string
     {
-        $conceptName = $this->paymentConcept->concept_name;
-        $amount = number_format($this->paymentConcept->amount, 2);
+        $conceptName = $this->paymentConcept['concept_name'];
+        $amount = number_format($this->paymentConcept['amount'], 2);
         $userName = $notifiable->name ?? 'Estudiante';
         $changeMessages = [];
         foreach ($this->changes as $change) {

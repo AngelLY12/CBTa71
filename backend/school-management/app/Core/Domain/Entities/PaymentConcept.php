@@ -52,6 +52,45 @@ class PaymentConcept
         private array $applicantTags =[]
     ) {}
 
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'concept_name' => $this->concept_name,
+            'description'  => $this->description,
+            'status'       => $this->status,
+            'start_date'   => $this->start_date,
+            'end_date'     => $this->end_date,
+            'amount'       => $this->amount,
+            'applies_to'   => $this->applies_to,
+            'is_global'    => $this->is_global,
+        ];
+    }
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            id: $data['id'] ?? null,
+            concept_name: $data['concept_name'],
+            description: $data['description'] ?? null,
+            status: $data['status'] instanceof PaymentConceptStatus
+                ? $data['status']
+                : PaymentConceptStatus::from($data['status']),
+            start_date: $data['start_date'] instanceof Carbon
+                ? $data['start_date']
+                : Carbon::parse($data['start_date']),
+            end_date: isset($data['end_date'])
+                ? ($data['end_date'] instanceof Carbon
+                    ? $data['end_date']
+                    : Carbon::parse($data['end_date']))
+                : null,
+            amount: $data['amount'],
+            applies_to: $data['applies_to'] instanceof PaymentConceptAppliesTo
+                ? $data['applies_to']
+                : PaymentConceptAppliesTo::from($data['applies_to']),
+            is_global: $data['is_global']
+        );
+    }
 
     public function isActive(): bool
     {

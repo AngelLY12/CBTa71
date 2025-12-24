@@ -382,7 +382,6 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         }
 
         return EloquentUser::whereIn('id', $ids)
-            ->select(['id', 'name', 'last_name', 'curp', 'status'])
             ->cursor()
             ->map(fn($user) => UserMapper::toDomain($user))
             ->collect();

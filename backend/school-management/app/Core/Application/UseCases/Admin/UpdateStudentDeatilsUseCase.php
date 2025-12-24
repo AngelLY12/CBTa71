@@ -17,7 +17,7 @@ class UpdateStudentDeatilsUseCase
     public function execute(int $userId, array $fields): User
     {
         $update=$this->repo->updateStudentDetails($userId, $fields);
-        ClearStaffCacheJob::dispatch()->delay(now()->addSeconds(rand(1, 10)));
+        ClearStaffCacheJob::dispatch()->onQueue('cache');
         return $update;
     }
 }
