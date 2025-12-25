@@ -4,7 +4,6 @@ namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
-use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Application\Traits\HasPaymentConcept;
 use App\Core\Domain\Entities\PaymentConcept;

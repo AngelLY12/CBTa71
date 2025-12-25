@@ -8796,10 +8796,22 @@
                         "example": "1500.00",
                         "nullable": true
                     },
+                    "amount_received": {
+                        "description": "Monto total recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
                     "created": {
                         "description": "Fecha de creación del pago en formato timestamp",
                         "type": "string",
                         "example": "2025-11-04T18:30:00Z",
+                        "nullable": true
+                    },
+                    "receipt_url": {
+                        "description": "Comprobante del alumno",
+                        "type": "string",
+                        "example": "https://recipient_url",
                         "nullable": true
                     }
                 },

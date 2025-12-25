@@ -49,9 +49,11 @@ class GeneralMapper{
                 id: $session->id ?? null,
                 payment_intent_id: $session->payment_intent ?? null,
                 concept_name: $metadata['concept_name'] ?? null,
-                status: $session->payment_status ?? null,
-                amount_total: $session->amount_total ?? null,
-                created:$session->created ? date('Y-m-d H:i:s', $session->created) : null
+                status: $session->payment_status_detailed ?? $session->payment_status ?? null,
+                amount_total: $session->amount_total ? number_format($session->amount_total / 100, 2, '.', '') : null,
+                amount_received: $session->amount_received ? number_format($session->amount_received / 100, 2, '.', '') : '0.00',
+                created:$session->created ? date('Y-m-d H:i:s', $session->created) : null,
+                receipt_url: $session->receipt_url ?? null
             );
     }
 

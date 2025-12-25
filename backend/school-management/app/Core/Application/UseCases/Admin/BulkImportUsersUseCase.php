@@ -28,8 +28,7 @@ class BulkImportUsersUseCase
     private const CHUNK_SIZE = 200;
     private const NOTIFICATION_DELAY_MIN = 1;
     private const NOTIFICATION_DELAY_MAX = 5;
-    private const CACHE_CLEAR_DELAY_MIN = 5;
-    private const CACHE_CLEAR_DELAY_MAX = 15;
+
     public function __construct(
         private UserRepInterface $userRepo,
         private RolesAndPermissionsRepInterface $rpRepo,

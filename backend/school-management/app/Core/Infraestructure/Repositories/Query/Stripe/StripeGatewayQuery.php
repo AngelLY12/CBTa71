@@ -104,8 +104,54 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
                 $lastId = end($sessions->data)->id ?? null;
 
             } while ($lastId && count($sessions->data) === $params['limit']);
+            $paymentIntentIds = [];
+            foreach ($allSessions as $session) {
+                if ($session->payment_status === 'paid' && $session->payment_intent) {
+                    $paymentIntentIds[] = $session->payment_intent;
+                }
+            }
+            $paymentIntents = [];
+            if (!empty($paymentIntentIds)) {
+                $uniqueIds = array_unique($paymentIntentIds);
 
-            return $allSessions;
+                foreach (array_chunk($uniqueIds, 100) as $chunk) {
+                    $batch = PaymentIntent::all([
+                        'ids' => $chunk,
+                        'expand' => ['data.charges'],
+                        'limit' => 100,
+                    ]);
+
+                    foreach ($batch->data as $pi) {
+                        $paymentIntents[$pi->id] = $pi;
+                    }
+                }
+            }
+
+            $paymentsWithDetails = [];
+            foreach ($allSessions as $session) {
+                $amountReceived = 0;
+                $paymentStatus = $session->payment_status;
+                $receiptUrl = null;
+
+                if ($session->payment_intent && $session->payment_status === 'paid') {
+                    $pi = $paymentIntents[$session->payment_intent] ?? null;
+                    if ($pi) {
+                        $amountReceived = $pi->amount_received ?? 0;
+                        $paymentStatus = $pi->status;
+
+                        if (!empty($pi->charges->data[0])) {
+                            $receiptUrl = $pi->charges->data[0]->receipt_url ?? null;
+                        }
+                    }
+                }
+
+                $session->amount_received = $amountReceived;
+                $session->payment_status_detailed = $paymentStatus;
+                $session->receipt_url = $receiptUrl;
+                $paymentsWithDetails[] = $session;
+            }
+
+            return $paymentsWithDetails;
         } catch (ApiErrorException $e) {
             logger()->error("Stripe error fetching sessions: " . $e->getMessage());
             throw new StripeGatewayException("Error obteniendo los pagos del estudiante", 500);
