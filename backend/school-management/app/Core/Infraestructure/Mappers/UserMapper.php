@@ -13,7 +13,6 @@ class UserMapper{
     {
 
         $domainUser = new DomainUser(
-            id: $user->id,
             name: $user->name,
             last_name: $user->last_name,
             email: $user->email,
@@ -27,7 +26,8 @@ class UserMapper{
             blood_type: $user->blood_type ?? null,
             registration_date: $user->registration_date ?? null,
             status: $user->status,
-            emailVerified: $user->hasVerifiedEmail()
+            emailVerified: $user->hasVerifiedEmail(),
+            id: $user->id
         );
         if ($user->relationLoaded('studentDetail')) {
             $domainUser->setStudentDetail(StudentDetailMapper::toDomain($user->studentDetail));

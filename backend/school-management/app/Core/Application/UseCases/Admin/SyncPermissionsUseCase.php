@@ -8,6 +8,7 @@ use App\Core\Domain\Repositories\Command\Auth\RolesAndPermissionsRepInterface;
 use App\Core\Domain\Repositories\Query\Auth\RolesAndPermissosQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotFound\UsersNotFoundForUpdateException;
+use App\Exceptions\Validation\ValidationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -26,6 +27,7 @@ class SyncPermissionsUseCase
 
     public function execute(UpdateUserPermissionsDTO $dto): array
     {
+        $this->validateNoDuplicatePermissions($dto);
         $usersGenerator = $this->getUsers($dto);
         $processedData = $this->processUsersFromGenerator($usersGenerator);
 
@@ -38,6 +40,21 @@ class SyncPermissionsUseCase
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
         return $this->buildResponse($processedData['users'], $dto, $result);
+    }
+
+    private function validateNoDuplicatePermissions(UpdateUserPermissionsDTO $dto): void
+    {
+        $add = $dto->permissionsToAdd ?? [];
+        $remove = $dto->permissionsToRemove ?? [];
+
+        $duplicates = array_intersect($add, $remove);
+
+        if (!empty($duplicates)) {
+            throw new ValidationException(
+                "Los siguientes permisos no pueden estar simultáneamente en add y remove: "
+                . implode(', ', $duplicates)
+            );
+        }
     }
 
     private function getUsers(UpdateUserPermissionsDTO $dto): \Generator

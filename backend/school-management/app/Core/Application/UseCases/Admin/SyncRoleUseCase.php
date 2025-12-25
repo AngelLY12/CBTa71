@@ -12,6 +12,7 @@ use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotAllowed\AdminRoleNotAllowedException;
 use App\Exceptions\NotFound\RoleNotFoundException;
 use App\Exceptions\NotFound\UsersNotFoundForUpdateException;
+use App\Exceptions\Validation\ValidationException;
 use Illuminate\Support\Collection;
 
 class SyncRoleUseCase
@@ -28,12 +29,28 @@ class SyncRoleUseCase
 
     public function execute(UpdateUserRoleDTO $dto): UserWithUpdatedRoleResponse
     {
+        $this->validateNoDuplicateRoles($dto);
         $updated=$this->updateRoleToMany($dto);
         if ($updated === null)
         {
             throw new UsersNotFoundForUpdateException();
         }
         return $updated;
+    }
+
+    private function validateNoDuplicateRoles(UpdateUserRoleDTO $dto): void
+    {
+        $add = $dto->rolesToAdd ?? [];
+        $remove = $dto->rolesToRemove ?? [];
+
+        $duplicates = array_intersect($add, $remove);
+
+        if (!empty($duplicates)) {
+            throw new ValidationException(
+                "Los siguientes roles no pueden estar simultáneamente en add y remove: "
+                . implode(', ', $duplicates)
+            );
+        }
     }
 
     private function updateRoleToMany(UpdateUserRoleDTO $dto): ?UserWithUpdatedRoleResponse
