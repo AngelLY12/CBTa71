@@ -14,12 +14,14 @@ use App\Http\Requests\Admin\UpdatePermissionsRequest;
 use App\Http\Requests\Admin\UpdateRolesRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Http\Requests\General\ForceRefreshRequest;
-use App\Http\Requests\ImportUsersRequest;
+use App\Http\Requests\General\ImportRequest;
 use App\Imports\StudentDetailsImport;
 use App\Imports\UsersImport;
+use App\Jobs\PromoteStudentsJob;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 /**
@@ -52,8 +54,8 @@ class AdminController extends Controller
 
     public function promotionStudents()
     {
-        $promotion=$this->service->promoteStudentes();
-        return Response::success(['affected' => $promotion], 'Se ejecutó la promoción de usuarios correctamente.');
+        PromoteStudentsJob::dispatch(Auth::id());
+        return Response::success(null, 'Promoción de estudiantes iniciada en segundo plano.');
 
     }
 
@@ -83,7 +85,7 @@ class AdminController extends Controller
 
     }
 
-    public function import(ImportUsersRequest $request)
+    public function import(ImportRequest $request)
     {
         $file= $request->file('file');
         $import=new UsersImport($this->service);
@@ -93,7 +95,7 @@ class AdminController extends Controller
 
     }
 
-    public function importStudents(ImportUsersRequest $request)
+    public function importStudents(ImportRequest $request)
     {
         $file= $request->file('file');
         $import= new StudentDetailsImport($this->service);

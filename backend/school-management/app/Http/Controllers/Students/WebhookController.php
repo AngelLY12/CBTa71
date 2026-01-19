@@ -32,6 +32,7 @@ class WebhookController extends Controller
             $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
             $obj = $event->data->object;
             $eventType=$event->type;
+            $eventId = $event->id;
 
             $messageMap = [
                 'payment_intent.payment_failed' => 'El pago falló',
@@ -41,32 +42,41 @@ class WebhookController extends Controller
             switch($eventType){
 
                 case 'checkout.session.completed':
-                    $this->webhookService->sessionCompleted($obj);
-                    if($obj->payment_status==='paid'){
-                        ReconcilePayments::dispatch();
+                    $result =$this->webhookService->sessionCompleted($obj, $eventId);
+                    if($obj->payment_status==='paid' && $result){
+                        $reconciliation =$this->webhookService->reconcilePayment($eventId, $obj->id);
+                        return Response::success($reconciliation, "Se reconcilio el pago del evento {$eventId}");
                     }
                     return Response::success(null, 'Se completó la sesión');
                     break;
                 case 'payment_intent.payment_failed':
                 case 'payment_intent.canceled':
                 case 'checkout.session.expired':
-                    $this->webhookService->handleFailedOrExpiredPayment($obj,$eventType);
+                    $result = $this->webhookService->handleFailedOrExpiredPayment($obj,$eventType, $eventId);
+                    if(!$result)
+                    {
+                        return Response::success(null, "Fallo el evento :" . $messageMap[$eventType] ?? 'Evento procesado');
+                    }
                     return Response::success(null, $messageMap[$eventType] ?? 'Evento procesado');
                     break;
                 case 'payment_method.attached':
-                    $result = $this->webhookService->paymentMethodAttached($obj);
-                    if ($result === false) {
+                    $result = $this->webhookService->paymentMethodAttached($obj, $eventId);
+                    if (!$result) {
                         return Response::success(null, 'El método de pago ya existe');
                     }
                     return Response::success(null, 'Se creó el método de pago');
                     break;
                 case 'checkout.session.async_payment_succeeded':
-                    $this->webhookService->sessionAsync($obj);
-                    ReconcilePayments::dispatch();
+                    $result = $this->webhookService->sessionAsync($obj, $eventId);
+                    if($result)
+                    {
+                        $reconciliation=$this->webhookService->reconcilePayment($eventId, $obj->id);
+                        return Response::success($reconciliation, "Se reconcilio el pago del evento {$eventId}");
+                    }
                     return Response::success(null, 'Se actualizó el estado del pago');
                     break;
                 case 'payment_intent.requires_action':
-                    $this->webhookService->requiresAction($obj);
+                    $this->webhookService->requiresAction($obj, $eventId);
                     return Response::success(null, 'Se notificó correctamente al usuario');
                     break;
                 default:
