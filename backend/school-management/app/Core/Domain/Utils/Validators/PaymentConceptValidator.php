@@ -38,7 +38,6 @@ use App\Exceptions\Validation\ConceptStartDateTooFarException;
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Exceptions\Conflict\ConceptAppliesToConflictException;
 use App\Exceptions\Conflict\StudentsAndExceptionsOverlapException;
-use http\Exception\InvalidArgumentException;
 
 class PaymentConceptValidator{
 
@@ -72,9 +71,9 @@ class PaymentConceptValidator{
 
     private static function userIsAllowedForConcept(PaymentConcept $concept, User $user): bool
     {
-        $student = $user->studentDetail;
+        $student = $user->getStudentDetail();
 
-        if ($concept->is_global && $user->hasRole(UserRoles::STUDENT->value)) {
+        if ($concept->applies_to === PaymentConceptAppliesTo::TODOS  && $user->hasRole(UserRoles::STUDENT->value)) {
             return true;
         }
 
@@ -167,16 +166,12 @@ class PaymentConceptValidator{
     {
         self::appliesToConflictAndOverlap($dto);
 
-        if(!empty($dto->students) && !empty($dto->exceptionStudents)){
-            $intersection = array_intersect(
-                (array)$dto->students,
-                (array)$dto->exceptionStudents
-            );
-
-            if (!empty($intersection)) {
-                throw new StudentsAndExceptionsOverlapException();
-            }
+        if(!in_array($dto->status, PaymentConceptStatus::allowedStatusesToCreateConcept(), true))
+        {
+            throw new ValidationException("No puedes crear un concepto con estatus {$dto->status->value}, solo se permiten: " .
+            implode(', ', array_map(fn($s) => $s->value, PaymentConceptStatus::allowedStatusesToCreateConcept())));
         }
+
         if ($dto->appliesTo === PaymentConceptAppliesTo::ESTUDIANTES
             && !empty($dto->exceptionStudents)
         ) {
@@ -190,7 +185,7 @@ class PaymentConceptValidator{
     }
 
     private static function appliesToConflictAndOverlap(CreatePaymentConceptDTO|UpdatePaymentConceptRelationsDTO $dto){
-        if (($dto->is_global) && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students) || !empty($dto->applicantTags)) ||
+        if (($dto->appliesTo === PaymentConceptAppliesTo::TODOS) && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students) || !empty($dto->applicantTags)) ||
             ($dto->students) && (!empty($dto->semesters) || !empty($dto->applicantTags) || !empty($dto->careers)) ||
             ($dto->applicantTags) && (!empty($dto->semesters) || !empty($dto->careers) || !empty($dto->students)) ||
             ($dto->semesters) && (!empty($dto->applicantTags) || !empty($dto->students)) ||

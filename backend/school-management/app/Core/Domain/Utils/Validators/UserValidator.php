@@ -3,6 +3,7 @@
 namespace App\Core\Domain\Utils\Validators;
 
 use App\Core\Domain\Entities\User;
+use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Enum\User\UserStatus;
 use App\Exceptions\Conflict\UserAlreadyActiveException;
 use App\Exceptions\Conflict\UserAlreadyDeletedException;

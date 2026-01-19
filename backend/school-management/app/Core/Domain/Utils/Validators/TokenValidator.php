@@ -12,9 +12,7 @@ class TokenValidator
 {
     public static function ensureIsTokenValid(RefreshToken $token)
     {
-        if (!$token) {
-            throw new InvalidRefreshTokenException("Refresh token no proporcionado");
-        }
+
         if ($token->isExpired()) {
             throw new RefreshTokenExpiredException("Refresh token expirado");
         }

@@ -9,10 +9,6 @@ class StripeValidator
 {
     public static function validateUserForStripe(User $user): void
     {
-        if (!$user) {
-            throw new ValidationException("Usuario no encontrado para Stripe");
-        }
-
         if (empty($user->email)) {
             throw new ValidationException("El usuario no tiene correo electrónico");
         }
@@ -28,7 +24,7 @@ class StripeValidator
             throw new ValidationException("El ID de {$fieldName} no puede ser vacío");
         }
 
-        if (!preg_match("/^{$prefix}_[a-zA-Z0-9]+$/", $id)) {
+        if (!preg_match("/^{$prefix}_[a-zA-Z0-9_]+$/", $id)) {
             throw new ValidationException("El ID de {$fieldName} tiene un formato inválido");
         }
     }
