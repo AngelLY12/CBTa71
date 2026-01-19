@@ -1,0 +1,161 @@
+<?php
+
+namespace Tests\Unit\Domain\Repositories\{{RepositoryType}}\{{Namespace}};
+
+use Tests\Unit\Domain\Repositories\BaseRepositoryTestCase;
+use {{InterfaceClass}};
+use PHPUnit\Framework\Attributes\Test;
+
+class {{RepositoryName}}Test extends BaseRepositoryTestCase
+{
+    /**
+     * The interface class being implemented
+     */
+    protected string $interfaceClass = {{InterfaceClass}}::class;
+
+    /**
+     * Setup the repository instance for testing
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // TODO: Inicializar tu instancia de repositorio aquí
+        // Ejemplo para repositorio Eloquent:
+        // $this->repository = app(\App\Infrastructure\Repositories\Eloquent\{{EntityName}}Repository::class);
+
+        // Ejemplo para Stripe:
+        // $this->repository = app(\App\Infrastructure\Gateways\Stripe\{{EntityName}}Gateway::class);
+
+        // Ejemplo para Cache:
+        // $this->repository = app(\App\Infrastructure\Services\Cache\{{EntityName}}CacheService::class);
+
+        $this->repository = null; // Eliminar esta línea después de implementar
+    }
+
+    /**
+     * Test que el repositorio puede ser instanciado
+     */
+    #[Test]
+    public function it_can_be_instantiated(): void
+    {
+        $this->assertNotNull($this->repository, 'El repositorio no está inicializado');
+        $this->assertImplementsInterface($this->interfaceClass);
+    }
+
+    /**
+     * Test que todos los métodos requeridos existen
+     */
+    #[Test]
+    public function it_has_all_required_methods(): void
+    {
+        $this->assertNotNull($this->repository, 'El repositorio no está inicializado');
+
+        // TODO: Agregar assertions para cada método en la interfaz
+        // Usar Reflection para obtener métodos automáticamente:
+        $reflection = new \ReflectionClass($this->interfaceClass);
+        $methods = $reflection->getMethods();
+
+        foreach ($methods as $method) {
+            $this->assertMethodExists($method->getName());
+        }
+    }
+
+    /**
+     * Test métodos específicos basados en el tipo de repositorio
+     */
+    #[Test]
+    public function it_has_type_specific_methods(): void
+    {
+        $this->assertNotNull($this->repository, 'El repositorio no está inicializado');
+
+        // Métodos comunes para Command
+        @if ($RepositoryType === 'Command')
+        $this->assertMethodExists('create');
+        $this->assertMethodExists('update');
+        $this->assertMethodExists('delete');
+        // TODO: Agregar más métodos específicos de Command
+        @endif
+
+        // Métodos comunes para Query
+        @if ($RepositoryType === 'Query')
+        $this->assertMethodExists('find');
+        $this->assertMethodExists('findAll');
+        $this->assertMethodExists('findBy');
+        // TODO: Agregar más métodos específicos de Query
+        @endif
+
+        // Métodos comunes para Stripe
+        @if ($RepositoryType === 'Stripe')
+        $this->assertMethodExists('createPayment');
+        $this->assertMethodExists('refundPayment');
+        // TODO: Agregar más métodos específicos de Stripe
+        @endif
+
+        // Métodos comunes para Cache
+        @if ($RepositoryType === 'Cache')
+        $this->assertMethodExists('get');
+        $this->assertMethodExists('set');
+        $this->assertMethodExists('delete');
+        // TODO: Agregar más métodos específicos de Cache
+        @endif
+    }
+
+    /**
+     * Test crear entidad (para Command)
+     */
+    @if ($RepositoryType === 'Command')
+    #[Test]
+    public function it_can_create_entity(): void
+    {
+        $this->markTestIncomplete('TODO: Implementar test para método create');
+
+        // Ejemplo:
+        // $data = ['name' => 'Test', 'email' => 'test@example.com'];
+        // $result = $this->repository->create($data);
+        // $this->assertInstanceOf(\App\Core\Domain\Entities\{{EntityName}}::class, $result);
+    }
+    @endif
+
+    /**
+     * Test buscar entidad (para Query)
+     */
+    @if ($RepositoryType === 'Query')
+    #[Test]
+    public function it_can_find_entity(): void
+    {
+        $this->markTestIncomplete('TODO: Implementar test para método find');
+    }
+    @endif
+
+    /**
+     * Test procesar pago (para Stripe)
+     */
+    @if ($RepositoryType === 'Stripe')
+    #[Test]
+    public function it_can_process_payment(): void
+    {
+        $this->markTestIncomplete('TODO: Implementar test para método processPayment');
+    }
+    @endif
+
+    /**
+     * Test obtener del cache (para Cache)
+     */
+    @if ($RepositoryType === 'Cache')
+    #[Test]
+    public function it_can_get_from_cache(): void
+    {
+        $this->markTestIncomplete('TODO: Implementar test para método get');
+    }
+    @endif
+
+    /**
+     * Test manejo de errores
+     */
+    #[Test]
+    public function it_handles_errors_correctly(): void
+    {
+        $this->markTestIncomplete('TODO: Implementar tests de manejo de errores');
+    }
+}

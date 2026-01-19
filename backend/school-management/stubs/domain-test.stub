@@ -1,0 +1,53 @@
+<?php
+
+namespace Tests\Unit\Domain\Entities;
+
+use Tests\Unit\Domain\BaseDomainTestCase;
+use App\Core\Domain\Entities\{{EntityName}};
+use PHPUnit\Framework\Attributes\Test;
+
+class {{EntityName}}Test extends BaseDomainTestCase
+{
+    #[Test]
+    public function it_can_be_instantiated()
+    {
+        ${{EntityVar}} = new {{EntityName}}();
+        $this->assertInstanceOf({{EntityName}}::class, ${{EntityVar}});
+    }
+
+    #[Test]
+    public function it_has_required_attributes()
+    {
+        // TODO: Implementar pruebas específicas para {{EntityName}}
+        $this->assertTrue(true);
+    }
+
+    #[Test]
+    public function it_accepts_valid_data()
+    {
+        // Crear instancia con datos válidos
+        // ${{EntityVar}} = new {{EntityName}}([...]);
+        // $this->assertInstanceOf({{EntityName}}::class, ${{EntityVar}});
+    }
+
+    #[Test]
+    public function it_can_be_serialized_to_array()
+    {
+        ${{EntityVar}} = new {{EntityName}}();
+        // ${{EntityVar}}->fill([...]);
+
+        $array = ${{EntityVar}}->toArray();
+
+        $this->assertIsArray($array);
+        // $this->assertArrayHasKey('id', $array);
+    }
+
+    #[Test]
+    public function it_can_be_converted_to_json()
+    {
+        ${{EntityVar}} = new {{EntityName}}();
+        $json = json_encode(${{EntityVar}});
+
+        $this->assertJson($json);
+    }
+}
