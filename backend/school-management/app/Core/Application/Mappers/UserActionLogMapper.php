@@ -11,11 +11,11 @@ class UserActionLogMapper
     public static function toDomain(User $user, array $request): UserActionLog
     {
         return new UserActionLog(
-            userId:$user?->id,
-            roles:$user?->roles->pluck('name')->toArray() ?? null,
-            ip:$request['ip'],
-            method:$request['method'],
-            url:$request['url'],
+            method: $request['method'],
+            url: $request['url'],
+            roles: $user?->roles->pluck('name')->toArray() ?? null,
+            userId: $user?->id,
+            ip: $request['ip'],
         );
     }
 }

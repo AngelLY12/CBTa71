@@ -8,11 +8,12 @@ use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\General\StripePaymentsResponse;
 use App\Core\Application\DTO\Response\General\StripePayoutResponse;
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Stripe\Checkout\Session;
 
 class GeneralMapper{
-    public static function toPaginatedResponse(array $items, LengthAwarePaginator $paginated){
+    public static function toPaginatedResponse(?array $items, LengthAwarePaginator $paginated){
         return new PaginatedResponse(
             items: $items ?? [],
             currentPage: $paginated->currentPage() ?? null,
@@ -32,7 +33,7 @@ class GeneralMapper{
         );
     }
 
-    public static function toLoginResponse(string $token, string $refresh,$token_type, array $data):LoginResponse
+    public static function toLoginResponse(?string $token, ?string $refresh,$token_type, ?array $data):LoginResponse
     {
         return new LoginResponse(
             access_token:$token ?? null,
@@ -50,8 +51,8 @@ class GeneralMapper{
                 payment_intent_id: $session->payment_intent ?? null,
                 concept_name: $metadata['concept_name'] ?? null,
                 status: $session->payment_status_detailed ?? $session->payment_status ?? null,
-                amount_total: $session->amount_total ? number_format($session->amount_total / 100, 2, '.', '') : null,
-                amount_received: $session->amount_received ? number_format($session->amount_received / 100, 2, '.', '') : '0.00',
+                amount_total: $session->amount_total !== null ? Money::from((string) $session->amount_total)->divide('100')->finalize() : null,
+                amount_received: $session->amount_received !==null ? Money::from((string) $session->amount_received)->divide('100')->finalize() : '0.00',
                 created:$session->created ? date('Y-m-d H:i:s', $session->created) : null,
                 receipt_url: $session->receipt_url ?? null
             );

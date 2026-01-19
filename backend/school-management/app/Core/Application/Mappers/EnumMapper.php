@@ -25,27 +25,27 @@ class EnumMapper
     }
     public static function toPaymentConceptAppliesTo(string $appliesTo): PaymentConceptAppliesTo
     {
-        return PaymentConceptAppliesTo::from($appliesTo);
+        return PaymentConceptAppliesTo::from(strtolower($appliesTo));
     }
 
     public static function toPaymentConceptStatus(string $status): PaymentConceptStatus
     {
-        return PaymentConceptStatus::from($status);
+        return PaymentConceptStatus::from(strtolower($status));
     }
 
     public static function toUserGender(string $gender): UserGender
     {
-        return UserGender::from($gender);
+        return UserGender::from(strtolower($gender));
     }
 
     public static function toUserBloodType(string $bloodType): UserBloodType
     {
-        return UserBloodType::from($bloodType);
+        return UserBloodType::from(strtoupper($bloodType));
     }
 
     public static function toUserStatus(string $status): UserStatus
     {
-        return UserStatus::from($status);
+        return UserStatus::from(strtolower($status));
     }
 
 }

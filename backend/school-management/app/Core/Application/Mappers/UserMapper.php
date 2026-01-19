@@ -6,6 +6,7 @@ use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
 use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
+use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
@@ -15,6 +16,7 @@ use App\Core\Application\DTO\Response\User\UserWithPendingSumamaryResponse;
 use App\Core\Application\DTO\Response\User\UserWithStudentDetailResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedPermissionsResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
+use App\Models\User;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
 use App\Core\Domain\Enum\User\UserBloodType;
@@ -27,21 +29,50 @@ class UserMapper{
     public static function toDomain(CreateUserDTO $user): DomainUser
     {
         return new DomainUser(
+            curp: $user->curp,
             name: $user->name,
             last_name: $user->last_name,
             email: $user->email,
             password: $user->password,
             phone_number: $user->phone_number,
+            status: $user->status ?? null,
+            registration_date: $user->registration_date ?? null,
             birthdate: $user->birthdate ?? null,
             gender: $user->gender ?? null,
-            curp: $user->curp ?? null,
             address: $user->address ?? [],
-            stripe_customer_id: null,
             blood_type: $user->blood_type ?? null,
-            registration_date: $user->registration_date ?? null,
-            status: $user->status
+            stripe_customer_id: null
         );
 
+    }
+
+    public static function toUserAuthResponse(User $user): UserAuthResponse
+    {
+        return new UserAuthResponse(
+            id: $user->id,
+            curp: $user->curp,
+            name: $user->name,
+            last_name: $user->last_name,
+            email: $user->email,
+            phone_number: $user->phone_number,
+            status: $user->status->value,
+            registration_date: $user->registration_date?->toDateString(),
+            emailVerifiedAt: $user->email_verified_at?->toDateString(),
+            birthdate: $user->birthdate?->toDateString(),
+            gender: $user->gender?->value,
+            address:$user->address,
+            blood_type: $user->blood_type?->value,
+            stripe_customer_id: $user->stripe_customer_id,
+            studentDetail: $user->studentDetail ?
+                [
+                    'control_number' => $user->studentDetail?->n_control,
+                    'semester'       => $user->studentDetail?->semestre,
+                    'group' => $user->studentDetail?->group,
+                    'career'         => $user->studentDetail?->career?->career_name,
+                    'workshop' => $user->studentDetail?->workshop ?? null,
+                ]
+                : null
+        );
     }
 
     public static function toCreateUserDTO(array $data): CreateUserDTO
@@ -52,17 +83,17 @@ class UserMapper{
             email: $data['email'],
             password: $data['password'],
             phone_number: $data['phone_number'],
+            curp: $data['curp'],
             birthdate: new Carbon($data['birthdate']) ?? null,
             gender: isset($data['gender'])
             ? UserGender::from(strtolower($data['gender']))
             : null,
-            curp:$data['curp'],
             address: $data['address'] ?? [],
-             blood_type: isset($data['blood_type'])
-            ? UserBloodType::from($data['blood_type'])
-            : null,
+            blood_type: isset($data['blood_type'])
+           ? UserBloodType::from($data['blood_type'])
+           : null,
             registration_date: new Carbon($data['registration_date'] ?? Carbon::now()),
-            status: UserStatus::from($data['status'])
+            status: isset($data['status']) ? UserStatus::from($data['status']) : UserStatus::ACTIVO
         );
 
     }
@@ -72,8 +103,8 @@ class UserMapper{
             id: $user->id ?? null,
             fullName: $user->fullName() ?? null,
             email: $user->email ?? null,
-            n_control: $user->studentDetail->n_control ?? null,
             curp: $user->curp ?? null,
+            n_control: $user->studentDetail->n_control ?? null,
         );
     }
 
@@ -147,10 +178,10 @@ class UserMapper{
     public static function toUpdateUserPermissionsDTO(array $data): UpdateUserPermissionsDTO
     {
         return new UpdateUserPermissionsDTO(
-            curps: $data['curps'] ?? [],
-            role: $data['role'] ?? null,
-            permissionsToAdd: $data['permissionsToAdd'] ?? [],
-            permissionsToRemove: $data['permissionsToRemove'] ?? []
+            curps: $data['curps'],
+            role: $data['role'],
+            permissionsToAdd: $data['permissionsToAdd'],
+            permissionsToRemove: $data['permissionsToRemove']
 
         );
     }
@@ -160,7 +191,7 @@ class UserMapper{
         return new UserWithUpdatedPermissionsResponse(
             fullName: $user?->name && $user?->last_name ? "{$user->name} {$user->last_name}" : null,
             curp: $user?->curp ?? null,
-            role: $role ?? null,
+            role: $role,
             updatedPermissions: $permissions,
             metadata: $metadata ?? []
         );

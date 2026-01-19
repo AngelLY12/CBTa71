@@ -12,10 +12,10 @@ class ParentInviteMapper
         return new ParentInvite(
             studentId: $data['studentId'],
             email: $data['parentEmail'],
-            token: Str::uuid()->toString(),
+            token: Str::uuid(),
             expiresAt: now()->addHours(48),
-            usedAt: null,
-            createdBy: $data['createdBy']
+            createdBy: $data['createdBy'],
+            usedAt: null
         );
     }
 }
