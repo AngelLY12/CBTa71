@@ -9,7 +9,7 @@ use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
 use App\Core\Application\DTO\Response\General\ImportResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
-use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
+//use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Application\Traits\HasCache;
@@ -29,7 +29,7 @@ use App\Core\Application\UseCases\Admin\SyncPermissionsUseCase;
 use App\Core\Application\UseCases\Admin\SyncRoleUseCase;
 use App\Core\Application\UseCases\Admin\TemporaryDisableUserUseCase;
 use App\Core\Application\UseCases\Admin\UpdateStudentDeatilsUseCase;
-use App\Core\Application\UseCases\Jobs\PromoteStudentsUseCase;
+//use App\Core\Application\UseCases\Jobs\PromoteStudentsUseCase;
 use App\Core\Application\UseCases\User\RegisterUseCase;
 use App\Core\Domain\Entities\Permission;
 use App\Core\Domain\Entities\Role;
@@ -62,7 +62,6 @@ class AdminServiceFacades
         private FindRoleByIdUseCase             $role,
         private FindPermissionByIdUseCase       $permission,
         private SyncRoleUseCase                 $syncRoles,
-        private PromoteStudentsUseCase $promote,
         private CacheService $service
     )
     {
@@ -79,13 +78,6 @@ class AdminServiceFacades
     public function findStudentDetail(int $user_id): StudentDetail
     {
         return $this->find_student->execute($user_id);
-    }
-
-    public function promoteStudentes(): PromotedStudentsResponse
-    {
-        $promote=$this->promote->execute();
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
-        return $promote;
     }
 
     public function updateStudentDetail(int $user_id, array $fields): User

@@ -4,9 +4,11 @@ namespace App\Core\Application\Services\Payments\Stripe;
 
 use App\Core\Application\UseCases\Payments\Stripe\HandleFailedOrExpiredPaymentUseCase;
 use App\Core\Application\UseCases\Payments\Stripe\PaymentMethodAttachedUseCase;
+use App\Core\Application\UseCases\Payments\Stripe\ReconcileSinglePaymentUseCase;
 use App\Core\Application\UseCases\Payments\Stripe\RequiresActionUseCase;
 use App\Core\Application\UseCases\Payments\Stripe\SessionAsyncCompletedUseCase;
 use App\Core\Application\UseCases\Payments\Stripe\SessionCompletedUseCase;
+use App\Core\Domain\Entities\Payment;
 
 class WebhookServiceFacades{
 
@@ -15,32 +17,38 @@ class WebhookServiceFacades{
        private SessionAsyncCompletedUseCase $async,
        private PaymentMethodAttachedUseCase $attached,
        private RequiresActionUseCase $requires,
-       private HandleFailedOrExpiredPaymentUseCase $handle
+       private HandleFailedOrExpiredPaymentUseCase $handle,
+       private ReconcileSinglePaymentUseCase $reconcile,
     ) {
 
     }
 
-    public function sessionCompleted($obj)
+    public function sessionCompleted($obj, string $eventId)
     {
-        return $this->session->execute($obj);
+        return $this->session->execute($obj, $eventId);
     }
 
-    public function sessionAsync($obj) {
-        return $this->async->execute($obj);
+    public function sessionAsync($obj, string $eventId) {
+        return $this->async->execute($obj, $eventId);
     }
 
-    public function paymentMethodAttached($obj){
+    public function paymentMethodAttached($obj, string $eventId){
 
-       return $this->attached->execute($obj);
+       return $this->attached->execute($obj, $eventId);
     }
 
-    public function requiresAction($obj){
-        return $this->requires->execute($obj);
+    public function requiresAction($obj, string $eventId){
+        return $this->requires->execute($obj, $eventId);
     }
 
-    public function handleFailedOrExpiredPayment($obj, string $eventType)
+    public function handleFailedOrExpiredPayment($obj, string $eventType, string $eventId)
     {
-        return $this->handle->execute($obj,$eventType);
+        return $this->handle->execute($obj,$eventType, $eventId);
 
+    }
+
+    public function reconcilePayment(string $eventId, string $sessionId)
+    {
+        return $this->reconcile->execute($eventId, $sessionId);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Core\Application\Services\Misc;
 
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptToDisplay;
+use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\UseCases\Payments\FindConceptByIdUseCase;
 use App\Core\Application\UseCases\Payments\FindPaymentByIdUseCase;
 use App\Core\Application\UseCases\User\FindUserUseCase;
@@ -19,7 +21,7 @@ class FindEntityServiceFacades
     {
     }
 
-    public function findConcept(int $id): PaymentConcept
+    public function findConcept(int $id): ConceptToDisplay
     {
         return $this->concept->execute($id);
     }
@@ -27,7 +29,7 @@ class FindEntityServiceFacades
     {
         return $this->payment->execute($id);
     }
-    public function findUser(bool $forceRefresh): User
+    public function findUser(bool $forceRefresh): UserAuthResponse
     {
         return $this->user->execute($forceRefresh);
     }

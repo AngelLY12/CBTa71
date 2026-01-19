@@ -29,7 +29,7 @@ class DashboardServiceFacades {
 
     public function pendingPaymentAmount(bool $onlyThisYear, User $user, bool $forceRefresh): PendingSummaryResponse {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":pending:$user->id:$onlyThisYear");
-        return $this->cache($key,$forceRefresh ,fn() => $this->pending->execute($user->id, $onlyThisYear));
+        return $this->cache($key,$forceRefresh ,fn() => $this->pending->execute($user, $onlyThisYear));
     }
 
     public function paymentsMade(bool $onlyThisYear, User $user, bool $forceRefresh): PaymentsSummaryResponse {
@@ -39,7 +39,7 @@ class DashboardServiceFacades {
 
     public function overduePayments(bool $onlyThisYear, User $user, bool $forceRefresh): PendingSummaryResponse {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":overdue:$user->id:$onlyThisYear");
-        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user->id, $onlyThisYear));
+        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user, $onlyThisYear));
     }
 
     public function paymentHistory(bool $onlyThisYear, User $user, int $perPage, int $page, bool $forceRefresh): PaginatedResponse {

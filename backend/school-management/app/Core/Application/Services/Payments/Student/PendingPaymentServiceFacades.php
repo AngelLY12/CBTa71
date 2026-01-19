@@ -24,12 +24,12 @@ class PendingPaymentServiceFacades{
 
     public function showPendingPayments(User $user, bool $forceRefresh): array {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value . ":pending:$user->id");
-        return $this->cache($key,$forceRefresh ,fn() =>  $this->pending->execute($user->id));
+        return $this->cache($key,$forceRefresh ,fn() =>  $this->pending->execute($user));
     }
 
     public function showOverduePayments(User $user, bool $forceRefresh): array {
         $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value . ":overdue:$user->id");
-        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user->id));
+        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user));
     }
 
     public function payConcept(User $user, int $conceptId): string {
