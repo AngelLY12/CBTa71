@@ -52,7 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule){
         $schedule->command('payments:dispatch-reconcile-payments-job')->everyTwoHours()->withoutOverlapping(30)->onOneServer();
-        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyFourHours();
+        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyThreeHours()->withoutOverlapping(30)->onOneServer();
         $schedule->command('backup:clean')->dailyAt('23:50');
         $schedule->command('concepts:dispatch-finalize-job')->dailyAt('00:05')->withoutOverlapping(30)->onOneServer();
         $schedule->command('backup:dispatch-create-backup-job')->dailyAt('01:05') ->withoutOverlapping(120);
