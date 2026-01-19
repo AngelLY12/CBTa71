@@ -6,6 +6,7 @@ use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
+use App\Core\Domain\Utils\Helpers\Money;
 
 trait HasPaymentStripe
 {
@@ -15,20 +16,20 @@ trait HasPaymentStripe
     {
         $this->repo = $repo;
     }
-    public function updatePaymentWithStripeData(Payment $payment, $pi, $charge, PaymentMethod $savedPaymentMethod): Payment
+    public function updatePaymentWithStripeData(Payment $payment, $pi, $charge, ?PaymentMethod $savedPaymentMethod): Payment
     {
-        $expected = bcdiv((string)$pi->amount, '100', 2);
-        $received = bcdiv((string)($pi->amount_received ?? 0), '100', 2);
+        $expected = Money::from($payment->amount);
+        $received = Money::from($payment->amount_received ?? '0.00');
         $internalStatus = $this->verifyStatus($pi, $received, $expected);
         $paymentMethodDetails = $this->formatPaymentMethodDetails($charge->payment_method_details);
         $fields=[
-            'amount_received' => $received,
             'payment_method_id' => $savedPaymentMethod?->id,
             'stripe_payment_method_id' => $charge?->payment_method,
             'status' => $internalStatus,
             'payment_method_details'=>$paymentMethodDetails,
             'url' => $charge?->receipt_url ?? $payment->url,
         ];
+        $fields = array_filter($fields, fn($value) => !is_null($value));
         $newPayment=$this->repo->update($payment->id, $fields);
         logger()->info("Pago {$payment->id} actualizado correctamente.");
         return $newPayment;
@@ -47,14 +48,23 @@ trait HasPaymentStripe
         return (array) $details;
     }
 
-    private function verifyStatus($pi, string $received, string $expected): PaymentStatus
+    public function verifyStatus($pi, Money $received, Money $expected): PaymentStatus
     {
-        return match (true)
-        {
-            $pi->status !== PaymentStatus::SUCCEEDED->value => PaymentStatus::DEFAULT,
-            bccomp($received, $expected, 2) === -1 => PaymentStatus::UNDERPAID,
-            bccomp($received, $expected, 2) === 1  => PaymentStatus::OVERPAID,
-            default => PaymentStatus::SUCCEEDED
+        if ($pi->status === 'succeeded') {
+            if ($received->isLessThan($expected)) {
+                return PaymentStatus::UNDERPAID;
+            } elseif ($received->isGreaterThan($expected)) {
+                return PaymentStatus::OVERPAID;
+            } else {
+                return PaymentStatus::SUCCEEDED;
+            }
+        }
+
+        return match($pi->status) {
+            'requires_action' => PaymentStatus::REQUIRES_ACTION,
+            'requires_payment_method' => PaymentStatus::UNPAID,
+            'processing' => PaymentStatus::DEFAULT,
+            default => PaymentStatus::DEFAULT
         };
 
     }

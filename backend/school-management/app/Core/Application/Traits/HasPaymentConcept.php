@@ -47,7 +47,7 @@ trait HasPaymentConcept
         if (empty($recipients)) {
             return;
         }
-        $chunks = array_chunk($recipients, 50);
+        $chunks = array_chunk($recipients, 100);
 
         foreach ($chunks as $chunk) {
             $userIds = array_map(fn($user) => $user->id, $chunk);
