@@ -10,12 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * @OA\Schema(
  *     schema="UpdatePaymentConceptRelationsRequest",
  *     type="object",
- *      @OA\Property(
- *          property="is_global",
- *          type="boolean",
- *          description="Indica si aplica globalmente",
- *          example=false
- *      ),
+ *
  *     @OA\Property(
  *         property="applies_to",
  *         ref="#/components/schemas/PaymentConceptAppliesTo",
@@ -93,8 +88,7 @@ class UpdatePaymentConceptRelationsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'is_global'        => 'sometimes|required|boolean',
-            'applies_to'       => ['nullable','string','in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptAppliesTo::cases()))],
+            'applies_to'       => ['sometimes', 'required','string','in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptAppliesTo::cases()))],
             'semestres'      => 'nullable|array',
             'semestres.*'    => 'integer',
             'careers'        => 'nullable|array',
@@ -113,11 +107,6 @@ class UpdatePaymentConceptRelationsRequest extends FormRequest
 
     public function prepareForValidation()
     {
-        if ($this->has('is_global')) {
-            $this->merge([
-                'is_global' => filter_var($this->is_global, FILTER_VALIDATE_BOOLEAN),
-            ]);
-        }
 
         if ($this->has('replaceRelations')) {
             $this->merge([
@@ -159,7 +148,6 @@ class UpdatePaymentConceptRelationsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'is_global.boolean'     => 'El campo is_global debe ser booleano.',
             'applies_to.in'         => 'El valor de applies_to no es válido.',
             'semestres.array'        => 'Semestres debe ser un arreglo.',
             'semestres.*.integer'    => 'Cada semestre debe ser un número entero.',

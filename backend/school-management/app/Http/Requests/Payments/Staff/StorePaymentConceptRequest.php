@@ -11,7 +11,7 @@ use Illuminate\Foundation\Http\FormRequest;
  * @OA\Schema(
  *     schema="StorePaymentConceptRequest",
  *     type="object",
- *     required={"concept_name","start_date","amount","is_global","applies_to"},
+ *     required={"concept_name","start_date","amount","applies_to"},
  *
  *     @OA\Property(
  *         property="concept_name",
@@ -56,13 +56,6 @@ use Illuminate\Foundation\Http\FormRequest;
  *         minimum=10,
  *         description="Monto del concepto",
  *         example=1500.50
- *     ),
- *
- *     @OA\Property(
- *         property="is_global",
- *         type="boolean",
- *         description="Indica si aplica globalmente",
- *         example=true
  *     ),
  *
  *     @OA\Property(
@@ -137,7 +130,6 @@ class StorePaymentConceptRequest extends FormRequest
             'amount'       => ['required','numeric',
                                 'min:' . config('concepts.amount.min'),
                                 'max:' . config('concepts.amount.max')],
-            'is_global'    => 'required|boolean',
             'applies_to'   => ['required', 'string', 'in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptAppliesTo::cases()))],
             'semestres'      => 'nullable|array',
             'semestres.*'    => 'integer',
@@ -163,12 +155,6 @@ class StorePaymentConceptRequest extends FormRequest
         if ($this->filled('description')) {
             $this->merge([
                 'description' => strip_tags($this->description),
-            ]);
-        }
-
-        if ($this->has('is_global')) {
-            $this->merge([
-                'is_global' => filter_var($this->is_global, FILTER_VALIDATE_BOOLEAN),
             ]);
         }
 
@@ -209,7 +195,6 @@ class StorePaymentConceptRequest extends FormRequest
             'end_date.date_format'  => 'La fecha de fin debe tener el formato YYYY-MM-DD.',
             'amount.required'       => 'El monto es obligatorio.',
             'amount.numeric'        => 'El monto debe ser numérico.',
-            'is_global.boolean'     => 'El campo is_global debe ser booleano.',
             'applies_to.in'         => 'El valor de applies_to no es válido.',
             'semestres.array'        => 'Semestres debe ser un arreglo.',
             'semestres.*.integer'    => 'Cada semestre debe ser un número entero.',

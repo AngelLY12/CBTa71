@@ -46,9 +46,9 @@ class FindPermissionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'curps' => ['nullable', 'array'],
+            'curps' => ['sometimes','required', 'array'],
             'curps.*' => ['string', 'size:18', 'exists:users,curp'],
-            'role' => ['nullable', 'string', 'exists:roles,name'],
+            'role' => ['sometimes', 'required', 'string', 'exists:roles,name'],
         ];
     }
 

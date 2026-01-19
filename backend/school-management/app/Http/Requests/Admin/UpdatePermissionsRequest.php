@@ -68,15 +68,15 @@ class UpdatePermissionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'curps' => ['nullable', 'array'],
+            'curps' => ['sometimes', 'required', 'array'],
             'curps.*' => ['string', 'exists:users,curp'],
 
-            'role' => ['nullable', 'string', 'exists:roles,name'],
+            'role' => ['sometimes', 'required', 'string', 'exists:roles,name'],
 
-            'permissionsToAdd' => ['nullable', 'array'],
+            'permissionsToAdd' => ['sometimes', 'required', 'array'],
             'permissionsToAdd.*' => ['string', 'exists:permissions,name'],
 
-            'permissionsToRemove' => ['nullable', 'array'],
+            'permissionsToRemove' => ['sometimes', 'required', 'array'],
             'permissionsToRemove.*' => ['string', 'exists:permissions,name'],
         ];
     }
