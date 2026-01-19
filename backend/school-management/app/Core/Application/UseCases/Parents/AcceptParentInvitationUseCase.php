@@ -3,14 +3,20 @@
 namespace App\Core\Application\UseCases\Parents;
 
 use App\Core\Application\Mappers\ParentStudentMapper;
+use App\Core\Domain\Enum\Cache\CachePrefix;
+use App\Core\Domain\Enum\Cache\ParentCacheSufix;
 use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Repositories\Command\Misc\ParentInviteRepInterface;
 use App\Core\Domain\Repositories\Command\User\ParentStudentRepInterface;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Misc\ParentInviteQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Core\Infraestructure\Cache\CacheService;
+use App\Events\ParentInvitationAccepted;
+use App\Events\ParentInvitationFailed;
 use App\Exceptions\NotAllowed\InvalidInvitationException;
 use App\Exceptions\NotFound\UserNotFoundException;
+use Illuminate\Support\Facades\DB;
 
 class AcceptParentInvitationUseCase
 {
@@ -20,8 +26,8 @@ class AcceptParentInvitationUseCase
         private ParentStudentRepInterface $parentRepo,
         private UserQueryRepInterface $userQRepo,
         private UserRepInterface $userRepo,
+        private CacheService $service
     ) {}
-
     public function execute(string $token, ?string $relationship=null): void
     {
         $inv = $this->inviteQRepo->findByToken($token);
@@ -36,22 +42,46 @@ class AcceptParentInvitationUseCase
         {
             throw new UserNotFoundException();
         }
-        $hasParentRole= $parent->isParent();
-        if (!$hasParentRole) {
-            $this->userRepo->assignRole($parent->id,UserRoles::PARENT->value);
-        }
-        $parentRole = $parent->getRole(UserRoles::PARENT->value);
-        $studentRole = $student->getRole(UserRoles::STUDENT->value);
-        $data=[
-            'parentId' => $parent->id,
-            'studentId' => $student->id,
-            'parentRoleId' => $parentRole->id,
-            'studentRoleId' => $studentRole->id,
-            'relationship' => $relationship ?? null
-        ];
-        $this->parentRepo->create(ParentStudentMapper::toDomain($data));
-        $this->inviteRepo->markAsUsed($inv->id);
 
+        try{
+            DB::beginTransaction();
+            if (!$parent->isParent()) {
+                $this->userRepo->assignRole($parent->id, UserRoles::PARENT->value);
+                $parent = $this->userQRepo->findById($parent->id); // Recargar
+            }
+            $parentRole = $parent->getRole(UserRoles::PARENT->value);
+            $studentRole = $student->getRole(UserRoles::STUDENT->value);
+
+            $data=[
+                'parentId' => $parent->id,
+                'studentId' => $student->id,
+                'parentRoleId' => $parentRole->id,
+                'studentRoleId' => $studentRole->id,
+                'relationship' => $relationship ?? null
+            ];
+
+            $this->parentRepo->create(ParentStudentMapper::toDomain($data));
+
+            $this->inviteRepo->markAsUsed($inv->id);
+            $this->service->clearKey(CachePrefix::STUDENT->value, ParentCacheSufix::PARENTS->value . ":$student->id");
+            $this->service->clearKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value . ":$parent->id");
+            DB::commit();
+
+            event(new ParentInvitationAccepted(
+                $student->id,
+                $parent->fullName(),
+                $student->fullName()
+            ));
+
+        }catch (\Exception $exception){
+            DB::rollBack();
+            event(new ParentInvitationFailed(
+                $student->id,
+                $parent->fullName(),
+                $student->fullName()
+            ));
+            throw $exception;
+        }
     }
 
 }

@@ -5,7 +5,8 @@ namespace App\Core\Application\UseCases\Payments\Staff\Dashboard;
 use App\Core\Application\DTO\Response\Payment\FinancialSummaryResponse;
 use App\Core\Application\Mappers\PaymentMapper;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
-use App\Core\Domain\Repositories\Query\Stripe\StripeGatewayQueryInterface;
+use App\Core\Domain\Repositories\Stripe\StripeGatewayQueryInterface;
+use App\Core\Domain\Utils\Helpers\Money;
 
 class PaymentsMadeUseCase{
  public function __construct(
@@ -51,30 +52,28 @@ class PaymentsMadeUseCase{
 
     private function formattBalance(array $balanceData): array
     {
-        $available = '0';
+        $available = Money::from('0');
+        $pending = Money::from('0');
         $availableBySource = [];
-        $pending = '0';
         $pendingBySource = [];
         foreach ($balanceData['available'] as $b) {
-            $available = bcadd($available, $b['amount'], 2);
+            $available = $available->add(Money::from($b['amount']));
             $this->aggregateBySource($b['source_types'], $availableBySource);
         }
 
         foreach ($balanceData['pending'] as $b) {
-            $pending = bcadd($pending, $b['amount'], 2);
+            $pending = $pending->add(Money::from($b['amount']));
             $this->aggregateBySource($b['source_types'], $pendingBySource);
         }
-        return [$available,$pending, $availableBySource, $pendingBySource];
+        return [$available->finalize(),$pending->finalize(), $availableBySource, $pendingBySource];
     }
 
     private function aggregateBySource(array $sourceTypes, array &$target): void
     {
         foreach ($sourceTypes as $type => $amount) {
-            $target[$type] = bcadd(
-                $target[$type] ?? '0',
-                bcdiv($amount, '100', 2),
-                2
-            );
+            $money = Money::from($target[$type] ?? '0')
+                ->add(Money::from($amount));
+            $target[$type] = $money->finalize();
         }
     }
 
@@ -92,12 +91,12 @@ class PaymentsMadeUseCase{
                 ];
             }
             $result[$key]['months'][] = [
-                'amount' => $data['amount'],
-                'fee'    => $data['fee'],
+                'amount' => Money::from($data['amount'])->finalize(),
+                'fee'    => Money::from($data['fee'])->finalize(),
             ];
 
-            $result[$key]['total'] = bcadd($result[$key]['total'], $data['amount'], 2);
-            $result[$key]['total_fee'] = bcadd($result[$key]['total_fee'], $data['fee'], 2);
+            $result[$key]['total'] = Money::from($result[$key]['total'])->add($data['amount'])->finalize();
+            $result[$key]['total_fee'] = Money::from($result[$key]['total_fee'])->add($data['fee'])->finalize();
 
         }
         return $result;
@@ -118,8 +117,8 @@ class PaymentsMadeUseCase{
                 ];
             }
 
-            $result[$key]['months'][] = $amount;
-            $result[$key]['total'] = bcadd($result[$key]['total'], $amount, 2);
+            $result[$key]['months'][] = Money::from($amount)->finalize();
+            $result[$key]['total'] = Money::from($result[$key]['total'])->add($amount)->finalize();
         }
 
         return $result;
@@ -151,7 +150,10 @@ class PaymentsMadeUseCase{
     }
     private function calculatePercentage(string $part, string $total): string
     {
-        return bcdiv(bcmul($part, '100', 2), $total, 2);
+        $part = Money::from($part)->multiply('100');
+        $total = Money::from($total);
+
+        return $part->divide($total)->finalize();
     }
 
 }

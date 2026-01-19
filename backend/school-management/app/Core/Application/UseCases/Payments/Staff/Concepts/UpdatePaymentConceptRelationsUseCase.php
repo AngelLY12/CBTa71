@@ -36,11 +36,6 @@ class UpdatePaymentConceptRelationsUseCase
     public function execute(UpdatePaymentConceptRelationsDTO $dto): UpdatePaymentConceptRelationsResponse {
         $this->preValidateUpdate($dto);
         [$newPaymentConcept, $oldPaymentConcept, $oldRecipientIds]= DB::transaction(function() use ($dto) {
-            if (isset($dto->appliesTo)) {
-                $dto->is_global = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
-            } else if (isset($dto->is_global) && $dto->is_global === true) {
-                $dto->appliesTo = PaymentConceptAppliesTo::TODOS;
-            }
 
             $existingConcept = $this->pcqRepo->findById($dto->id);
 
@@ -93,14 +88,14 @@ class UpdatePaymentConceptRelationsUseCase
 
     private function validFields(UpdatePaymentConceptRelationsDTO $dto): array
     {
-        $allowedFields = ['is_global', 'applies_to'];
+        $allowedFields = ['applies_to'];
         $fieldsToUpdate = [];
 
         foreach ($dto->toArray() as $key => $value) {
             if (!in_array($key, $allowedFields)) {
                 continue;
             }
-            if ($value !== null && $value !== '' && $value !== []) {
+            if ($value !== null) {
                 $fieldsToUpdate[$key] = $value;
             }
         }
@@ -277,7 +272,6 @@ class UpdatePaymentConceptRelationsUseCase
                 }
                 break;
             case PaymentConceptAppliesTo::TODOS:
-                $paymentConcept->is_global = true;
                 break;
             case PaymentConceptAppliesTo::TAG:
                 if($dto->applicantTags)

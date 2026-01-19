@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\UseCases\User;
 
+use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Cache\CachePrefix;
@@ -20,7 +21,7 @@ class FindUserUseCase
     {
         $this->setCacheService($service);
     }
-    public function execute(bool $forceRefresh): User
+    public function execute(bool $forceRefresh): UserAuthResponse
     {
 
         $user =$this->uqRepo->findAuthUser();

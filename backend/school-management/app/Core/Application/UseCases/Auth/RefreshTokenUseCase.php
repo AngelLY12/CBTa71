@@ -8,6 +8,8 @@ use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\TokenValidator;
 use App\Core\Domain\Utils\Validators\UserValidator;
+use App\Exceptions\Unauthorized\InvalidRefreshTokenException;
+use App\Exceptions\Unauthorized\RefreshTokenRevokedException;
 
 class RefreshTokenUseCase
 {
@@ -25,9 +27,14 @@ class RefreshTokenUseCase
         TokenValidator::ensureIsTokenValid($refreshToken);
         $user = $this->uqRepo->findById($refreshToken->user_id);
         UserValidator::ensureUserIsActive($user);
-        $this->refresh->revokeRefreshToken($refreshTokenValue);
+        $revoked = $this->refresh->revokeRefreshToken($refreshTokenValue);
+
+        if (! $revoked) {
+            throw new InvalidRefreshTokenException('Ya se usó este refresh token');
+        }
         $userRoles= $user->getRoleNames();
-        $userData=$this->formatUserData($userRoles, $user->fullName(), $user->id);
+        $hasUnreadNotifications = $this->uqRepo->userHasUnreadNotifications($user->id);
+        $userData=$this->formatUserData($userRoles, $user->fullName(), $user->id, $hasUnreadNotifications);
         $newAccessToken  = $this->userRepo->createToken($user->id, 'api-token');
         $newRefreshToken = $this->userRepo->createRefreshToken($user->id, 'refresh-token');
         return GeneralMapper::toLoginResponse($newAccessToken,
@@ -36,12 +43,13 @@ class RefreshTokenUseCase
         $userData);
     }
 
-    private function formatUserData(array $roles, string $fullName, int $id): array
+    private function formatUserData(array $roles, string $fullName, int $id, bool $hasUnreadNotifications): array
    {
         return [
             'id' => $id,
             'fullName' => $fullName,
-            'roles' => $roles
+            'roles' => $roles,
+            'hasUnreadNotifications' => $hasUnreadNotifications
         ];
    }
 }

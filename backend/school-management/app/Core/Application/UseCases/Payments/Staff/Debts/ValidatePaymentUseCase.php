@@ -2,12 +2,14 @@
 
 namespace App\Core\Application\UseCases\Payments\Staff\Debts;
 
+use App\Core\Application\DTO\Response\General\ReconciliationResult;
 use App\Core\Application\DTO\Response\Payment\PaymentValidateResponse;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Application\Mappers\PaymentMapper;
 use App\Core\Application\Services\Payments\Staff\PaymentValidationService;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Entities\User;
+use App\Exceptions\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use App\Core\Application\Mappers\UserMapper as AppUserMapper;
 use App\Jobs\ClearStaffCacheJob;
@@ -24,15 +26,33 @@ class ValidatePaymentUseCase{
     }
     public function execute(string $search, string $payment_intent_id): PaymentValidateResponse
     {
-        [$payment, $student, $wasValidated] = DB::transaction(
-            fn() => $this->validationService->validateAndGetOrCreatePayment($search, $payment_intent_id)
-        );
+        try
+        {
+            [$payment, $student, $wasCreated, $wasReconciled , $reconcileResponse] = DB::transaction(
+                fn() => $this->validationService->validateAndGetOrCreatePayment($search, $payment_intent_id)
+            );
 
-        if ($wasValidated) {
-            $this->processSideEffects($payment, $student);
+            if ($wasCreated) {
+                $this->processSideEffects($payment, $student);
+            }
+
+            return $this->buildResponse($payment, $student, $wasCreated, $wasReconciled, $reconcileResponse);
+
+        }catch (ValidationException $e) {
+            logger()->warning("Validación duplicada para pago", [
+                'search' => $search,
+                'payment_intent_id' => $payment_intent_id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            logger()->error("Error al validar pago", [
+                'search' => $search,
+                'payment_intent_id' => $payment_intent_id,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
         }
-
-        return $this->buildResponse($payment, $student);
 
     }
 
@@ -60,8 +80,10 @@ class ValidatePaymentUseCase{
             'recipientEmail' => $student->email,
             'concept_name' => $payment->concept_name,
             'amount' => $payment->amount,
-            'payment_method_detail' => $payment->payment_method_details,
-            'url' => $payment->url,
+            'amount_received' => $payment->amount_received,
+            'payment_method_detail' => $payment->payment_method_details ?? [],
+            'status' => $payment->status->value,
+            'url' => $payment->url ?? null,
             'payment_intent_id' => $payment->payment_intent_id,
         ];
 
@@ -73,11 +95,20 @@ class ValidatePaymentUseCase{
             ->onQueue('emails');
     }
 
-    private function buildResponse(Payment $payment, User $student): PaymentValidateResponse
+    private function buildResponse(Payment $payment, User $student, bool $wasCreated, bool $wasReconciled, ReconciliationResult $result): PaymentValidateResponse
     {
+        $metadata = [
+            'wasCreated' => $wasCreated,
+            'wasReconciled' => $wasReconciled,
+            'message' => $wasCreated
+                ? 'Pago creado con éxito, se realizó el proceso correctamente.'
+                : 'Pago reconciliado, se realizó el proceso correctamente.',
+            'reconciliationResult' => $wasReconciled ? $result->toArray() : null,
+        ];
         return PaymentMapper::toPaymentValidateResponse(
             AppUserMapper::toDataResponse($student),
-            PaymentMapper::toPaymentDataResponse($payment)
+            PaymentMapper::toPaymentDataResponse($payment),
+            $metadata
         );
     }
 }

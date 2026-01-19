@@ -3,8 +3,8 @@
 namespace App\Core\Application\UseCases\Payments\Student\Cards;
 
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
-use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
+use App\Core\Domain\Repositories\Stripe\StripeGatewayInterface;
 
 class DeletePaymentMethoUseCase
 {

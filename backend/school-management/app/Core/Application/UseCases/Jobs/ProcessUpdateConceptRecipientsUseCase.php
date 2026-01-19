@@ -56,7 +56,7 @@ class ProcessUpdateConceptRecipientsUseCase
                 'concept_id' =>$newPaymentConcept->id,
                 'reason' => $notificationDecision['reason'],
                 'recipient_count' => count($recipients),
-                'applies_to' => $newPaymentConcept->applies_to->value
+                'applies_to' => $appliesTo
             ]);
         }
 
@@ -98,17 +98,6 @@ class ProcessUpdateConceptRecipientsUseCase
                 ];
                 break;
         }
-        if($newConcept->is_global !== $oldConcept->is_global)
-        {
-            $changes = [
-                [
-                    'field' =>'is_global',
-                    'type' => 'applies_to_changed',
-                    'old' => $oldConcept->is_global,
-                    'new' => $newConcept->is_global,
-                ]
-            ];
-        }
         SendConceptUpdatedRelationsNotificationJob::forStudents(
             $userIds,
             $newConcept->id,
@@ -121,71 +110,150 @@ class ProcessUpdateConceptRecipientsUseCase
     private function sendBroadcastForNewUserIds(PaymentConcept $concept, array $notificationDecision): void
     {
         $changes = [];
-        switch ($notificationDecision['reason'])
-        {
-            case 'exceptions_removed':
-                $changes = [
-                    [
-                        'type' => 'exceptions_update',
-                        'field' => 'exceptions',
-                        'added' => [],
-                        'removed' => $notificationDecision['newUserIds']
-                    ]
-                ];
-                break;
-            case 'exceptions_added':
-                $changes = [
-                    [
-                        'type' => 'exceptions_update',
-                        'field' => 'exceptions',
-                        'added' => $notificationDecision['newUserIds'],
-                        'removed' => []
-                    ]
-                ];
-                break;
-            case 'careers_updated':
-                $changes = [
-                    [
-                        'type' => 'relation_update',
-                        'field' => 'careers',
-                        'added' => $notificationDecision['newUserIds'],
-                        'removed' => []
-                    ]
-                ];
-                break;
-            case 'semesters_updated':
-                $changes = [
-                    [
-                        'type' => 'relation_update',
-                        'field' => 'semesters',
-                        'added' => $notificationDecision['newUserIds'],
-                        'removed' => []
-                    ]
-                ];
-                break;
-            case 'students_updated':
-                $changes = [
-                    [
-                        'type' => 'relation_update',
-                        'field' => 'students',
-                        'added' => $notificationDecision['newUserIds'],
-                        'removed' => []
-                    ]
-                ];
-                break;
-            case 'tags_updated':
-                $changes = [
-                    [
-                        'type' => 'relation_update',
-                        'field' => 'applicant_tags',
-                        'added' => $notificationDecision['newUserIds'],
-                        'removed' => []
-                    ]
-                ];
-                break;
+
+        $isRemoved = str_contains($notificationDecision['reason'], '_removed');
+
+        if ($isRemoved) {
+            $field = str_replace('_removed', '', $notificationDecision['reason']);
+            $fieldMap = [
+                'careers' => 'careers',
+                'semesters' => 'semesters',
+                'students' => 'students',
+                'tags' => 'applicant_tags',
+                'career_semester' => 'career_semester',
+                'careers_updated_in_career_semester' => 'careers_in_career_semester',
+                'semesters_updated_in_career_semester' => 'semesters_in_career_semester',
+                'both_career_semester_updated' => 'career_semester',
+                'careers_updated_in_career_semester_removed' => 'careers_in_career_semester',
+                'semesters_updated_in_career_semester_removed' => 'semesters_in_career_semester',
+                'both_career_semester_updated_removed' => 'career_semester'
+            ];
+
+            $fieldName = $fieldMap[$field] ?? $field;
+
+            $changes = [
+                [
+                    'type' => 'relation_removed',
+                    'field' => $fieldName,
+                    'added' => [],
+                    'removed' => $notificationDecision['removedUserIds']
+                ]
+            ];
+        } else {
+            switch ($notificationDecision['reason'])
+            {
+                case 'exceptions_removed':
+                    $changes = [
+                        [
+                            'type' => 'exceptions_update',
+                            'field' => 'exceptions',
+                            'added' => [],
+                            'removed' => $notificationDecision['newUserIds']
+                        ]
+                    ];
+                    break;
+                case 'exceptions_added':
+                    $changes = [
+                        [
+                            'type' => 'exceptions_update',
+                            'field' => 'exceptions',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => []
+                        ]
+                    ];
+                    break;
+                case 'exceptions_replaced':
+                    $changes = [
+                        [
+                            'type' => 'exceptions_update',
+                            'field' => 'exceptions',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => $notificationDecision['removedUserIds']
+                        ]
+                    ];
+                    break;
+                case 'careers_updated':
+                    $changes = [
+                        [
+                            'type' => 'relation_update',
+                            'field' => 'careers',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => []
+                        ]
+                    ];
+                    break;
+                case 'semesters_updated':
+                    $changes = [
+                        [
+                            'type' => 'relation_update',
+                            'field' => 'semesters',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => []
+                        ]
+                    ];
+                    break;
+                case 'students_updated':
+                    $changes = [
+                        [
+                            'type' => 'relation_update',
+                            'field' => 'students',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => []
+                        ]
+                    ];
+                    break;
+                case 'tags_updated':
+                    $changes = [
+                        [
+                            'type' => 'relation_update',
+                            'field' => 'applicant_tags',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => []
+                        ]
+                    ];
+                    break;
+                case 'career_semester_updated':
+                case 'both_career_semester_updated':
+                    $changes = [
+                        [
+                            'type' => 'relation_update',
+                            'field' => 'career_semester',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => []
+                        ]
+                    ];
+                    break;
+
+                case 'careers_updated_in_career_semester':
+                    $changes = [
+                        [
+                            'type' => 'relation_update',
+                            'field' => 'careers_in_career_semester',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => []
+                        ]
+                    ];
+                    break;
+
+                case 'semesters_updated_in_career_semester':
+                    $changes = [
+                        [
+                            'type' => 'relation_update',
+                            'field' => 'semesters_in_career_semester',
+                            'added' => $notificationDecision['newUserIds'],
+                            'removed' => []
+                        ]
+                    ];
+                    break;
+
+            }
         }
+        $userIdsToNotify = !empty($notificationDecision['newUserIds'])
+            ? $notificationDecision['newUserIds']
+            : $notificationDecision['removedUserIds'];
+
         SendConceptUpdatedRelationsNotificationJob::forStudents(
-            $notificationDecision['newUserIds'],
+            $userIdsToNotify,
             $concept->id,
             $changes
         )
@@ -198,9 +266,22 @@ class ProcessUpdateConceptRecipientsUseCase
         $newAppliesTo = $notificationData['new_applies_to'];
 
         if ($dto->appliesTo && $oldAppliesTo !== $newAppliesTo) {
+
+            if ($oldAppliesTo === PaymentConceptAppliesTo::TODOS || $newAppliesTo === PaymentConceptAppliesTo::TODOS) {
+                return [
+                    'should' => false,
+                    'newUserIds' => [],
+                    'removedUserIds' => [],
+                    'reason' => 'changes_involving_todos',
+                    'notification_type' => [],
+                    'applies_to' => $newAppliesTo->value
+                ];
+            }
+
             return [
                 'should' => true,
                 'newUserIds' => [],
+                'removedUserIds' => [],
                 'reason' => 'applies_to_changed',
                 'notification_type' => ['email', 'broadcast'],
                 'applies_to' => $newAppliesTo->value
@@ -211,22 +292,50 @@ class ProcessUpdateConceptRecipientsUseCase
             return [
                 'should' => true,
                 'newUserIds' => $notificationData['old_exception_ids'],
+                'removedUserIds' => [],
                 'reason' => 'exceptions_removed',
                 'notification_type' => ['email', 'broadcast'],
                 'applies_to' => $newAppliesTo->value
             ];
         }
-        if ($dto->exceptionStudents && $dto->replaceExceptions) {
+        if ($dto->exceptionStudents) {
             $oldExceptionIds = $notificationData['old_exception_ids'];
             $newExceptionIds = $notificationData['new_exception_ids'];
 
             $addedToExceptions = array_diff($newExceptionIds, $oldExceptionIds);
+            $removedFromExceptions = array_diff($oldExceptionIds, $newExceptionIds);
 
-            if (!empty($addedToExceptions)) {
+            $hasAdded = !empty($addedToExceptions);
+            $hasRemoved = !empty($removedFromExceptions);
+
+            if ($hasAdded && !$hasRemoved) {
                 return [
                     'should' => true,
                     'newUserIds' => $addedToExceptions,
+                    'removedUserIds' => [],
                     'reason' => 'exceptions_added',
+                    'notification_type' => ['broadcast'],
+                    'applies_to' => $newAppliesTo->value
+                ];
+            }
+
+            if (!$hasAdded && $hasRemoved && $dto->replaceExceptions) {
+                return [
+                    'should' => true,
+                    'newUserIds' => [],
+                    'removedUserIds' => $removedFromExceptions,
+                    'reason' => 'exceptions_removed',
+                    'notification_type' => ['email', 'broadcast'],
+                    'applies_to' => $newAppliesTo->value
+                ];
+            }
+
+            if ($hasAdded && $hasRemoved && $dto->replaceExceptions) {
+                return [
+                    'should' => true,
+                    'newUserIds' => $addedToExceptions,
+                    'removedUserIds' => $removedFromExceptions,
+                    'reason' => 'exceptions_replaced',
                     'notification_type' => ['broadcast'],
                     'applies_to' => $newAppliesTo->value
                 ];
@@ -235,15 +344,51 @@ class ProcessUpdateConceptRecipientsUseCase
 
         if (!$dto->appliesTo && $oldAppliesTo === $newAppliesTo)
         {
+            if ($oldAppliesTo === PaymentConceptAppliesTo::TODOS) {
+                return [
+                    'should' => false,
+                    'newUserIds' => [],
+                    'removedUserIds' => [],
+                    'reason' => 'todos_no_relations',
+                    'notification_type' => [],
+                    'applies_to' => $newAppliesTo->value
+                ];
+            }
+
             $newRecipientIds = $this->uqRepo->getRecipientsIds($newPaymentConcept, $newAppliesTo->value);
             $newlyAddedIds = array_diff($newRecipientIds, $oldRecipientIds);
+            $removedIds = array_diff($oldRecipientIds, $newRecipientIds);
 
             if (!empty($newlyAddedIds)) {
+                $reason = $this->determineRelationChangeReason($oldAppliesTo, $dto, true);
+
+                if ($oldAppliesTo === PaymentConceptAppliesTo::CARRERA_SEMESTRE) {
+                    if ($dto->careers && !$dto->semesters) {
+                        $reason = 'careers_updated_in_career_semester';
+                    } elseif (!$dto->careers && $dto->semesters) {
+                        $reason = 'semesters_updated_in_career_semester';
+                    } elseif ($dto->careers && $dto->semesters) {
+                        $reason = 'both_career_semester_updated';
+                    }
+                }
                 return [
                     'should' => true,
                     'newUserIds' => $newlyAddedIds,
-                    'reason' => $this->determineRelationChangeReason($oldAppliesTo, $dto),
+                    'removedUserIds' => [],
+                    'reason' => $reason,
                     'notification_type' => ['email', 'broadcast'],
+                    'applies_to' => $newAppliesTo->value
+                ];
+            }
+            if (!empty($removedIds) && $this->hasReplaceRelations($oldAppliesTo, $dto)) {
+                $reason = $this->determineRelationChangeReason($oldAppliesTo, $dto, false);
+
+                return [
+                    'should' => true,
+                    'newUserIds' => [],
+                    'removedUserIds' => $removedIds,
+                    'reason' => $reason . '_removed',
+                    'notification_type' => ['broadcast'],
                     'applies_to' => $newAppliesTo->value
                 ];
             }
@@ -252,35 +397,72 @@ class ProcessUpdateConceptRecipientsUseCase
         return [
             'should' => false,
             'newUserIds' => [],
+            'removedUserIds' => [],
             'reason' => '',
             'notification_type' => [],
             'applies_to' => $newAppliesTo->value
         ];
     }
 
-    private function determineRelationChangeReason(PaymentConceptAppliesTo $oldAppliesTo, UpdatePaymentConceptRelationsDTO $dto): string
+    private function determineRelationChangeReason(PaymentConceptAppliesTo $oldAppliesTo, UpdatePaymentConceptRelationsDTO $dto, bool $isAdded = true): string
     {
+        if ($oldAppliesTo === PaymentConceptAppliesTo::TODOS) {
+            return 'todos_no_changes';
+        }
+
         if ($oldAppliesTo === PaymentConceptAppliesTo::CARRERA && $dto->careers) {
-            return 'careers_updated';
+            return $isAdded ? 'careers_updated' : 'careers_removed';
         }
 
         if ($oldAppliesTo === PaymentConceptAppliesTo::SEMESTRE && $dto->semesters) {
-            return 'semesters_updated';
+            return $isAdded ? 'semesters_updated' : 'semesters_removed';
         }
 
         if ($oldAppliesTo === PaymentConceptAppliesTo::ESTUDIANTES && $dto->students) {
-            return 'students_updated';
+            return $isAdded ? 'students_updated' : 'students_removed';
         }
 
         if ($oldAppliesTo === PaymentConceptAppliesTo::TAG && $dto->applicantTags) {
-            return 'tags_updated';
+            return $isAdded ? 'tags_updated' : 'tags_removed';
         }
 
         if ($oldAppliesTo === PaymentConceptAppliesTo::CARRERA_SEMESTRE && ($dto->careers || $dto->semesters)) {
-            return 'career_semester_updated';
+            if (!$isAdded) {
+                if ($dto->careers && !$dto->semesters) {
+                    return 'careers_updated_in_career_semester_removed';
+                } elseif (!$dto->careers && $dto->semesters) {
+                    return 'semesters_updated_in_career_semester_removed';
+                } elseif ($dto->careers && $dto->semesters) {
+                    return 'both_career_semester_updated_removed';
+                }
+            }
+            return $isAdded ? 'career_semester_updated' : 'career_semester_removed';
         }
 
-        return 'relations_updated';
+        return $isAdded ? 'relations_updated' : 'relations_removed';
+    }
+
+    private function hasReplaceRelations(PaymentConceptAppliesTo $appliesTo, UpdatePaymentConceptRelationsDTO $dto): bool
+    {
+        switch ($appliesTo) {
+            case PaymentConceptAppliesTo::CARRERA:
+                return $dto->replaceRelations === true && $dto->careers === true;
+
+            case PaymentConceptAppliesTo::SEMESTRE:
+                return $dto->replaceRelations === true && $dto->semesters === true;
+
+            case PaymentConceptAppliesTo::ESTUDIANTES:
+                return $dto->replaceRelations === true && $dto->students === true;
+
+            case PaymentConceptAppliesTo::TAG:
+                return $dto->replaceRelations === true && $dto->applicantTags === true;
+
+            case PaymentConceptAppliesTo::CARRERA_SEMESTRE:
+                return $dto->replaceRelations === true && ($dto->careers === true || $dto->semesters === true);
+
+            default:
+                return false;
+        }
     }
 
     private function getNotificationData(PaymentConcept $newPaymentConcept, PaymentConcept $oldPaymentConcept): array

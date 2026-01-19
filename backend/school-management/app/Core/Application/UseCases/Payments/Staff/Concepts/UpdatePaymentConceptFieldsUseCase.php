@@ -8,6 +8,7 @@ use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
+use App\Core\Domain\Utils\Helpers\Money;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
 use App\Events\AdministrationEvent;
 use App\Events\PaymentConceptUpdatedFields;
@@ -139,7 +140,7 @@ class UpdatePaymentConceptFieldsUseCase
         }
 
         if ($field === 'amount' && is_numeric($value)) {
-            return '$' . number_format($value, 2);
+            return '$' . Money::from((string) $value)->finalize();
         }
 
         return (string)$value;

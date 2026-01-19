@@ -8,6 +8,7 @@ use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Repositories\Command\Auth\AccessTokenRepInterface;
 use App\Core\Domain\Repositories\Command\Auth\RefreshTokenRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
+use App\Exceptions\Unauthorized\InvalidRefreshTokenException;
 use App\Jobs\ClearParentCacheJob;
 use App\Jobs\ClearStudentCacheJob;
 use App\Models\User;
@@ -31,7 +32,10 @@ class LogoutUseCase
             }
 
             if ($refreshTokenValue) {
-                $this->refresh->revokeRefreshToken($refreshTokenValue);
+                $revoked=$this->refresh->revokeRefreshToken($refreshTokenValue);
+                if (!$revoked) {
+                    throw new InvalidRefreshTokenException('Hubo un error al cerrar sesión');
+                }
             }
         });
         $roles = $user->roles()->pluck('name')->toArray();

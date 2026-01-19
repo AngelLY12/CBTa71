@@ -3,32 +3,23 @@
 namespace App\Core\Application\UseCases\Parents;
 
 use App\Core\Application\DTO\Response\Parents\ParentChildrenResponse;
-use App\Core\Domain\Enum\User\UserRoles;
+use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Query\User\ParentStudentQueryRepInterface;
-use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotAllowed\UserInvalidRoleException;
 use App\Exceptions\NotFound\ParentChildrenNotFoundException;
-use App\Exceptions\NotFound\UserNotFoundException;
 
 class GetParentChildrenUseCase
 {
     public function __construct(
         private ParentStudentQueryRepInterface $relationQRepo,
-        private UserQueryRepInterface $userQRepo,
     ) {}
 
-    public function execute(int $parentId): ParentChildrenResponse
+    public function execute(User $parent): ParentChildrenResponse
     {
-        $parent=$this->userQRepo->findById($parentId);
-        if(!$parent)
-        {
-            throw new UserNotFoundException();
-        }
         if (!$parent->isParent()) {
             throw new UserInvalidRoleException();
         }
-
-        $response=$this->relationQRepo->getStudentsOfParent($parentId);
+        $response=$this->relationQRepo->getStudentsOfParent($parent->id);
         if(!$response)
         {
             throw new ParentChildrenNotFoundException();

@@ -4,23 +4,19 @@ namespace App\Core\Application\UseCases\Payments\Stripe;
 
 use App\Core\Application\Mappers\EnumMapper;
 use App\Core\Application\Traits\HasPaymentSession;
+use App\Core\Domain\Enum\Payment\PaymentEventType;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\DomainException;
 
 class SessionCompletedUseCase
 {
-    public function __construct(
-        private UserQueryRepInterface $uqRepo,
-        private FinalizeSetupSessionUseCase $finalize
-    ) {
 
-    }
     use HasPaymentSession;
 
     /**
      * @throws \Exception
      */
-    public function execute($obj)
+    public function execute($obj, string $eventId)
     {
         try {
             if (!isset($obj->mode)) {
@@ -29,19 +25,14 @@ class SessionCompletedUseCase
             }
             if ($obj->mode === 'payment') {
                 $status = EnumMapper::fromStripe($obj->payment_status);
-                $this->handlePaymentSession($obj, [
+                $payment=$this->handlePaymentSession($obj, [
                     'payment_intent_id' => $obj->payment_intent,
                     'status' => $status,
-                ]);
-                return true;
+                ], $eventId, PaymentEventType::WEBHOOK_SESSION_COMPLETED);
+                return $payment !== null;
             }
             if ($obj->mode === 'setup') {
-                $user = $this->uqRepo->findUserByEmail($obj->customer_email ?? null);
-                if (!$user) {
-                    logger()->error("Usuario no encontrado para session_id={$obj->id}");
-                    return false;
-                }
-                return $this->finalize->execute($obj->id, $user);
+                return $this->finalizeSetupSession($obj);
             }
             logger()->info("Sesión ignorada en webhook. session_id={$obj->id}");
             return true;

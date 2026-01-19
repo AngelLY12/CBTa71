@@ -4,7 +4,7 @@ namespace App\Core\Application\UseCases\Payments\Staff\Dashboard;
 
 use App\Core\Application\DTO\Response\General\StripePayoutResponse;
 use App\Core\Application\Mappers\GeneralMapper;
-use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
+use App\Core\Domain\Repositories\Stripe\StripeGatewayInterface;
 
 class CreatePayoutUseCase
 {

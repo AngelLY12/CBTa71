@@ -70,7 +70,6 @@ class CreatePaymentConceptUseCase
 
     private function preValidateRecipients(CreatePaymentConceptDTO $dto): void
     {
-        $dto->is_global = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
         PaymentConceptValidator::ensureCreatePaymentDTOIsValid($dto);
     }
 

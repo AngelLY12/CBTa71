@@ -26,8 +26,6 @@ use Illuminate\Support\Str;
 class BulkImportUsersUseCase
 {
     private const CHUNK_SIZE = 200;
-    private const NOTIFICATION_DELAY_MIN = 1;
-    private const NOTIFICATION_DELAY_MAX = 5;
 
     public function __construct(
         private UserRepInterface $userRepo,
@@ -338,6 +336,7 @@ class BulkImportUsersUseCase
             'status' => !empty($row[14]) ? EnumMapper::toUserStatus(trim($row[14]))->value : UserStatus::ACTIVO->value,
             'created_at' => now(),
             'updated_at' => now(),
+            'email_verified_at' => false,
             '_original_row_number' => $rowNumber,
         ];
     }
@@ -370,11 +369,7 @@ class BulkImportUsersUseCase
         if (empty($usersToNotify)) {
             return;
         }
-
-        foreach ($usersToNotify as $data) {
-            event(new Registered($data['user']));
-        }
-        $chunks = array_chunk($usersToNotify, 50);
+        $chunks = array_chunk($usersToNotify, 100);
 
         foreach ($chunks as $chunkIndex => $chunk) {
             $mailables = [];
@@ -396,18 +391,13 @@ class BulkImportUsersUseCase
                 $recipientEmails[] = $user->email;
             }
 
-            $delaySeconds = rand(
-                    self::NOTIFICATION_DELAY_MIN,
-                    self::NOTIFICATION_DELAY_MAX
-                ) * ($chunkIndex + 1);
-
             SendBulkMailJob::forRecipients(
                 $mailables,
                 $recipientEmails,
                 'bulk_import_user_registration'
             )
                 ->onQueue('emails')
-                ->delay(now()->addSeconds($delaySeconds));
+                ->delay(now()->addSeconds(5));
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Core\Application\UseCases\Payments;
 
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptToDisplay;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Exceptions\NotFound\ConceptNotFoundException;
@@ -14,9 +15,9 @@ class FindConceptByIdUseCase
     {
     }
 
-    public function execute(int $id): PaymentConcept
+    public function execute(int $id): ConceptToDisplay
     {
-        $concept=  $this->pcqRepo->findById($id);
+        $concept=  $this->pcqRepo->findByIdToDisplay($id);
         if(!$concept){
             throw new ConceptNotFoundException();
         }

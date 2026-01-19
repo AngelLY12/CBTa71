@@ -2,10 +2,14 @@
 
 namespace App\Core\Application\UseCases\Payments\Stripe;
 
+use App\Core\Domain\Entities\PaymentEvent;
 use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Enum\Cache\StudentCacheSufix;
+use App\Core\Domain\Enum\Payment\PaymentEventType;
+use App\Core\Domain\Repositories\Command\Payments\PaymentEventRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentEventQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentMethodQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Infraestructure\Cache\CacheService;
@@ -18,26 +22,36 @@ class PaymentMethodAttachedUseCase
         private PaymentMethodRepInterface $pmRepo,
         private PaymentMethodQueryRepInterface $pmqRepo,
         private UserQueryRepInterface $userRepo,
+        private PaymentEventRepInterface $paymentEventRep,
+        private PaymentEventQueryRepInterface $paymentEventQueryRep,
         private CacheService $service
 
     ) {
 
     }
-    public function execute($obj){
+    public function execute($obj, string $eventId){
+
+        if (!$obj) {
+            logger()->error("PaymentMethod no encontrado: objeto nulo");
+            return false;
+        }
+        $user = $this->userRepo->getUserByStripeCustomer($obj->customer);
+
+        $paymentMethodId = $obj->id;
+        $pm = $this->pmqRepo->existsPaymentMethodByStripeId($paymentMethodId);
+        if ($pm) {
+            logger()->info("El método de pago {$paymentMethodId} ya existe");
+            $this->createPaymentEvent($obj, $user->id, $eventId, true);
+            return true;
+        }
+
+        $event = $this->createPaymentEvent($obj, $user->id, $eventId, false);
+        if ($event->processed) {
+            logger()->info("PaymentEvent ya procesado: {$event->id} para payment_method {$paymentMethodId}");
+            return true;
+        }
         try {
 
-
-            if (!$obj) {
-                logger()->error("PaymentMethod no encontrado: objeto nulo");
-                return false;
-            }
-            $paymentMethodId = $obj->id;
-            $pm = $this->pmqRepo->findByStripeId($paymentMethodId);
-            if ($pm) {
-                logger()->info("El método de pago {$paymentMethodId} ya existe");
-                return true;
-            }
-            $user = $this->userRepo->getUserByStripeCustomer($obj->customer);
             $pmDomain = new PaymentMethod(
                 user_id: $user->id,
                 stripe_payment_method_id: $paymentMethodId,
@@ -51,25 +65,77 @@ class PaymentMethodAttachedUseCase
 
             });
             $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
-            return true;
-        }catch (DomainException $e) {
-            logger()->warning("Excepción de dominio en webhook: " . $e->getMessage(), [
-                'exception' => get_class($e),
-                'use_case' => static::class
+            $this->paymentEventRep->update($event->id, [
+                'processed' => true,
+                'processed_at' => now(),
+                'metadata' => array_merge($event->metadata ?? [], [
+                    'payment_method_created' => true,
+                ])
             ]);
-            return false;
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            logger()->warning("Excepción de validación en webhook: " . $e->getMessage());
-            return false;
+            return true;
 
         } catch (\Exception $e) {
-            logger()->error("Error inesperado en webhook: " . $e->getMessage(), [
-                'exception' => get_class($e),
-                'use_case' => static::class,
-                'trace' => $e->getTraceAsString()
+            // Registrar error en el evento
+            $this->paymentEventRep->update($event->id, [
+                'error_message' => $e->getMessage(),
+                'retry_count' => ($event->retryCount ?? 0) + 1,
+                'metadata' => array_merge($event->metadata ?? [], [
+                    'failed_at' => now()->toISOString(),
+                    'error_class' => get_class($e)
+                ])
             ]);
-            throw $e;
+
+            if (!($e instanceof DomainException) && !($e instanceof \Illuminate\Validation\ValidationException)) {
+                throw $e;
+            }
+
+            logger()->warning("Error procesando payment_method.attached: " . $e->getMessage(), [
+                'exception' => get_class($e),
+                'event_id' => $eventId,
+                'payment_method_id' => $paymentMethodId
+            ]);
+
+            return false;
         }
     }
+
+    private function createPaymentEvent($obj, int $userId, string $eventId, bool $alreadyExists = false): PaymentEvent
+    {
+        $paymentMethodId = $obj->id;
+
+        $existing = $this->paymentEventQueryRep->findByStripeEvent(
+            $eventId,
+            PaymentEventType::WEBHOOK_PAYMENT_METHOD_ATTACHED
+        );
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $event = PaymentEvent::createWebhookEvent(
+            paymentId: null,
+            stripeEventId: $eventId,
+            paymentIntentId: null,
+            sessionId: null,
+            amount: null,
+            eventType: PaymentEventType::WEBHOOK_PAYMENT_METHOD_ATTACHED,
+            metadata: [
+                'raw_object' => $obj,
+                'stripe_event_type' => 'payment_method.attached',
+                'payment_method_id' => $paymentMethodId,
+                'user_id' => $userId,
+                'already_exists' => $alreadyExists,
+                'customer_id' => $obj->customer ?? null
+            ],
+        );
+
+        if ($alreadyExists) {
+            $event->setProccessed(true);
+            $event->setProcessedAt(now());
+        }
+
+        return $this->paymentEventRep->create($event);
+    }
+
+
 }

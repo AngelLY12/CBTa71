@@ -2,8 +2,8 @@
 
 namespace App\Core\Application\UseCases\Payments\Student\PendingPayment;
 
+use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
-use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\Unauthorized\UserInactiveException;
 
 class ShowPendingPaymentsUseCase
@@ -11,11 +11,9 @@ class ShowPendingPaymentsUseCase
 
     public function __construct(
         private PaymentConceptQueryRepInterface $pcqRepo,
-        private UserQueryRepInterface $userRepo
     ) {}
 
-    public function execute(int $userId): array {
-        $user=$this->userRepo->getUserWithStudentDetail($userId);
+    public function execute(User $user): array {
         if (!$user->isActive()) {
             throw new UserInactiveException();
         }

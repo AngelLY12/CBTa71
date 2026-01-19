@@ -32,8 +32,8 @@ abstract class BasePaymentConceptStatusUseCase
             $this->getTargetStatus()
         );
 
-        $userIds = $this->getAffectedUserIds($concept);
         $updatedConcept = $this->updateConceptStatus($concept);
+        $userIds = $this->getAffectedUserIds($updatedConcept);
         $this->dispatchStatusChangedNotification($concept, $updatedConcept);
         $this->dispatchCacheClearJobs($userIds);
         return $this->formattResponse($concept, $updatedConcept);

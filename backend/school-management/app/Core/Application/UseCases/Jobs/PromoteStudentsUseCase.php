@@ -25,7 +25,8 @@ class PromoteStudentsUseCase
         SemesterPromotionValidator::ensurePromotionIsValid($wasExecuted);
         [$incrementCount, $userIds] = DB::transaction(function () {
             $incrementCount = $this->sdRepo->incrementSemesterForAll();
-            $userIds = $this->sdRepo->getStudentsExceedingSemesterLimit(10);
+            $maxSemester=config('promotions.max_semester');
+            $userIds = $this->sdRepo->getStudentsExceedingSemesterLimit($maxSemester);
             $this->userRepo->changeStatus($userIds, UserStatus::BAJA->value);
             $this->promotionRepo->registerExecution();
             return [$incrementCount, $userIds];
