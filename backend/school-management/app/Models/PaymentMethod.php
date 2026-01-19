@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentMethod extends Model
 {
+    use HasFactory;
     protected $fillable =[
         'user_id',
         'stripe_payment_method_id',
@@ -16,6 +18,14 @@ class PaymentMethod extends Model
     ];
 
     protected $hidden = ['user_id,created_at', 'updated_at'];
+
+    protected function casts(): array
+    {
+        return [
+            'exp_month' => 'integer',
+            'exp_year' => 'integer',
+        ];
+    }
 
 
      public function user(){

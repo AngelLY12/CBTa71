@@ -12,9 +12,18 @@ trait ResolvesTargetUser
         if ($this->hasRole(UserRoles::PARENT->value) && $id) {
             return $this->children()
                         ->where('student_id', $id)
-                        ->with('student')
+                        ->with(['student' => function ($query) {
+                            $query->with(['studentDetail', 'roles']);
+                        }])
                         ->first()?->student;
         }
+
+        $this->loadMissing(['roles']);
+
+        if($this->hasRole(UserRoles::STUDENT->value)){
+            $this->loadMissing(['studentDetail']);
+        }
+
 
         return $this;
     }

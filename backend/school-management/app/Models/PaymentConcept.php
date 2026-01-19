@@ -24,7 +24,6 @@ class PaymentConcept extends Model
         'end_date',
         'amount',
         'applies_to',
-        'is_global'
     ];
 
     protected function casts(): array
