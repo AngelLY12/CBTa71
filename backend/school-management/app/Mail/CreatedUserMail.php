@@ -36,7 +36,7 @@ class CreatedUserMail extends Mailable
                 'header_title' => 'Cuenta creada',
                 'message_intro' => 'Hemos creado una cuenta para ti.',
                 'message_details' => $messageDetails,
-                'message_footer' => 'Recuerda cambiar tu contraseña de ser posible.',
+                'message_footer' => 'Recuerda cambiar tu contraseña de ser posible y verifica tu correo electrónico.',
             ])
         ];
 

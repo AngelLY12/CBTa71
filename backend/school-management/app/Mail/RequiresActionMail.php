@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Core\Application\DTO\Request\Mail\RequiresActionEmailDTO;
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use MailerSend\Helpers\Builder\Personalization;
@@ -25,7 +26,7 @@ class RequiresActionMail extends Mailable
        try {
         $url=null;
         $reference=null;
-        $amount = bcdiv((string) $this->data->amount, '100', 2);
+        $amount = Money::from((string) $this->data->amount)->divide('100')->finalize();
            if (isset($this->data->payment_method_options['oxxo'])) {
                 $reference=$this->data->next_action['oxxo_display_details']['number'];
                 $url=$this->data->next_action['oxxo_display_details']['hosted_voucher_url'];
@@ -33,7 +34,7 @@ class RequiresActionMail extends Mailable
                 $headerTitle = 'Instrucciones para completar tu pago en OXXO';
                 $messageIntro = 'Para completar tu pago, acude a cualquier tienda OXXO y presenta el código de referencia en el voucher:';
                 $messageDetails = "
-                    <p><strong>Monto:</strong> $" . number_format($amount, 2) . "</p>
+                    <p><strong>Monto:</strong> $" . Money::from($amount)->finalize() . "</p>
                     <p><strong>Número de referencia:</strong> {$reference}</p>
                     <p><strong>Voucher:</strong> <a href='{$url}' target='_blank'>Ver voucher</a></p>
                     <p>Tu pago será actualizado automáticamente una vez que completes la operación en la tienda OXXO.</p>
@@ -45,7 +46,7 @@ class RequiresActionMail extends Mailable
                 $headerTitle = 'Instrucciones para completar tu pago por transferencia bancaria';
                 $messageIntro = 'Para completar tu pago, realiza una transferencia bancaria utilizando los siguientes datos:';
                 $messageDetails = "
-                    <p><strong>Monto:</strong> $" . number_format($amount, 2) . "</p>
+                    <p><strong>Monto:</strong> $" . Money::from($amount)->finalize() . "</p>
                     <p><strong>Referencia:</strong> {$reference}</p>
                     <p><strong>Instrucciones:</strong> <a href='{$url}' target='_blank'>Ver instrucciones</a></p>
                     <p>Tu pago será actualizado automáticamente una vez que la transferencia sea recibida.</p>

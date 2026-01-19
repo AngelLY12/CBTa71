@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -52,8 +53,8 @@ class CriticalAmountAlertMail extends Mailable
             <p>Se {$this->action} un concepto con la siguiente información:</p>
             <p><strong>ID del Concepto:</strong> {$this->id}</p>
             <p><strong>Concepto:</strong> {$this->concept_name}</p>
-            <p><strong>Monto:</strong> $".number_format($this->amount, 2)."</p>
-            <p><strong>Monto umbral: $".number_format($this->threshold, 2)." </strong></p>
+            <p><strong>Monto:</strong> $".Money::from($this->amount)->finalize()."</p>
+            <p><strong>Monto umbral: $".$this->threshold." </strong></p>
             <p><strong>Se excedio por:</strong> {$this->exceededBy}</p>
 
         ";

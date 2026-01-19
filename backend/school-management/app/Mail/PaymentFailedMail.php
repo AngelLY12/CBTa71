@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Core\Application\DTO\Request\Mail\PaymentFailedEmailDTO;
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
 use MailerSend\Helpers\Builder\Personalization;
 use Illuminate\Mail\Mailable;
@@ -32,7 +33,7 @@ class PaymentFailedMail extends Mailable
                 'greeting' => "Hola {$this->data->recipientName}",
                 'error' => $this->data->error,
                 'concept_name' => $this->data->concept_name ?? 'No disponible',
-                'amount' => isset($this->data->amount) ? number_format($this->data->amount, 2) : '0.00',
+                'amount' => isset($this->data->amount) ? Money::from($this->data->amount)->finalize() : '0.00',
             ])
         ];
 

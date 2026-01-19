@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Core\Application\DTO\Request\Mail\PaymentValidatedEmailDTO;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
 use MailerSend\Helpers\Builder\Personalization;
 use Illuminate\Mail\Mailable;
@@ -34,8 +35,8 @@ class PaymentValidatedMail extends Mailable
         $paymentLegend = $this->buildPaymentLegend();
         $messageDetails = "
             <p><strong>Concepto:</strong> {$this->data->concept_name}</p>
-            <p><strong>Monto:</strong> $".number_format($this->data->amount, 2)."</p>
-            <p><strong>Monto recibido: $".number_format($this->data->amount_received, 2)." </strong></p>
+            <p><strong>Monto:</strong> $". Money::from($this->data->amount)->finalize()."</p>
+            <p><strong>Monto recibido: $". Money::from($this->data->amount_received)->finalize()." </strong></p>
             <p><strong>Método de pago:</strong> {$type_payment_method}</p>
             <p><strong>Código de referencia:</strong> {$this->data->payment_intent_id}</p>
             <p><strong>Voucher OXXO:</strong> {$voucherNumber}</p>
@@ -67,23 +68,19 @@ class PaymentValidatedMail extends Mailable
 
     private function buildPaymentLegend(): string
     {
-        $pending = bcsub(
-            (string) $this->data->amount,
-            (string) $this->data->amount_received,
-            2
-        );
-        $balance= bcsub(
-            (string) $this->data->amount_received,
-            (string) $this->data->amount,
-            2
-        );
+        $pending = Money::from((string) $this->data->amount)
+            ->sub((string)$this->data->amount_received)
+            ->finalize();
+        $balance=Money::from((string) $this->data->amount_received)
+            ->sub((string)$this->data->amount)
+            ->finalize();
         return match ($this->data->status) {
             PaymentStatus::UNDERPAID->value =>
                 "<p style='color:#d97706;'>
                 Detectamos que el monto recibido es menor al esperado.
                 <br>
                 <strong>Monto pendiente:</strong> $"
-                . number_format($pending, 2)
+                . $pending
                 .
                 "</p>",
 
@@ -92,10 +89,7 @@ class PaymentValidatedMail extends Mailable
                 Tu pago tiene un <strong>monto extra</strong>.
                 <br>
                 <strong>Saldo extra pagado:</strong> $"
-                . number_format(
-                    $balance,
-                    2
-                ) .
+                . $balance .
                 "</p>",
 
             PaymentStatus::SUCCEEDED->value => '',

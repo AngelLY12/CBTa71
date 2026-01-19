@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Core\Application\DTO\Request\Mail\NewPaymentConceptEmailDTO;
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -26,9 +27,10 @@ class NewConceptMail extends Mailable
     public function build()
     {
        try {
+
         $personalization = [
             new Personalization($this->data->recipientEmail, [
-                'amount' => number_format($this->data->amount, 2),
+                'amount' => Money::from($this->data->amount)->finalize(),
                 'end_date' => $this->data->end_date ?? 'Sin fecha límite',
                 'greeting' => "Hola {$this->data->recipientName}",
                 'concept_name' => $this->data->concept_name
