@@ -2,6 +2,7 @@
 
 namespace App\Core\Domain\Repositories\Query\User;
 
+use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
@@ -26,11 +27,12 @@ interface UserQueryRepInterface{
     public function hasRole(int $userId, string $role):bool;
     public function getStudentsWithPendingSummary(array $userIds): array;
     public function findAllUsers(int $perPage, int $page, ?UserStatus $status = null): LengthAwarePaginator;
-    public function findAuthUser(): ?User;
+    public function findAuthUser(): ?UserAuthResponse;
     public function findByIds(array $ids): Collection;
     public function findUserRoles(int $userId): array;
     public function findModelEntity(int $userId): ModelsUser;
     public function getUsersByRoleCursor(string $role): \Generator;
     public function getUsersByCurpCursor(array $curps): \Generator;
+    public function userHasUnreadNotifications(int $userId): bool;
 
 }

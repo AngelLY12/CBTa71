@@ -11,7 +11,7 @@ interface StudentDetailReInterface
     public function findStudentDetails(int $userId): ?StudentDetail;
     public function incrementSemesterForAll(): int;
     public function getStudentsExceedingSemesterLimit(int $maxSemester = 10): array;
-    public function updateStudentDetails(int $user_id, array $field): User;
+    public function updateStudentDetails(int $user_id, array $fields): User;
     public function insertStudentDetails(array $studentDetails): int;
     public function insertSingleStudentDetail(array $detail): bool;
     public function attachStudentDetail(CreateStudentDetailDTO $detail, ModelsUser $user): User;
