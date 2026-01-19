@@ -24,7 +24,6 @@ class AdminUserSeeder extends Seeder
                 'name' => 'Angel',
                 'last_name' => 'Lopez Yáñez',
                 'email' => 'lopezyanezangell@gmail.com',
-                'password' => Hash::make('123'),
                 'phone_number' => '7352770097',
                 'birthdate' => '2003-05-04',
                 'gender' => UserGender::HOMBRE,
@@ -42,7 +41,11 @@ class AdminUserSeeder extends Seeder
             ]
         );
 
-        $admin->assignRole(UserRoles::ADMIN->value);
+        if (!$admin->password) {
+            $admin->password = Hash::make(config('auth.admin_password'));
+            $admin->save();
+        }
 
+        $admin->syncRoles([UserRoles::ADMIN->value]);
     }
 }
