@@ -12,8 +12,8 @@ class PaymentValidatedEmailDTO
         public readonly string $amount_received,
         public readonly string $status,
         public readonly array $payment_method_detail,
-        public readonly ?string $payment_intent_id,
-        public readonly?string $url
+        public readonly ?string $payment_intent_id = null,
+        public readonly?string $url = null
     ) {}
 
 }

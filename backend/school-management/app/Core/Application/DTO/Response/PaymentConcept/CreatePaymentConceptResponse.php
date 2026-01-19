@@ -19,7 +19,6 @@ namespace App\Core\Application\DTO\Response\PaymentConcept;
  *     @OA\Property(
  *         property="metadata",
  *         type="object",
- *         @OA\Property(property="is_global", type="boolean", example=false),
  *         @OA\Property(property="exception_count", type="integer", example=5),
  *         @OA\Property(property="career_count", type="integer", example=3),
  *         @OA\Property(property="semester_count", type="integer", example=2)
@@ -35,14 +34,15 @@ class CreatePaymentConceptResponse
         public readonly string $conceptName,
         public readonly string $status,
         public readonly string $appliesTo,
-        public readonly ?string $description = null,
         public readonly string $amount,
         public readonly string $startDate,
         public readonly string $endDate,
         public readonly int $affectedStudentsCount,
-        public readonly array $metadata = [],
         public readonly string $message,
         public readonly string $createdAt,
+        public readonly array $metadata = [],
+        public readonly ?string $description = null,
+
     ){}
 
 }

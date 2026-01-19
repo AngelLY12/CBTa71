@@ -56,7 +56,6 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
  *     @OA\Property(property="replaceRelations", type="boolean", example=false, description="Si es true, reemplaza las relaciones existentes con las nuevas"),
  *     @OA\Property(property="replaceExceptions", type="boolean", example=false, description="Si es true, reemplaza los estudiantes a los que no aplica el concepto"),
  *     @OA\Property(property="removeAllExceptions", type="boolean", example=false, description="Si es true, elimina los estudiantes a los que no aplicaba el concepto"),
- *     @OA\Property(property="is_global", type="boolean", example=true),
  * )
  */
 class UpdatePaymentConceptRelationsDTO
@@ -66,19 +65,17 @@ class UpdatePaymentConceptRelationsDTO
         public array|int|null $semesters = null,
         public array|int|null $careers = null,
         public array|string|null $students = null,
-        public ?PaymentConceptAppliesTo $appliesTo,
-        public ?bool $is_global = false,
-        public bool $replaceRelations = false,
+        public ?PaymentConceptAppliesTo $appliesTo=null,
+        public ?bool $replaceRelations = null,
         public array|string|null $exceptionStudents = null,
-        public bool $replaceExceptions = false,
-        public bool $removeAllExceptions = false,
+        public ?bool $replaceExceptions = null,
+        public ?bool $removeAllExceptions = null,
         public array|string|null $applicantTags = null,
     ){}
 
     public function toArray(): array
     {
         return [
-            'is_global' => $this->is_global,
             'applies_to' => $this->appliesTo
         ];
     }
@@ -93,7 +90,6 @@ class UpdatePaymentConceptRelationsDTO
             'applies_to' => $this->appliesTo instanceof PaymentConceptAppliesTo
                 ? $this->appliesTo->value
                 : $this->appliesTo,
-            'is_global' => $this->is_global,
             'replace_relations' => $this->replaceRelations,
             'exception_students' => $this->exceptionStudents,
             'replace_exceptions' => $this->replaceExceptions,
@@ -114,7 +110,6 @@ class UpdatePaymentConceptRelationsDTO
                     ? $data['applies_to']
                     : PaymentConceptAppliesTo::tryFrom($data['applies_to']))
                 : null,
-            is_global: $data['is_global'] ?? false,
             replaceRelations: $data['replace_relations'] ?? false,
             exceptionStudents: $data['exception_students'] ?? null,
             replaceExceptions: $data['replace_exceptions'] ?? false,

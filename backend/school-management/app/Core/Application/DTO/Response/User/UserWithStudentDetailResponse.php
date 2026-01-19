@@ -21,6 +21,6 @@ class UserWithStudentDetailResponse{
         public readonly ?int $semestre = null,
         public readonly ?string $group = null,
         public readonly ?string $workshop = null,
-        public readonly ?int $n_control = null,
+        public readonly ?string $n_control = null,
     ) {}
 }

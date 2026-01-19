@@ -23,11 +23,11 @@ class UpdatePaymentConceptDTO
 {
     public function __construct(
         public int $id,
-        public ?string $concept_name,
-        public ?string $description,
-        public ?Carbon $start_date,
-        public ?Carbon $end_date,
-        public ?string $amount,
+        public ?string $concept_name = null,
+        public ?string $description = null,
+        public ?Carbon $start_date = null,
+        public ?Carbon $end_date = null,
+        public ?string $amount = null,
 
     ) {}
 

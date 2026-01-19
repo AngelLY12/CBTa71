@@ -24,7 +24,7 @@ namespace App\Core\Application\DTO\Response\Parents;
  *      @OA\Property(
  *         property="childrenData",
  *         type="array",
- *         description="Usuarios que han cambiado su estado",
+ *         description="Hijos del familiar",
  *         @OA\Items(
  *             type="object",
  *             @OA\Property(property="id", type="integer", example=3),
@@ -36,9 +36,9 @@ namespace App\Core\Application\DTO\Response\Parents;
 class ParentChildrenResponse
 {
     public function __construct(
-        public readonly ?int $parentId,
-        public readonly ?string $parentName,
-        public readonly ?array $childrenData,
+        public readonly int $parentId,
+        public readonly string $parentName,
+        public readonly array $childrenData,
     )
     {
     }

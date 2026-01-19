@@ -7,6 +7,7 @@ namespace App\Core\Application\DTO\Response\Payment;
  * @OA\Schema(
  *     schema="PaymentListItemResponse",
  *     type="object",
+ *     @OA\Property(property="id", type="integer", description="ID del pago", example=10),
  *     @OA\Property(property="date", type="string", nullable=true, description="Fecha del pago", example="2025-11-04"),
  *     @OA\Property(property="concept", type="string", nullable=true, description="Concepto del pago", example="Pago de inscripción"),
  *     @OA\Property(property="amount", type="string", nullable=true, description="Monto del pago", example="1500.00"),
@@ -18,6 +19,7 @@ namespace App\Core\Application\DTO\Response\Payment;
 class PaymentListItemResponse{
 
      public function __construct(
+         public readonly int $id,
         public readonly ?string $date,
         public readonly ?string $concept,
         public readonly ?string $amount,
