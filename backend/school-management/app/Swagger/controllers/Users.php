@@ -125,7 +125,7 @@ public function updatePassword(){}
  *                          type="object",
  *                          @OA\Property(
  *                              property="user",
- *                              ref="#/components/schemas/DomainUser"
+ *                              ref="#/components/schemas/UserAuthResponse"
  *                          )
  *                      )
  *                  )

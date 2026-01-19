@@ -30,7 +30,7 @@ class FindEntity
  *                          type="object",
  *                          @OA\Property(
  *                              property="concept",
- *                              ref="#/components/schemas/DomainPaymentConcept"
+ *                              ref="#/components/schemas/ConceptToDisplay"
  *                          )
  *                      )
  *                  )
