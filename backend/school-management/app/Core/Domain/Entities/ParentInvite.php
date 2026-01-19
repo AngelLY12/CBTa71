@@ -9,26 +9,27 @@ use Carbon\Carbon;
  *     schema="ParentInvite",
  *     type="object",
  *     required={"studentId","email","token","expiresAt","createdBy"},
- *     @OA\Property(property="id", type="integer", nullable=true),
  *     @OA\Property(property="studentId", type="integer"),
  *     @OA\Property(property="email", type="string", format="email"),
  *     @OA\Property(property="token", type="string"),
  *     @OA\Property(property="expiresAt", type="string", format="date-time"),
+ *     @OA\Property(property="createdBy", type="integer"),
+ *     @OA\Property(property="id", type="integer", nullable=true),
  *     @OA\Property(property="usedAt", type="string", format="date-time", nullable=true),
- *     @OA\Property(property="createdBy", type="integer")
  * )
  */
 class ParentInvite
 {
     public function __construct(
-        public ?int $id=null,
         /** @var User */
         public int $studentId,
         public string $email,
         public string $token,
         public Carbon $expiresAt,
-        public ?Carbon $usedAt,
-        public int $createdBy
+        public int $createdBy,
+        public ?int $id=null,
+        public ?Carbon $usedAt=null,
+
     ) {}
 
     public function isExpired(): bool
