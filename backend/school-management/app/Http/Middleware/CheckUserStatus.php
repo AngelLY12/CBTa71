@@ -7,6 +7,7 @@ use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Exceptions\Unauthorized\UserInactiveException;
 use App\Jobs\CheckUserStatusJob;
 use App\Jobs\ClearStudentCacheJob;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,6 +23,7 @@ class CheckUserStatus
      */
     public function handle(Request $request, Closure $next): Response
     {
+        /** @var User $user */
         $user=$request->user();
         try {
             UserValidator::ensureUserIsActive(UserMapper::toDomain($user));
