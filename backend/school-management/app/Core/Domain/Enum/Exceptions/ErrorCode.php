@@ -63,6 +63,7 @@ namespace App\Core\Domain\Enum\Exceptions;
  *         "STUDENT_DETAIL_NOT_FOUND",
  *         "STUDENTS_NOT_FOUND",
  *         "USER_NOT_FOUND",
+ *          "STUDENT_PARENTS_NOT_FOUND",
  *         "USERS_NOT_FOUND_FOR_UPDATE",
  *         "PAYMENT_NOTIFICATION_ERROR",
  *         "PAYMENT_RECONCILIATION_ERROR",
@@ -166,6 +167,7 @@ enum ErrorCode:string
     case STUDENTS_NOT_FOUND = 'STUDENTS_NOT_FOUND';
     case USER_NOT_FOUND = 'USER_NOT_FOUND';
     case USERS_NOT_FOUND_FOR_UPDATE = 'USERS_NOT_FOUND_FOR_UPDATE';
+    case STUDENT_PARENTS_NOT_FOUND = 'STUDENT_PARENTS_NOT_FOUND';
 
     // ========== CARPETA: ServerError (3) ==========
     case PAYMENT_NOTIFICATION_ERROR = 'PAYMENT_NOTIFICATION_ERROR';

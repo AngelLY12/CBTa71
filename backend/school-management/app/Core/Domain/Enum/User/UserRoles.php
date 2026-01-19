@@ -20,8 +20,8 @@ enum UserRoles: string
     public static function students(): array
     {
         return [
-            self::STUDENT->value,
-            self::APPLICANT->value,
+            self::STUDENT,
+            self::APPLICANT,
         ];
     }
 

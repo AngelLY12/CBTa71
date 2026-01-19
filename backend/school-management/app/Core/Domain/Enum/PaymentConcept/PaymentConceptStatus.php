@@ -22,8 +22,7 @@ enum PaymentConceptStatus: string
     {
         return match ($this) {
             self::ACTIVO => [self::FINALIZADO, self::DESACTIVADO, self::ELIMINADO,],
-            self::FINALIZADO => [self::ACTIVO, self::ELIMINADO,],
-            self::DESACTIVADO => [self::ACTIVO, self::ELIMINADO,],
+            self::FINALIZADO, self::DESACTIVADO => [self::ACTIVO, self::ELIMINADO,],
             self::ELIMINADO => [self::ACTIVO,self::DESACTIVADO,],
         };
     }
@@ -37,6 +36,11 @@ enum PaymentConceptStatus: string
     public function isUpdatable(): bool
     {
         return in_array($this, [self::ACTIVO, self::DESACTIVADO], true);
+    }
+
+    public static function allowedStatusesToCreateConcept(): array
+    {
+        return [self::ACTIVO, self::DESACTIVADO];
     }
 }
 
