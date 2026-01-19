@@ -20,8 +20,8 @@ class SendBulkMailJob implements ShouldQueue
      */
     public int $tries = 5;
     public $backoff = [10, 30, 60];
-    private const EMAILS_PER_MINUTE = 60;
-    private const DELAY_BETWEEN_EMAILS = 100000;
+    private const EMAILS_PER_MINUTE = 1100;
+    private const DELAY_BETWEEN_EMAILS = 50000;
 
     protected array $mailables;
     protected array $recipientEmails;

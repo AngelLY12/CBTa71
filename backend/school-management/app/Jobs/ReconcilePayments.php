@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Core\Application\Services\Payments\ReconcilePaymentsService;
+use App\Core\Application\UseCases\Payments\Reconcile\ReconcilePaymentsBatchUseCase;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,6 +19,9 @@ class ReconcilePayments implements ShouldQueue
     public $tries = 3;
     public $backoff = [10, 30, 60];
 
+    public function __construct()
+    {
+    }
     public function middleware(): array
     {
         return [
@@ -31,10 +35,11 @@ class ReconcilePayments implements ShouldQueue
 
     /**
      * Execute the job.
+     * @throws \Throwable
      */
-    public function handle(ReconcilePaymentsService $service): void
+    public function handle(ReconcilePaymentsBatchUseCase $reconcile): void
     {
-        $result=$service->reconcile();
+        $result = $reconcile->execute();
         logger()->info('[ReconcilePayments] Finished', [
             'processed' => $result->processed,
             'updated'   => $result->updated,
@@ -48,5 +53,9 @@ class ReconcilePayments implements ShouldQueue
         Log::critical("Job falló reconciliando pagos", [
             'error' => $exception->getMessage()
         ]);
+    }
+    public static function forCron(): self
+    {
+        return new self();
     }
 }
