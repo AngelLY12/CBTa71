@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('status',20)->default(PaymentStatus::DEFAULT->value);
             $table->string('payment_intent_id',50)->unique()->nullable();
             $table->text('url')->nullable();
-            $table->string('stripe_session_id')->nullable()->unique();
+            $table->string('stripe_session_id', 50)->nullable()->unique();
             $table->timestamps();
             $table->index(['created_at', 'amount_received']);
             $table->index(['status', 'created_at']);

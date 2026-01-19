@@ -36,7 +36,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
             $table->foreignIdFor(Career::class)->nullable()->constrained('careers')->onDelete('set null');
-            $table->integer('n_control')->nullable()->unique();
+            $table->string('n_control',30)->nullable()->unique();
             $table->tinyInteger('semestre')->nullable();
             $table->string('group', 10)->nullable();
             $table->string('workshop')->nullable();
