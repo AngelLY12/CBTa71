@@ -2,23 +2,22 @@
 
 namespace Database\Factories;
 
-use App\Models\PaymentConceptUser;
-use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\User;
+use App\Models\ConceptException;
 use App\Models\PaymentConcept;
-
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AppModelsPaymentConceptUser>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ConceptException>
  */
-class PaymentConceptUserFactory extends Factory
+class ConceptExceptionFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var string
      */
-    protected $model = PaymentConceptUser::class;
+    protected $model = ConceptException::class;
 
     /**
      * Define the model's default state.
@@ -34,7 +33,7 @@ class PaymentConceptUserFactory extends Factory
     }
 
     /**
-     * Indicate that the relation is for a specific payment concept.
+     * Indicate that the exception is for a specific payment concept.
      */
     public function forPaymentConcept(PaymentConcept $concept): static
     {
@@ -44,7 +43,7 @@ class PaymentConceptUserFactory extends Factory
     }
 
     /**
-     * Indicate that the relation is for a specific user.
+     * Indicate that the exception is for a specific user.
      */
     public function forUser(User $user): static
     {
@@ -54,7 +53,7 @@ class PaymentConceptUserFactory extends Factory
     }
 
     /**
-     * Indicate that the relation was created recently.
+     * Indicate that the exception was created recently.
      */
     public function recentlyCreated(): static
     {
@@ -65,12 +64,32 @@ class PaymentConceptUserFactory extends Factory
     }
 
     /**
-     * Create multiple user assignments for a payment concept.
+     * Indicate that the exception is for a scholarship student.
      */
-    public function assignUsersToConcept(PaymentConcept $concept, array $userIds): void
+    public function forScholarship(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'created_at' => $this->faker->dateTimeBetween('-3 months', 'now'),
+        ]);
+    }
+
+    /**
+     * Indicate that the exception is for a special case.
+     */
+    public function specialCase(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'created_at' => $this->faker->dateTimeBetween('-2 months', 'now'),
+        ]);
+    }
+
+    /**
+     * Create multiple exceptions for a payment concept.
+     */
+    public function assignExceptionsToConcept(PaymentConcept $concept, array $userIds): void
     {
         foreach ($userIds as $userId) {
-            PaymentConceptUser::factory()
+            ConceptException::factory()
                 ->forPaymentConcept($concept)
                 ->forUser(User::find($userId))
                 ->create();
@@ -78,12 +97,12 @@ class PaymentConceptUserFactory extends Factory
     }
 
     /**
-     * Create multiple concept assignments for a user.
+     * Create multiple exceptions for a user.
      */
-    public function assignConceptsToUser(User $user, array $conceptIds): void
+    public function assignExceptionsToUser(User $user, array $conceptIds): void
     {
         foreach ($conceptIds as $conceptId) {
-            PaymentConceptUser::factory()
+            ConceptException::factory()
                 ->forPaymentConcept(PaymentConcept::find($conceptId))
                 ->forUser($user)
                 ->create();
