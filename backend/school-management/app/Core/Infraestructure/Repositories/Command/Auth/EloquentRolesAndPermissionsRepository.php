@@ -85,13 +85,19 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
     {
         $userIds = $users->pluck('id')->toArray();
 
+        $usuariosConCambios = $this->getUsersWithRoleChanges(
+            $userIds,
+            $rolesToAddIds,
+            $rolesToRemoveIds
+        );
+
         $resultado = [
             'removed' => 0,
             'added' => 0,
-            'users_affected' => 0
+            'users_affected' => count($usuariosConCambios)
         ];
 
-        DB::transaction(function () use ($userIds, $rolesToAddIds, $rolesToRemoveIds) {
+        DB::transaction(function () use ($userIds, $rolesToAddIds, $rolesToRemoveIds, &$resultado) {
             if (!empty($rolesToRemoveIds)) {
                 $resultado['removed'] = DB::table('model_has_roles')
                     ->whereIn('model_id', $userIds)
@@ -130,13 +136,6 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
                     DB::table('model_has_roles')->insertOrIgnore($rows);
                 }
             }
-
-            $usuariosConCambios = $this->getUsersWithRoleChanges(
-                $userIds,
-                $rolesToAddIds,
-                $rolesToRemoveIds
-            );
-            $resultado['users_affected'] = count($usuariosConCambios);
         });
 
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
@@ -180,9 +179,6 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
 
         $usuariosConCambios = [];
 
-        $rolesToAddMap = array_flip($rolesToAddIds);
-        $rolesToRemoveMap = array_flip($rolesToRemoveIds);
-
         foreach ($userIds as $userId) {
             $rolesActualesStr = $rolesPorUsuario[$userId] ?? '';
             $rolesActuales = $rolesActualesStr ? explode(',', $rolesActualesStr) : [];
@@ -204,7 +200,7 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
                 }
             }
 
-            if (!$faltanRoles && !$tienenRolesNoRemovidos) {
+            if ($faltanRoles || $tienenRolesNoRemovidos) {
                 $usuariosConCambios[] = $userId;
             }
         }

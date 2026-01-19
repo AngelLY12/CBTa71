@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Core\Infraestructure\Repositories\Query\Stripe;
+namespace App\Core\Infraestructure\Repositories\Stripe;
 
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Stripe\StripeGatewayQueryInterface;
+use App\Core\Domain\Utils\Helpers\Money;
 use App\Core\Domain\Utils\Validators\StripeValidator;
 use App\Exceptions\ServerError\StripeGatewayException;
 use App\Exceptions\Validation\ValidationException;
@@ -179,7 +180,7 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
         $available = [];
         foreach ($balance->available as $a) {
             $available[] = [
-                'amount' => bcdiv($a->amount, '100', 2),
+                'amount' => Money::from((string) $a->amount)->divide('100')->finalize(),
                 'source_types' => $a->source_types
             ];
         }
@@ -187,7 +188,7 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
         $pending = [];
         foreach ($balance->pending as $p) {
             $pending[] = [
-                'amount' => bcdiv($p->amount, '100', 2),
+                'amount' => Money::from((string) $p->amount)->divide('100')->finalize(),
                 'source_types' => $p->source_types
             ];
         }
@@ -212,8 +213,8 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
             ];
         }
 
-        $totalPayouts = '0';
-        $totalFees = '0';
+        $totalPayouts = Money::from('0');
+        $totalFees = Money::from('0');
         $byMonth = [];
         $hasMore = true;
         $lastId = null;
@@ -227,26 +228,26 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
             $payouts = Payout::all($params);
 
             foreach ($payouts->data as $payout) {
-                $amount = bcdiv($payout->amount, '100', 2);
+                $amount = Money::from((string) $payout->amount)->divide('100');
                 $month = date('Y-m', $payout->arrival_date);
 
-                $fee = '0';
+                $fee = Money::from('0');
                 if (isset($payout->balance_transaction)) {
-                    $fee = bcdiv($payout->balance_transaction->fee, '100', 2);
+                    $fee = Money::from((string) $payout->balance_transaction->fee)->divide('100');
                 }
 
-                $totalPayouts = bcadd($totalPayouts, $amount, 2);
-                $totalFees = bcadd($totalFees, $fee, 2);
+                $totalPayouts = $totalPayouts->add($amount);
+                $totalFees = $totalFees->add($fee);
 
                 if (!isset($byMonth[$month])) {
                     $byMonth[$month] = [
-                        'amount' => '0',
-                        'fee' => '0'
+                        'amount' => Money::from('0'),
+                        'fee' => Money::from('0'),
                     ];
                 }
 
-                $byMonth[$month]['amount'] = bcadd($byMonth[$month]['amount'], $amount, 2);
-                $byMonth[$month]['fee'] = bcadd($byMonth[$month]['fee'], $fee, 2);
+                $byMonth[$month]['amount'] = $byMonth[$month]['amount']->add($amount);
+                $byMonth[$month]['fee'] = $byMonth[$month]['fee']->add($fee);
             }
 
             $hasMore = $payouts->has_more;
@@ -254,9 +255,15 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
         }
 
         return [
-            'total' => $totalPayouts,
-            'total_fee' => $totalFees,
-            'by_month' => $byMonth,
+            'total' => $totalPayouts->finalize(),
+            'total_fee' => $totalFees->finalize(),
+            'by_month' => array_map(
+                fn ($data) => [
+                    'amount' => $data['amount']->finalize(),
+                    'fee' => $data['fee']->finalize(),
+                ],
+                $byMonth
+            ),
         ];
     }
 
@@ -268,7 +275,9 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
 
         $results = [];
 
-        $chunks = array_chunk($paymentIntentIds, 10);
+        $uniqueIds = array_unique($paymentIntentIds);
+
+        $chunks = array_chunk($uniqueIds, 50);
 
         foreach ($chunks as $chunkIndex => $chunk) {
             foreach ($chunk as $intentId) {
@@ -280,15 +289,77 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
                 }
             }
 
-            if ($chunkIndex < count($chunks) - 1) {
-                usleep(200000);
+            if ($chunkIndex < count($chunks) - 1 && count($chunks)-1) {
+                usleep(100000);
             }
         }
 
         return $results;
     }
 
+    public function countSessionsByMetadata(array $metadata, string $status): int
+    {
+        $queryParts = [];
+        foreach ($metadata as $key => $value) {
+            $queryParts[] = "metadata['{$key}']:'{$value}'";
+        }
 
+        $queryParts[] = "status:'{$status}'";
+        $query = implode(' AND ', $queryParts);
 
+        try {
+            $result = \Stripe\Checkout\Session::search([
+                'query' => $query,
+            ]);
+
+            return $result->total_count;
+
+        } catch (\Exception $e) {
+            logger()->error("Error contando sesiones por estado: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function getSessionsByMetadata(array $metadataFilters, string $status, int $limit = 100): array
+    {
+        $sessions = [];
+        $params = [];
+        foreach ($metadataFilters as $key => $value) {
+            $params[] ="metadata['{$key}']:'{$value}'";
+        }
+
+        $params[] = "status:'{$status}'";
+        $params = implode(' AND ', $params);
+
+        try {
+            $stripeSessions = \Stripe\Checkout\Session::search([
+                'query' => $params,
+                'limit' => $limit,
+                'expand' => "data.payment_intent"
+            ]);
+
+            foreach ($stripeSessions->data as $session) {
+                $sessions[] = [
+                    'id' => $session->id,
+                    'payment_intent_id' => $session->payment_intent?->id,
+                    'amount_total' => $session->amount_total,
+                    'amount_received' => $session->payment_intent?->amount_received,
+                    'status' => $session->payment_status,
+                    'metadata' => (array)$session->metadata,
+                    'created' => $session->created,
+                    'customer' => $session->customer ?? null,
+                ];
+            }
+            logger()->debug("Encontradas " . count($sessions) . " sesiones con filtros", [
+                'filters' => $metadataFilters,
+                'session_ids' => array_column($sessions, 'id')
+            ]);
+
+            return $sessions;
+        } catch (\Exception $e) {
+            logger()->error("Error obteniendo sesiones de Stripe: " . $e->getMessage());
+            return [];
+        }
+    }
 
 }

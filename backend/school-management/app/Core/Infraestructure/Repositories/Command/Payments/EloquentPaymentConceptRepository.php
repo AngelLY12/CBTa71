@@ -27,7 +27,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $pc = $this->findOrFail($conceptId);
         $pc->update($data);
-        $pc->load(['careers', 'users', 'paymentConceptSemesters', 'exceptions', 'applicantTypes']);
+        $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
     }
 
@@ -73,7 +73,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             $pc->users()->syncWithoutDetaching($userIds->userIds);
         }
 
-        $pc->refresh();
+        $pc->load('users');
         return PaymentConceptMapper::toDomain($pc);
 
     }
@@ -86,7 +86,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         }else{
             $pc->careers()->syncWithoutDetaching($careerIds);
         }
-        $pc->refresh();
+        $pc->load('careers');
         return PaymentConceptMapper::toDomain($pc);
 
     }
@@ -110,7 +110,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             ['payment_concept_id', 'semestre'],
             ['semestre']
         );
-        $pc->refresh();
+        $pc->load('paymentConceptSemesters');
         return PaymentConceptMapper::toDomain($pc);
     }
 
@@ -124,7 +124,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             $pc->exceptions()->syncWithoutDetaching($userIds->userIds);
         }
 
-        $pc->refresh();
+        $pc->load('exceptions');
         return PaymentConceptMapper::toDomain($pc);
 
     }
@@ -149,7 +149,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             ['payment_concept_id', 'tag'],
             ['tag']
         );
-        $pc->refresh();
+        $pc->load('applicantTypes');
         return PaymentConceptMapper::toDomain($pc);
 
     }

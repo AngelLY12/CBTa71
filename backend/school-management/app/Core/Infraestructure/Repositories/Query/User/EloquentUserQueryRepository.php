@@ -2,9 +2,11 @@
 
 namespace App\Core\Infraestructure\Repositories\Query\User;
 
+use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\Mappers\UserMapper as MappersUserMapper;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Models\User as EloquentUser;
 use App\Core\Infraestructure\Mappers\UserMapper;
@@ -166,6 +168,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
     {
         $usersQuery = EloquentUser::query()
             ->where('status', UserStatus::ACTIVO)
+            ->role(UserRoles::STUDENT->value)
             ->select(DB::raw('1'));
 
         $this->matchRecipients($usersQuery, $concept, $appliesTo);
@@ -209,16 +212,32 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                 $q->whereIn('career_id', $concept->getCareerIds());
             }),
             PaymentConceptAppliesTo::SEMESTRE->value => $usersQuery->whereHas('studentDetail', function($q) use ($concept) {
-                $q->whereIn('semester', $concept->getSemesters());
+                $q->whereIn('semestre', $concept->getSemesters());
             }),
             PaymentConceptAppliesTo::CARRERA_SEMESTRE->value => $usersQuery->whereHas('studentDetail', function($q) use ($concept){
                 $q->whereIn('career_id', $concept->getCareerIds())
-                    ->whereIn('semester', $concept->getSemesters());
+                    ->whereIn('semestre', $concept->getSemesters());
             }),
             PaymentConceptAppliesTo::ESTUDIANTES->value => $usersQuery->whereIn('id', $concept->getUserIds()),
-            PaymentConceptAppliesTo::TODOS->value => $usersQuery,
-            PaymentConceptAppliesTo::TAG->value => $usersQuery->whereHas('applicantTypes', function($q) use ($concept) {
-                $q->whereIn('tag', $concept->getApplicantTag());
+            PaymentConceptAppliesTo::TODOS->value => $usersQuery->role(UserRoles::STUDENT->value),
+            PaymentConceptAppliesTo::TAG->value => $usersQuery->where(function ($query) use ($concept) {
+                $query->where(function ($subQuery) use ($concept) {
+                    foreach ($concept->getApplicantTag() as $tag) {
+                        match($tag) {
+                            PaymentConceptApplicantType::NO_STUDENT_DETAILS =>
+                            $subQuery->orWhere(function($q) {
+                                $q->whereDoesntHave('studentDetail')
+                                    ->role(UserRoles::STUDENT->value);
+                            }),
+
+                            PaymentConceptApplicantType::APPLICANT =>
+                            $subQuery->orWhere(function($q) {
+                                $q->role(UserRoles::APPLICANT->value);
+                            }),
+                            default => null,
+                        };
+                    }
+                });
             }),
             default => null,
         };
@@ -247,7 +266,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                 DB::raw('COALESCE(SUM(payments.amount_received), 0) AS total_paid'),
                 DB::raw('COUNT(payments.id) AS total_paid_concepts')
             )
-            ->whereIn('payments.status', PaymentStatus::terminalStatuses())
+            ->whereIn('payments.status', PaymentStatus::paidStatuses())
             ->whereIn('payments.user_id', $userIds)
             ->groupBy('payments.user_id');
 
@@ -273,7 +292,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                 student_details.semestre AS semestre,
                 careers.career_name AS career,
                 COUNT(pending_concepts.id) AS total_count,
-                COALESCE(SUM(pending_concepts.amount), 0) AS total_amount,
+                COALESCE(SUM(pending_concepts.pending_amount), 0) AS total_amount,
                 COALESCE(
                     SUM(CASE WHEN pending_concepts.is_expired = 1 THEN 1 ELSE 0 END),
                     0
@@ -282,7 +301,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                     SUM(
                         CASE
                             WHEN pending_concepts.is_expired = 1
-                            THEN pending_concepts.amount
+                            THEN pending_concepts.pending_amount
                             ELSE 0
                         END
                     ),
@@ -355,7 +374,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
              $students->transform(function ($user) {
                 if ($user->relationLoaded('studentDetail') && $user->studentDetail) {
-                    $user->studentDetail->career = optional($user->studentDetail->career)->name;
+                    $user->studentDetail->career = optional($user->studentDetail->career)->career_name;
                     unset($user->studentDetail->career_id);
                 }
                 return $user;
@@ -364,15 +383,19 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
         return $paginator;
     }
-    public function findAuthUser(): ?User
+    public function findAuthUser(): ?UserAuthResponse
     {
         /** @var \App\Models\User $user */
         $user=Auth::user();
-        $isStudent=$this->hasRole($user->id,UserRoles::STUDENT->value);
-        if($isStudent){
-            $user->load('studentDetail');
+        if (! $user) {
+            return null;
         }
-        return optional($user, fn($user) => UserMapper::toDomain($user));
+        if ($this->hasRole($user->id, UserRoles::STUDENT->value)) {
+            $user->load([
+                'studentDetail.career:id,career_name',
+            ]);
+        }
+        return  MappersUserMapper::toUserAuthResponse($user);
     }
 
     public function findByIds(array $ids): Collection
@@ -412,5 +435,13 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                      ->cursor() as $user) {
             yield $user;
         }
+    }
+    public function userHasUnreadNotifications(int $userId): bool
+    {
+        return DB::table('notifications')
+            ->where('notifiable_id', $userId)
+            ->where('notifiable_type', User::class)
+            ->whereNull('read_at')
+            ->exists();
     }
 }

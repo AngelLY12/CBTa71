@@ -1,10 +1,11 @@
 <?php
-namespace App\Core\Infraestructure\Repositories\Command\Stripe;
+namespace App\Core\Infraestructure\Repositories\Stripe;
 
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Repositories\Stripe\StripeGatewayInterface;
+use App\Core\Domain\Utils\Helpers\Money;
 use App\Core\Domain\Utils\Validators\StripeValidator;
 use App\Exceptions\ServerError\StripeGatewayException;
 use App\Exceptions\Validation\PayoutValidationException;
@@ -14,13 +15,15 @@ use Stripe\Checkout\Session;
 use Stripe\Customer;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\RateLimitException;
+use Stripe\PaymentIntent;
 use Stripe\PaymentMethod as StripePaymentMethod;
 use Stripe\Payout;
 use Stripe\Stripe;
 
 class StripeGateway implements StripeGatewayInterface
 {
-    public function __construct()
+    public function __construct(
+    )
     {
         Stripe::setApiKey(config('services.stripe.secret'));
     }
@@ -37,8 +40,7 @@ class StripeGateway implements StripeGatewayInterface
             $existingCustomers = Customer::all(['email' => $user->email, 'limit' => 1]);
 
             if (count($existingCustomers->data) > 0) {
-                $user->stripe_customer_id = $existingCustomers->data[0]->id;
-                return $user->stripe_customer_id;
+                return $existingCustomers->data[0]->id;
             }
 
             $customer = Customer::create([
@@ -46,8 +48,7 @@ class StripeGateway implements StripeGatewayInterface
                 'name' => $user->fullName(),
             ]);
 
-            $user->stripe_customer_id = $customer->id;
-            return $user->stripe_customer_id;
+            return $customer->id;
         }catch (\InvalidArgumentException $e) {
             throw $e;
         }catch(ApiErrorException $e){
@@ -58,9 +59,8 @@ class StripeGateway implements StripeGatewayInterface
 
     }
 
-    public function createSetupSession(User $user): Session
+    public function createSetupSession(string $customerId): Session
     {
-        $customerId = $this->createStripeUser($user);
         try{
             return Session::create([
                 'mode' => 'setup',
@@ -79,9 +79,8 @@ class StripeGateway implements StripeGatewayInterface
 
     }
 
-     public function createCheckoutSession(User $user, PaymentConcept $paymentConcept, string $amount): Session
+     public function createCheckoutSession(string $customerId, PaymentConcept $paymentConcept, string $amount, int $userId): Session
     {
-        $customerId = $this->createStripeUser($user);
         try{
             $sessionData = [
             'mode' => 'payment',
@@ -91,12 +90,16 @@ class StripeGateway implements StripeGatewayInterface
                 'price_data' => [
                     'currency' => 'mxn',
                     'product_data' => ['name' => $paymentConcept->concept_name],
-                    'unit_amount' => (int) bcmul($amount, '100', 0),
+                    'unit_amount' => Money::from($paymentConcept->amount)->toMinorUnits(),
                 ],
                 'quantity' => 1,
             ]],
             'payment_method_types' => ['card', 'oxxo', 'customer_balance'],
-            'metadata' => ['payment_concept_id' => $paymentConcept->id, 'concept_name' => $paymentConcept->concept_name],
+            'metadata' => [
+                'payment_concept_id' => $paymentConcept->id,
+                'concept_name' => $paymentConcept->concept_name,
+                'user_id' => $userId,
+            ],
             'payment_method_options' => [
                 'card' => ['setup_future_usage' => 'off_session'],
                 'customer_balance' => [
@@ -142,17 +145,51 @@ class StripeGateway implements StripeGatewayInterface
         try {
             $session = Session::retrieve($sessionId);
 
-            $nonPaidValues = array_map(
-                fn($enum) => $enum->value,
-                PaymentStatus::nonPaidStatuses()
-            );
+            if (in_array($session->status, ['expired', 'complete'])) {
+                return false;
+            }
+            $createdAt = $session->created;
+            $oneHourAgo = time() - 3600;
 
-            if (in_array($session->payment_status, $nonPaidValues, true)) {
-                $session->expire();
-                return true;
+            if ($createdAt <= $oneHourAgo) {
+                return false;
             }
 
-            return false;
+            $safeToExpireStatuses = [
+                PaymentStatus::UNPAID->value,
+                PaymentStatus::REQUIRES_ACTION->value,
+            ];
+
+            if (!in_array($session->payment_status, $safeToExpireStatuses)) {
+                return false;
+            }
+
+            if (!empty($session->payment_intent)) {
+                try {
+                    $paymentIntent = PaymentIntent::retrieve($session->payment_intent);
+
+                    $cancelableStatuses = [
+                        'requires_payment_method',
+                        'requires_confirmation',
+                        'requires_action',
+                        'processing'
+                    ];
+
+                    if (in_array($paymentIntent->status, $cancelableStatuses)) {
+                        $paymentIntent->cancel([
+                            'cancellation_reason' => 'abandoned'
+                        ]);
+                        logger()->info("PaymentIntent cancelado", [
+                            'payment_intent' => $session->payment_intent,
+                            'previous_status' => $paymentIntent->status
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    logger()->warning("No se pudo cancelar PaymentIntent: " . $e->getMessage());
+                }
+            }
+            $session->expire();
+            return true;
         } catch (\Exception $e) {
             logger()->warning("No se pudo expirar la sesión {$sessionId}: " . $e->getMessage());
             return false;
@@ -164,29 +201,30 @@ class StripeGateway implements StripeGatewayInterface
         try
         {
             $balance = Balance::retrieve();
-            $totalAvailableMxn = 0;
+            $totalAvailableMxn = Money::from('0');
             foreach ($balance->available as $item) {
                 if ($item->currency === 'mxn') {
-                    $totalAvailableMxn = bcadd($totalAvailableMxn, $item->amount, 0);
+                    $totalAvailableMxn = $totalAvailableMxn->add((string)$item->amount)->divide('100');
                 }
             }
 
-            $minimumPayout = 10000;
-            if (bccomp($totalAvailableMxn, $minimumPayout, 0) === -1) {
-                $availableFormatted = number_format(bcdiv($totalAvailableMxn, 100, 2), 2);
+            $minimumPayout = Money::from('100.00');
+            if ($totalAvailableMxn->isLessThan($minimumPayout)) {
                 throw new PayoutValidationException("Fondos insuficientes. Disponible: $" .
-                    $availableFormatted . " MXN. " .
+                    $totalAvailableMxn->finalize() . " MXN. " .
                     "Mínimo requerido: $100.00 MXN");
             }
             $payout = Payout::create([
-                'amount' => intval($totalAvailableMxn),
+                'amount' => (int)$totalAvailableMxn->multiply('100')->finalize(0),
                 'currency' => 'mxn',
                 'description' => 'Payout manual de la escuela',
             ]);
 
             logger()->info('Payout creado exitosamente', [
                 'payout_id' => $payout->id,
-                'amount' => bcdiv($payout->amount, 100, 2),
+                'amount' => Money::from((string) $payout->amount)
+                    ->divide('100')
+                    ->finalize(),
                 'arrival_date' => date('Y-m-d', $payout->arrival_date),
             ]);
 
@@ -194,11 +232,13 @@ class StripeGateway implements StripeGatewayInterface
             return [
                 'success' => true,
                 'payout_id' => $payout->id,
-                'amount' => bcdiv($payout->amount, 100, 2),
+                'amount' => Money::from((string) $payout->amount)
+                    ->divide('100')
+                    ->finalize(),
                 'currency' => $payout->currency,
                 'arrival_date' => date('Y-m-d', $payout->arrival_date),
                 'status' => $payout->status,
-                'available_before_payout' =>bcdiv($totalAvailableMxn, 100, 2),
+                'available_before_payout' => $totalAvailableMxn->finalize(),
             ];
 
         }

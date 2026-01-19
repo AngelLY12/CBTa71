@@ -15,7 +15,7 @@ use Spatie\Permission\Models\Role;
 
 class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQueryRepInterface
 {
-    public function findRoleById(int $id): EntitiesRole
+    public function findRoleById(int $id): ?EntitiesRole
     {
        return optional(Role::find($id),fn($role)=>RolesAndPermissionMapper::toRoleDomain($role));
     }
@@ -31,23 +31,27 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
         ->map(fn($role)=>RolesAndPermissionMapper::toRoleDomain($role))
         ->toArray();
     }
-    public function findPermissionById(int $id): EntitiesPermission
+    public function findPermissionById(int $id): ?EntitiesPermission
     {
         return optional(Permission::find($id),fn($permission)=>RolesAndPermissionMapper::toPermissionDomain($permission));
     }
 
     public function findPermissionsApplicableByUsers(?string $role, ?array $curps): array
     {
-        if (!empty($role)) {
-            $users = User::role($role)
-                ->with('roles')
-                ->get(['curp']);
-        }
+        $users = collect();
 
-        if (!empty($curps)) {
+        if (!empty($role)) {
+            try {
+                $users = User::role($role)
+                    ->with('roles')
+                    ->get(['curp', 'id']);
+            } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist $e) {
+                return [];
+            }
+        } elseif (!empty($curps)) {
             $users = User::with('roles')
                 ->whereIn('curp', $curps)
-                ->get(['curp']);
+                ->get(['curp', 'id']);
         }
 
         if ($users->isEmpty()) return [];

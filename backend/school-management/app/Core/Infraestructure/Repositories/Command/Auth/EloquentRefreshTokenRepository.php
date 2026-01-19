@@ -24,13 +24,16 @@ class EloquentRefreshTokenRepository implements RefreshTokenRepInterface
         return RefreshTokenMapper::toDomain($eloquent);
     }
 
-    public function revokeRefreshToken(string $tokenValue): ?EntitiesRefreshToken
+    public function revokeRefreshToken(string $refreshTokenValue): bool
     {
-        $refresh = $this->findByToken($tokenValue);
-        return $refresh ? $this->update($refresh->id, ['revoked' => true]) : null;
+        $affected = DB::table('refresh_tokens')
+            ->where('token', hash('sha256', $refreshTokenValue))
+            ->where('revoked', false)
+            ->update(['revoked' => true]);
+
+        return $affected === 1;
 
     }
-
     public function update(int $tokenId, array $fields): EntitiesRefreshToken
     {
         $eloquentToken =  $this->findOrFail($tokenId);

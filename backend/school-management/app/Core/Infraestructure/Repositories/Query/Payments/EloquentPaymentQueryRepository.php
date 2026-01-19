@@ -6,11 +6,14 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Application\Mappers\PaymentMapper as MappersPaymentMapper;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
+use App\Core\Domain\Utils\Helpers\Money;
 use App\Core\Infraestructure\Mappers\PaymentMapper;
 use App\Models\Payment as EloquentPayment;
 use Generator;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
 {
@@ -18,6 +21,15 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     public function findById(int $id): ?Payment
     {
         return optional(EloquentPayment::find($id), fn($pc) => PaymentMapper::toDomain($pc));
+    }
+
+    public function findByIds(array $ids): Collection
+    {
+        if(empty($ids)) return collect();
+        return EloquentPayment::whereIn('id', $ids)
+            ->lazy(200)
+            ->map(fn($pc) => PaymentMapper::toDomain($pc))
+            ->collect();
     }
 
     public function findBySessionId(string $sessionId): ?Payment
@@ -45,9 +57,9 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         $total = $results->sum('month_total');
 
         return [
-            'total' => number_format($total, 2, '.', ''),
+            'total' => Money::from($total)->finalize(),
             'by_month' => $results->pluck('month_total', 'month')
-                ->map(fn($amount) => number_format($amount, 2, '.', ''))
+                ->map(fn($amount) => Money::from($amount)->finalize())
                 ->toArray()
         ];
     }
@@ -102,10 +114,6 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
             ->through(fn($p) => MappersPaymentMapper::toDetailResponse($p));
     }
 
-
-
-
-
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment
     {
         $payment=EloquentPayment::
@@ -141,14 +149,12 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
      /**
      * @return Generator<int, Payment>
      */
-    public function getPaidWithinLastMonthCursor(): Generator
+    public function getReconciliablePaymentsCursor(): Generator
     {
         foreach (EloquentPayment::whereIn('status', PaymentStatus::reconcilableStatuses())
-                     ->whereBetween('created_at', [
-                         now()->subMonth(),
-                         now()->subMinutes(10),
-                     ])
-                ->cursor() as $model) {
+                     ->whereNotNull('payment_intent_id')
+                     ->where('created_at', '>=', now()->subMonth())
+                     ->cursor() as $model) {
             yield PaymentMapper::toDomain($model);
         }
     }
@@ -162,7 +168,28 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         if (!empty($allowedStatuses)) {
             $query->whereIn('status', $allowedStatuses);
         }
+        $payment = $query->orderByDesc('id')->first();
 
-        return PaymentMapper::toDomain($query->orderByDesc('id')->first());
+        return $payment ? PaymentMapper::toDomain($payment) : null;
+    }
+
+    public function getPaymentsByConceptName(?string $search=null,int $perPage, int $page): LengthAwarePaginator
+    {
+        $query = EloquentPayment::query()
+            ->when($search, function ($q) use ($search) {
+                $q->where('concept_name', 'LIKE', "%{$search}%");
+            });
+        return $query
+            ->select([
+                'concept_name',
+                DB::raw('SUM(amount) as amount_total'),
+                DB::raw('SUM(amount_received) as amount_received_total'),
+                DB::raw('DATE_FORMAT(MIN(created_at), "%Y-%m-%d") as first_payment_date'),
+                DB::raw('DATE_FORMAT(MAX(created_at), "%Y-%m-%d") as last_payment_date')
+            ])
+            ->groupBy('concept_name')
+            ->orderBy('last_payment_date', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(fn($item) => MappersPaymentMapper::toPaymentsMadeByConceptName($item));
     }
 }

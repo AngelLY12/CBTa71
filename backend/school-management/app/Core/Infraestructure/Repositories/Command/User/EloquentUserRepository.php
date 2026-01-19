@@ -44,9 +44,19 @@ class EloquentUserRepository implements UserRepInterface
     {
         $eloquentUser = $this->findOrFail($userId);
         $refreshToken = bin2hex(random_bytes(64));
+        $role = $eloquentUser->getRoleNames()
+            ->sortBy(fn ($role) => match ($role) {
+                UserRoles::ADMIN->value,
+                UserRoles::SUPERVISOR->value => 1,
+                UserRoles::FINANCIAL_STAFF->value => 2,
+                default => 3,
+            })
+            ->first();
+        $expirationTime = config("refresh_token.expiration_time_by_role.$role") ??
+            config('refresh_token.default_refresh_ttl');
         $eloquentUser->refreshTokens()->create([
             'token' => hash('sha256', $refreshToken),
-            'expires_at' => now()->addDays(7),
+            'expires_at' => now()->addMinutes($expirationTime),
             'revoked' => false
         ]);
         return $refreshToken;
@@ -78,7 +88,7 @@ class EloquentUserRepository implements UserRepInterface
         return EloquentUser::whereIn('email', $emails)->get();
     }
 
-    public function insertSingleUser(array $userData): User
+    public function insertSingleUser(array $userData): EloquentUser
     {
         try {
             return EloquentUser::create($userData);
@@ -129,7 +139,5 @@ class EloquentUserRepository implements UserRepInterface
             'total'  => $affected
         ]);
     }
-
-
 
 }

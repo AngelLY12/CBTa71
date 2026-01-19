@@ -12,6 +12,55 @@ use Illuminate\Support\Facades\Cache;
 
 class CacheService
 {
+    public function get(string $key, $default = null)
+    {
+        return Cache::get($key, $default);
+    }
+
+    public function getMany(array $keys, $default = null)
+    {
+        return Cache::getMultiple($keys, $default);
+    }
+
+    public function put(string $key, $value, $ttl = null): void
+    {
+        if ($ttl === null) {
+            Cache::forever($key, $value);
+        } else {
+            Cache::put($key, $value, $ttl);
+        }
+    }
+
+    public function putMany(array $values, $ttl = null): void
+    {
+        Cache::putMany($values, $ttl);
+    }
+
+    public function forget(string $key): void
+    {
+        Cache::forget($key);
+    }
+
+    public function has(string $key): bool
+    {
+        return Cache::has($key);
+    }
+
+    public function remember(string $key, $ttl, Closure $callback)
+    {
+        return Cache::remember($key, $ttl, $callback);
+    }
+
+    public function increment(string $key, $value = 1)
+    {
+        return Cache::increment($key, $value);
+    }
+
+    public function decrement(string $key, $value = 1)
+    {
+        return Cache::decrement($key, $value);
+    }
+
     public function rememberForever(string $key, Closure $callback)
     {
         return Cache::rememberForever($key, $callback);
@@ -27,14 +76,19 @@ class CacheService
     public function clearPrefix(string $prefix): void
     {
         $redis = Cache::getRedis();
-        $cursor = '0';
+        $cursor = 0;
+        $allKeys = [];
 
         do {
-            [$cursor, $keys] = $redis->scan($cursor, ['match' => "$prefix*", 'count' => 100]);
-            if (!empty($keys)) {
-                $redis->del(...$keys);
+            $keys = $redis->scan($cursor, "$prefix", 100);
+            if ($keys !== false && !empty($keys)) {
+                $allKeys = array_merge($allKeys, $keys);
             }
-        } while ($cursor != 0);
+        } while ($cursor > 0);
+
+        if (!empty($allKeys)) {
+            $redis->del($allKeys);
+        }
     }
 
     public function clearKey(string $prefixKey, string $suffix): void
@@ -45,7 +99,7 @@ class CacheService
 
     public function clearStaffCache(): void
     {
-        
+
         $suffixes = [
             StaffCacheSufix::DASHBOARD->value . ":*",
             StaffCacheSufix::DEBTS->value . ":*",
@@ -104,7 +158,7 @@ class CacheService
             $this->clearKey(CachePrefix::STUDENT->value, $suffix);
         }
 
-        
+
         $staffSuffixes = [
             StaffCacheSufix::DASHBOARD->value . ":pending",
             StaffCacheSufix::DASHBOARD->value . ":concepts",

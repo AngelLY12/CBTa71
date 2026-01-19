@@ -19,13 +19,14 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
 {
     public function findStudentDetails(int $userId): ?StudentDetail
     {
-        $eloquentStudentDetails = EloquentStudentDetail::where('user_id',$userId);
+        $eloquentStudentDetails = EloquentStudentDetail::where('user_id',$userId)->first();
         return $eloquentStudentDetails ? StudentDetailMapper::toDomain($eloquentStudentDetails): null;
     }
 
     public function insertStudentDetails(array $studentDetails): int {
         if (!empty($studentDetails)) {
-            return DB::table('student_details')->insert($studentDetails);
+            $result = DB::table('student_details')->insert($studentDetails);
+            return $result ? count($studentDetails) : 0;
         }
         return 0;
     }
@@ -42,7 +43,7 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
 
     public function incrementSemesterForAll(): int
     {
-        return EloquentStudentDetail::where('semestre', '<=', 10)
+        return EloquentStudentDetail::where('semestre', '<', 10)
             ->whereHas('user', function ($query) {
                 $query->whereIn('status', [UserStatus::ACTIVO, UserStatus::BAJA_TEMPORAL]);
             })
@@ -81,9 +82,7 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
 
     private function findModelByUserId(int $user_id): EloquentStudentDetail
     {
-        return EloquentStudentDetail::where('user_id', $user_id)->firstOr(
-            throw new ModelNotFoundException('No se encontraron detalles de estudiante para este usuario')
-        );
+        return EloquentStudentDetail::where('user_id', $user_id)->firstOrFail();
     }
 
 }
