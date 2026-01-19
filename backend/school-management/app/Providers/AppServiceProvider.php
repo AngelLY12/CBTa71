@@ -78,7 +78,6 @@ use App\Listeners\SendParentInvitationFailedNotification;
 use App\Listeners\SendParentStudentDeleteNotification;
 use App\Listeners\SendPromotionNotification;
 use App\Listeners\SendStudentsPromotionFailedNotification;
-use App\Notifications\ParentInvitationFailedNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Event;
@@ -87,7 +86,6 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use L5Swagger\L5SwaggerServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -136,13 +134,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PaymentEventRepInterface::class, EloquentPaymentEventRepository::class);
         $this->app->bind(PaymentEventQueryRepInterface::class, EloquentPaymentEventQueryRepository::class);
 
-        if(class_exists(TelescopeServiceProvider::class))
+        if(class_exists(App\Providers\TelescopeServiceProvider::class))
         {
-            $this->app->register(TelescopeServiceProvider::class);
+            $this->app->register(App\Providers\TelescopeServiceProvider::class);
         }
-        if(class_exists(L5SwaggerServiceProvider::class))
+        if(class_exists(L5Swagger\L5SwaggerServiceProvider::class))
         {
-            $this->app->register(L5SwaggerServiceProvider::class);
+            $this->app->register(L5Swagger\L5SwaggerServiceProvider::class);
         }
 
     }
