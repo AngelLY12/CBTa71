@@ -4829,7 +4829,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "concept": {
-                                                            "$ref": "#/components/schemas/DomainPaymentConcept"
+                                                            "$ref": "#/components/schemas/ConceptToDisplay"
                                                         }
                                                     },
                                                     "type": "object"
@@ -5541,13 +5541,13 @@
                 ]
             }
         },
-        "/api/parents/invite": {
+        "/api/v1/parents/invite": {
             "post": {
                 "tags": [
                     "Parents"
                 ],
                 "summary": "Enviar invitación a un padre",
-                "operationId": "4f2fd20a846ff6030acb250622df8cb6",
+                "operationId": "inviteParent",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -5642,16 +5642,21 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "/api/parents/invite/accept": {
+        "/api/v1/parents/invite/accept": {
             "post": {
                 "tags": [
                     "Parents"
                 ],
                 "summary": "Aceptar invitación de un padre",
-                "operationId": "049d727a465579831a22bcfdfe263ed1",
+                "operationId": "acceptInvitation",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -5723,28 +5728,21 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "/api/parents/get-children": {
+        "/api/v1/parents/get-children": {
             "get": {
                 "tags": [
                     "Parents"
                 ],
                 "summary": "Obtiene los hijos del parent",
-                "operationId": "b19527c8231cfe01f47c8ea01dbd7136",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del parent",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
+                "operationId": "getParentChildren",
                 "responses": {
                     "200": {
                         "description": "Hijos obtenidos correctamente",
@@ -5827,7 +5825,210 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/parents/get-parents": {
+            "get": {
+                "tags": [
+                    "Parents"
+                ],
+                "summary": "Obtiene los familiares del hijo",
+                "operationId": "getStudentParents",
+                "responses": {
+                    "200": {
+                        "description": "Familiares obtenidos correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "children": {
+                                                            "description": "Lista de hijos del usuario",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/StudentParentsResponse"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/parents/delete-parent/{parentId}": {
+            "delete": {
+                "tags": [
+                    "Parents"
+                ],
+                "summary": "Eliminar una relación del estudiante con un familiar",
+                "operationId": "deleteRelation",
+                "parameters": [
+                    {
+                        "name": "parentId",
+                        "in": "path",
+                        "description": "ID del familiar a eliminar (por ejemplo, 4)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Relación eliminada correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Relación eliminada correctamente"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/concepts": {
@@ -7226,6 +7427,167 @@
                 ]
             }
         },
+        "/api/v1/payments/by-concept": {
+            "get": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Obtener lista de pagos por concepto",
+                "description": "Devuelve una lista paginada de pagos registrados por concepto, con opción de búsqueda por email, CURP o número de control, y posibilidad de forzar actualización del caché.",
+                "operationId": "getPaymentsByConcept",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Filtro opcional para buscar por email, nombre o nombre de concepto de pago.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "example@gmail.com"
+                        }
+                    },
+                    {
+                        "name": "perPage",
+                        "in": "query",
+                        "description": "Número de resultados por página (por defecto 15).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Número de página actual (por defecto 1).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización de caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de pagos obtenida exitosamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "payments": {
+                                                            "allOf": [
+                                                                {
+                                                                    "$ref": "#/components/schemas/PaginatedResponse"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "items": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "$ref": "#/components/schemas/PaymentsMadeByConceptName"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/pending-payments/{id}": {
             "get": {
                 "tags": [
@@ -7955,7 +8317,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "user": {
-                                                            "$ref": "#/components/schemas/DomainUser"
+                                                            "$ref": "#/components/schemas/UserAuthResponse"
                                                         }
                                                     },
                                                     "type": "object"
@@ -8051,12 +8413,6 @@
             },
             "CreatePaymentConceptDTO": {
                 "description": "Datos para crear un concepto de pago",
-                "required": [
-                    "concept_name",
-                    "amount",
-                    "status",
-                    "is_global"
-                ],
                 "properties": {
                     "concept_name": {
                         "type": "string",
@@ -8085,10 +8441,6 @@
                         "format": "date",
                         "example": "2025-12-31",
                         "nullable": true
-                    },
-                    "is_global": {
-                        "type": "boolean",
-                        "example": true
                     },
                     "appliesTo": {
                         "$ref": "#/components/schemas/PaymentConceptAppliesTo"
@@ -8293,10 +8645,6 @@
                         "description": "Si es true, elimina los estudiantes a los que no aplicaba el concepto",
                         "type": "boolean",
                         "example": false
-                    },
-                    "is_global": {
-                        "type": "boolean",
-                        "example": true
                     }
                 },
                 "type": "object"
@@ -8307,8 +8655,7 @@
                     "user_id": {
                         "description": "ID del usuario asociado al detalle",
                         "type": "integer",
-                        "example": 1,
-                        "nullable": true
+                        "example": 1
                     },
                     "career_id": {
                         "description": "ID de la carrera del estudiante",
@@ -8318,8 +8665,8 @@
                     },
                     "n_control": {
                         "description": "Número de control del estudiante",
-                        "type": "integer",
-                        "example": 123456,
+                        "type": "string",
+                        "example": "123456",
                         "nullable": true
                     },
                     "semestre": {
@@ -8698,6 +9045,35 @@
                         "type": "string",
                         "example": "bearer",
                         "nullable": true
+                    },
+                    "user_data": {
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 1
+                                },
+                                "fullName": {
+                                    "type": "string",
+                                    "example": "Carlos Antonio"
+                                },
+                                "roles": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "example": [
+                                        "student"
+                                    ]
+                                },
+                                "hasUnreadNotifications": {
+                                    "type": "boolean",
+                                    "example": true
+                                }
+                            },
+                            "type": "object"
+                        }
                     }
                 },
                 "type": "object"
@@ -8760,6 +9136,27 @@
                             "type": "object"
                         },
                         "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ReconciliationResult": {
+                "properties": {
+                    "processed": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "updated": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "notified": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "failed": {
+                        "type": "integer",
+                        "example": 0
                     }
                 },
                 "type": "object"
@@ -8880,7 +9277,40 @@
                         "example": "Juan Perez"
                     },
                     "childrenData": {
-                        "description": "Usuarios que han cambiado su estado",
+                        "description": "Hijos del familiar",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "example": 3
+                                },
+                                "name": {
+                                    "type": "string",
+                                    "example": "Jesus Perez"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "StudentParentsResponse": {
+                "description": "Respuesta del get que muestra los hijos del padre",
+                "properties": {
+                    "studentId": {
+                        "description": "Id del estudiante",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "studentName": {
+                        "description": "Nombre del estudiante",
+                        "type": "string",
+                        "example": "Juan Perez"
+                    },
+                    "parentsData": {
+                        "description": "Familiares del estudiante",
                         "type": "array",
                         "items": {
                             "properties": {
@@ -9167,6 +9597,11 @@
             },
             "PaymentListItemResponse": {
                 "properties": {
+                    "id": {
+                        "description": "ID del pago",
+                        "type": "integer",
+                        "example": 10
+                    },
                     "date": {
                         "description": "Fecha del pago",
                         "type": "string",
@@ -9228,6 +9663,80 @@
                         "type": "string",
                         "format": "date-time",
                         "example": "2024-01-12 14:45:00"
+                    },
+                    "metadata": {
+                        "properties": {
+                            "wasCreated": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "wasReconciled": {
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "message": {
+                                "type": "string",
+                                "example": "Pago creado con exito"
+                            },
+                            "reconciliationResult": {
+                                "properties": {
+                                    "processed": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "updated": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "notified": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "failed": {
+                                        "type": "integer",
+                                        "example": 0
+                                    }
+                                },
+                                "type": "object",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentsMadeByConceptName": {
+                "properties": {
+                    "concept_name": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción"
+                    },
+                    "amount_total": {
+                        "description": "Monto total que debe recibir ese concepto",
+                        "type": "string",
+                        "example": "1500.00"
+                    },
+                    "amount_received_total": {
+                        "description": "Monto total pagado del concepto",
+                        "type": "string",
+                        "example": "1500.00"
+                    },
+                    "first_payment_date": {
+                        "description": "Primera fecha de pago del concepto",
+                        "type": "string",
+                        "example": "2025-11-04"
+                    },
+                    "last_payment_date": {
+                        "description": "Última fecha de pago del concepto",
+                        "type": "string",
+                        "example": "2025-12-04"
+                    },
+                    "collection_rate": {
+                        "description": "Tasa de recaudación del concepto",
+                        "type": "string",
+                        "example": "100.00"
                     }
                 },
                 "type": "object"
@@ -9427,6 +9936,94 @@
                 },
                 "type": "object"
             },
+            "ConceptToDisplay": {
+                "description": "Representa un concepto de pago",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "concept_name": {
+                        "type": "string",
+                        "example": "Pago de inscripción"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentConceptStatus"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-01"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "example": "1500.00"
+                    },
+                    "applies_to": {
+                        "$ref": "#/components/schemas/PaymentConceptAppliesTo"
+                    },
+                    "users": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "12324",
+                            "2435646",
+                            "3323232"
+                        ]
+                    },
+                    "careers": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Sistemas"
+                        ]
+                    },
+                    "semesters": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "example": [
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    "exceptionUsers": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "12326",
+                            "24646",
+                            "33232"
+                        ]
+                    },
+                    "applicantTags": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentConceptApplicantType"
+                        }
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pago correspondiente al semestre 2025A",
+                        "nullable": true
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-31",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "ConceptsToDashboardResponse": {
                 "properties": {
                     "id": {
@@ -9545,10 +10142,6 @@
                     },
                     "metadata": {
                         "properties": {
-                            "is_global": {
-                                "type": "boolean",
-                                "example": false
-                            },
                             "exception_count": {
                                 "type": "integer",
                                 "example": 5
@@ -9904,6 +10497,109 @@
                         "description": "URL para completar el setup de la tarjeta",
                         "type": "string",
                         "example": "https://example.com/setup/pm_01HXXXXXX",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "UserAuthResponse": {
+                "description": "Representa un usuario del sistema",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "curp": {
+                        "type": "string",
+                        "example": "PEMJ950615HDFRZN09"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Juan"
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "example": "Pérez"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "juan.perez@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "example": "hashed_password"
+                    },
+                    "phone_number": {
+                        "type": "string",
+                        "example": "+5215512345678"
+                    },
+                    "status": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserStatus"
+                            }
+                        ],
+                        "nullable": true,
+                        "example": "activo"
+                    },
+                    "registration_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-15T12:34:56Z",
+                        "nullable": true
+                    },
+                    "emailVerifiedAt": {
+                        "description": "Indica si el correo del usuario ya ha sido verificado y cuando",
+                        "type": "string",
+                        "example": "2024-01-15T12:34:56Z"
+                    },
+                    "birthdate": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1995-06-15",
+                        "nullable": true
+                    },
+                    "gender": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserGender"
+                            }
+                        ],
+                        "nullable": true,
+                        "example": "male"
+                    },
+                    "address": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Calle Falsa 123",
+                            "Colonia Centro"
+                        ],
+                        "nullable": true
+                    },
+                    "stripe_customer_id": {
+                        "type": "string",
+                        "example": "cus_ABC123XYZ",
+                        "nullable": true
+                    },
+                    "blood_type": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserBloodType"
+                            }
+                        ],
+                        "nullable": true,
+                        "example": "O+"
+                    },
+                    "studentDetail": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/DomainStudentDetail"
+                            }
+                        ],
                         "nullable": true
                     }
                 },
@@ -10323,10 +11019,6 @@
                     "createdBy"
                 ],
                 "properties": {
-                    "id": {
-                        "type": "integer",
-                        "nullable": true
-                    },
                     "studentId": {
                         "type": "integer"
                     },
@@ -10341,13 +11033,17 @@
                         "type": "string",
                         "format": "date-time"
                     },
+                    "createdBy": {
+                        "type": "integer"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "nullable": true
+                    },
                     "usedAt": {
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
-                    },
-                    "createdBy": {
-                        "type": "integer"
                     }
                 },
                 "type": "object"
@@ -10386,6 +11082,30 @@
             "DomainPayment": {
                 "description": "Representa un pago realizado por un usuario",
                 "properties": {
+                    "concept_name": {
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "type": "string",
+                        "example": "1500",
+                        "nullable": true
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentStatus"
+                    },
+                    "payment_method_details": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "Tarjeta de crédito",
+                            "Banco XYZ"
+                        ],
+                        "nullable": true
+                    },
                     "id": {
                         "type": "integer",
                         "example": 1,
@@ -10410,34 +11130,10 @@
                         "example": "pm_1Hh1Xx2eZvKYlo2Cj1234567",
                         "nullable": true
                     },
-                    "concept_name": {
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "type": "string",
-                        "example": "1500",
-                        "nullable": true
-                    },
                     "amount_received": {
                         "type": "string",
                         "example": "1500",
                         "nullable": true
-                    },
-                    "payment_method_details": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "example": [
-                            "Tarjeta de crédito",
-                            "Banco XYZ"
-                        ],
-                        "nullable": true
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/PaymentStatus"
                     },
                     "payment_intent_id": {
                         "type": "string",
@@ -10457,7 +11153,14 @@
                     "created_at": {
                         "type": "string",
                         "format": "date",
-                        "example": "2025-09-01"
+                        "example": "2025-09-01",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-01",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -10465,19 +11168,9 @@
             "DomainPaymentConcept": {
                 "description": "Representa un concepto de pago",
                 "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1,
-                        "nullable": true
-                    },
                     "concept_name": {
                         "type": "string",
                         "example": "Pago de inscripción"
-                    },
-                    "description": {
-                        "type": "string",
-                        "example": "Pago correspondiente al semestre 2025A",
-                        "nullable": true
                     },
                     "status": {
                         "$ref": "#/components/schemas/PaymentConceptStatus"
@@ -10487,22 +11180,12 @@
                         "format": "date",
                         "example": "2025-09-01"
                     },
-                    "end_date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-12-31",
-                        "nullable": true
-                    },
                     "amount": {
                         "type": "string",
                         "example": "1500.00"
                     },
                     "applies_to": {
                         "$ref": "#/components/schemas/PaymentConceptAppliesTo"
-                    },
-                    "is_global": {
-                        "type": "boolean",
-                        "example": true
                     },
                     "userIds": {
                         "type": "array",
@@ -10552,6 +11235,22 @@
                         "items": {
                             "$ref": "#/components/schemas/PaymentConceptApplicantType"
                         }
+                    },
+                    "id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pago correspondiente al semestre 2025A",
+                        "nullable": true
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-31",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -10613,6 +11312,11 @@
                         "description": "Tipo de permiso.",
                         "type": "string",
                         "example": "model"
+                    },
+                    "belongsTo": {
+                        "description": "Identifica el rol al que pertenece el permiso.",
+                        "type": "string",
+                        "example": "STUDENT"
                     }
                 },
                 "type": "object"
@@ -10664,14 +11368,14 @@
             "DomainStudentDetail": {
                 "description": "Detalles del estudiante",
                 "properties": {
+                    "user_id": {
+                        "type": "integer",
+                        "example": 123
+                    },
                     "id": {
                         "type": "integer",
                         "example": 1,
                         "nullable": true
-                    },
-                    "user_id": {
-                        "type": "integer",
-                        "example": 123
                     },
                     "career_id": {
                         "type": "integer",
@@ -10679,8 +11383,8 @@
                         "nullable": true
                     },
                     "n_control": {
-                        "type": "integer",
-                        "example": 20201234,
+                        "type": "string",
+                        "example": "20201234",
                         "nullable": true
                     },
                     "semestre": {
@@ -10704,10 +11408,9 @@
             "DomainUser": {
                 "description": "Representa un usuario del sistema",
                 "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1,
-                        "nullable": true
+                    "curp": {
+                        "type": "string",
+                        "example": "PEMJ950615HDFRZN09"
                     },
                     "name": {
                         "type": "string",
@@ -10730,6 +11433,37 @@
                         "type": "string",
                         "example": "+5215512345678"
                     },
+                    "status": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserStatus"
+                            }
+                        ],
+                        "nullable": true,
+                        "example": "activo"
+                    },
+                    "registration_date": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-15T12:34:56Z",
+                        "nullable": true
+                    },
+                    "emailVerified": {
+                        "description": "Indica si el correo del usuario ya ha sido verificado",
+                        "type": "boolean"
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Role"
+                        },
+                        "nullable": true
+                    },
+                    "id": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
                     "birthdate": {
                         "type": "string",
                         "format": "date",
@@ -10744,10 +11478,6 @@
                         ],
                         "nullable": true,
                         "example": "male"
-                    },
-                    "curp": {
-                        "type": "string",
-                        "example": "PEMJ950615HDFRZN09"
                     },
                     "address": {
                         "type": "array",
@@ -10774,21 +11504,6 @@
                         "nullable": true,
                         "example": "O+"
                     },
-                    "registration_date": {
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2024-01-15T12:34:56Z",
-                        "nullable": true
-                    },
-                    "status": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/UserStatus"
-                            }
-                        ],
-                        "nullable": true,
-                        "example": "activo"
-                    },
                     "studentDetail": {
                         "oneOf": [
                             {
@@ -10796,17 +11511,6 @@
                             }
                         ],
                         "nullable": true
-                    },
-                    "roles": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Role"
-                        },
-                        "nullable": true
-                    },
-                    "emailVerified": {
-                        "description": "Indica si el correo del usuario ya ha sido verificado",
-                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -10873,6 +11577,7 @@
                     "STUDENTS_NOT_FOUND",
                     "USER_NOT_FOUND",
                     "USERS_NOT_FOUND_FOR_UPDATE",
+                    "STUDENT_PARENTS_NOT_FOUND",
                     "PAYMENT_NOTIFICATION_ERROR",
                     "PAYMENT_RECONCILIATION_ERROR",
                     "STRIPE_CHECKOUT_SESSION_ERROR",
@@ -10907,11 +11612,12 @@
                 "type": "string",
                 "enum": [
                     "succeeded",
-                    "requires_action",
+                    "overpaid",
+                    "failed",
                     "paid",
+                    "requires_action",
                     "unpaid",
                     "pending",
-                    "overpaid",
                     "underpaid"
                 ],
                 "example": "paid"
@@ -11435,6 +12141,16 @@
                 },
                 "type": "object"
             },
+            "ImportRequest": {
+                "properties": {
+                    "file": {
+                        "description": "Archivo con los usuarios a importar (XLSX, XLS o CSV)",
+                        "type": "string",
+                        "format": "binary"
+                    }
+                },
+                "type": "object"
+            },
             "PaginationRequest": {
                 "properties": {
                     "forceRefresh": {
@@ -11457,16 +12173,6 @@
                         "type": "integer",
                         "minimum": 1,
                         "example": 1
-                    }
-                },
-                "type": "object"
-            },
-            "ImportUsersRequest": {
-                "properties": {
-                    "file": {
-                        "description": "Archivo con los usuarios a importar (XLSX, XLS o CSV)",
-                        "type": "string",
-                        "format": "binary"
                     }
                 },
                 "type": "object"
@@ -11632,7 +12338,6 @@
                     "concept_name",
                     "start_date",
                     "amount",
-                    "is_global",
                     "applies_to"
                 ],
                 "properties": {
@@ -11668,11 +12373,6 @@
                         "type": "number",
                         "minimum": 10,
                         "example": 1500.5
-                    },
-                    "is_global": {
-                        "description": "Indica si aplica globalmente",
-                        "type": "boolean",
-                        "example": true
                     },
                     "applies_to": {
                         "$ref": "#/components/schemas/PaymentConceptAppliesTo"
@@ -11739,11 +12439,6 @@
             },
             "UpdatePaymentConceptRelationsRequest": {
                 "properties": {
-                    "is_global": {
-                        "description": "Indica si aplica globalmente",
-                        "type": "boolean",
-                        "example": false
-                    },
                     "applies_to": {
                         "$ref": "#/components/schemas/PaymentConceptAppliesTo"
                     },

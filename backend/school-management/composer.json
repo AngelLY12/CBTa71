@@ -16,10 +16,10 @@
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-permission": "^6.21",
-        "stripe/stripe-php": "^17.6"
+        "stripe/stripe-php": "^17.6",
+        "darkaonline/l5-swagger": "*"
     },
     "require-dev": {
-        "darkaonline/l5-swagger": "*",
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",

@@ -3,11 +3,10 @@
 namespace App\Core\Infraestructure\Repositories\Query\Stripe;
 
 use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Query\Stripe\StripeGatewayQueryInterface;
+use App\Core\Domain\Repositories\Stripe\StripeGatewayQueryInterface;
 use App\Core\Domain\Utils\Validators\StripeValidator;
 use App\Exceptions\ServerError\StripeGatewayException;
 use App\Exceptions\Validation\ValidationException;
-use GuzzleHttp\Promise\PromiseInterface;
 use Stripe\Balance;
 use Stripe\Charge;
 use Stripe\Checkout\Session;

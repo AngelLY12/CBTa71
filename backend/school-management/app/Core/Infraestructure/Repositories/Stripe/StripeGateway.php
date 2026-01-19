@@ -4,7 +4,7 @@ namespace App\Core\Infraestructure\Repositories\Command\Stripe;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
-use App\Core\Domain\Repositories\Command\Stripe\StripeGatewayInterface;
+use App\Core\Domain\Repositories\Stripe\StripeGatewayInterface;
 use App\Core\Domain\Utils\Validators\StripeValidator;
 use App\Exceptions\ServerError\StripeGatewayException;
 use App\Exceptions\Validation\PayoutValidationException;
@@ -142,7 +142,12 @@ class StripeGateway implements StripeGatewayInterface
         try {
             $session = Session::retrieve($sessionId);
 
-            if (in_array($session->payment_status, PaymentStatus::nonPaidStatuses())) {
+            $nonPaidValues = array_map(
+                fn($enum) => $enum->value,
+                PaymentStatus::nonPaidStatuses()
+            );
+
+            if (in_array($session->payment_status, $nonPaidValues, true)) {
                 $session->expire();
                 return true;
             }
