@@ -10,11 +10,12 @@ class UserLogActionMapper
     public static function toDomain(UserActionLog $log): EntitiesUserActionLog
     {
         return new EntitiesUserActionLog(
-            userId:$log->user_id ?? null,
-            roles:$log->roles ?? null,
-            ip:$log->ip ?? null,
-            method:$log->method,
-            url:$log->url,
+            method: $log->method,
+            url: $log->url,
+            roles: $log->roles ?? null,
+            id: $log->id,
+            userId: $log->user_id ?? null,
+            ip: $log->ip ?? null,
         );
     }
 
@@ -27,6 +28,6 @@ class UserLogActionMapper
             'method' => $log->method,
             'url' => $log->url,
         ];
-        
+
     }
 }

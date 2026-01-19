@@ -11,13 +11,13 @@ class StudentDetailMapper{
     public static function toDomain(StudentDetail $studentDetail): DomainStudentDetail
     {
         return new DomainStudentDetail(
-            id:$studentDetail->id,
-            user_id:$studentDetail->user_id,
-            career_id:$studentDetail->career_id ?? null,
-            n_control:$studentDetail->n_control ?? null,
-            semestre:$studentDetail->semestre ?? null,
-            group:$studentDetail->group ?? null,
-            workshop:$studentDetail->workshop ?? null
+            user_id: $studentDetail->user_id,
+            id: $studentDetail->id,
+            career_id: $studentDetail->career_id ?? null,
+            n_control: $studentDetail->n_control ?? null,
+            semestre: $studentDetail->semestre ?? null,
+            group: $studentDetail->group ?? null,
+            workshop: $studentDetail->workshop ?? null
         );
 
     }

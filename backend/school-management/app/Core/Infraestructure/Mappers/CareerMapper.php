@@ -8,8 +8,8 @@ use App\Core\Domain\Entities\Career as DomainCareer;
 class CareerMapper{
     public static function toDomain(Career $career): DomainCareer{
         return new DomainCareer(
-            id:$career->id,
-            career_name:$career->career_name
+            career_name: $career->career_name,
+            id: $career->id
         );
     }
 

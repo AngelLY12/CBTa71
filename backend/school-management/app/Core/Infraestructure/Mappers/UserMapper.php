@@ -13,21 +13,21 @@ class UserMapper{
     {
 
         $domainUser = new DomainUser(
+            curp: $user->curp,
             name: $user->name,
             last_name: $user->last_name,
             email: $user->email,
             password: $user->password,
             phone_number: $user->phone_number,
-            birthdate: $user->birthdate ?? null,
-            gender: $user->gender,
-            curp: $user->curp,
-            address: $user->address ?? [],
-            stripe_customer_id: $user->stripe_customer_id ?? null,
-            blood_type: $user->blood_type ?? null,
-            registration_date: $user->registration_date ?? null,
             status: $user->status,
+            registration_date: $user->registration_date,
             emailVerified: $user->hasVerifiedEmail(),
-            id: $user->id
+            id: $user->id,
+            birthdate: $user->birthdate,
+            gender: $user->gender,
+            address: $user->address,
+            blood_type: $user->blood_type,
+            stripe_customer_id: $user->stripe_customer_id
         );
         if ($user->relationLoaded('studentDetail')) {
             $domainUser->setStudentDetail(StudentDetailMapper::toDomain($user->studentDetail));

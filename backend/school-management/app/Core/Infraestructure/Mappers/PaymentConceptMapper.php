@@ -10,15 +10,14 @@ class PaymentConceptMapper{
 
     public static function toDomain(PaymentConcept $paymentConcept){
         $domain= new DomainPaymentConcept(
-            id:$paymentConcept->id,
-            concept_name:$paymentConcept->concept_name,
-            description:$paymentConcept->description,
-            status:$paymentConcept->status,
-            start_date:$paymentConcept->start_date,
-            end_date:$paymentConcept->end_date,
-            amount:$paymentConcept->amount,
-            applies_to:$paymentConcept->applies_to,
-            is_global:$paymentConcept->is_global
+            concept_name: $paymentConcept->concept_name,
+            status: $paymentConcept->status,
+            start_date: $paymentConcept->start_date,
+            amount: $paymentConcept->amount,
+            applies_to: $paymentConcept->applies_to,
+            id: $paymentConcept->id,
+            description: $paymentConcept->description,
+            end_date: $paymentConcept->end_date
         );
         if($paymentConcept->relationLoaded('careers'))
         {
@@ -54,7 +53,6 @@ class PaymentConceptMapper{
             'end_date'     => $concept->end_date,
             'amount'       => $concept->amount,
             'applies_to'   => $concept->applies_to,
-            'is_global'    => $concept->is_global,
         ];
     }
 
