@@ -47,7 +47,7 @@ class ProcessRecipientsListener implements ShouldQueue
     }
     public function failed(PaymentConceptCreated $event, \Throwable $exception): void
     {
-        Log::critical('ProcessPaymentConceptRecipientsListener failed', [
+        Log::critical('ProcessRecipientsListener failed', [
             'concept_id' => $event->paymentConceptId,
             'applies_to' => $event->appliesTo,
             'error' => $exception->getMessage(),

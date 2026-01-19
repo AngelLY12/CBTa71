@@ -89,7 +89,7 @@ class NotifyUsersOfConceptStatusChange implements ShouldQueue
     }
     public function failed(PaymentConceptStatusChanged $event, \Throwable $exception): void
     {
-        Log::critical('ProcessPaymentConceptRecipientsListener failed', [
+        Log::critical('NotifyUsersOfConceptStatusChange failed', [
             'concept_id' => $event->conceptId,
             'new_status' => $event->newStatus,
             'old_status' => $event->oldStatus,

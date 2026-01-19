@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Core\Domain\Enum\User\UserStatus;
+use App\Core\Domain\Utils\Helpers\Money;
 use App\Events\AdministrationEvent;
 use App\Jobs\SendBulkMailJob;
 use App\Mail\CriticalAmountAlertMail;
@@ -14,6 +15,7 @@ class SendAmoutExceededNotification
     /**
      * Create the event listener.
      */
+
     public function __construct()
     {
         //
@@ -31,7 +33,7 @@ class SendAmoutExceededNotification
             ->limit(4)
             ->get();
         $threshold = config('concepts.amount.notifications.threshold');
-        $exceededBy = bcsub($event->amount, $threshold);
+        $exceededBy = Money::from($event->amount)->sub($threshold)->finalize();
         $mailables=[];
         $recipientEmails=[];
         foreach ($mandatoryRecipients as $recipient) {
@@ -54,7 +56,7 @@ class SendAmoutExceededNotification
     }
     public function failed(AdministrationEvent $event, \Throwable $exception): void
     {
-        Log::critical('ProcessPaymentConceptRecipientsListener failed', [
+        Log::critical('SendAmountExceededNotification failed', [
             'concept_name' => $event->concept_name,
             'action' => $event->action,
             'error' => $exception->getMessage(),

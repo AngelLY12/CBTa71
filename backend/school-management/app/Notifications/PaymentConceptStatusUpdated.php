@@ -56,22 +56,9 @@ class PaymentConceptStatusUpdated extends Notification
     {
         return new BroadcastMessage([
             'id' => $this->id,
-            'type' => 'payment_concept_status_changed',
+            'type' => get_class($this),
+            'data' => $this->toDatabase($notifiable),
             'read_at' => null,
-            'data' => [
-                'title' => 'Estado de concepto actualizado',
-                'message' => sprintf(
-                    'El concepto "%s" cambió de %s a %s',
-                    $this->concept['concept_name'],
-                    $this->oldStatus,
-                    $this->newStatus
-                ),
-                'concept_id' => $this->concept['id'],
-                'concept_name' => $this->concept['concept_name'],
-                'old_status' => $this->oldStatus,
-                'new_status' => $this->newStatus,
-                'amount' => $this->concept['amount'],
-            ],
             'created_at' => now()->toISOString(),
         ]);
     }

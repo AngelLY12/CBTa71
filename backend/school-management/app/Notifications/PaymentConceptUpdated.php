@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
@@ -74,9 +75,11 @@ class PaymentConceptUpdated extends Notification
         return match($mainChangeType) {
             'created_concept' => 'Concepto de pago creado',
             'relation_update' => 'Actualización del concepto de pago',
+            'relation_removed' => 'Concepto de pago ya no aplica',
             'applies_to_changed' => 'Nuevo concepto de pago aplicado',
             'exceptions_update' => 'Actualización de las excepciones del concepto de pago',
             default => 'Actualización de concepto de pago'
+
         };
     }
 
@@ -92,9 +95,13 @@ class PaymentConceptUpdated extends Notification
             if ($change['type'] === 'relation_update') {
                 return 'relation_update';
             }
+            if ($change['type'] === 'relation_removed') {
+                return 'relation_removed';
+            }
             if($change['type'] === 'created_concept'){
                 return 'created_concept';
             }
+
         }
 
         return 'field_update';
@@ -104,15 +111,14 @@ class PaymentConceptUpdated extends Notification
     private function getMessage(object $notifiable): string
     {
         $conceptName = $this->paymentConcept['concept_name'];
-        $amount = number_format($this->paymentConcept['amount'], 2);
-
+        $amount = Money::from($this->paymentConcept['amount'])->finalize();
+        $userName = $notifiable->name;
         if (empty($this->changes)) {
-            return "El concepto '{$conceptName}' con monto ({$amount} MXN) ha sido actualizado.";
+            return "Hola {$userName}, te informamos que el concepto de pago '{$conceptName}' (monto: {$amount} MXN) ha sido actualizado.";
         }
 
         $changeMessages = [];
         $createdMessage=[];
-        $userId = $notifiable->id;
         foreach ($this->changes as $change) {
             if($change['type'] === 'created_concept')
             {
@@ -123,50 +129,74 @@ class PaymentConceptUpdated extends Notification
                 $createdMessage[] = "Monto: {$amount} MXN";
                 $createdMessage[] = "Válido del {$startDate} al {$endDate}";
             }
-            if ($change['field'] === 'is_global') {
-                $globalStatus = $change['new'] ? 'global' : 'no global';
-                $changeMessages[] = "El concepto ahora es {$globalStatus}";
-            } elseif ($change['type'] === 'applies_to_changed') {
+
+            if ($change['type'] === 'applies_to_changed') {
                 $changeMessages[] = "El concepto ahora aplica a: {$change['new']}";
             } elseif ($change['type'] === 'relation_update') {
-                if($change['field'] === 'semesters')
-                {
-                    $semesters = implode(', ', (array)$change['added']);
-                    $changeMessages[] = "El concepto ahora aplica al {$semesters} semestre";
-                }
-                if($change['field'] === 'applicant_tags')
-                {
-                    $changeMessages[] = "El concepto ahora aplica a tu tag particular";
-                }
-                if($change['field'] === 'students')
-                {
-                    $changeMessages[] = "El concepto de pago ahora aplica para ti";
-                }
-                if($change['field'] === 'careers')
-                {
-                    $changeMessages[] = "El concepto de pago ahora aplica a tu carrera";
-                }
-            }elseif ($change['type'] === 'exceptions_update')
-            {
-                if (!empty(array_intersect($change['added'], [$userId]))) {
-                    $changeMessages[] = "Fuiste agregado a las excepciones del concepto de pago, ya no aplica a ti";
-                }
-                if (!empty(array_intersect($change['removed'], [$userId]))) {
-                    $changeMessages[] = "Fuiste eliminado de las excepciones del concepto de pago, ahora aplica a ti y debes pagar";
+                switch($change['field']) {
+                    case 'semesters':
+                        $changeMessages[] = "El concepto ahora aplica a tu semestre";
+                        break;
+                    case 'applicant_tags':
+                        $changeMessages[] = "El concepto ahora aplica a tu tag particular";
+                        break;
+                    case 'students':
+                        $changeMessages[] = "El concepto de pago ahora aplica para ti";
+                        break;
+                    case 'careers':
+                        $changeMessages[] = "El concepto de pago ahora aplica a tu carrera";
+                        break;
+                    case 'career_semester':
+                    case 'careers_in_career_semester':
+                    case 'semesters_in_career_semester':
+                        $changeMessages[] = "El concepto ahora aplica a tu combinación de carrera/semestre";
+                        break;
                 }
             }
-
+            elseif ($change['type'] === 'exceptions_update')
+            {
+                if (!empty($change['added']) && empty($change['removed'])) {
+                    $changeMessages[] = "Fuiste agregado a las excepciones del concepto de pago, ya no aplica a ti";
+                } elseif (!empty($change['removed']) && empty($change['added'])) {
+                    $changeMessages[] = "Fuiste eliminado de las excepciones del concepto de pago, ahora aplica a ti y debes pagar";
+                } else {
+                    $changeMessages[] = "Tu estado en las excepciones del concepto ha cambiado";
+                }
+            }
+            elseif ($change['type'] === 'relation_removed') {
+                switch($change['field']) {
+                    case 'semesters':
+                        $changeMessages[] = "El concepto ya NO aplica a tu semestre";
+                        break;
+                    case 'applicant_tags':
+                        $changeMessages[] = "El concepto ya NO aplica a tu tag particular";
+                        break;
+                    case 'students':
+                        $changeMessages[] = "El concepto de pago ya NO aplica para ti";
+                        break;
+                    case 'careers':
+                        $changeMessages[] = "El concepto de pago ya NO aplica a tu carrera";
+                        break;
+                    case 'career_semester':
+                    case 'careers_in_career_semester':
+                    case 'semesters_in_career_semester':
+                        $changeMessages[] = "El concepto ya NO aplica a tu combinación de carrera/semestre";
+                        break;
+                    default:
+                        $changeMessages[] = "El concepto ya NO aplica a ti";
+                        break;
+                }
+            }
         }
 
         if(!empty($createdMessage))
         {
-            $message = "Concepto de pago creado. ";
+            $message = "Hola {$userName}, te informamos que hay un nuevo concepto de pago creado. ";
             $message .= "Detalles importantes: " . implode(", ", $createdMessage) . '.';
             return $message;
         }
 
-        $baseMessage = "El concepto '{$conceptName}' con monto ({$amount} MXN) ha sido actualizado.";
-
+        $baseMessage = "Hola {$userName}, te informamos que el concepto de pago '{$conceptName}' (monto: {$amount} MXN) ha sido actualizado.";
         if (!empty($changeMessages)) {
             $limitedChanges = array_slice($changeMessages, 0, 3);
             $baseMessage .= " Cambios: " . implode(', ', $limitedChanges);
@@ -182,11 +212,18 @@ class PaymentConceptUpdated extends Notification
     }
     private function getFilteredChanges(): array
     {
-        $relevantFields = ['relation_update', 'applies_to_changed', 'exceptions_update', 'created_concept'];
+        $relevantTypes = [
+            'relation_update',
+            'applies_to_changed',
+            'exceptions_update',
+            'created_concept',
+            'relation_removed'
+        ];
 
-        return array_filter($this->changes, function($change) use ($relevantFields) {
-            return in_array($change['type'], $relevantFields);
-        });
+        return array_values(array_filter(
+            $this->changes,
+            fn($change) => in_array($change['type'], $relevantTypes)
+        ));
     }
 
 }

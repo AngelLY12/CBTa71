@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -77,13 +78,13 @@ class PaymentConceptUpdatedFields extends Notification
     private function getMessage(object $notifiable): string
     {
         $conceptName = $this->paymentConcept['concept_name'];
-        $amount = number_format($this->paymentConcept['amount'], 2);
+        $amount = Money::from($this->paymentConcept['amount'])->finalize();
         $userName = $notifiable->name ?? 'Estudiante';
         $changeMessages = [];
         foreach ($this->changes as $change) {
             if ($change['field'] === 'amount') {
-                $oldAmount = number_format($change['old'], 2);
-                $newAmount = number_format($change['new'], 2);
+                $oldAmount = Money::from($change['old'])->finalize();
+                $newAmount = Money::from($change['new'])->finalize();
                 $changeMessages[] = "Monto cambiado de {$oldAmount} a {$newAmount} MXN";
             } elseif ($change['field'] === 'concept_name') {
                 $changeMessages[] = "Nombre cambiado de '{$change['old']}' a '{$change['new']}'";
