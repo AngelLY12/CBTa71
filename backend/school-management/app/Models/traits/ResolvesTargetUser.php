@@ -10,12 +10,17 @@ trait ResolvesTargetUser
     public function resolveTargetUser(?int $id = null): ?User
     {
         if ($this->hasRole(UserRoles::PARENT->value) && $id) {
-            return $this->children()
+            $child = $this->children()
                         ->where('student_id', $id)
                         ->with(['student' => function ($query) {
                             $query->with(['studentDetail', 'roles']);
                         }])
-                        ->first()?->student;
+                        ->first();
+            if (!$child) {
+                return null;
+            }
+
+            return $child->student;
         }
 
         $this->loadMissing(['roles']);
