@@ -9,6 +9,18 @@ class Careers
  *     path="/api/v1/careers",
  *     tags={"Careers"},
  *     summary="Obtener todas las carreras",
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *            name="X-User-Role",
+ *            in="header",
+ *            required=false,
+ *            description="Rol requerido para este endpoint",
+ *            @OA\Schema(
+ *                type="string",
+ *                example="admin|supervisor"
+ *            )
+ *        ),
+ *
  *      @OA\Parameter(
  *         name="forceRefresh",
  *         in="query",
@@ -55,6 +67,17 @@ public function getCareers(){}
  *     path="/api/v1/careers/{id}",
  *     tags={"Careers"},
  *     summary="Obtener una carrera por ID",
+ *     security={{"bearerAuth":{}}},
+ *      @OA\Parameter(
+ *             name="X-User-Role",
+ *             in="header",
+ *             required=false,
+ *             description="Rol requerido para este endpoint",
+ *             @OA\Schema(
+ *                 type="string",
+ *                 example="admin|supervisor"
+ *             )
+ *         ),
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -108,6 +131,17 @@ public function getCareer(){}
  *     path="/api/v1/careers",
  *     tags={"Careers"},
  *     summary="Crear una nueva carrera",
+ *     security={{"bearerAuth":{}}},
+ *      @OA\Parameter(
+ *             name="X-User-Role",
+ *             in="header",
+ *             required=false,
+ *             description="Rol requerido para este endpoint",
+ *             @OA\Schema(
+ *                 type="string",
+ *                 example="admin|supervisor"
+ *             )
+ *         ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(ref="#/components/schemas/CreateCareerRequest")
@@ -152,6 +186,17 @@ public function createCareer(){}
  *     path="/api/v1/careers/{id}",
  *     tags={"Careers"},
  *     summary="Actualizar una carrera existente",
+ *     security={{"bearerAuth":{}}},
+ *      @OA\Parameter(
+ *             name="X-User-Role",
+ *             in="header",
+ *             required=false,
+ *             description="Rol requerido para este endpoint",
+ *             @OA\Schema(
+ *                 type="string",
+ *                 example="admin|supervisor"
+ *             )
+ *         ),
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -204,6 +249,17 @@ public function updateCareer(){}
  *     path="/api/v1//careers/{id}",
  *     tags={"Careers"},
  *     summary="Eliminar una carrera",
+ *     security={{"bearerAuth":{}}},
+ *      @OA\Parameter(
+ *             name="X-User-Role",
+ *             in="header",
+ *             required=false,
+ *             description="Rol requerido para este endpoint",
+ *             @OA\Schema(
+ *                 type="string",
+ *                 example="admin|supervisor"
+ *             )
+ *         ),
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

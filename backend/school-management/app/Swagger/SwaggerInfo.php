@@ -25,5 +25,9 @@ namespace App\Swagger;
  *     url="https://nginx-production-728f.up.railway.app",
  *     description="Servidor de producción"
  * )
+ *
+ * @OA\PathItem(
+ *      path="/api"
+ *  )
  */
 class SwaggerInfo{}

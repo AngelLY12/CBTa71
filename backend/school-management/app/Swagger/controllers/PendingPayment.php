@@ -12,6 +12,26 @@ class PendingPayment
  *     description="Devuelve todos los conceptos pendientes de pago del usuario logueado.",
  *     operationId="getUserPendingPayments",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                            name="X-User-Role",
+ *                            in="header",
+ *                            required=false,
+ *                            description="Rol requerido para este endpoint",
+ *                            @OA\Schema(
+ *                                type="string",
+ *                                example="student|parent"
+ *                            )
+ *                        ),
+ *                        @OA\Parameter(
+ *                            name="X-User-Permission",
+ *                            in="header",
+ *                            required=false,
+ *                            description="Permiso requerido para este endpoint",
+ *                            @OA\Schema(
+ *                                 type="string",
+ *                                 example="view.pending.concepts"
+ *                             )
+ *                        ),
  *
  *     @OA\Parameter(
  *         name="forceRefresh",
@@ -66,6 +86,26 @@ public function pending(){}
  *     description="Crea un intento de pago en Stripe (u otro proveedor) para el concepto indicado y devuelve la URL del checkout.",
  *     operationId="createPaymentIntent",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                             name="X-User-Role",
+ *                             in="header",
+ *                             required=false,
+ *                             description="Rol requerido para este endpoint",
+ *                             @OA\Schema(
+ *                                 type="string",
+ *                                 example="student|parent"
+ *                             )
+ *                         ),
+ *                         @OA\Parameter(
+ *                             name="X-User-Permission",
+ *                             in="header",
+ *                             required=false,
+ *                             description="Permiso requerido para este endpoint",
+ *                             @OA\Schema(
+ *                                  type="string",
+ *                                  example="create.payment"
+ *                              )
+ *                         ),
  *
  *     @OA\RequestBody(
  *         required=true,
@@ -115,6 +155,26 @@ public function payConcept(){}
  *     operationId="getUserOverduePayments",
  *     tags={"Pending Payment"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                              name="X-User-Role",
+ *                              in="header",
+ *                              required=false,
+ *                              description="Rol requerido para este endpoint",
+ *                              @OA\Schema(
+ *                                  type="string",
+ *                                  example="student|parent"
+ *                              )
+ *                          ),
+ *                          @OA\Parameter(
+ *                              name="X-User-Permission",
+ *                              in="header",
+ *                              required=false,
+ *                              description="Permiso requerido para este endpoint",
+ *                              @OA\Schema(
+ *                                   type="string",
+ *                                   example="view.overdue.concepts"
+ *                               )
+ *                          ),
  *
  *     @OA\Parameter(
  *         name="forceRefresh",

@@ -12,6 +12,26 @@ class Debts
  *     tags={"Debts"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
+ *                      name="X-User-Role",
+ *                      in="header",
+ *                      required=false,
+ *                      description="Rol requerido para este endpoint (solo para documentación, ej. 'admin')",
+ *                      @OA\Schema(
+ *                          type="string",
+ *                          example="financial-staff"
+ *                      )
+ *                  ),
+ *                  @OA\Parameter(
+ *                      name="X-User-Permission",
+ *                      in="header",
+ *                      required=false,
+ *                      description="Permiso requerido para este endpoint",
+ *                      @OA\Schema(
+ *                           type="string",
+ *                           example="view.stripe.payments"
+ *                       )
+ *                  ),
+ *     @OA\Parameter(
  *         name="search",
  *         in="query",
  *         description="Email, CURP o n_control",
@@ -71,6 +91,26 @@ public function stripe(){}
  *     description="Valida un pago realizado en Stripe mediante el `payment_intent_id` y la búsqueda del estudiante.",
  *     tags={"Debts"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                       name="X-User-Role",
+ *                       in="header",
+ *                       required=false,
+ *                       description="Rol requerido para este endpoint",
+ *                       @OA\Schema(
+ *                           type="string",
+ *                           example="financial-staff"
+ *                       )
+ *                   ),
+ *                   @OA\Parameter(
+ *                       name="X-User-Permission",
+ *                       in="header",
+ *                       required=false,
+ *                       description="Permiso requerido para este endpoint",
+ *                       @OA\Schema(
+ *                            type="string",
+ *                            example="validate.debt"
+ *                        )
+ *                   ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
@@ -116,6 +156,26 @@ public function validate(){}
  *     description="Obtiene una lista paginada de todos los pagos pendientes registrados. Permite buscar por nombre o control del estudiante, paginar los resultados y forzar la actualización del caché.",
  *     tags={"Debts"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                        name="X-User-Role",
+ *                        in="header",
+ *                        required=false,
+ *                        description="Rol requerido para este endpoint",
+ *                        @OA\Schema(
+ *                            type="string",
+ *                            example="financial-staff"
+ *                        )
+ *                    ),
+ *                    @OA\Parameter(
+ *                        name="X-User-Permission",
+ *                        in="header",
+ *                        required=false,
+ *                        description="Permiso requerido para este endpoint",
+ *                        @OA\Schema(
+ *                             type="string",
+ *                             example="view.debts"
+ *                         )
+ *                    ),
  *     @OA\Parameter(
  *         name="search",
  *         in="query",

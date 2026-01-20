@@ -11,6 +11,28 @@ class Admin
  *     description="Crea un nuevo usuario en el sistema con los datos proporcionados.",
  *     operationId="adminRegisterUser",
  *     tags={"Admin"},
+ *     security={{"bearerAuth": {}}},
+ *
+ *     @OA\Parameter(
+ *          name="X-User-Role",
+ *          in="header",
+ *          required=false,
+ *          description="Rol requerido para este endpoint",
+ *          @OA\Schema(
+ *              type="string",
+ *              example="admin"
+ *          )
+ *      ),
+ *      @OA\Parameter(
+ *          name="X-User-Permission",
+ *          in="header",
+ *          required=false,
+ *          description="Permiso requerido para este endpoint",
+ *          @OA\Schema(
+ *               type="string",
+ *               example="create.user"
+ *           )
+ *      ),
  *
  *     @OA\RequestBody(
  *         required=true,
@@ -66,6 +88,28 @@ public function registerUser(){}
  *     description="Se hace un incremento en el semestre de todos los alumnos sin importar status y da de baja a quienes sobrepasan el semestre 12.",
  *     operationId="promotionStudents",
  *     tags={"Admin"},
+ *     security={{"bearerAuth": {}}},
+ *
+ *     @OA\Parameter(
+ *           name="X-User-Role",
+ *           in="header",
+ *           required=false,
+ *           description="Rol requerido para este endpoint",
+ *           @OA\Schema(
+ *               type="string",
+ *               example="admin"
+ *           )
+ *       ),
+ *       @OA\Parameter(
+ *           name="X-User-Permission",
+ *           in="header",
+ *           required=false,
+ *           description="Permiso requerido para este endpoint",
+ *           @OA\Schema(
+ *                type="string",
+ *                example="promote.student"
+ *            )
+ *       ),
  *
  *      @OA\Response(
  *          response=200,
@@ -117,6 +161,27 @@ public function promotion(){}
  *     description="Permite asignar información académica (carrera, semestre, grupo, taller) a un usuario ya registrado.",
  *     operationId="attachStudentDetailToUser",
  *     security={{"bearerAuth":{}}},
+ *
+ *     @OA\Parameter(
+ *            name="X-User-Role",
+ *            in="header",
+ *            required=false,
+ *            description="Rol requerido para este endpoint",
+ *            @OA\Schema(
+ *                type="string",
+ *                example="admin|supervisor"
+ *            )
+ *        ),
+ *        @OA\Parameter(
+ *            name="X-User-Permission",
+ *            in="header",
+ *            required=false,
+ *            description="Permiso requerido para este endpoint",
+ *            @OA\Schema(
+ *                 type="string",
+ *                 example="attach.student"
+ *             )
+ *        ),
  *
  *     @OA\RequestBody(
  *         required=true,
@@ -184,6 +249,27 @@ public function attachStudent(){}
  *     security={{"bearerAuth":{}}},
  *
  *     @OA\Parameter(
+ *             name="X-User-Role",
+ *             in="header",
+ *             required=false,
+ *             description="Rol requerido para este endpoint",
+ *             @OA\Schema(
+ *                 type="string",
+ *                 example="admin|supervisor"
+ *             )
+ *         ),
+ *         @OA\Parameter(
+ *             name="X-User-Permission",
+ *             in="header",
+ *             required=false,
+ *             description="Permiso requerido para este endpoint",
+ *             @OA\Schema(
+ *                  type="string",
+ *                  example="view.student"
+ *              )
+ *         ),
+ *
+ *     @OA\Parameter(
  *         name="id",
  *         in="query",
  *         description="ID del estudiante del que se quieren los detalles.",
@@ -239,6 +325,27 @@ public function getStudentDetails(){}
  *     description="Permite actualizar información académica (carrera, grupo, taller) a un usuario ya registrado.",
  *     operationId="updateStudentDetailToUser",
  *     security={{"bearerAuth":{}}},
+ *
+ *     @OA\Parameter(
+ *              name="X-User-Role",
+ *              in="header",
+ *              required=false,
+ *              description="Rol requerido para este endpoint",
+ *              @OA\Schema(
+ *                  type="string",
+ *                  example="admin|supervisor"
+ *              )
+ *          ),
+ *          @OA\Parameter(
+ *              name="X-User-Permission",
+ *              in="header",
+ *              required=false,
+ *              description="Permiso requerido para este endpoint",
+ *              @OA\Schema(
+ *                   type="string",
+ *                   example="update.student"
+ *               )
+ *          ),
  *
  *     @OA\RequestBody(
  *         required=true,
@@ -327,6 +434,27 @@ public function updateStudentDetails(){}
  *     ",
  *     tags={"Admin"},
  *     security={{"bearerAuth":{}}},
+ *      @OA\Parameter(
+ *              name="X-User-Role",
+ *              in="header",
+ *              required=false,
+ *              description="Rol requerido para este endpoint",
+ *              @OA\Schema(
+ *                  type="string",
+ *                  example="admin|supervisor"
+ *              )
+ *          ),
+ *      @OA\Parameter(
+ *              name="X-User-Permission",
+ *              in="header",
+ *              required=false,
+ *              description="Permiso requerido para este endpoint",
+ *              @OA\Schema(
+ *                   type="string",
+ *                   example="import.users"
+ *               )
+ *          ),
+ *
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\MediaType(
@@ -401,6 +529,26 @@ public function import(){}
  *     6. workshop (opcional)",
  *     tags={"Admin"},
  *     security={{"bearerAuth":{}}},
+ *      @OA\Parameter(
+ *               name="X-User-Role",
+ *               in="header",
+ *               required=false,
+ *               description="Rol requerido para este endpoint",
+ *               @OA\Schema(
+ *                   type="string",
+ *                   example="admin|supervisor"
+ *               )
+ *           ),
+ *      @OA\Parameter(
+ *               name="X-User-Permission",
+ *               in="header",
+ *               required=false,
+ *               description="Permiso requerido para este endpoint",
+ *               @OA\Schema(
+ *                    type="string",
+ *                    example="import.users"
+ *                )
+ *           ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\MediaType(
@@ -469,6 +617,26 @@ public function importStudents(){}
  *     operationId="updateManyUserPermissions",
  *     tags={"Admin"},
  *     security={{"bearerAuth": {}}},
+ *      @OA\Parameter(
+ *               name="X-User-Role",
+ *               in="header",
+ *               required=false,
+ *               description="Rol requerido para este endpoint ",
+ *               @OA\Schema(
+ *                   type="string",
+ *                   example="admin|supervisor"
+ *               )
+ *           ),
+ *      @OA\Parameter(
+ *               name="X-User-Permission",
+ *               in="header",
+ *               required=false,
+ *               description="Permiso requerido para este endpoint ",
+ *               @OA\Schema(
+ *                    type="string",
+ *                    example="sync.permissions"
+ *                )
+ *           ),
  *
  *     @OA\RequestBody(
  *         required=true,
@@ -529,6 +697,26 @@ public function updatePermissions(){}
  *     operationId="showAllUsers",
  *     tags={"Admin"},
  *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *                name="X-User-Role",
+ *                in="header",
+ *                required=false,
+ *                description="Rol requerido para este endpoint",
+ *                @OA\Schema(
+ *                    type="string",
+ *                    example="admin|supervisor"
+ *                )
+ *            ),
+ *       @OA\Parameter(
+ *                name="X-User-Permission",
+ *                in="header",
+ *                required=false,
+ *                description="Permiso requerido para este endpoint",
+ *                @OA\Schema(
+ *                     type="string",
+ *                     example="view.users"
+ *                 )
+ *            ),
  *
  *     @OA\Parameter(
  *         name="forceRefresh",
@@ -630,6 +818,27 @@ public function showUsers(){}
  *     tags={"Admin"},
  *     operationId="updateManyUserRoles",
  *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *                 name="X-User-Role",
+ *                 in="header",
+ *                 required=false,
+ *                 description="Rol requerido para este endpoint",
+ *                 @OA\Schema(
+ *                     type="string",
+ *                     example="admin|supervisor"
+ *                 )
+ *             ),
+ *        @OA\Parameter(
+ *                 name="X-User-Permission",
+ *                 in="header",
+ *                 required=false,
+ *                 description="Permiso requerido para este endpoint",
+ *                 @OA\Schema(
+ *                      type="string",
+ *                      example="sync.roles"
+ *                  )
+ *             ),
+ *
  *     @OA\RequestBody(
  *        required=true,
  *        @OA\JsonContent(ref="#/components/schemas/UpdateRolesRequest")
@@ -685,6 +894,26 @@ public function updateRoles(){}
  *     description="Cambia el estado de los usuarios seleccionados a 'activado'.",
  *     tags={"Admin"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                  name="X-User-Role",
+ *                  in="header",
+ *                  required=false,
+ *                  description="Rol requerido para este endpoint",
+ *                  @OA\Schema(
+ *                      type="string",
+ *                      example="admin|supervisor"
+ *                  )
+ *              ),
+ *         @OA\Parameter(
+ *                  name="X-User-Permission",
+ *                  in="header",
+ *                  required=false,
+ *                  description="Permiso requerido para este endpoint",
+ *                  @OA\Schema(
+ *                       type="string",
+ *                       example="activate.users"
+ *                   )
+ *              ),
  *     @OA\RequestBody(
  *        required=true,
  *        @OA\JsonContent(ref="#/components/schemas/ChangeUserStatusRequest")
@@ -740,6 +969,26 @@ public function activateUsers(){}
  *     description="Cambia el estado de los usuarios seleccionados a 'eliminado'.",
  *     tags={"Admin"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                   name="X-User-Role",
+ *                   in="header",
+ *                   required=false,
+ *                   description="Rol requerido para este endpoint",
+ *                   @OA\Schema(
+ *                       type="string",
+ *                       example="admin|supervisor"
+ *                   )
+ *               ),
+ *          @OA\Parameter(
+ *                   name="X-User-Permission",
+ *                   in="header",
+ *                   required=false,
+ *                   description="Permiso requerido para este endpoint",
+ *                   @OA\Schema(
+ *                        type="string",
+ *                        example="delete.users"
+ *                    )
+ *               ),
  *     @OA\RequestBody(
  *        required=true,
  *        @OA\JsonContent(ref="#/components/schemas/ChangeUserStatusRequest")
@@ -795,6 +1044,26 @@ public function deleteUsers(){}
  *     description="Cambia el estado de los usuarios seleccionados a 'baja'.",
  *     tags={"Admin"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                    name="X-User-Role",
+ *                    in="header",
+ *                    required=false,
+ *                    description="Rol requerido para este endpoint",
+ *                    @OA\Schema(
+ *                        type="string",
+ *                        example="admin|supervisor"
+ *                    )
+ *                ),
+ *           @OA\Parameter(
+ *                    name="X-User-Permission",
+ *                    in="header",
+ *                    required=false,
+ *                    description="Permiso requerido para este endpoint",
+ *                    @OA\Schema(
+ *                         type="string",
+ *                         example="disable.users"
+ *                     )
+ *                ),
  *     @OA\RequestBody(
  *        required=true,
  *        @OA\JsonContent(ref="#/components/schemas/ChangeUserStatusRequest")
@@ -849,6 +1118,26 @@ public function disableUsers(){}
  *     description="Cambia el estado de los usuarios seleccionados a 'baja-temporal'.",
  *     tags={"Admin"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                     name="X-User-Role",
+ *                     in="header",
+ *                     required=false,
+ *                     description="Rol requerido para este endpoint",
+ *                     @OA\Schema(
+ *                         type="string",
+ *                         example="admin|supervisor"
+ *                     )
+ *                 ),
+ *            @OA\Parameter(
+ *                     name="X-User-Permission",
+ *                     in="header",
+ *                     required=false,
+ *                     description="Permiso requerido para este endpoint",
+ *                     @OA\Schema(
+ *                          type="string",
+ *                          example="disable.users"
+ *                      )
+ *                 ),
  *     @OA\RequestBody(
  *        required=true,
  *        @OA\JsonContent(ref="#/components/schemas/ChangeUserStatusRequest")
@@ -905,7 +1194,26 @@ public function temporaryDisableUsers(){}
  *     operationId="showAllPermissions",
  *     tags={"Admin"},
  *     security={{"bearerAuth": {}}},
- *
+ *      @OA\Parameter(
+ *                     name="X-User-Role",
+ *                     in="header",
+ *                     required=false,
+ *                     description="Rol requerido para este endpoint",
+ *                     @OA\Schema(
+ *                         type="string",
+ *                         example="admin|supervisor"
+ *                     )
+ *                 ),
+ *            @OA\Parameter(
+ *                     name="X-User-Permission",
+ *                     in="header",
+ *                     required=false,
+ *                     description="Permiso requerido para este endpoint",
+ *                     @OA\Schema(
+ *                          type="string",
+ *                          example="view.permissions"
+ *                      )
+ *                 ),
  *
  *      @OA\RequestBody(
  *         required=true,
@@ -989,6 +1297,26 @@ public function findPermissions(){}
  *     operationId="showAllRoles",
  *     tags={"Admin"},
  *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *                      name="X-User-Role",
+ *                      in="header",
+ *                      required=false,
+ *                      description="Rol requerido para este endpoint",
+ *                      @OA\Schema(
+ *                          type="string",
+ *                          example="admin|supervisor"
+ *                      )
+ *                  ),
+ *             @OA\Parameter(
+ *                      name="X-User-Permission",
+ *                      in="header",
+ *                      required=false,
+ *                      description="Permiso requerido para este endpoint",
+ *                      @OA\Schema(
+ *                           type="string",
+ *                           example="view.roles"
+ *                       )
+ *                  ),
  *
  *      @OA\Parameter(
  *         name="forceRefresh",
@@ -1041,6 +1369,26 @@ public function findRoles(){}
  *     operationId="showRoleById",
  *     tags={"Admin"},
  *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *                      name="X-User-Role",
+ *                      in="header",
+ *                      required=false,
+ *                      description="Rol requerido para este endpoint",
+ *                      @OA\Schema(
+ *                          type="string",
+ *                          example="admin|supervisor"
+ *                      )
+ *                  ),
+ *             @OA\Parameter(
+ *                      name="X-User-Permission",
+ *                      in="header",
+ *                      required=false,
+ *                      description="Permiso requerido para este endpoint",
+ *                      @OA\Schema(
+ *                           type="string",
+ *                           example="view.roles"
+ *                       )
+ *                  ),
  *
  *     @OA\Parameter(
  *         name="id",
@@ -1097,6 +1445,26 @@ public function findRole(){}
  *     operationId="showPermissionById",
  *     tags={"Admin"},
  *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *                      name="X-User-Role",
+ *                      in="header",
+ *                      required=false,
+ *                      description="Rol requerido para este endpoint",
+ *                      @OA\Schema(
+ *                          type="string",
+ *                          example="admin|supervisor"
+ *                      )
+ *                  ),
+ *             @OA\Parameter(
+ *                      name="X-User-Permission",
+ *                      in="header",
+ *                      required=false,
+ *                      description="Permiso requerido para este endpoint",
+ *                      @OA\Schema(
+ *                           type="string",
+ *                           example="view.permissions"
+ *                       )
+ *                  ),
  *
  *     @OA\Parameter(
  *         name="id",

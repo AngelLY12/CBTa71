@@ -13,6 +13,26 @@ class Cards
  *     operationId="deleteUserCard",
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
+ *           name="X-User-Role",
+ *           in="header",
+ *           required=false,
+ *           description="Rol requerido para este endpoint",
+ *           @OA\Schema(
+ *               type="string",
+ *               example="student|parent"
+ *           )
+ *       ),
+ *       @OA\Parameter(
+ *           name="X-User-Permission",
+ *           in="header",
+ *           required=false,
+ *           description="Permiso requerido para este endpoint",
+ *           @OA\Schema(
+ *                type="string",
+ *                example="view.cards"
+ *            )
+ *       ),
+ *     @OA\Parameter(
  *         name="paymentMethodId",
  *         in="path",
  *         description="ID del método de pago a eliminar (por ejemplo, 'pm_1P7E89AjcPzVqRkV')",
@@ -54,6 +74,26 @@ public function deleteCard(){}
  *     description="Crea una sesión de Stripe Checkout para registrar una nueva tarjeta del usuario autenticado.",
  *     operationId="addUserCard",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *            name="X-User-Role",
+ *            in="header",
+ *            required=false,
+ *            description="Rol requerido para este endpoint",
+ *            @OA\Schema(
+ *                type="string",
+ *                example="student|parent"
+ *            )
+ *        ),
+ *        @OA\Parameter(
+ *            name="X-User-Permission",
+ *            in="header",
+ *            required=false,
+ *            description="Permiso requerido para este endpoint",
+ *            @OA\Schema(
+ *                 type="string",
+ *                 example="create.setup"
+ *             )
+ *        ),
  *     @OA\Response(
  *          response=201,
  *          description="Sesión de registro de método de pago creada exitosamente",
@@ -93,6 +133,26 @@ public function createCard(){}
  *     description="Obtiene la lista de tarjetas o métodos de pago asociados al usuario autenticado. Permite forzar actualización del caché.",
  *     operationId="getUserCards",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *            name="X-User-Role",
+ *            in="header",
+ *            required=false,
+ *            description="Rol requerido para este endpoint",
+ *            @OA\Schema(
+ *                type="string",
+ *                example="student|parent"
+ *            )
+ *        ),
+ *        @OA\Parameter(
+ *            name="X-User-Permission",
+ *            in="header",
+ *            required=false,
+ *            description="Permiso requerido para este endpoint",
+ *            @OA\Schema(
+ *                 type="string",
+ *                 example="delete.card"
+ *             )
+ *        ),
  *     @OA\Parameter(
  *         name="forceRefresh",
  *         in="query",

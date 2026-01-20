@@ -12,6 +12,26 @@ class PaymentConcepts
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
+ *                         name="X-User-Role",
+ *                         in="header",
+ *                         required=false,
+ *                         description="Rol requerido para este endpoint",
+ *                         @OA\Schema(
+ *                             type="string",
+ *                             example="financial-staff"
+ *                         )
+ *                     ),
+ *                     @OA\Parameter(
+ *                         name="X-User-Permission",
+ *                         in="header",
+ *                         required=false,
+ *                         description="Permiso requerido para este endpoint",
+ *                         @OA\Schema(
+ *                              type="string",
+ *                              example="view.concepts"
+ *                          )
+ *                     ),
+ *     @OA\Parameter(
  *         name="status",
  *         in="query",
  *         ref="#/components/schemas/PaymentConceptStatus"
@@ -74,6 +94,68 @@ class PaymentConcepts
  */
 public function concepts(){}
 
+    /**
+     * @OA\Get(
+     *     path="/api/v1/concepts/{id}",
+     *     summary="Buscar concepto de pago por ID",
+     *     description="Obtiene la información de un concepto de pago específico mediante su identificador.",
+     *     tags={"FindEntity"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *                         name="X-User-Role",
+     *                         in="header",
+     *                         required=false,
+     *                         description="Rol requerido para este endpoint",
+     *                         @OA\Schema(
+     *                             type="string",
+     *                             example="financial-staff"
+     *                         )
+     *                     ),
+     *                     @OA\Parameter(
+     *                         name="X-User-Permission",
+     *                         in="header",
+     *                         required=false,
+     *                         description="Permiso requerido para este endpoint",
+     *                         @OA\Schema(
+     *                              type="string",
+     *                              example="view.concepts"
+     *                          )
+     *                     ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID del concepto a buscar",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Concepto encontrado correctamente",
+     *          @OA\JsonContent(
+     *              allOf={
+     *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+     *                  @OA\Schema(
+     *                      @OA\Property(
+     *                          property="data",
+     *                          type="object",
+     *                          @OA\Property(
+     *                              property="concept",
+     *                              ref="#/components/schemas/ConceptToDisplay"
+     *                          )
+     *                      )
+     *                  )
+     *              }
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+     *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+     *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+     *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+     *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+     * )
+     */
+    public function getConcept(){}
+
 
 /**
  * @OA\Post(
@@ -82,6 +164,26 @@ public function concepts(){}
  *     description="Crea un nuevo concepto de pago y lo asocia con las entidades correspondientes (carreras, semestres, estudiantes).",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="financial-staff"
+ *                          )
+ *                      ),
+ *                      @OA\Parameter(
+ *                          name="X-User-Permission",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Permiso requerido para este endpoint",
+ *                          @OA\Schema(
+ *                               type="string",
+ *                               example="create.concepts"
+ *                           )
+ *                      ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(ref="#/components/schemas/StorePaymentConceptRequest")
@@ -124,6 +226,26 @@ public function createConcept(){}
  *     description="Actualiza los datos de un concepto de pago existente. Todos los campos son opcionales (usar 'sometimes'), excepto el id en la ruta.",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="financial-staff"
+ *                          )
+ *                      ),
+ *                      @OA\Parameter(
+ *                          name="X-User-Permission",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Permiso requerido para este endpoint",
+ *                          @OA\Schema(
+ *                               type="string",
+ *                               example="update.concepts"
+ *                           )
+ *                      ),
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
@@ -173,6 +295,26 @@ public function updateConcept(){}
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="financial-staff"
+ *                          )
+ *                      ),
+ *                      @OA\Parameter(
+ *                          name="X-User-Permission",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Permiso requerido para este endpoint",
+ *                          @OA\Schema(
+ *                               type="string",
+ *                               example="update.concepts"
+ *                           )
+ *                      ),
+ *     @OA\Parameter(
  *         name="id",
  *         in="path",
  *         required=true,
@@ -216,10 +358,30 @@ public function updateRelations(){}
 
 /**
  * @OA\Post(
- *     path="/api/v1/concepts/{id}/finalize",
+ *     path="/api/v1/concepts/{concept}/finalize",
  *     summary="Finalizar concepto de pago",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="financial-staff"
+ *                          )
+ *                      ),
+ *                      @OA\Parameter(
+ *                          name="X-User-Permission",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Permiso requerido para este endpoint",
+ *                          @OA\Schema(
+ *                               type="string",
+ *                               example="finalize.concepts"
+ *                           )
+ *                      ),
  *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  *     @OA\Response(
  *          response=200,
@@ -253,11 +415,30 @@ public function finalizeConcept(){}
 
 /**
  * @OA\Post(
- *     path="/api/v1/concepts/{id}/disable",
+ *     path="/api/v1/concepts/{concept}/disable",
  *     summary="Deshabilitar un concepto de pago",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
- *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+ *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="financial-staff"
+ *                          )
+ *                      ),
+ *                      @OA\Parameter(
+ *                          name="X-User-Permission",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Permiso requerido para este endpoint",
+ *                          @OA\Schema(
+ *                               type="string",
+ *                               example="disable.concepts"
+ *                           )
+ *                      ),
  *     @OA\Response(
  *          response=200,
  *          description="Concepto deshabilitado correctamente",
@@ -290,11 +471,30 @@ public function disableConcept(){}
 
 /**
  * @OA\Post(
- *     path="/api/v1/concepts/{id}/activate",
+ *     path="/api/v1/concepts/{concept}/activate",
  *     summary="Habilitar un concepto de pago",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
- *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+ *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="financial-staff"
+ *                          )
+ *                      ),
+ *                      @OA\Parameter(
+ *                          name="X-User-Permission",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Permiso requerido para este endpoint",
+ *                          @OA\Schema(
+ *                               type="string",
+ *                               example="activate.concepts"
+ *                           )
+ *                      ),
  *     @OA\Response(
  *          response=200,
  *          description="Concepto activado correctamente",
@@ -331,6 +531,26 @@ public function activateConcept(){}
  *     summary="Eliminar concepto de pago (físicamente)",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="financial-staff"
+ *                          )
+ *                      ),
+ *                      @OA\Parameter(
+ *                          name="X-User-Permission",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Permiso requerido para este endpoint",
+ *                          @OA\Schema(
+ *                               type="string",
+ *                               example="eliminate.concepts"
+ *                           )
+ *                      ),
  *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  *     @OA\Response(
  *          response=200,
@@ -350,10 +570,30 @@ public function deleteConcept(){}
 
  /**
  * @OA\Post(
- *     path="/api/v1/concepts/{id}/logical",
+ *     path="/api/v1/concepts/{concept}/logical",
  *     summary="Eliminar concepto de pago (lógicamente)",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
+  *     @OA\Parameter(
+  *                          name="X-User-Role",
+  *                          in="header",
+  *                          required=false,
+  *                          description="Rol requerido para este endpoint",
+  *                          @OA\Schema(
+  *                              type="string",
+  *                              example="financial-staff"
+  *                          )
+  *                      ),
+  *                      @OA\Parameter(
+  *                          name="X-User-Permission",
+  *                          in="header",
+  *                          required=false,
+  *                          description="Permiso requerido para este endpoint",
+  *                          @OA\Schema(
+  *                               type="string",
+  *                               example="eliminate.logical.concepts"
+  *                           )
+  *                      ),
  *     @OA\Response(
   *          response=200,
   *          description="Concepto eliminado correctamente",

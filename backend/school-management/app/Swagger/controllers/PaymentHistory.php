@@ -13,6 +13,26 @@ class PaymentHistory
  *     description="Devuelve el historial de pagos del usuario logueado, con soporte para paginación y cacheo.",
  *     operationId="getUserPaymentHistory",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="student|parent"
+ *                          )
+ *                      ),
+ *                      @OA\Parameter(
+ *                          name="X-User-Permission",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Permiso requerido para este endpoint",
+ *                          @OA\Schema(
+ *                               type="string",
+ *                               example="view.payment.history"
+ *                           )
+ *                      ),
  *
  *     @OA\Parameter(
  *         name="perPage",
@@ -79,5 +99,67 @@ class PaymentHistory
  * )
  */
 public function history(){}
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/history/payment/{id}",
+     *     summary="Buscar pago por ID",
+     *     description="Obtiene la información detallada de un pago específico mediante su identificador.",
+     *     tags={"FindEntity"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *                          name="X-User-Role",
+     *                          in="header",
+     *                          required=false,
+     *                          description="Rol requerido para este endpoint",
+     *                          @OA\Schema(
+     *                              type="string",
+     *                              example="student|parent"
+     *                          )
+     *                      ),
+     *                      @OA\Parameter(
+     *                          name="X-User-Permission",
+     *                          in="header",
+     *                          required=false,
+     *                          description="Permiso requerido para este endpoint",
+     *                          @OA\Schema(
+     *                               type="string",
+     *                               example="view.payment"
+     *                           )
+     *                      ),
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID del pago a buscar",
+     *         @OA\Schema(type="integer", example=5)
+     *     ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Pago encontrado correctamente",
+     *          @OA\JsonContent(
+     *              allOf={
+     *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+     *                  @OA\Schema(
+     *                      @OA\Property(
+     *                          property="data",
+     *                          type="object",
+     *                          @OA\Property(
+     *                              property="payment",
+     *                              ref="#/components/schemas/DomainPayment"
+     *                          )
+     *                      )
+     *                  )
+     *              }
+     *          )
+     *      ),
+     *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+     *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+     *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+     *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+     *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+     * )
+     */
+    public function getPayment(){}
 
 }

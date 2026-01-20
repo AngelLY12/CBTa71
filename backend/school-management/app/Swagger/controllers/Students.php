@@ -12,6 +12,26 @@ class Students
  *     description="Devuelve una lista paginada de estudiantes registrados, con opción de búsqueda por email, CURP o número de control, y posibilidad de forzar actualización del caché.",
  *     operationId="getStudents",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                               name="X-User-Role",
+ *                               in="header",
+ *                               required=false,
+ *                               description="Rol requerido para este endpoint",
+ *                               @OA\Schema(
+ *                                   type="string",
+ *                                   example="financial-staff"
+ *                               )
+ *                           ),
+ *                           @OA\Parameter(
+ *                               name="X-User-Permission",
+ *                               in="header",
+ *                               required=false,
+ *                               description="Permiso requerido para este endpoint",
+ *                               @OA\Schema(
+ *                                    type="string",
+ *                                    example="view.students"
+ *                                )
+ *                           ),
  *
  *     @OA\Parameter(
  *         name="search",

@@ -11,6 +11,26 @@ class DashboardStaff
  *     description="Forza el borrado del caché en todos los datos del dashboard.",
  *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *           name="X-User-Role",
+ *           in="header",
+ *           required=false,
+ *           description="Rol requerido para este endpoint",
+ *           @OA\Schema(
+ *               type="string",
+ *               example="financial-staff"
+ *           )
+ *       ),
+ *       @OA\Parameter(
+ *           name="X-User-Permission",
+ *           in="header",
+ *           required=false,
+ *           description="Permiso requerido para este endpoint",
+ *           @OA\Schema(
+ *                type="string",
+ *                example="refresh.all.dashboard"
+ *            )
+ *       ),
  *     @OA\Response(
  *          response=200,
  *          description="Caché limpiado correctamente",
@@ -43,6 +63,26 @@ public function refresh(){}
  *     description="Devuelve una lista paginada de conceptos de pago visibles en el panel del personal. Permite filtrar por año actual y forzar actualización del caché.",
  *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *            name="X-User-Role",
+ *            in="header",
+ *            required=false,
+ *            description="Rol requerido para este endpoint",
+ *            @OA\Schema(
+ *                type="string",
+ *                example="financial-staff"
+ *            )
+ *        ),
+ *        @OA\Parameter(
+ *            name="X-User-Permission",
+ *            in="header",
+ *            required=false,
+ *            description="Permiso requerido para este endpoint",
+ *            @OA\Schema(
+ *                 type="string",
+ *                 example="view.concepts.history"
+ *             )
+ *        ),
  *     @OA\Parameter(
  *         name="only_this_year",
  *         in="query",
@@ -110,10 +150,30 @@ public function concepts(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/dashboard-staff/payments-made",
+ *     path="/api/v1/dashboard-staff/payments",
  *     summary="Obtener monto total de pagos realizados",
  *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *             name="X-User-Role",
+ *             in="header",
+ *             required=false,
+ *             description="Rol requerido para este endpoint",
+ *             @OA\Schema(
+ *                 type="string",
+ *                 example="financial-staff"
+ *             )
+ *         ),
+ *         @OA\Parameter(
+ *             name="X-User-Permission",
+ *             in="header",
+ *             required=false,
+ *             description="Permiso requerido para este endpoint",
+ *             @OA\Schema(
+ *                  type="string",
+ *                  example="view.all.paid.concepts.summary"
+ *              )
+ *         ),
  *     @OA\Parameter(
  *         name="only_this_year",
  *         in="query",
@@ -161,6 +221,26 @@ public function payments(){}
  *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
+ *              name="X-User-Role",
+ *              in="header",
+ *              required=false,
+ *              description="Rol requerido para este endpoint",
+ *              @OA\Schema(
+ *                  type="string",
+ *                  example="financial-staff"
+ *              )
+ *          ),
+ *          @OA\Parameter(
+ *              name="X-User-Permission",
+ *              in="header",
+ *              required=false,
+ *              description="Permiso requerido para este endpoint",
+ *              @OA\Schema(
+ *                   type="string",
+ *                   example="view.all.students.summary"
+ *               )
+ *          ),
+ *     @OA\Parameter(
  *         name="only_this_year",
  *         in="query",
  *         description="Filtrar solo por el año actual",
@@ -203,11 +283,31 @@ public function students(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/dashboard-staff/pending-payments",
+ *     path="/api/v1/dashboard-staff/pending",
  *     summary="Obtener cantidad y monto total de pagos pendientes",
  *     description="Devuelve el total de conceptos pendientes de pago, incluyendo cantidad y monto total. Se puede filtrar por el año actual y forzar la actualización del caché.",
  *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *               name="X-User-Role",
+ *               in="header",
+ *               required=false,
+ *               description="Rol requerido para este endpoint",
+ *               @OA\Schema(
+ *                   type="string",
+ *                   example="financial-staff"
+ *               )
+ *           ),
+ *           @OA\Parameter(
+ *               name="X-User-Permission",
+ *               in="header",
+ *               required=false,
+ *               description="Permiso requerido para este endpoint",
+ *               @OA\Schema(
+ *                    type="string",
+ *                    example="view.all.pending.concepts.summary"
+ *                )
+ *           ),
  *     @OA\Parameter(
  *         name="only_this_year",
  *         in="query",
@@ -256,6 +356,26 @@ public function pending(){}
  *     description="Crea un payout en Stripe transfiriendo TODO el balance disponible en MXN a la cuenta bancaria registrada. Requiere un mínimo de $100.00 MXN disponibles.",
  *     tags={"Dashboard Staff", "Payouts"},
  *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *                name="X-User-Role",
+ *                in="header",
+ *                required=false,
+ *                description="Rol requerido para este endpoint",
+ *                @OA\Schema(
+ *                    type="string",
+ *                    example="financial-staff"
+ *                )
+ *            ),
+ *            @OA\Parameter(
+ *                name="X-User-Permission",
+ *                in="header",
+ *                required=false,
+ *                description="Permiso requerido para este endpoint",
+ *                @OA\Schema(
+ *                     type="string",
+ *                     example="create.payout"
+ *                 )
+ *            ),
  *     @OA\Response(
  *          response=200,
  *          description="Payout creado exitosamente",

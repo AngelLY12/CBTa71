@@ -12,6 +12,17 @@ class Parents
  *     tags={"Parents"},
  *     operationId="inviteParent",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                           name="X-User-Role",
+ *                           in="header",
+ *                           required=false,
+ *                           description="Rol requerido para este endpoint",
+ *                           @OA\Schema(
+ *                               type="string",
+ *                               example="student"
+ *                           )
+ *                       ),
+ *
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(ref="#/components/schemas/SendInviteRequest")
@@ -51,6 +62,16 @@ public function invite(){}
  *     tags={"Parents"},
  *     operationId="acceptInvitation",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                            name="X-User-Role",
+ *                            in="header",
+ *                            required=false,
+ *                            description="Rol requerido para este endpoint",
+ *                            @OA\Schema(
+ *                                type="string",
+ *                                example="parent"
+ *                            )
+ *                        ),
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(ref="#/components/schemas/AcceptInviteRequest")
@@ -78,6 +99,16 @@ public function accept(){}
  *     tags={"Parents"},
  *     operationId="getParentChildren",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                            name="X-User-Role",
+ *                            in="header",
+ *                            required=false,
+ *                            description="Rol requerido para este endpoint",
+ *                            @OA\Schema(
+ *                                type="string",
+ *                                example="parent"
+ *                            )
+ *                        ),
  *
  *     @OA\Response(
  *          response=200,
@@ -117,6 +148,16 @@ public function getChildren(){}
  *     tags={"Parents"},
  *     operationId="getStudentParents",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                            name="X-User-Role",
+ *                            in="header",
+ *                            required=false,
+ *                            description="Rol requerido para este endpoint",
+ *                            @OA\Schema(
+ *                                type="string",
+ *                                example="student"
+ *                            )
+ *                        ),
  *
  *     @OA\Response(
  *          response=200,
@@ -156,6 +197,16 @@ public function getParents(){}
  *     summary="Eliminar una relación del estudiante con un familiar",
  *     operationId="deleteRelation",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                            name="X-User-Role",
+ *                            in="header",
+ *                            required=false,
+ *                            description="Rol requerido para este endpoint",
+ *                            @OA\Schema(
+ *                                type="string",
+ *                                example="student"
+ *                            )
+ *                        ),
  *     @OA\Parameter(
  *         name="parentId",
  *         in="path",

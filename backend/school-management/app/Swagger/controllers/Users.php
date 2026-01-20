@@ -9,6 +9,8 @@ class Users
  *     path="/api/v1/users/update",
  *     tags={"Users"},
  *     summary="Actualizar los datos generales de un usuario",
+ *     security={{"bearerAuth":{}}},
+ *
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(ref="#/components/schemas/UpdateUserRequest")
@@ -62,6 +64,7 @@ public function updateUser(){}
  *     path="/api/v1/users/update/password",
  *     tags={"Users"},
  *     summary="Actualizar la contraseña de un usuario",
+ *     security={{"bearerAuth":{}}},
  *     @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(

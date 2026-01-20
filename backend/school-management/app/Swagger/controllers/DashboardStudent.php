@@ -12,6 +12,26 @@ class DashboardStudent
  *     description="Limpia el caché de datos almacenados en el dashboard (estadísticas, pagos, etc.)",
  *     operationId="refreshDashboardCache",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                 name="X-User-Role",
+ *                 in="header",
+ *                 required=false,
+ *                 description="Rol requerido para este endpoint",
+ *                 @OA\Schema(
+ *                     type="string",
+ *                     example="student|parent"
+ *                 )
+ *             ),
+ *             @OA\Parameter(
+ *                 name="X-User-Permission",
+ *                 in="header",
+ *                 required=false,
+ *                 description="Permiso requerido para este endpoint",
+ *                 @OA\Schema(
+ *                      type="string",
+ *                      example="refresh.all.dashboard"
+ *                  )
+ *             ),
  *     @OA\Response(
  *          response=200,
  *          description="Caché del dashboard limpiado con éxito",
@@ -34,6 +54,26 @@ public function refresh(){}
  *     description="Devuelve una lista paginada con el historial de pagos realizados por el usuario autenticado. Permite forzar la actualización del caché.",
  *     operationId="getPaymentHistory",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                  name="X-User-Role",
+ *                  in="header",
+ *                  required=false,
+ *                  description="Rol requerido para este endpoint",
+ *                  @OA\Schema(
+ *                      type="string",
+ *                      example="student|parent"
+ *                  )
+ *              ),
+ *              @OA\Parameter(
+ *                  name="X-User-Permission",
+ *                  in="header",
+ *                  required=false,
+ *                  description="Permiso requerido para este endpoint",
+ *                  @OA\Schema(
+ *                       type="string",
+ *                       example="view.payments.history"
+ *                   )
+ *              ),
  *
  *     @OA\Parameter(
  *         name="perPage",
@@ -111,6 +151,26 @@ public function history(){}
  *     operationId="getOverduePayments",
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
+ *                   name="X-User-Role",
+ *                   in="header",
+ *                   required=false,
+ *                   description="Rol requerido para este endpoint",
+ *                   @OA\Schema(
+ *                       type="string",
+ *                       example="student|parent"
+ *                   )
+ *               ),
+ *               @OA\Parameter(
+ *                   name="X-User-Permission",
+ *                   in="header",
+ *                   required=false,
+ *                   description="Permiso requerido para este endpoint",
+ *                   @OA\Schema(
+ *                        type="string",
+ *                        example="view.own.overdue.concepts.summary"
+ *                    )
+ *               ),
+ *     @OA\Parameter(
  *         name="forceRefresh",
  *         in="query",
  *         description="Forzar actualización de caché (true o false)",
@@ -161,6 +221,26 @@ public function overdue(){}
  *     operationId="getPaidAmount",
  *     security={{"bearerAuth":{}}},
  *     @OA\Parameter(
+ *                    name="X-User-Role",
+ *                    in="header",
+ *                    required=false,
+ *                    description="Rol requerido para este endpoint",
+ *                    @OA\Schema(
+ *                        type="string",
+ *                        example="student|parent"
+ *                    )
+ *                ),
+ *                @OA\Parameter(
+ *                    name="X-User-Permission",
+ *                    in="header",
+ *                    required=false,
+ *                    description="Permiso requerido para este endpoint",
+ *                    @OA\Schema(
+ *                         type="string",
+ *                         example="view.own.paid.concepts.summary"
+ *                     )
+ *                ),
+ *     @OA\Parameter(
  *         name="forceRefresh",
  *         in="query",
  *         description="Forzar actualización de caché (true o false)",
@@ -207,6 +287,26 @@ public function paid(){}
  *     description="Devuelve la cantidad y monto total de los pagos pendientes del usuario autenticado.",
  *     operationId="getPendingPayments",
  *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                     name="X-User-Role",
+ *                     in="header",
+ *                     required=false,
+ *                     description="Rol requerido para este endpoint",
+ *                     @OA\Schema(
+ *                         type="string",
+ *                         example="student|parent"
+ *                     )
+ *                 ),
+ *                 @OA\Parameter(
+ *                     name="X-User-Permission",
+ *                     in="header",
+ *                     required=false,
+ *                     description="Permiso requerido para este endpoint",
+ *                     @OA\Schema(
+ *                          type="string",
+ *                          example="view.own.pending.concepts.summary"
+ *                      )
+ *                 ),
  *     @OA\Parameter(
  *         name="forceRefresh",
  *         in="query",
