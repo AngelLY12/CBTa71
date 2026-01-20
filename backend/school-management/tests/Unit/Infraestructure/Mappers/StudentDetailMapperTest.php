@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Mappers;
+namespace Tests\Unit\Infraestructure\Mappers;
 
 use PHPUnit\Framework\Attributes\Test;
 use App\Models\StudentDetail;

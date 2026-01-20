@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Query;
+namespace Tests\Unit\Infraestructure\Repositories\Query;
 
 use App\Models\Payment;
 use PHPUnit\Framework\Attributes\Test;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Command;
+namespace Tests\Unit\Infraestructure\Repositories\Command;
 
 use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Infraestructure\Mappers\PaymentMethodMapper;

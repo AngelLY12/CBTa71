@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Command;
+namespace Tests\Unit\Infraestructure\Repositories\Command;
 
 use App\Core\Infraestructure\Repositories\Command\Misc\EloquentSemesterPromotionsRepository;
 use Carbon\Carbon;

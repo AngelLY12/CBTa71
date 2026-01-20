@@ -1,6 +1,6 @@
 <?php
 
-namespace Domain\Entities;
+namespace Tests\Unit\Domain\Entities;
 
 use App\Core\Domain\Entities\PaymentEvent;
 use App\Core\Domain\Enum\Payment\PaymentEventType;

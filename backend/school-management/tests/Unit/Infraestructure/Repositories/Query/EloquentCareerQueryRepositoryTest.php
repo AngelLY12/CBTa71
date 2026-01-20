@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Query;
+namespace Tests\Unit\Infraestructure\Repositories\Query;
 
 use App\Core\Domain\Entities\Career;
 use App\Core\Infraestructure\Repositories\Query\Misc\EloquentCareerQueryRepository;

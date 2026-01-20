@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\DTO;
+namespace Tests\Unit\Application\DTO;
 
 use App\Core\Application\DTO\Response\General\ImportResponse;
 use PHPUnit\Framework\Attributes\Test;

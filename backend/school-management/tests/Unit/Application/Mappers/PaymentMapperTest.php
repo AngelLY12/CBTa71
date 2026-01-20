@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Mappers;
+namespace Tests\Unit\Application\Mappers;
 
 use App\Core\Application\DTO\Response\General\ReconciliationResult;
 use App\Core\Application\DTO\Response\Payment\FinancialSummaryResponse;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Stripe;
+namespace Tests\Unit\Infraestructure\Repositories\Stripe;
 
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper;

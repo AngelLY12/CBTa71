@@ -1,6 +1,6 @@
 <?php
 
-namespace Domain\Helpers;
+namespace Tests\Unit\Domain\Helpers;
 
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;

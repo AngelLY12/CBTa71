@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Mappers;
+namespace Tests\Unit\Infraestructure\Mappers;
 
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;

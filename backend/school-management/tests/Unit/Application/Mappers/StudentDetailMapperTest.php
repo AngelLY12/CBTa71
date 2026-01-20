@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Mappers;
+namespace Tests\Unit\Application\Mappers;
 
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
 use App\Core\Application\Mappers\StudentDetailMapper;

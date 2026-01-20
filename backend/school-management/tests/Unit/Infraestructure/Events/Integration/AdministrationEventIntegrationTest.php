@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Events\Integration;
+namespace Tests\Unit\Infraestructure\Events\Integration;
 
 use App\Events\AdministrationEvent;
 use Illuminate\Support\Facades\Event;

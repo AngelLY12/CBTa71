@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Query;
+namespace Tests\Unit\Infraestructure\Repositories\Query;
 
 use App\Core\Infraestructure\Repositories\Query\Payments\EloquentPaymentMethodQueryRepository;
 use Database\Factories\UserFactory;

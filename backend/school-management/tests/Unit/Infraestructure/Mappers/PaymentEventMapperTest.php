@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Mappers;
+namespace Tests\Unit\Infraestructure\Mappers;
 
 use App\Core\Domain\Entities\PaymentEvent;
 use App\Core\Domain\Enum\Payment\PaymentEventType;

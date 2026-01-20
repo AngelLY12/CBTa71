@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Stripe;
+namespace Tests\Unit\Infraestructure\Repositories\Stripe;
 
 use App\Core\Infraestructure\Repositories\Stripe\StripeGatewayQuery;
 use App\Exceptions\ServerError\StripeGatewayException;

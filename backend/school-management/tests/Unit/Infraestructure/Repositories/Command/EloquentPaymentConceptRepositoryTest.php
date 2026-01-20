@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Command;
+namespace Tests\Unit\Infraestructure\Repositories\Command;
 
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Domain\Entities\PaymentConcept;

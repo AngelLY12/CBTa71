@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Mappers;
+namespace Tests\Unit\Infraestructure\Mappers;
 
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use PHPUnit\Framework\Attributes\Test;

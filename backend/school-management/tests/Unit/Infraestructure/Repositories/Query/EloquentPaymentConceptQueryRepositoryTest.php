@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Query;
+namespace Tests\Unit\Infraestructure\Repositories\Query;
 
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptToDisplay;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;

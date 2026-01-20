@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Mappers;
+namespace Tests\Unit\Application\Mappers;
 
 use App\Core\Application\DTO\Request\General\LoginDTO;
 use App\Core\Application\DTO\Response\General\LoginResponse;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Command;
+namespace Tests\Unit\Infraestructure\Repositories\Command;
 
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
 use App\Core\Domain\Enum\User\UserRoles;

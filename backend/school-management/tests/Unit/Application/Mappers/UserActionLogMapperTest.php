@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Mappers;
+namespace Tests\Unit\Application\Mappers;
 
 use App\Core\Application\Mappers\UserActionLogMapper;
 use App\Core\Domain\Entities\UserActionLog;

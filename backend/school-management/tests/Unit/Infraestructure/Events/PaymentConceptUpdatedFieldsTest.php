@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Events;
+namespace Tests\Unit\Infraestructure\Events;
 
 use App\Events\PaymentConceptUpdatedFields;
 use PHPUnit\Framework\Attributes\Test;

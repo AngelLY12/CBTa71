@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Query;
+namespace Tests\Unit\Infraestructure\Repositories\Query;
 
 use App\Core\Application\DTO\Response\Parents\ParentChildrenResponse;
 use App\Core\Application\DTO\Response\Parents\StudentParentsResponse;

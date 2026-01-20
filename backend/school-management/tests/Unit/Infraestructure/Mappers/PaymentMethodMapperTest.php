@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Mappers;
+namespace Tests\Unit\Infraestructure\Mappers;
 
 use App\Core\Infraestructure\Mappers\PaymentMethodMapper;
 use App\Models\PaymentMethod;

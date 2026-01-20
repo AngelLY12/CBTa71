@@ -1,6 +1,6 @@
 <?php
 
-namespace Infraestructure\Repositories\Cache;
+namespace Tests\Unit\Infraestructure\Repositories\Cache;
 
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Enum\Cache\ParentCacheSufix;
