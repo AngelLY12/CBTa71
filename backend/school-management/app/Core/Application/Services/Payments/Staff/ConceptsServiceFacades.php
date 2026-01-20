@@ -7,10 +7,12 @@ use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptChangeStatusResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptToDisplay;
 use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptRelationsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptResponse;
 use App\Core\Application\Traits\HasCache;
+use App\Core\Application\UseCases\Payments\Staff\Concepts\FindConceptByIdUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\UpdatePaymentConceptRelationsUseCase;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\ActivatePaymentConceptUseCase;
@@ -38,6 +40,8 @@ class ConceptsServiceFacades{
         private EliminatePaymentConceptUseCase        $eliminate,
         private EliminateLogicalPaymentConceptUseCase $eliminateLogical,
         private ActivatePaymentConceptUseCase         $activate,
+        private FindConceptByIdUseCase $concept,
+
         private CacheService                          $service
     )
     {
@@ -48,6 +52,11 @@ class ConceptsServiceFacades{
     public function showConcepts(string $status, int $perPage, int $page, bool $forceRefresh): PaginatedResponse{
         $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:$status:$perPage:$page");
         return $this->cache($key,$forceRefresh ,fn() => $this->show->execute($status, $perPage, $page));
+    }
+
+    public function findConcept(int $id): ConceptToDisplay
+    {
+        return $this->concept->execute($id);
     }
 
      public function createPaymentConcept(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {

@@ -2,7 +2,9 @@
 
 namespace App\Core\Application\Services\User;
 
+use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\Traits\HasCache;
+use App\Core\Application\UseCases\User\FindUserUseCase;
 use App\Core\Application\UseCases\User\UpdateUserUseCase;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Cache\CachePrefix;
@@ -12,17 +14,25 @@ use App\Core\Infraestructure\Cache\CacheService;
 use App\Exceptions\NotAllowed\InvalidCurrentPasswordException;
 use Illuminate\Support\Facades\Hash;
 
-class UpdateUserServiceFacades
+class UserServiceFacades
 {
     use HasCache;
 
 
-    public function __construct(private UpdateUserUseCase $update,
+    public function __construct(
+            private UpdateUserUseCase $update,
             private CacheService $service,
-            private UserQueryRepInterface $userRepo
-)
+            private UserQueryRepInterface $userRepo,
+            private FindUserUseCase $user,
+
+    )
     {
         $this->setCacheService($service);
+    }
+
+    public function findUser(bool $forceRefresh): UserAuthResponse
+    {
+        return $this->user->execute($forceRefresh);
     }
 
     public function updateUser(int $userId, array $fields): User

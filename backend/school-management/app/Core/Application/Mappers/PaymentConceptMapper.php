@@ -57,7 +57,7 @@ class PaymentConceptMapper{
                 ->toArray(),
 
             careers: $concept->careers
-                ->pluck('career_name')
+                ->pluck('id')
                 ->values()
                 ->toArray(),
 

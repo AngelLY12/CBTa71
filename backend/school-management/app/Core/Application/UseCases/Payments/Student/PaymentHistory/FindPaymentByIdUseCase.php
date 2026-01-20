@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Application\UseCases\Payments;
+namespace App\Core\Application\UseCases\Payments\Student\PaymentHistory;
 
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
