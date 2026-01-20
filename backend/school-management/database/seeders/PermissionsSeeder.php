@@ -22,6 +22,7 @@ class PermissionsSeeder extends Seeder
                 'view.own.overdue.concepts.summary',
                 'view.payments.history',
                 'view.cards',
+                'view.payment',
                 'view.payment.history',
                 'view.pending.concepts',
                 'view.overdue.concepts',
@@ -49,8 +50,8 @@ class PermissionsSeeder extends Seeder
                 'finalize.concepts',
                 'disable.concepts',
                 'eliminate.concepts',
-                'activate.concept',
-                'eliminate.logical.concept',
+                'activate.concepts',
+                'eliminate.logical.concepts',
                 'validate.debt',
                 'view.students',
                 'view.stripe.payments',
@@ -77,8 +78,6 @@ class PermissionsSeeder extends Seeder
 
         $globalPayment = [
             'refresh.all.dashboard',
-            'view.concept',
-            'view.payment',
         ];
 
         $insertPermissions = fn(array $permissions, string $type='role', ?string $belongsTo=null) =>
