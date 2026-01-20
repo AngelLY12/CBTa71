@@ -6,27 +6,28 @@ echo "Iniciando worker de Laravel..."
 echo "Limpiando cachés..."
 php artisan optimize:clear || echo "No se pudo limpiar"
 
-echo "Tareas programadas:"
-php artisan schedule:list || true
-
-echo "⚙Iniciando worker + scheduler..."
-
-while true; do
-  echo "---- $(date '+%Y-%m-%d %H:%M:%S') Ejecutando queue:work ----"
-
-  php artisan queue:work redis \
+echo "Iniciando worker..."
+php artisan queue:work redis \
     --queue=cache,high,emails,low,default,notifications,processing \
     --sleep=3 \
+    --backoff=5 \
     --tries=3 \
     --timeout=120 \
     --memory=256 \
     --max-jobs=100 \
-    --max-time=3600
+    --max-time=3600 &
 
-  echo "Worker reiniciado (memoria / señal / max-jobs)"
+echo "Tareas programadas:"
+php artisan schedule:list || true
 
-  echo "Ejecutando scheduler..."
-  php artisan schedule:run --no-interaction
 
-  sleep 60
+echo "Iniciando scheduler..."
+LOG_FILE="/var/www/storage/logs/scheduler-$(date '+%Y-%m-%d').log"
+while true; do
+    {
+        echo "---- $(date '+%Y-%m-%d %H:%M:%S') Ejecutando schedule:run ----"
+        php artisan schedule:run
+        echo "---- Esperando 60 segundos ----"
+    } | tee -a "$LOG_FILE"
+    sleep 60
 done
