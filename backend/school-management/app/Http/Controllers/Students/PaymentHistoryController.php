@@ -23,7 +23,7 @@ class PaymentHistoryController extends Controller
 
     }
 
-    
+
     public function index(PaginationRequest $request, ?int $id)
     {
         /** @var \App\Models\User $user */
@@ -41,6 +41,13 @@ class PaymentHistoryController extends Controller
             ['payment_history' => $history],
             empty($history->items) ? 'No hay historial de pagos para este usuario.' : null
         );
+
+    }
+
+    public function findPayment(int $id)
+    {
+        $payment=$this->paymentHistoryService->findPayment($id);
+        return Response::success(['payment' => $payment], 'Pago encontrado.');
 
     }
 }

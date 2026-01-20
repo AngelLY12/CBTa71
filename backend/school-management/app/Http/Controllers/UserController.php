@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Core\Application\Services\User\UpdateUserServiceFacades;
+use App\Core\Application\Services\User\UserServiceFacades;
+use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\User\UpdatePasswordRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use Illuminate\Support\Facades\Auth;
@@ -14,12 +15,20 @@ use Illuminate\Support\Facades\Response;
  *     description="Operaciones para actualizar usuarios"
  * )
  */
-class UpdateUserController extends Controller
+class UserController extends Controller
 {
-    private UpdateUserServiceFacades $service;
-    public function __construct( UpdateUserServiceFacades $service)
+    private UserServiceFacades $service;
+    public function __construct(UserServiceFacades $service)
     {
         $this->service=$service;
+    }
+
+    public function findUser(ForceRefreshRequest $request)
+    {
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $user=$this->service->findUser($forceRefresh);
+        return Response::success(['user' => $user], 'Usuario encontrado.');
+
     }
 
     public function update(UpdateUserRequest $request)

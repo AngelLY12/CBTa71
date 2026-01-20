@@ -47,6 +47,13 @@ class ConceptsController extends Controller
 
     }
 
+    public function findConcept(int $id)
+    {
+        $concept=$this->conceptsService->findConcept($id);
+        return Response::success(['concept' => $concept], 'Concepto encontrado.');
+
+    }
+
     public function store(StorePaymentConceptRequest $request)
     {
         $data = $request->validated();
