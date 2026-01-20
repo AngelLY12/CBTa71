@@ -11,11 +11,11 @@ const { isMovil = false } = Astro.props;
 
 <div
     id="divNav"
-    class={`${isMovil == false ? "w-[8.7rem] h-full fixed hidden lg:visible lg:block" : "fixed inset-0 right-0 z-50 hidden"} `}
+    class={`${isMovil == false ? "w-[9.4rem] h-full fixed hidden lg:visible lg:block" : "fixed inset-0 right-0 z-50 hidden"} `}
 >
     <nav
         id={`${isMovil == false ? "container-navbar" : "container-navbarMobil"}`}
-        class="bg-green-500 w-[8.7rem] z-10 fixed inset-y-0 right-0 md:h-full md:static md:z-auto md:w-full flex flex-col gap-2 pt-2 px-1 text-white"
+        class="bg-green-500 w-[8.7rem] z-10 fixed inset-y-0 right-0 lg:h-full lg:static lg:z-auto lg:w-full flex flex-col gap-2 pt-2 px-1 text-white"
     >
         {
             !isMovil ? (
@@ -127,10 +127,10 @@ const { isMovil = false } = Astro.props;
                 e.classList.add("justify-center");
                 e.classList.remove("pl-2");
             });
-            divNavbar.classList.remove("w-[8.7rem]");
+            divNavbar.classList.remove("lg:w-full");
             divContainer.classList.toggle("lg:pl-44");
             divContainer.classList.toggle("lg:pl-30");
-            divNavbar.classList.add("w-20");
+            divNavbar.classList.add("lg:w-20");
         }
 
         button?.addEventListener("click", () => {
@@ -141,10 +141,10 @@ const { isMovil = false } = Astro.props;
             });
             divContainer.classList.toggle("lg:pl-44");
             divContainer.classList.toggle("lg:pl-30");
-            divNavbar.classList.toggle("w-[8.7rem]");
-            divNavbar.classList.toggle("w-20");
+            divNavbar.classList.toggle("lg:w-full");
+            divNavbar.classList.toggle("lg:w-20");
 
-            const isNowCollapsed = divNavbar.classList.contains("w-20");
+            const isNowCollapsed = divNavbar.classList.contains("lg:w-20");
             localStorage.setItem("navbarCollapsed", String(isNowCollapsed));
         });
 
@@ -156,7 +156,7 @@ const { isMovil = false } = Astro.props;
             divNavbarMobil.classList.remove("show-navbar");
             setTimeout(() => {
                 divNavbarMobil.classList.add("hidden");
-                divNav.classList.add("hidden")
+                divNav.classList.add("hidden");
             }, 300); // espera a que termine la transición
             bgNavbar?.classList?.add("hidden");
             body.classList.remove("overflow-y-hidden");

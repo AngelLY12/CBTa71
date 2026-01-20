@@ -3,7 +3,7 @@ import InputTitleUp from '../../components/React/InputTitleUp'
 import ButtonSecondary from '../../components/React/ButtonSecondary'
 import ButtonPrimary from '../../components/React/ButtonPrimary'
 
-function ContentTeachersAdd() {
+const ContentTeachersAdd = () => {
     const [name, setName] = useState("")
     const [apellidos, setApellidos] = useState("")
     const [correo, setCorreo] = useState("")

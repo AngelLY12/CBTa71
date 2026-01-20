@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import InputTitleUp from '../../components/React/InputTitleUp'
 import SelectInputOption from '../../components/React/SelectInputOption'
 import RadioButtonTitle from '../../components/React/RadioButtonTitle'
 import ButtonPrimary from '../../components/React/ButtonPrimary'
 import ButtonSecondary from '../../components/React/ButtonSecondary'
 
-function ContentAddRole() {
+const ContentAddRole = () => {
     const [name, setName] = useState("")
     const [apellidos, setApellidos] = useState("")
     const [correo, setCorreo] = useState("")

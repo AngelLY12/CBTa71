@@ -1,5 +1,5 @@
 ---
-import { routes, routesNavbar } from "../data/routes";
+import { routes } from "../data/routes";
 import NavigationSideBar from "./NavigationSideBar.astro";
 
 const isLogin = Astro.url.pathname == routes.login.url;
@@ -72,6 +72,5 @@ const isLogin = Astro.url.pathname == routes.login.url;
         });
         bgNavbar.classList.remove("hidden");
         body.classList.add("overflow-y-hidden");
-        console.log("Llamado a hidden");
     }
 </script>

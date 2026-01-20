@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ButtonPrimary from './ButtonPrimary';
 
-function SelectInputOption({ className, options = [], setValue, title, titleSelector }) {
+const SelectInputOption = ({ className, options = [], value = "", setValue, title, titleSelector }) => {
     const [opentOption, setOpenOptions] = useState(false)
     const [openMovilSelect, setOpenMovilSelect] = useState(false);
     const [indexSelect, setIndexSelect] = useState(-1)
@@ -31,11 +31,12 @@ function SelectInputOption({ className, options = [], setValue, title, titleSele
     }
 
     const optionClick = (i) => {
-        const value = options[i]
-        setValue(value)
-        setValueSelect(value)
-        setIndexSelect(i)
+        const valueSelect = options[i]
+        setValue(valueSelect)
         closeOption()
+        if (value != "") return;
+        setValueSelect(valueSelect)
+        setIndexSelect(i)
     }
 
     function handleClickOutside(e) {
@@ -87,6 +88,15 @@ function SelectInputOption({ className, options = [], setValue, title, titleSele
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [closeOption]);
 
+    useEffect(() => {
+        if (value != "") {
+            const index = options.indexOf(value);
+            const valueArray = options[index];
+            setValueSelect(valueArray)
+            setIndexSelect(index)
+        }
+    }, [value]);
+
     const focusSelect = () => {
         buttonRef.current.focus()
     }
@@ -109,7 +119,7 @@ function SelectInputOption({ className, options = [], setValue, title, titleSele
                 <div className='flex w-full md:h-full'>
                     <div className={`w-full md:h-full md:visible md:block hidden`}>
                         <button ref={buttonRef} className="flex w-full h-full outline-0 group" onClick={showOption}>
-                            <div className='flex w-11/12 items-center px-2 border-[1px] rounded-s group-focus:border-blue-600 group-focus:border-[1.7px]'>
+                            <div className='flex w-full items-center px-2 border-[1px] rounded-s group-focus:border-blue-600 group-focus:border-[1.7px]'>
                                 <p>{!valueSelect ? titleSelector : ""} <span className='font-semibold'>{valueSelect}</span></p>
                             </div>
                             <div className='flex w-12 h-full justify-center items-center border-[1px] rounded-e group-focus:border-blue-600 group-focus:border-[1.7px]'>
@@ -132,12 +142,12 @@ function SelectInputOption({ className, options = [], setValue, title, titleSele
 
                 {
                     (opentOption || openMovilSelect) &&
-                    <div className='md:absolute p-2 md:inset-x-0 md:max-h-48 w-full md:w-auto bg-white md:shadow-lg overflow-y-auto'>
+                    <div className='z-10 md:absolute p-2 md:inset-x-0 md:max-h-48 w-full md:w-auto bg-white md:shadow-lg overflow-y-auto'>
                         {options.map((option, i) => (
-                            <button value={option} onClick={() => optionClick(i)} className={`flex p-2 rounded-lg w-full items-center gap-1 active:bg-neutral-600/15 hover:bg-neutral-600/15 ${indexSelect == i && "bg-neutral-600/15 font-bold"}`} key={i}>
+                            <button value={option} onClick={() => optionClick(i)} className={`flex justify-start p-2 rounded-lg w-full items-center gap-1 active:bg-neutral-600/15 hover:bg-neutral-600/15 ${indexSelect == i && "bg-neutral-600/15 font-bold"}`} key={i}>
                                 <div className={`md:hidden w-5 h-5 rounded-full border-2 ${indexSelect == i ? "bg-green-500 border-green-500" : "border-neutral-950"}`}>
                                 </div>
-                                <p className={`${indexSelect == i && "text-green-600 md:text-black"}`}>{option}</p>
+                                <p className={`w-full text-start ${indexSelect == i && "text-green-600 md:text-black"}`}>{option}</p>
                             </button>
                         ))}
                     </div>

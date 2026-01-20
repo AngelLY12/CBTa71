@@ -1,17 +1,15 @@
-import React, { useEffect, useState } from 'react'
-
-function SubNavbar({ url, options = [{ tab, value }], windowTab, setWindowTab, setParamIndex }) {
+const SubNavbar = ({ url, options = [{ tab, value }], windowTab, setWindowTab, setParamIndex }) => {
 
     const clickOption = (tab, i) => {
         setWindowTab(tab)
-        setParamIndex(i)
+        setParamIndex(i);
         if (tab != "") {
             window.history.pushState({}, '', `${url}?tab=${tab}`)
         } else {
             window.history.pushState({}, '', `${url}`)
         }
     }
-    
+
     return (
         <div className='flex gap-2 overflow-auto'>
             {options.map((option, i) => (

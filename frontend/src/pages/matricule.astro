@@ -1,0 +1,13 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import Layout from "../layouts/Layout.astro";
+import ContentMatricule from "../view/matricule/ContentMatricule.jsx";
+---
+
+<Layout title="Matriculado">
+    <DivWithNavbar title="Matriculado">
+        <div class="w-full">
+            <ContentMatricule client:load />
+        </div>
+    </DivWithNavbar>
+</Layout>

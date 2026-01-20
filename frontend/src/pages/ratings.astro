@@ -2,20 +2,20 @@
 import DivWithNavbar from "../components/DivWithNavbar.astro";
 import { routes } from "../data/routes";
 import Layout from "../layouts/Layout.astro";
-import ContentClassShedule from "../view/clasShedule/ContentClassShedule";
+import ContentRating from "../view/rating/ContentRating";
 
 const linksSubNavbar = [
-    { tab: "", value: "Alumnos" },
-    { tab: "classShedule-teacher", value: "Maestros" },
+    { tab: "", value: "Buscar" },
+    { tab: "rating-capture", value: "Capturar" },
 ];
 ---
 
-<Layout title="Horario">
-    <DivWithNavbar title="Horario">
+<Layout title="Calificaciones">
+    <DivWithNavbar title="Calificaciones">
         <div class="w-full">
-            <ContentClassShedule
+            <ContentRating
                 opcionTab={linksSubNavbar}
-                routePrimary={routes.classSchedule.url}
+                routePrimary={routes.ratings.url}
                 client:load
             />
         </div>

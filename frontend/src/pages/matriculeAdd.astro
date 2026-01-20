@@ -1,0 +1,12 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import { routes } from "../data/routes";
+import Layout from "../layouts/Layout.astro";
+import ContentMatriculeAdd from "../view/matricule/ContentMatriculeAdd";
+---
+
+<Layout title="Agregar matriculado">
+    <DivWithNavbar title="Agregar" routesMiddle={[routes.matricule]}>
+        <ContentMatriculeAdd client:load />
+    </DivWithNavbar>
+</Layout>

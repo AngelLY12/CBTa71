@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 function RoleSeccion2() {
   const [enableAspirant, setEnableAspirant] = useState(false);
   const [enableMaterial, setEnableMaterial] = useState(false);
-   const [enableSectionPay, setEnableSectionPay] = useState(false);
+  const [enableSectionPay, setEnableSectionPay] = useState(false);
 
   const activeAspirant = (e) => {
     setEnableAspirant(e.target.checked);
@@ -13,34 +13,8 @@ function RoleSeccion2() {
     setEnableMaterial(e.target.checked)
   }
 
-   const activeSeccionPay = (e) => {
+  const activeSeccionPay = (e) => {
     setEnableSectionPay(e.target.checked)
-  }
-
-  const getPersonal = async () => {
-    // try {
-    //     const response = await fetch(`/api/personal?search=${searchPersonal}`);
-    //     if (!response.ok) {
-    //         throw new Error(`HTTP error! status: ${response.status}`);
-    //     }
-    //     const data = await response.json();
-    //     setPersonalResponse(data);
-    // } catch (error) {
-    //     console.error("Error fetching personal data:", error);
-    // }
-  }
-
-  const getPersonalCategory = async () => {
-    // try {
-    //     const response = await fetch(`/api/personal?category=${filtreSelect == "" ? optionsSelect[0] : filtreSelect}`);
-    //     if (!response.ok) {
-    //         throw new Error(`HTTP error! status: ${response.status}`);
-    //     }
-    //     const data = await response.json();
-    //     setPersonalResponse(data);
-    // } catch (error) {
-    //    console.error("Error fetching personal data:", error);
-    // }
   }
 
   return (

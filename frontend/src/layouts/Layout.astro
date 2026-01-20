@@ -1,6 +1,5 @@
 ---
 import Header from "../components/Header.astro";
-import { routes } from "../data/routes";
 import "../styles/global.css";
 
 interface Props {
@@ -21,7 +20,7 @@ const { title } = Astro.props;
 	</head>
 	<body>
 		<Header />
-		<div class="pt-20 h-screen">
+		<div class="w-full pt-20 h-screen">
 			<slot />
 		</div>
 	</body>

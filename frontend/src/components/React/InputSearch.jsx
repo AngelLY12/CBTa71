@@ -40,7 +40,9 @@ function InputSearch({ className, value, setValue, title, options = [], getOptio
     }
 
     const showOption = () => {
-        setOpenMovilSearch(true)
+        if (isMovil) {
+            setOpenMovilSearch(true)
+        }
         if (value != "") {
             setOpenOption(true)
         }
@@ -119,6 +121,7 @@ function InputSearch({ className, value, setValue, title, options = [], getOptio
                                 className="bg-white w-full h-full md:rounded-md py-2 px-8 outline-2 outline-gray-400 rounded-xl md:outline-1 md:outline-gray-600 md:focus:outline-indigo-600"
                                 value={value}
                                 ref={inputRef}
+                                onFocus={showOption}
                                 onChange={(e) => handleWrite(e.target.value)}
                                 placeholder={title}
                             />
@@ -141,23 +144,25 @@ function InputSearch({ className, value, setValue, title, options = [], getOptio
                     </div>
                 </div>
 
-                 <div className='w-full h-1 bg-green-300/50 rounded md:hidden'></div>
+                {openMovilSearch &&
+                    < div className='w-full h-1 bg-green-300/50 rounded md:hidden'></div>
+                }
 
                 {openOption && (
-                    <div className="p-2 md:absolute md:inset-x-0 md:mt-1.5 md:max-h-36 md:rounded-md md:shadow-xl md:overflow-y-auto bg-white">
-                        {options.map((option, i) => (
+                    <div className="z-10 p-2 md:absolute md:inset-x-0 md:mt-1.5 md:max-h-36 md:rounded-md md:shadow-xl md:overflow-y-auto bg-white">
+                        {options.map((option) => (
                             <button
                                 key={option.id}
-                                value={option[valueSearch]}
+                                value={!Array.isArray(valueSearch) ? option[valueSearch] : `${option[valueSearch[0]]} ${option[valueSearch[1]]}`}
                                 className="select-none w-full flex items-center p-2 hover:bg-neutral-600/15 active:bg-neutral-600/15 rounded-md cursor-pointer"
                                 onClick={(e) => selectOption(e.target.value)}
                             >
-                                {option[valueSearch]}
+                                {!Array.isArray(valueSearch) ? option[valueSearch] : `${option[valueSearch[0]]} ${option[valueSearch[1]]}`}
                             </button>
                         ))}
                     </div>
                 )}
-            </div>
+            </div >
         </>
     );
 }
