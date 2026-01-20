@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CareerController;
-use App\Http\Controllers\FindEntityController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Parents\ParentsController;
 use App\Http\Controllers\RefreshTokenController;
@@ -17,7 +16,7 @@ use App\Http\Controllers\Students\PaymentHistoryController;
 use App\Http\Controllers\Students\PendingPaymentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Students\WebhookController;
-use App\Http\Controllers\UpdateUserController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Response;
 use App\Core\Domain\Enum\Exceptions\ErrorCode;
@@ -50,7 +49,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
 
     Route::prefix('parents')->middleware(['throttle:5,1', 'log.action', 'user.status'])->group(function(){
-        Route::middleware(['role:student|admin',])->post('/invite',[ParentsController::class, 'sendInvitation']);
+        Route::middleware(['role:student',])->post('/invite',[ParentsController::class, 'sendInvitation']);
         Route::middleware(['role:parent'])->post('/invite/accept',[ParentsController::class, 'acceptInvitation']);
         Route::middleware(['role:parent'])->get('/get-children',[ParentsController::class,'getParetChildren']);
         Route::middleware(['role:student'])->get('/get-parents',[ParentsController::class,'getStudentParents']);
@@ -71,6 +70,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
     Route::prefix('history')->middleware(['role:student|parent','throttle:global', 'log.action', 'user.status'])->group(function(){
         Route::middleware('permission:view.payment.history')->get('/{id}',[PaymentHistoryController::class,'index']);
+        Route::middleware('permission:view.payment')->get('/payment/{id}',[PaymentHistoryController::class,'findPayment']);
+
     });
     Route::prefix('pending-payment')->middleware(['role:student|parent', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['permission:view.pending.concepts','throttle:global'])->get('/{id}',[PendingPaymentController::class,'index']);
@@ -89,6 +90,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
     Route::prefix('concepts')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
         Route::middleware(['permission:view.concepts', 'throttle:global'])->get('/', [ConceptsController::class, 'index']);
+        Route::middleware('permission:view.concepts')->get('/{id}',[ConceptsController::class,'findConcept']);
         Route::middleware(['permission:create.concepts', 'throttle:10,1'])->post('/', [ConceptsController::class, 'store']);
         Route::middleware(['permission:update.concepts', 'throttle:10,1'])->put('/{id}', [ConceptsController::class, 'update']);
         Route::middleware(['permission:update.concepts', 'throttle:10,1'])->patch('/{id}', [ConceptsController::class, 'update']);
@@ -96,8 +98,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:finalize.concepts', 'throttle:10,1'])->post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
         Route::middleware(['permission:disable.concepts', 'throttle:10,1'])->post('/{concept}/disable', [ConceptsController::class, 'disable']);
         Route::middleware(['permission:eliminate.concepts', 'throttle:10,1'])->delete('/{id}/eliminate', [ConceptsController::class, 'eliminate']);
-        Route::middleware(['permission:eliminate.logical.concept', 'throttle:10,1'])->post('/{concept}/eliminateLogical',[ConceptsController::class,'eliminateLogical']);
-        Route::middleware(['permission:activate.concept', 'throttle:10,1'])->post('/{concept}/activate',[ConceptsController::class,'activate']);
+        Route::middleware(['permission:eliminate.logical.concepts', 'throttle:10,1'])->post('/{concept}/eliminateLogical',[ConceptsController::class,'eliminateLogical']);
+        Route::middleware(['permission:activate.concepts', 'throttle:10,1'])->post('/{concept}/activate',[ConceptsController::class,'activate']);
     });
 
     Route::prefix('debts')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
@@ -135,10 +137,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:update.student')->patch('/update-student/{id}',[AdminController::class,'updateStudentDetail']);
         Route::middleware('permission:promote.student')->patch('/promote',[AdminController::class,'promotionStudents']);
     });
-    Route::prefix('find')->middleware(['role:student|financial-staff|parent','throttle:global', 'log.action', 'user.status'])->group(function(){
-        Route::middleware('permission:view.concept')->get('/concept/{id}',[FindEntityController::class,'findConcept']);
-        Route::middleware('permission:view.payment')->get('/payment/{id}',[FindEntityController::class,'findPayment']);
-    });
 
     Route::prefix('careers')->middleware(['role:admin|supervisor', 'log.action', 'user.status'])->group(function(){
         Route::get('/', [CareerController::class, 'index']);
@@ -148,10 +146,10 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::delete('/{id}', [CareerController::class, 'destroy']);
     });
 
-    Route::prefix('users')->middleware(['role:admin|student|financial-staff|parent|supervisor','throttle:10,1', 'log.action', 'user.status'])->group(function () {
-        Route::patch('/update', [UpdateUserController::class, 'update']);
-        Route::patch('/update/password', [UpdateUserController::class, 'updatePassword']);
-        Route::get('/user',[FindEntityController::class,'findUser']);
+    Route::prefix('users')->middleware(['throttle:10,1', 'log.action', 'user.status'])->group(function () {
+        Route::patch('/update', [UserController::class, 'update']);
+        Route::patch('/update/password', [UserController::class, 'updatePassword']);
+        Route::get('/user',[UserController::class,'findUser']);
     });
 
 
