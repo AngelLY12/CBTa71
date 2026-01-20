@@ -24,6 +24,7 @@
         }
     ],
     "paths": {
+        "/api": {},
         "/api/v1/admin-actions/register": {
             "post": {
                 "tags": [
@@ -32,6 +33,28 @@
                 "summary": "Registrar un nuevo usuario",
                 "description": "Crea un nuevo usuario en el sistema con los datos proporcionados.",
                 "operationId": "adminRegisterUser",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "create.user"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Datos necesarios para el registro del usuario. Nota: La contraseña no debe ser incluida en la request, se genera para cada usuario desde el sistema",
                     "required": true,
@@ -95,7 +118,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/admin-actions/promotion": {
@@ -106,6 +134,28 @@
                 "summary": "Incrementa el semestre de los alumnos y da de baja a quienes sobrepasan",
                 "description": "Se hace un incremento en el semestre de todos los alumnos sin importar status y da de baja a quienes sobrepasan el semestre 12.",
                 "operationId": "promotionStudents",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "promote.student"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Usuarios promovidos con exito",
@@ -168,7 +218,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/admin-actions/attach-student": {
@@ -179,6 +234,28 @@
                 "summary": "Asociar detalles de estudiante a un usuario existente",
                 "description": "Permite asignar información académica (carrera, semestre, grupo, taller) a un usuario ya registrado.",
                 "operationId": "attachStudentDetailToUser",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "attach.student"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Datos necesarios para asociar un detalle de estudiante al usuario.",
                     "required": true,
@@ -280,6 +357,26 @@
                 "operationId": "getStudentDetailToUser",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.student"
+                        }
+                    },
+                    {
                         "name": "id",
                         "in": "query",
                         "description": "ID del estudiante del que se quieren los detalles.",
@@ -364,6 +461,28 @@
                 "summary": "Actualizar detalles de estudiante a un usuario existente",
                 "description": "Permite actualizar información académica (carrera, grupo, taller) a un usuario ya registrado.",
                 "operationId": "updateStudentDetailToUser",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "update.student"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Datos necesarios para actualizar un detalle de estudiante al usuario.",
                     "required": true,
@@ -463,6 +582,28 @@
                 "summary": "Importar usuarios desde un archivo Excel",
                 "description": "Permite subir un archivo Excel (.xlsx) con los datos de los usuarios y sus detalles estudiantiles.\r\n *     El archivo debe contener las columnas en el siguiente orden:\r\n *     1. name (Nombre)\r\n *     2. last_name (Apellidos)\r\n *     3. email (Correo electrónico)\r\n *     4. password (Contraseña, si se deja vacío se asignará 'default123')\r\n *     5. phone_number (Teléfono)\r\n *     6. birthdate (Fecha de nacimiento, formato YYYY-MM-DD)\r\n *     7. gender (Género)\r\n *     8. curp (CURP)\r\n *     9. street (Calle)\r\n *     10. city (Ciudad)\r\n *     11. state (Estado)\r\n *     12. zip_code (Código postal)\r\n *     13. stripe_customer_id (Opcional)\r\n *     14. blood_type (Tipo de sangre)\r\n *     15. registration_date (Fecha de registro, si no se especifica se usa la actual)\r\n *     16. status (Estado del usuario, por defecto 'activo')\r\n *     17. career_id (ID de la carrera)\r\n *     18. n_control (Número de control)\r\n *     19. semestre (Semestre)\r\n *     20. group (Grupo)\r\n *     21. workshop (Taller)\r\n *     ",
                 "operationId": "178a4e0d1920f7589e9e38d7710f5b25",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "import.users"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -561,6 +702,28 @@
                 "summary": "Importar detalles estudiantiles desde un archivo Excel",
                 "description": "Permite subir un archivo Excel (.xlsx) con los detalles estudiantiles de los usuarios.\r\n *      Solo se insertarán filas con CURP existente en la base de datos y con career_id, n_control y semestre definidos.\r\n *      Columnas esperadas:\r\n *     1. curp (CURP del usuario)\r\n *     2. career_id (ID de la carrera)\r\n *     3. n_control (Número de control)\r\n *     4. semestre (Semestre)\r\n *     5. group (opcional)\r\n *     6. workshop (opcional)",
                 "operationId": "a2fb9e09634f7bad889068a279fd8a45",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "import.users"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -659,6 +822,28 @@
                 "summary": "Actualizar permisos a múltiples usuarios",
                 "description": "Permite al administrador agregar o eliminar permisos a varios usuarios al mismo tiempo.\r\n *     Se puede especificar una lista de CURP o role (solo uno de los dos) y los permisos que se añadirán o eliminarán.",
                 "operationId": "updateManyUserPermissions",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint ",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint ",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "sync.permissions"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Datos necesarios para actualizar permisos de usuario.",
                     "required": true,
@@ -753,6 +938,26 @@
                 "description": "Permite al administrador ver a todos los usuarios registrados, junto con sus roles, permisos y detalles académicos (si aplica).",
                 "operationId": "showAllUsers",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.users"
+                        }
+                    },
                     {
                         "name": "forceRefresh",
                         "in": "query",
@@ -892,6 +1097,28 @@
                 "summary": "Sincroniza roles de múltiples usuarios",
                 "description": "Permite agregar o eliminar roles a varios usuarios simultáneamente.",
                 "operationId": "updateManyUserRoles",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "sync.roles"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -980,6 +1207,28 @@
                 "summary": "Activa múltiples usuarios",
                 "description": "Cambia el estado de los usuarios seleccionados a 'activado'.",
                 "operationId": "c91d83e3748e694a996b1e64fa782f83",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "activate.users"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1068,6 +1317,28 @@
                 "summary": "Elimina múltiples usuarios",
                 "description": "Cambia el estado de los usuarios seleccionados a 'eliminado'.",
                 "operationId": "7c9bf99943dfe8c45c4e013b6f21ad99",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "delete.users"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1156,6 +1427,28 @@
                 "summary": "Da de baja múltiples usuarios",
                 "description": "Cambia el estado de los usuarios seleccionados a 'baja'.",
                 "operationId": "fdfddee8ed6255a0160e6a49045870aa",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "disable.users"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1244,6 +1537,28 @@
                 "summary": "Da de baja temporal múltiples usuarios",
                 "description": "Cambia el estado de los usuarios seleccionados a 'baja-temporal'.",
                 "operationId": "5d3b588afbaedf14d6a3b0cbeee57c5f",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "disable.users"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1332,6 +1647,28 @@
                 "summary": "Mostrar permisos existentes",
                 "description": "Permite al administrador ver todos los permisos registrados.",
                 "operationId": "showAllPermissions",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.permissions"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1467,6 +1804,26 @@
                 "operationId": "showAllRoles",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.roles"
+                        }
+                    },
+                    {
                         "name": "forceRefresh",
                         "in": "query",
                         "description": "Forzar actualización del caché (true o false).",
@@ -1546,6 +1903,26 @@
                 "description": "Permite al administrador ver la información de un rol específico por su identificador.",
                 "operationId": "showRoleById",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.roles"
+                        }
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -1632,6 +2009,26 @@
                 "description": "Permite al administrador ver la información de un permiso específico por su identificador.",
                 "operationId": "showPermissionById",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.permissions"
+                        }
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -2298,6 +2695,26 @@
                 "operationId": "deleteUserCard",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.cards"
+                        }
+                    },
+                    {
                         "name": "paymentMethodId",
                         "in": "path",
                         "description": "ID del método de pago a eliminar (por ejemplo, 'pm_1P7E89AjcPzVqRkV')",
@@ -2398,6 +2815,28 @@
                 "summary": "Registrar un nuevo método de pago",
                 "description": "Crea una sesión de Stripe Checkout para registrar una nueva tarjeta del usuario autenticado.",
                 "operationId": "addUserCard",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "create.setup"
+                        }
+                    }
+                ],
                 "responses": {
                     "201": {
                         "description": "Sesión de registro de método de pago creada exitosamente",
@@ -2485,6 +2924,26 @@
                 "description": "Obtiene la lista de tarjetas o métodos de pago asociados al usuario autenticado. Permite forzar actualización del caché.",
                 "operationId": "getUserCards",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "delete.card"
+                        }
+                    },
                     {
                         "name": "forceRefresh",
                         "in": "query",
@@ -2610,6 +3069,16 @@
                 "operationId": "535d0e811dc5cff67f58c33b6b0649fa",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
                         "name": "forceRefresh",
                         "in": "query",
                         "description": "Forzar actualización del caché (true o false).",
@@ -2695,7 +3164,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -2703,6 +3177,18 @@
                 ],
                 "summary": "Crear una nueva carrera",
                 "operationId": "042b58252d46151ca550a211432adf06",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2805,7 +3291,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/careers/{id}": {
@@ -2816,6 +3307,16 @@
                 "summary": "Obtener una carrera por ID",
                 "operationId": "e44f69b3e40c57e3183b795eb9f52154",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -2919,7 +3420,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "patch": {
                 "tags": [
@@ -2928,6 +3434,16 @@
                 "summary": "Actualizar una carrera existente",
                 "operationId": "1e5fcdffb18cec1d175f63a8f46baf01",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -3051,7 +3567,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1//careers/{id}": {
@@ -3062,6 +3583,16 @@
                 "summary": "Eliminar una carrera",
                 "operationId": "9176a2c687042e7640092fa5afcbd0b1",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -3147,7 +3678,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/dashboard-staff/refresh": {
@@ -3158,6 +3694,28 @@
                 "summary": "Limpiar el caché del dashboard",
                 "description": "Forza el borrado del caché en todos los datos del dashboard.",
                 "operationId": "bd1308f96ae260af7d85ac0b96730b37",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "refresh.all.dashboard"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Caché limpiado correctamente",
@@ -3239,6 +3797,26 @@
                 "description": "Devuelve una lista paginada de conceptos de pago visibles en el panel del personal. Permite filtrar por año actual y forzar actualización del caché.",
                 "operationId": "2b844dca986c636b547fa3f0d8a91958",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.concepts.history"
+                        }
+                    },
                     {
                         "name": "only_this_year",
                         "in": "query",
@@ -3371,14 +3949,34 @@
                 ]
             }
         },
-        "/api/v1/dashboard-staff/payments-made": {
+        "/api/v1/dashboard-staff/payments": {
             "get": {
                 "tags": [
                     "Dashboard Staff"
                 ],
                 "summary": "Obtener monto total de pagos realizados",
-                "operationId": "5fcc30772287b8eb0fbfb98833944536",
+                "operationId": "6d9ad78eea8f2daa91ec86b76d47c6bc",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.all.paid.concepts.summary"
+                        }
+                    },
                     {
                         "name": "only_this_year",
                         "in": "query",
@@ -3483,6 +4081,26 @@
                 "operationId": "4a12c92ac48e2f3f2ab3f5f497491eb8",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.all.students.summary"
+                        }
+                    },
+                    {
                         "name": "only_this_year",
                         "in": "query",
                         "description": "Filtrar solo por el año actual",
@@ -3578,15 +4196,35 @@
                 ]
             }
         },
-        "/api/v1/dashboard-staff/pending-payments": {
+        "/api/v1/dashboard-staff/pending": {
             "get": {
                 "tags": [
                     "Dashboard Staff"
                 ],
                 "summary": "Obtener cantidad y monto total de pagos pendientes",
                 "description": "Devuelve el total de conceptos pendientes de pago, incluyendo cantidad y monto total. Se puede filtrar por el año actual y forzar la actualización del caché.",
-                "operationId": "79711f7937015b505da2b4d95e278449",
+                "operationId": "f08d098bbd12edc4a94ce4cae7dbbeee",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.all.pending.concepts.summary"
+                        }
+                    },
                     {
                         "name": "only_this_year",
                         "in": "query",
@@ -3693,6 +4331,28 @@
                 "summary": "Crear un payout con todo el balance disponible",
                 "description": "Crea un payout en Stripe transfiriendo TODO el balance disponible en MXN a la cuenta bancaria registrada. Requiere un mínimo de $100.00 MXN disponibles.",
                 "operationId": "14d1cab8c35b64b8ceb168bef63a7ca3",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "create.payout"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Payout creado exitosamente",
@@ -3807,6 +4467,28 @@
                 "summary": "Limpiar caché del dashboard",
                 "description": "Limpia el caché de datos almacenados en el dashboard (estadísticas, pagos, etc.)",
                 "operationId": "refreshDashboardCache",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "refresh.all.dashboard"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Caché del dashboard limpiado con éxito",
@@ -3875,6 +4557,26 @@
                 "description": "Devuelve una lista paginada con el historial de pagos realizados por el usuario autenticado. Permite forzar la actualización del caché.",
                 "operationId": "getPaymentHistory",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.payments.history"
+                        }
+                    },
                     {
                         "name": "perPage",
                         "in": "query",
@@ -4037,6 +4739,26 @@
                 "operationId": "getOverduePayments",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.own.overdue.concepts.summary"
+                        }
+                    },
+                    {
                         "name": "forceRefresh",
                         "in": "query",
                         "description": "Forzar actualización de caché (true o false)",
@@ -4153,6 +4875,26 @@
                 "operationId": "getPaidAmount",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.own.paid.concepts.summary"
+                        }
+                    },
+                    {
                         "name": "forceRefresh",
                         "in": "query",
                         "description": "Forzar actualización de caché (true o false)",
@@ -4263,6 +5005,26 @@
                 "description": "Devuelve la cantidad y monto total de los pagos pendientes del usuario autenticado.",
                 "operationId": "getPendingPayments",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.own.pending.concepts.summary"
+                        }
+                    },
                     {
                         "name": "forceRefresh",
                         "in": "query",
@@ -4379,6 +5141,26 @@
                 "description": "Obtiene todos los pagos registrados en Stripe asociados a un estudiante específico. Se puede filtrar por año y forzar actualización del caché.",
                 "operationId": "7a955e098f48d1a8b013eef23755b31a",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint (solo para documentación, ej. 'admin')",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.stripe.payments"
+                        }
+                    },
                     {
                         "name": "search",
                         "in": "query",
@@ -4527,6 +5309,28 @@
                 "summary": "Validar un pago de Stripe",
                 "description": "Valida un pago realizado en Stripe mediante el `payment_intent_id` y la búsqueda del estudiante.",
                 "operationId": "5bc38b4d4aa111d4ebdf6de90befac6c",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "validate.debt"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4653,6 +5457,26 @@
                 "operationId": "6252587fb8c526bfb1bb970090853f6b",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.debts"
+                        }
+                    },
+                    {
                         "name": "search",
                         "in": "query",
                         "description": "Texto de búsqueda para filtrar por CURP, email o número de control del estudiante.",
@@ -4738,218 +5562,6 @@
                     },
                     "422": {
                         "description": "Error de validación",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autenticado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Demasiadas solicitudes",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/find/concept/{id}": {
-            "get": {
-                "tags": [
-                    "FindEntity"
-                ],
-                "summary": "Buscar concepto de pago por ID",
-                "description": "Obtiene la información de un concepto de pago específico mediante su identificador.",
-                "operationId": "a4f01187f8b40a39612dbe6c4e6db667",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del concepto a buscar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Concepto encontrado correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "concept": {
-                                                            "$ref": "#/components/schemas/ConceptToDisplay"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "No encontrado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autenticado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Demasiadas solicitudes",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/find/payment/{id}": {
-            "get": {
-                "tags": [
-                    "FindEntity"
-                ],
-                "summary": "Buscar pago por ID",
-                "description": "Obtiene la información detallada de un pago específico mediante su identificador.",
-                "operationId": "b46418648e17d667d6c4a8b9549c414b",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del pago a buscar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 5
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Pago encontrado correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "payment": {
-                                                            "$ref": "#/components/schemas/DomainPayment"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "No encontrado",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5548,6 +6160,18 @@
                 ],
                 "summary": "Enviar invitación a un padre",
                 "operationId": "inviteParent",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -5657,6 +6281,18 @@
                 ],
                 "summary": "Aceptar invitación de un padre",
                 "operationId": "acceptInvitation",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "parent"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -5743,6 +6379,18 @@
                 ],
                 "summary": "Obtiene los hijos del parent",
                 "operationId": "getParentChildren",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "parent"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Hijos obtenidos correctamente",
@@ -5840,6 +6488,18 @@
                 ],
                 "summary": "Obtiene los familiares del hijo",
                 "operationId": "getStudentParents",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Familiares obtenidos correctamente",
@@ -5938,6 +6598,16 @@
                 "summary": "Eliminar una relación del estudiante con un familiar",
                 "operationId": "deleteRelation",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student"
+                        }
+                    },
                     {
                         "name": "parentId",
                         "in": "path",
@@ -6040,6 +6710,26 @@
                 "description": "Obtiene una lista paginada de conceptos de pago, con filtros opcionales por estado y control de caché.",
                 "operationId": "7b2457df1dbe68942b72956f021e15c5",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.concepts"
+                        }
+                    },
                     {
                         "$ref": "#/components/schemas/PaymentConceptStatus"
                     },
@@ -6181,6 +6871,28 @@
                 "summary": "Crear un nuevo concepto de pago",
                 "description": "Crea un nuevo concepto de pago y lo asocia con las entidades correspondientes (carreras, semestres, estudiantes).",
                 "operationId": "d4a46f73910eee38f9ae69b167c5f3f0",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "create.concepts"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -6298,6 +7010,130 @@
             }
         },
         "/api/v1/concepts/{id}": {
+            "get": {
+                "tags": [
+                    "FindEntity"
+                ],
+                "summary": "Buscar concepto de pago por ID",
+                "description": "Obtiene la información de un concepto de pago específico mediante su identificador.",
+                "operationId": "0d8657e4cb4cc17fbb58be7549f3c3ef",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.concepts"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del concepto a buscar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Concepto encontrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "concept": {
+                                                            "$ref": "#/components/schemas/ConceptToDisplay"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
             "put": {
                 "tags": [
                     "Payment Concepts"
@@ -6306,6 +7142,26 @@
                 "description": "Actualiza los datos de un concepto de pago existente. Todos los campos son opcionales (usar 'sometimes'), excepto el id en la ruta.",
                 "operationId": "167231eaeb26ca131cbad24a74929639",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "update.concepts"
+                        }
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -6440,6 +7296,26 @@
                 "operationId": "d61e99309acac6cad9ec93aff3ae5fb9",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "eliminate.concepts"
+                        }
+                    },
+                    {
                         "name": "id",
                         "in": "path",
                         "required": true,
@@ -6536,6 +7412,26 @@
                 "description": "Actualiza las relaciones de un concepto de pago existente.",
                 "operationId": "6369d93134af7991e6ae7a8e010bd768",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "update.concepts"
+                        }
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -6663,14 +7559,34 @@
                 ]
             }
         },
-        "/api/v1/concepts/{id}/finalize": {
+        "/api/v1/concepts/{concept}/finalize": {
             "post": {
                 "tags": [
                     "Payment Concepts"
                 ],
                 "summary": "Finalizar concepto de pago",
-                "operationId": "5538e95b12edc9fad26df0f51ccc550f",
+                "operationId": "4cc07c92ab50b239cc52a3bde0be3a16",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "finalize.concepts"
+                        }
+                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -6776,20 +7692,32 @@
                 ]
             }
         },
-        "/api/v1/concepts/{id}/disable": {
+        "/api/v1/concepts/{concept}/disable": {
             "post": {
                 "tags": [
                     "Payment Concepts"
                 ],
                 "summary": "Deshabilitar un concepto de pago",
-                "operationId": "8f22e90850b3d1ee51c2b0cbfb24d75a",
+                "operationId": "929cbe430ee0bceadafcdf650493a3e1",
                 "parameters": [
                     {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "disable.concepts"
                         }
                     }
                 ],
@@ -6889,20 +7817,32 @@
                 ]
             }
         },
-        "/api/v1/concepts/{id}/activate": {
+        "/api/v1/concepts/{concept}/activate": {
             "post": {
                 "tags": [
                     "Payment Concepts"
                 ],
                 "summary": "Habilitar un concepto de pago",
-                "operationId": "ba6e0a4ed620d7b5d932247acbb7ee40",
+                "operationId": "8d5ca510d7dde232eea85e73830b4abc",
                 "parameters": [
                     {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
                         "schema": {
-                            "type": "integer"
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "activate.concepts"
                         }
                     }
                 ],
@@ -7002,13 +7942,35 @@
                 ]
             }
         },
-        "/api/v1/concepts/{id}/logical": {
+        "/api/v1/concepts/{concept}/logical": {
             "post": {
                 "tags": [
                     "Payment Concepts"
                 ],
                 "summary": "Eliminar concepto de pago (lógicamente)",
-                "operationId": "7da8ecb89c3ac7a63b1ecc7f7a1f4837",
+                "operationId": "dba7725c8d74600c5868d51808f9bc37",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "eliminate.logical.concepts"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Concepto eliminado correctamente",
@@ -7114,6 +8076,26 @@
                 "description": "Devuelve el historial de pagos del usuario logueado, con soporte para paginación y cacheo.",
                 "operationId": "getUserPaymentHistory",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.payment.history"
+                        }
+                    },
                     {
                         "name": "perPage",
                         "in": "query",
@@ -7266,6 +8248,132 @@
                 ]
             }
         },
+        "/api/v1/history/payment/{id}": {
+            "get": {
+                "tags": [
+                    "FindEntity"
+                ],
+                "summary": "Buscar pago por ID",
+                "description": "Obtiene la información detallada de un pago específico mediante su identificador.",
+                "operationId": "a0b716010d330fbb97f88216f581ae87",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.payment"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del pago a buscar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Pago encontrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "payment": {
+                                                            "$ref": "#/components/schemas/DomainPayment"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/payments": {
             "get": {
                 "tags": [
@@ -7275,6 +8383,26 @@
                 "description": "Devuelve una lista paginada de pagos registrados, con opción de búsqueda por email, CURP o número de control, y posibilidad de forzar actualización del caché.",
                 "operationId": "getPayments",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.payments"
+                        }
+                    },
                     {
                         "name": "search",
                         "in": "query",
@@ -7437,6 +8565,26 @@
                 "operationId": "getPaymentsByConcept",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.payments"
+                        }
+                    },
+                    {
                         "name": "search",
                         "in": "query",
                         "description": "Filtro opcional para buscar por email, nombre o nombre de concepto de pago.",
@@ -7598,6 +8746,26 @@
                 "operationId": "getUserPendingPayments",
                 "parameters": [
                     {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.pending.concepts"
+                        }
+                    },
+                    {
                         "name": "forceRefresh",
                         "in": "query",
                         "description": "Forzar actualización del caché (true o false).",
@@ -7725,6 +8893,28 @@
                 "summary": "Generar intento de pago para un concepto pendiente",
                 "description": "Crea un intento de pago en Stripe (u otro proveedor) para el concepto indicado y devuelve la URL del checkout.",
                 "operationId": "createPaymentIntent",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "create.payment"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Datos necesarios para generar el intento de pago",
                     "required": true,
@@ -7852,6 +9042,26 @@
                 "description": "Devuelve los pagos que ya están vencidos para el usuario autenticado.",
                 "operationId": "getUserOverduePayments",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.overdue.concepts"
+                        }
+                    },
                     {
                         "name": "forceRefresh",
                         "in": "query",
@@ -7981,6 +9191,26 @@
                 "description": "Devuelve una lista paginada de estudiantes registrados, con opción de búsqueda por email, CURP o número de control, y posibilidad de forzar actualización del caché.",
                 "operationId": "getStudents",
                 "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.students"
+                        }
+                    },
                     {
                         "name": "search",
                         "in": "query",
@@ -8208,7 +9438,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/users/update/password": {
@@ -8279,7 +9514,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/users/user": {
@@ -9329,442 +10569,6 @@
                 },
                 "type": "object"
             },
-            "FinancialSummaryResponse": {
-                "properties": {
-                    "totalPayments": {
-                        "description": "Monto total bruto de pagos recibidos",
-                        "type": "string",
-                        "example": "250000.00"
-                    },
-                    "totalPayouts": {
-                        "description": "Monto total neto recibido (payouts)",
-                        "type": "string",
-                        "example": "230000.00"
-                    },
-                    "totalFees": {
-                        "description": "Monto total de comisiones cobradas",
-                        "type": "string",
-                        "example": "20000.00"
-                    },
-                    "paymentsBySemester": {
-                        "description": "Pagos brutos agrupados por semestre",
-                        "type": "object",
-                        "additionalProperties": {
-                            "properties": {
-                                "total": {
-                                    "type": "string",
-                                    "example": "45000.00"
-                                },
-                                "months": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string",
-                                        "example": "15000.00"
-                                    }
-                                }
-                            },
-                            "type": "object",
-                            "property": null
-                        }
-                    },
-                    "payoutsBySemester": {
-                        "description": "Payouts agrupados por semestre",
-                        "type": "object",
-                        "additionalProperties": {
-                            "properties": {
-                                "total": {
-                                    "type": "string",
-                                    "example": "38000.00"
-                                },
-                                "total_fee": {
-                                    "type": "string",
-                                    "example": "2500.00"
-                                },
-                                "months": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "amount": {
-                                                "type": "string",
-                                                "example": "18000.00"
-                                            },
-                                            "fee": {
-                                                "type": "string",
-                                                "example": "1200.00"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                }
-                            },
-                            "type": "object",
-                            "property": null
-                        }
-                    },
-                    "totalBalanceAvailable": {
-                        "description": "Balance total disponible actualmente",
-                        "type": "string",
-                        "example": "35000.00"
-                    },
-                    "totalBalancePending": {
-                        "description": "Balance total pendiente actualmente",
-                        "type": "string",
-                        "example": "15000.00"
-                    },
-                    "availablePercentage": {
-                        "description": "Porcentaje del balance disponible respecto al total de pagos",
-                        "type": "string",
-                        "example": "14.00"
-                    },
-                    "pendingPercentage": {
-                        "description": "Porcentaje del balance pendiente respecto al total de pagos",
-                        "type": "string",
-                        "example": "6.00"
-                    },
-                    "netReceivedPercentage": {
-                        "description": "Porcentaje neto recibido respecto al total de pagos",
-                        "type": "string",
-                        "example": "92.00"
-                    },
-                    "feePercentage": {
-                        "description": "Porcentaje total de comisión respecto al total de pagos",
-                        "type": "string",
-                        "example": "8.00"
-                    },
-                    "totalBalanceAvailableBySource": {
-                        "description": "Balance disponible agrupado por método de pago",
-                        "type": "object",
-                        "example": {
-                            "card": "25000.00",
-                            "oxxo": "6000.00",
-                            "transfer": "4000.00"
-                        }
-                    },
-                    "totalBalancePendingBySource": {
-                        "description": "Balance pendiente agrupado por método de pago",
-                        "type": "object",
-                        "example": {
-                            "card": "9000.00",
-                            "oxxo": "3000.00",
-                            "transfer": "3000.00"
-                        }
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentDataResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID interno del pago",
-                        "type": "integer",
-                        "example": 123,
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "amount_received": {
-                        "description": "Monto del pago recibido",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "status": {
-                        "description": "Estado del pago",
-                        "type": "string",
-                        "example": "completed",
-                        "nullable": true
-                    },
-                    "payment_intent_id": {
-                        "description": "ID del Payment Intent asociado",
-                        "type": "string",
-                        "example": "pi_01HXXXXXX",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentDetailResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID interno del pago",
-                        "type": "integer",
-                        "example": 123,
-                        "nullable": true
-                    },
-                    "concept": {
-                        "description": "Concepto del pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "amount_received": {
-                        "description": "Monto del pago recibido",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "balance": {
-                        "description": "Saldo a favor",
-                        "type": "string",
-                        "example": "150.00",
-                        "nullable": true
-                    },
-                    "date": {
-                        "description": "Fecha del pago",
-                        "type": "string",
-                        "example": "2025-11-04",
-                        "nullable": true
-                    },
-                    "status": {
-                        "description": "Estado del pago",
-                        "type": "string",
-                        "example": "completed",
-                        "nullable": true
-                    },
-                    "reference": {
-                        "description": "Referencia del pago",
-                        "type": "string",
-                        "example": "REF123456",
-                        "nullable": true
-                    },
-                    "url": {
-                        "description": "URL del recibo de pago",
-                        "type": "string",
-                        "example": "https://example.com/receipt/123",
-                        "nullable": true
-                    },
-                    "payment_method_details": {
-                        "description": "Detalles del método de pago utilizado",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentHistoryResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID interno del pago",
-                        "type": "integer",
-                        "example": 123,
-                        "nullable": true
-                    },
-                    "concept": {
-                        "description": "Concepto del pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "amount_received": {
-                        "description": "Monto del pago recibido",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "status": {
-                        "description": "Status del concepto del pago",
-                        "type": "string",
-                        "example": "paid",
-                        "nullable": true
-                    },
-                    "date": {
-                        "description": "Fecha del pago",
-                        "type": "string",
-                        "example": "2025-11-04",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentListItemResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID del pago",
-                        "type": "integer",
-                        "example": 10
-                    },
-                    "date": {
-                        "description": "Fecha del pago",
-                        "type": "string",
-                        "example": "2025-11-04",
-                        "nullable": true
-                    },
-                    "concept": {
-                        "description": "Concepto del pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "amount_received": {
-                        "description": "Monto del pago recibido",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "method": {
-                        "description": "Método de pago usado",
-                        "type": "string",
-                        "example": "Tarjeta de crédito",
-                        "nullable": true
-                    },
-                    "fullName": {
-                        "description": "Nombre completo del usuario que realizó el pago",
-                        "type": "string",
-                        "example": "Juan Pérez",
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentValidateResponse": {
-                "properties": {
-                    "student": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/UserDataResponse"
-                            }
-                        ],
-                        "nullable": true
-                    },
-                    "payment": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/PaymentDataResponse"
-                            }
-                        ],
-                        "nullable": true
-                    },
-                    "updatedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2024-01-12 14:45:00"
-                    },
-                    "metadata": {
-                        "properties": {
-                            "wasCreated": {
-                                "type": "boolean",
-                                "example": true
-                            },
-                            "wasReconciled": {
-                                "type": "boolean",
-                                "example": false
-                            },
-                            "message": {
-                                "type": "string",
-                                "example": "Pago creado con exito"
-                            },
-                            "reconciliationResult": {
-                                "properties": {
-                                    "processed": {
-                                        "type": "integer",
-                                        "example": 0
-                                    },
-                                    "updated": {
-                                        "type": "integer",
-                                        "example": 0
-                                    },
-                                    "notified": {
-                                        "type": "integer",
-                                        "example": 0
-                                    },
-                                    "failed": {
-                                        "type": "integer",
-                                        "example": 0
-                                    }
-                                },
-                                "type": "object",
-                                "nullable": true
-                            }
-                        },
-                        "type": "object"
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentsMadeByConceptName": {
-                "properties": {
-                    "concept_name": {
-                        "description": "Concepto del pago",
-                        "type": "string",
-                        "example": "Pago de inscripción"
-                    },
-                    "amount_total": {
-                        "description": "Monto total que debe recibir ese concepto",
-                        "type": "string",
-                        "example": "1500.00"
-                    },
-                    "amount_received_total": {
-                        "description": "Monto total pagado del concepto",
-                        "type": "string",
-                        "example": "1500.00"
-                    },
-                    "first_payment_date": {
-                        "description": "Primera fecha de pago del concepto",
-                        "type": "string",
-                        "example": "2025-11-04"
-                    },
-                    "last_payment_date": {
-                        "description": "Última fecha de pago del concepto",
-                        "type": "string",
-                        "example": "2025-12-04"
-                    },
-                    "collection_rate": {
-                        "description": "Tasa de recaudación del concepto",
-                        "type": "string",
-                        "example": "100.00"
-                    }
-                },
-                "type": "object"
-            },
-            "PaymentsSummaryResponse": {
-                "properties": {
-                    "totalPayments": {
-                        "description": "Monto total de pagos realizados por el alumno",
-                        "type": "string",
-                        "example": "25000.00"
-                    },
-                    "paymentsByMonth": {
-                        "description": "Pagos realizados por el alumno agrupados por mes (YYYY-MM)",
-                        "type": "object",
-                        "example": {
-                            "2024-01": "15000.00",
-                            "2024-02": "12000.00",
-                            "2024-03": "18000.00"
-                        },
-                        "additionalProperties": {
-                            "type": "string",
-                            "example": "15000.00",
-                            "property": null
-                        }
-                    }
-                },
-                "type": "object"
-            },
             "ConceptChangeStatusResponse": {
                 "title": "Respuesta de cambio de estado de concepto de pago",
                 "description": "Respuesta detallada al cambiar el estado de un concepto de pago",
@@ -9976,10 +10780,12 @@
                     "careers": {
                         "type": "array",
                         "items": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "example": [
-                            "Sistemas"
+                            1,
+                            2,
+                            3
                         ]
                     },
                     "semesters": {
@@ -10498,6 +11304,442 @@
                         "type": "string",
                         "example": "https://example.com/setup/pm_01HXXXXXX",
                         "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "FinancialSummaryResponse": {
+                "properties": {
+                    "totalPayments": {
+                        "description": "Monto total bruto de pagos recibidos",
+                        "type": "string",
+                        "example": "250000.00"
+                    },
+                    "totalPayouts": {
+                        "description": "Monto total neto recibido (payouts)",
+                        "type": "string",
+                        "example": "230000.00"
+                    },
+                    "totalFees": {
+                        "description": "Monto total de comisiones cobradas",
+                        "type": "string",
+                        "example": "20000.00"
+                    },
+                    "paymentsBySemester": {
+                        "description": "Pagos brutos agrupados por semestre",
+                        "type": "object",
+                        "additionalProperties": {
+                            "properties": {
+                                "total": {
+                                    "type": "string",
+                                    "example": "45000.00"
+                                },
+                                "months": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "example": "15000.00"
+                                    }
+                                }
+                            },
+                            "type": "object",
+                            "property": null
+                        }
+                    },
+                    "payoutsBySemester": {
+                        "description": "Payouts agrupados por semestre",
+                        "type": "object",
+                        "additionalProperties": {
+                            "properties": {
+                                "total": {
+                                    "type": "string",
+                                    "example": "38000.00"
+                                },
+                                "total_fee": {
+                                    "type": "string",
+                                    "example": "2500.00"
+                                },
+                                "months": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "amount": {
+                                                "type": "string",
+                                                "example": "18000.00"
+                                            },
+                                            "fee": {
+                                                "type": "string",
+                                                "example": "1200.00"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            },
+                            "type": "object",
+                            "property": null
+                        }
+                    },
+                    "totalBalanceAvailable": {
+                        "description": "Balance total disponible actualmente",
+                        "type": "string",
+                        "example": "35000.00"
+                    },
+                    "totalBalancePending": {
+                        "description": "Balance total pendiente actualmente",
+                        "type": "string",
+                        "example": "15000.00"
+                    },
+                    "availablePercentage": {
+                        "description": "Porcentaje del balance disponible respecto al total de pagos",
+                        "type": "string",
+                        "example": "14.00"
+                    },
+                    "pendingPercentage": {
+                        "description": "Porcentaje del balance pendiente respecto al total de pagos",
+                        "type": "string",
+                        "example": "6.00"
+                    },
+                    "netReceivedPercentage": {
+                        "description": "Porcentaje neto recibido respecto al total de pagos",
+                        "type": "string",
+                        "example": "92.00"
+                    },
+                    "feePercentage": {
+                        "description": "Porcentaje total de comisión respecto al total de pagos",
+                        "type": "string",
+                        "example": "8.00"
+                    },
+                    "totalBalanceAvailableBySource": {
+                        "description": "Balance disponible agrupado por método de pago",
+                        "type": "object",
+                        "example": {
+                            "card": "25000.00",
+                            "oxxo": "6000.00",
+                            "transfer": "4000.00"
+                        }
+                    },
+                    "totalBalancePendingBySource": {
+                        "description": "Balance pendiente agrupado por método de pago",
+                        "type": "object",
+                        "example": {
+                            "card": "9000.00",
+                            "oxxo": "3000.00",
+                            "transfer": "3000.00"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentDataResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID interno del pago",
+                        "type": "integer",
+                        "example": 123,
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "amount_received": {
+                        "description": "Monto del pago recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "status": {
+                        "description": "Estado del pago",
+                        "type": "string",
+                        "example": "completed",
+                        "nullable": true
+                    },
+                    "payment_intent_id": {
+                        "description": "ID del Payment Intent asociado",
+                        "type": "string",
+                        "example": "pi_01HXXXXXX",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentDetailResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID interno del pago",
+                        "type": "integer",
+                        "example": 123,
+                        "nullable": true
+                    },
+                    "concept": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "amount_received": {
+                        "description": "Monto del pago recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "balance": {
+                        "description": "Saldo a favor",
+                        "type": "string",
+                        "example": "150.00",
+                        "nullable": true
+                    },
+                    "date": {
+                        "description": "Fecha del pago",
+                        "type": "string",
+                        "example": "2025-11-04",
+                        "nullable": true
+                    },
+                    "status": {
+                        "description": "Estado del pago",
+                        "type": "string",
+                        "example": "completed",
+                        "nullable": true
+                    },
+                    "reference": {
+                        "description": "Referencia del pago",
+                        "type": "string",
+                        "example": "REF123456",
+                        "nullable": true
+                    },
+                    "url": {
+                        "description": "URL del recibo de pago",
+                        "type": "string",
+                        "example": "https://example.com/receipt/123",
+                        "nullable": true
+                    },
+                    "payment_method_details": {
+                        "description": "Detalles del método de pago utilizado",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentHistoryResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID interno del pago",
+                        "type": "integer",
+                        "example": 123,
+                        "nullable": true
+                    },
+                    "concept": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "amount_received": {
+                        "description": "Monto del pago recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "status": {
+                        "description": "Status del concepto del pago",
+                        "type": "string",
+                        "example": "paid",
+                        "nullable": true
+                    },
+                    "date": {
+                        "description": "Fecha del pago",
+                        "type": "string",
+                        "example": "2025-11-04",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentListItemResponse": {
+                "properties": {
+                    "id": {
+                        "description": "ID del pago",
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "date": {
+                        "description": "Fecha del pago",
+                        "type": "string",
+                        "example": "2025-11-04",
+                        "nullable": true
+                    },
+                    "concept": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Monto del pago",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "amount_received": {
+                        "description": "Monto del pago recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "method": {
+                        "description": "Método de pago usado",
+                        "type": "string",
+                        "example": "Tarjeta de crédito",
+                        "nullable": true
+                    },
+                    "fullName": {
+                        "description": "Nombre completo del usuario que realizó el pago",
+                        "type": "string",
+                        "example": "Juan Pérez",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentValidateResponse": {
+                "properties": {
+                    "student": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/UserDataResponse"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "payment": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentDataResponse"
+                            }
+                        ],
+                        "nullable": true
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-12 14:45:00"
+                    },
+                    "metadata": {
+                        "properties": {
+                            "wasCreated": {
+                                "type": "boolean",
+                                "example": true
+                            },
+                            "wasReconciled": {
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "message": {
+                                "type": "string",
+                                "example": "Pago creado con exito"
+                            },
+                            "reconciliationResult": {
+                                "properties": {
+                                    "processed": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "updated": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "notified": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "failed": {
+                                        "type": "integer",
+                                        "example": 0
+                                    }
+                                },
+                                "type": "object",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentsMadeByConceptName": {
+                "properties": {
+                    "concept_name": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción"
+                    },
+                    "amount_total": {
+                        "description": "Monto total que debe recibir ese concepto",
+                        "type": "string",
+                        "example": "1500.00"
+                    },
+                    "amount_received_total": {
+                        "description": "Monto total pagado del concepto",
+                        "type": "string",
+                        "example": "1500.00"
+                    },
+                    "first_payment_date": {
+                        "description": "Primera fecha de pago del concepto",
+                        "type": "string",
+                        "example": "2025-11-04"
+                    },
+                    "last_payment_date": {
+                        "description": "Última fecha de pago del concepto",
+                        "type": "string",
+                        "example": "2025-12-04"
+                    },
+                    "collection_rate": {
+                        "description": "Tasa de recaudación del concepto",
+                        "type": "string",
+                        "example": "100.00"
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentsSummaryResponse": {
+                "properties": {
+                    "totalPayments": {
+                        "description": "Monto total de pagos realizados por el alumno",
+                        "type": "string",
+                        "example": "25000.00"
+                    },
+                    "paymentsByMonth": {
+                        "description": "Pagos realizados por el alumno agrupados por mes (YYYY-MM)",
+                        "type": "object",
+                        "example": {
+                            "2024-01": "15000.00",
+                            "2024-02": "12000.00",
+                            "2024-03": "18000.00"
+                        },
+                        "additionalProperties": {
+                            "type": "string",
+                            "example": "15000.00",
+                            "property": null
+                        }
                     }
                 },
                 "type": "object"
@@ -11607,21 +12849,6 @@
                 ],
                 "example": "VALIDATION_ERROR"
             },
-            "PaymentStatus": {
-                "description": "Estatus válidos de un pago",
-                "type": "string",
-                "enum": [
-                    "succeeded",
-                    "overpaid",
-                    "failed",
-                    "paid",
-                    "requires_action",
-                    "unpaid",
-                    "pending",
-                    "underpaid"
-                ],
-                "example": "paid"
-            },
             "PaymentConceptApplicantType": {
                 "description": "Tags de casos especiales",
                 "type": "string",
@@ -11654,6 +12881,21 @@
                     "eliminado"
                 ],
                 "example": "activo"
+            },
+            "PaymentStatus": {
+                "description": "Estatus válidos de un pago",
+                "type": "string",
+                "enum": [
+                    "succeeded",
+                    "overpaid",
+                    "failed",
+                    "paid",
+                    "requires_action",
+                    "unpaid",
+                    "pending",
+                    "underpaid"
+                ],
+                "example": "paid"
             },
             "RelationshipType": {
                 "description": "Tipo de relación entre padre y estudiante",
@@ -12738,10 +13980,6 @@
             "description": "Operaciones relacionadas con carreras"
         },
         {
-            "name": "FindEntity",
-            "description": "Operaciones para buscar usuarios, pagos y conceptos"
-        },
-        {
             "name": "Auth",
             "description": "Endpoints relacionados con la autenticación de usuarios, tokens de acceso, contraseñas y verificación"
         },
@@ -12788,6 +14026,10 @@
         {
             "name": "Payouts",
             "description": "Payouts"
+        },
+        {
+            "name": "FindEntity",
+            "description": "FindEntity"
         },
         {
             "name": "Payment History",
