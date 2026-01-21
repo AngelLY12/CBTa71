@@ -4,8 +4,8 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
 use App\Core\Domain\Entities\User;
-use App\Core\Domain\Repositories\Command\StudentDetailReInterface;
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\Conflict\UserAlreadyHaveStudentDetailException;
 use App\Jobs\ClearStaffCacheJob;
 
