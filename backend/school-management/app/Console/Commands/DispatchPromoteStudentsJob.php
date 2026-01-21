@@ -26,7 +26,7 @@ class DispatchPromoteStudentsJob extends Command
      */
     public function handle()
     {
-        PromoteStudentsJob::dispatch();
+        PromoteStudentsJob::dispatch()->onQueue('maintenance-heavy');
         $this->info('PromoteStudentsJob despachado.');
     }
 }

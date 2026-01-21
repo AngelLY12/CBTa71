@@ -26,7 +26,7 @@ class DispatchCleanCacheJob extends Command
      */
     public function handle()
     {
-        CleanCacheJob::dispatch();
+        CleanCacheJob::dispatch()->onQueue('cache');
         $this->info("CleanCacheJob despachado");
     }
 }

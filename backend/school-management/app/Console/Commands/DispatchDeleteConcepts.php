@@ -26,7 +26,7 @@ class DispatchDeleteConcepts extends Command
      */
     public function handle()
     {
-        CleanDeleteConceptsJob::dispatch();
+        CleanDeleteConceptsJob::dispatch()->onQueue('default');
         $this->info('CleanDeleteConceptsJob despachado');
     }
 }

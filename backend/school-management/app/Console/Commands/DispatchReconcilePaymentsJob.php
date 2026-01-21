@@ -26,7 +26,7 @@ class DispatchReconcilePaymentsJob extends Command
      */
     public function handle()
     {
-        ReconcilePayments::dispatch();
+        ReconcilePayments::forCron()->onQueue('maintenance-heavy');
         $this->info('ReconcilePaymentsJob dispatched');
     }
 }
