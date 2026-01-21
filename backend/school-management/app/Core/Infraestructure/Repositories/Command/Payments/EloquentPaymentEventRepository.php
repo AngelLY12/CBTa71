@@ -25,4 +25,15 @@ class EloquentPaymentEventRepository implements PaymentEventRepInterface
         return PaymentEventMapper::toDomain($paymentEvent);
     }
 
+    public function deleteOlderEvents(): int
+    {
+        $count = 0;
+        EloquentPaymentEvent::where('created_at', '<', now()->subMonths(3))
+            ->chunkById(1000, function($logs) use (&$count) {
+                $count += $logs->count();
+                $logs->each->delete();
+            });
+        return $count;
+    }
+
 }

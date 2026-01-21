@@ -8,4 +8,6 @@ interface PaymentEventRepInterface
 {
     public function create(PaymentEvent $event): PaymentEvent;
     public function update(int $paymentEventId, array $fields): PaymentEvent;
+    public function deleteOlderEvents(): int;
+
 }
