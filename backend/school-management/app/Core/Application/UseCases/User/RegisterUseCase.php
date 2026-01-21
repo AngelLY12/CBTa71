@@ -31,6 +31,7 @@ class RegisterUseCase
         if($password)
         {
             $this->notifyRecipients($user, $password);
+            return $user;
         }
         event(new Registered($user));
         return $user;
