@@ -38,7 +38,7 @@ class ParentInvitationAcceptedNotification extends Notification
         return [
             'title' => 'Nuevo familiar agregado',
             'message' => "Hola {$this->studentFullName}, tu familiar {$this->parentFullName} aceptó tu invitación",
-            'type' => 'success'
+            'type' => 'invitation_accepted',
         ];
     }
 

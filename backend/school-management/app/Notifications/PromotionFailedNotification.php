@@ -37,7 +37,7 @@ class PromotionFailedNotification extends Notification
         return [
             'title' => 'Promoción de estudiantes no completada',
             'message' => "Hubo un fallo en la promoción de los estudiantes: {$this->error}",
-            'type' => 'error'
+            'type' => 'promotion_failed'
         ];
     }
 

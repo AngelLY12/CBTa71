@@ -38,7 +38,7 @@ class PromotionCompletedNotification extends Notification
         return [
             'title' => 'Promoción de estudiantes completada',
             'message' => "Se promovieron {$this->promotedCount} estudiantes y se dieron de baja {$this->desactivatedCount}",
-            'type' => 'success'
+            'type' => 'promotion_completed'
         ];
     }
 

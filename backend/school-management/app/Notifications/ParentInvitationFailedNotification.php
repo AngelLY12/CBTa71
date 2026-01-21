@@ -38,7 +38,7 @@ class ParentInvitationFailedNotification extends Notification
         return [
             'title' => 'Fallo al aceptar invitación',
             'message' => "Hola {$this->studentFullName}, hubo un fallo inesperado en la invitación enviada a tu familiar {$this->parentFullName}. Puedes iniciar el proceso de nuevo enviando una nueva invitación.",
-            'type' => 'success'
+            'type' => 'invitation_failed',
         ];
     }
 

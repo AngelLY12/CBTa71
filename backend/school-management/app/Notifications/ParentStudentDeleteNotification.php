@@ -37,7 +37,7 @@ class ParentStudentDeleteNotification extends Notification
         return [
             'title' => 'Relación eliminada',
             'message' => "Hola {$notifiable->name}, se elimino la relación con tu familiar {$this->studentFullName}.",
-            'type' => 'success'
+            'type' => 'relation_deleted'
         ];
     }
 

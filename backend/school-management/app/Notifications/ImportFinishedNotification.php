@@ -36,8 +36,8 @@ class ImportFinishedNotification extends Notification
     {
         return [
             'title' => 'Import finalizado',
-            'message' => "Importación de datos finalizada, a continuación veras un resúmen",
-            'data' => $this->importResult,
+            'message' => "Import de datos finalizado, a continuación veras un resúmen.",
+            'details' => $this->buildImportMessage(),
             'type' => 'import_finished'
         ];
     }
@@ -63,5 +63,40 @@ class ImportFinishedNotification extends Notification
         return [
             //
         ];
+    }
+
+
+    private function buildImportMessage(): string
+    {
+        if (empty($this->result['summary'])) {
+            return $this->result['message']
+                ?? 'El import finalizó, pero no se pudo generar el resumen.';
+        }
+
+        $summary = $this->result['summary'];
+        $errors  = $this->result['errors'] ?? [];
+        $warnings = $this->result['warnings'] ?? [];
+
+        $lines = [];
+
+        $lines[] = 'Resumen extendido de la operación:';
+        $lines[] = "• Filas recibidas: {$summary['total_rows_received']}";
+        $lines[] = "• Filas procesadas: {$summary['rows_processed']}";
+        $lines[] = "• Filas insertadas: {$summary['rows_inserted']}";
+        $lines[] = "• Filas fallidas: {$summary['rows_failed']}";
+        $lines[] = "• Tasa de éxito: {$summary['success_rate']}%";
+
+        if (($warnings['total_warnings'] ?? 0) > 0) {
+            $lines[] = "Advertencias: {$warnings['total_warnings']}";
+        }
+
+        if (($errors['total_errors'] ?? 0) > 0) {
+            $lines[] = "Errores: {$errors['total_errors']}";
+        }
+
+        $lines[] = "Fecha: " . ($this->result['timestamp'] ?? now()->toDateTimeString());
+
+        return implode("\n", $lines);
+
     }
 }
