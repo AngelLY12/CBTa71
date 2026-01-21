@@ -2251,7 +2251,7 @@
                 }
             }
         },
-        "/api/forgot-password": {
+        "/api/v1/forgot-password": {
             "post": {
                 "tags": [
                     "Auth"
@@ -2321,7 +2321,7 @@
                 }
             }
         },
-        "/api/verify-email/{id}/{hash}": {
+        "/api/v1/verify-email/{id}/{hash}": {
             "get": {
                 "tags": [
                     "Auth"
