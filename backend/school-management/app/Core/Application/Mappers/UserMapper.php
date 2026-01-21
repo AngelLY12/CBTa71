@@ -84,15 +84,15 @@ class UserMapper{
             password: $data['password'],
             phone_number: $data['phone_number'],
             curp: $data['curp'],
-            birthdate: new Carbon($data['birthdate']) ?? null,
+            birthdate: isset($data['birthdate']) ? new Carbon($data['birthdate']) : null,
             gender: isset($data['gender'])
             ? UserGender::from(strtolower($data['gender']))
             : null,
-            address: $data['address'] ?? [],
+            address: isset($data['address']) ? $data['address'] : null,
             blood_type: isset($data['blood_type'])
            ? UserBloodType::from($data['blood_type'])
            : null,
-            registration_date: new Carbon($data['registration_date'] ?? Carbon::now()),
+            registration_date: isset($data['registration_date']) ? new Carbon($data['registration_date']) : Carbon::now(),
             status: isset($data['status']) ? UserStatus::from($data['status']) : UserStatus::ACTIVO
         );
 
