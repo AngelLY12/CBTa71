@@ -8,8 +8,6 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Exceptions\DomainException;
-use App\Http\Middleware\CheckUserStatus;
-use App\Http\Middleware\LogUserAction;
 use App\Http\Middleware\SecureHeadersMiddleware;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -37,15 +35,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
-        $middleware->append(SecureHeadersMiddleware::class);
-
+        $middleware->append(\App\Http\Middleware\SecureHeadersMiddleware::class);
+        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'log.action' => LogUserAction::class,
-            'user.status' => CheckUserStatus::class
+            'log.action' => \App\Http\Middleware\LogUserAction::class,
+            'user.status' => \App\Http\Middleware\CheckUserStatus::class
         ]);
 
         //
@@ -55,14 +53,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('tokens:dispatch-clean-expired-tokens')->everyThreeHours()->withoutOverlapping(30)->onOneServer();
         $schedule->command('backup:clean')->dailyAt('23:50');
         $schedule->command('concepts:dispatch-finalize-job')->dailyAt('00:05')->withoutOverlapping(30)->onOneServer();
-        $schedule->command('backup:dispatch-create-backup-job')->dailyAt('01:05') ->withoutOverlapping(120);
-        $schedule->command('db:auto-restore')->dailyAt('02:25')->withoutOverlapping(30);
-        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('03:25');
-        $schedule->command('users:dispatch-delete-users')->weekly()->at('04:25')->withoutOverlapping(30)->onOneServer();
-        $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('05:25')->withoutOverlapping(30)->onOneServer();
-        $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('05:55');
+        $schedule->command('backup:dispatch-create-backup-job')->dailyAt('00:30') ->withoutOverlapping(120);
+        $schedule->command('db:auto-restore')->dailyAt('01:30')->withoutOverlapping(30);
+        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('01:20');
+        $schedule->command('users:dispatch-delete-users')->weekly()->at('01:45')->withoutOverlapping(30)->onOneServer();
+        $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('02:10')->withoutOverlapping(30)->onOneServer();
+        $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('02:35');
         $schedule->command('app:dispatch-promote-students-job')
-        ->dailyAt('21:50')
+        ->dailyAt('22:50')
         ->when(function () {
             $today = now();
             $lastDay = $today->endOfMonth()->day;
@@ -75,6 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('logs:dispatch-clean-older-logs-job')->quarterly()->withoutOverlapping(120);
         $schedule->command('app:dispatch-optimize-database-job')->quarterly()->withoutOverlapping()->onOneServer();
         $schedule->command('cache:dispatch-clean-cache-job')->cron('0 0 1 */3 *')->withoutOverlapping(30);
+        $schedule->command('payments:dispath-clean-older-payment-events-job')->cron('0 0 1 */3 *')->withoutOverlapping(30);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
