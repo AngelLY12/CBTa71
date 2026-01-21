@@ -30,7 +30,7 @@ Route::get('/health', function () {
 });
 Route::post('/stripe/webhook', [WebhookController::class, 'handle']);
 
-Route::prefix('v1')->middleware(['throttle:5,1', 'api'])->group(function () {
+Route::prefix('v1')->middleware(['throttle:5,1'])->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
     Route::post('/register', [LoginController::class, 'register']);
     Route::post('/refresh-token', [RefreshTokenController::class, 'store']);
