@@ -50,7 +50,9 @@ WORKDIR /var/www
 # In other cases, it would be possible to copy composer files
 # first, to leverage Docker's layer caching mechanism.
 # -----------------------------------------------------------
-COPY composer.json composer.lock ./
+COPY composer.json composer.lock artisan ./
+COPY bootstrap ./bootstrap
+COPY config ./config
 
 # Install Composer and dependencies
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
