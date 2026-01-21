@@ -26,7 +26,7 @@ class DispatchCleanOlderLogsJob extends Command
      */
     public function handle()
     {
-        CleanOlderLogsJob::dispatch()->onQueue('default');
+        CleanOlderLogsJob::dispatch()->onQueue('maintenance-heavy');
         $this->info("CleanOlderLogsJob despachado");
     }
 }

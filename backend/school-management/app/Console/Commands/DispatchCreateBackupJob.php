@@ -26,7 +26,7 @@ class DispatchCreateBackupJob extends Command
      */
     public function handle()
     {
-        CreateBackupJob::dispatch()->onQueue('backups');
+        CreateBackupJob::dispatch()->onQueue('maintenance-heavy');
         $this->info('CreateBackupJob despachado');
     }
 }
