@@ -54,7 +54,7 @@ class AdminController extends Controller
 
     public function promotionStudents()
     {
-        PromoteStudentsJob::dispatch(Auth::id());
+        PromoteStudentsJob::dispatch(Auth::id())->onQueue('maintenance-heavy');
         return Response::success(null, 'Promoción de estudiantes iniciada en segundo plano.');
 
     }
