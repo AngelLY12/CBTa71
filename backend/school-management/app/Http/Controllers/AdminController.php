@@ -88,20 +88,18 @@ class AdminController extends Controller
     public function import(ImportRequest $request)
     {
         $file= $request->file('file');
-        $import=new UsersImport($this->service);
-        Excel::import($import,$file);
-        $result = $import->getImportResult();
-        return Response::success(['summary' => $result], 'Usuarios importados correctamente.');
+        $import=new UsersImport($this->service, Auth::user());
+        Excel::queueImport($import,$file)->onQueue('imports');
+        return Response::success(null, 'Usuarios procesandose, se te notificara cuando termine.');
 
     }
 
     public function importStudents(ImportRequest $request)
     {
         $file= $request->file('file');
-        $import= new StudentDetailsImport($this->service);
-        Excel::import($import,$file);
-        $result = $import->getImportResult();
-        return Response::success(['summary' => $result], 'Detalles de estudiantes importados correctamente.');
+        $import= new StudentDetailsImport($this->service, Auth::user());
+        Excel::queueImport($import,$file)->onQueue('imports');
+        return Response::success(null, 'Usuarios procesandose, se te notificara cuando termine.');
     }
 
     public function updatePermissions(UpdatePermissionsRequest $request)
