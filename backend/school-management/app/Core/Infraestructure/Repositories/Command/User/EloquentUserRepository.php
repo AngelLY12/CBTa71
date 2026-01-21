@@ -49,11 +49,13 @@ class EloquentUserRepository implements UserRepInterface
                 UserRoles::ADMIN->value,
                 UserRoles::SUPERVISOR->value => 1,
                 UserRoles::FINANCIAL_STAFF->value => 2,
+                UserRoles::UNVERIFIED->value => 0,
                 default => 3,
             })
+
             ->first();
-        $expirationTime = config("refresh_token.expiration_time_by_role.$role") ??
-            config('refresh_token.default_refresh_ttl');
+        $expirationTime = config("refresh-token.expiration_time_by_role.$role") ??
+            config('refresh-token.default_refresh_ttl');
         $eloquentUser->refreshTokens()->create([
             'token' => hash('sha256', $refreshToken),
             'expires_at' => now()->addMinutes($expirationTime),
