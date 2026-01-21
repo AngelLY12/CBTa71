@@ -90,7 +90,7 @@ public function resetPassword(){}
 *
 *
 * @OA\Post(
-*     path="/api/forgot-password",
+*     path="/api/v1/forgot-password",
 *     tags={"Auth"},
 *     summary="Enviar link para restablecer contraseña",
 *     description="Envía un correo con el enlace de restablecimiento de contraseña al email proporcionado.",
@@ -131,7 +131,7 @@ public function forgotPassword(){}
 /**
 *
 * @OA\Get(
-*     path="/api/verify-email/{id}/{hash}",
+*     path="/api/v1/verify-email/{id}/{hash}",
 *     tags={"Auth"},
 *     summary="Verificar email del usuario",
 *     description="Marca el correo del usuario como verificado si el hash es correcto.",

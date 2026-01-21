@@ -34,11 +34,25 @@ Route::prefix('v1')->middleware('throttle:5,1')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
     Route::post('/register', [LoginController::class, 'register']);
     Route::post('/refresh-token', [RefreshTokenController::class, 'store']);
+    Route::post('/forgot-password', [\App\Http\Controllers\Auth\PasswordResetLinkController::class, 'store'])
+        ->middleware('guest')
+        ->name('api.password.email');
+
+    Route::post('/reset-password', [\App\Http\Controllers\Auth\NewPasswordController::class, 'store'])
+        ->middleware('guest')
+        ->name('api.password.store');
 
 });
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::post('/logout',[RefreshTokenController::class,'logout']);
+    Route::get('/verify-email/{id}/{hash}', \App\Http\Controllers\Auth\VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('api.verification.verify');
+
+    Route::post('/email/verification-notification', [\App\Http\Controllers\Auth\EmailVerificationNotificationController::class, 'store'])
+        ->middleware(['auth', 'throttle:6,1'])
+        ->name('api.verification.send');
 
     Route::prefix('notifications')->middleware(['throttle:30,1'])->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
