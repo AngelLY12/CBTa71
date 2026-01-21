@@ -134,14 +134,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PaymentEventRepInterface::class, EloquentPaymentEventRepository::class);
         $this->app->bind(PaymentEventQueryRepInterface::class, EloquentPaymentEventQueryRepository::class);
 
-        if(class_exists(App\Providers\TelescopeServiceProvider::class))
-        {
-            $this->app->register(App\Providers\TelescopeServiceProvider::class);
-        }
-        if(class_exists(L5Swagger\L5SwaggerServiceProvider::class))
-        {
-            $this->app->register(L5Swagger\L5SwaggerServiceProvider::class);
-        }
 
     }
 
@@ -204,7 +196,7 @@ class AppServiceProvider extends ServiceProvider
             return response()->json($payload, $status);
         });
 
-        Response::macro('error', function ($message = null, $status = 400, $errors = null, string $code=null) {
+        Response::macro('error', function ($message = null, $status = 400, $errors = null, ?string $code=null) {
             $payload = ['success' => false];
 
             if(!is_null($code) && $code !== '') {
