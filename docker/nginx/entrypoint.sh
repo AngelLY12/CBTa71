@@ -10,7 +10,7 @@ echo "Esperando a que Laravel esté listo..."
 i=0
 until curl -s $LARAVEL_URL >/dev/null; do
     i=$((i+1))
-    if [$i -ge $MAX_RETRIES]; then
+    if [ $i -ge $MAX_RETRIES ]; then
         echo "Laravel no respondió después de $MAX_RETRIES intentos. Abortando."
         exit 1
     fi
