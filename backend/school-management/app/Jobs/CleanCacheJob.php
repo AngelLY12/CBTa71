@@ -34,7 +34,7 @@ class CleanCacheJob implements ShouldQueue
         $cache->clearPrefix(CachePrefix::USER->value);
         $cache->clearPrefix(CachePrefix::CAREERS->value);
         $cache->clearPrefix(CachePrefix::PARENT->value);
-
+        Log::info("Cache general limpiado con éxito");
     }
 
     public function failed(\Throwable $exception): void

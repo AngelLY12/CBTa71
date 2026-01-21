@@ -38,6 +38,7 @@ class CheckUserStatusJob implements ShouldQueue
 
         }
         $service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$this->user->id");
+        Log::info("Se eliminaron los tokens y cachde del usuario {$this->user->id}");
     }
 
     public function failed(\Throwable $exception): void
