@@ -196,7 +196,7 @@ Route::get('/test-redis-connection', function() {
 });
 
 
-Route::get('/debug/redis-keys', function () {
+Route::get('/debug/redis-keys/cursor', function () {
     $redis = Cache::getRedis();
 
     $keys = [];
