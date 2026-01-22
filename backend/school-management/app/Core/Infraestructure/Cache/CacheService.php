@@ -82,7 +82,7 @@ class CacheService
     public function clearPrefix(string $prefix): void
     {
         $redis = Cache::getRedis();
-        $laravelPrefix = Cache::getPrefix();
+        $laravelPrefix = config('database.redis.options.prefix') . Cache::getPrefix();;
         $searchPattern = $laravelPrefix . $prefix . '*';
         $cursor = 0;
         $allKeys = [];
