@@ -4,6 +4,7 @@ namespace App\Core\Application\Traits;
 
 use App\Core\Infraestructure\Cache\CacheService;
 use App\Exceptions\Conflict\IdempotencyExistsException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 trait HasCache
@@ -17,6 +18,11 @@ trait HasCache
 
     public function cache(string $key, bool $forceRefresh, callable $callback)
     {
+        Log::emergency('🔥 CACHE DEBUG - Método cache() EJECUTADO', [
+            'key' => $key,
+            'forceRefresh' => $forceRefresh,
+            'caller' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'] ?? 'unknown',
+        ]);
 
         if ($forceRefresh) {
             $this->cacheService->clearPrefix($key);

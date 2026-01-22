@@ -41,6 +41,8 @@ use App\Core\Domain\Enum\Cache\AdminCacheSufix;
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Infraestructure\Cache\CacheService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class AdminServiceFacades
 {
@@ -113,8 +115,20 @@ class AdminServiceFacades
     }
     public function showAllUsers(int $perPage, int $page, bool $forceRefresh, ?UserStatus $status = null): PaginatedResponse
     {
+        Log::emergency('🟢 CACHE DEBUG - showAllUsers LLAMADO', [
+            'perPage' => $perPage,
+            'page' => $page,
+            'forceRefresh' => $forceRefresh,
+            'status' => $status?->value,
+            'timestamp' => now()->toDateTimeString(),
+        ]);
+
         $statusValue = $status ? $status->value : 'all';
         $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage:$statusValue");
+        Log::emergency('🔑 CACHE DEBUG - Key generada', [
+            'key' => $key,
+            'full_key' => Cache::getPrefix() . $key,
+        ]);
         return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page, $status));
     }
 

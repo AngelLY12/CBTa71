@@ -9,6 +9,7 @@ use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Closure;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class CacheService
 {
@@ -68,7 +69,18 @@ class CacheService
 
     public function rememberForever(string $key, Closure $callback)
     {
-        return Cache::rememberForever($key, $callback);
+        Log::emergency('💾 CACHE DEBUG - rememberForever EJECUTADO', [
+            'key' => $key,
+            'full_key' => Cache::getPrefix() . $key,
+            'callback_type' => gettype($callback),
+        ]);
+        $result = Cache::rememberForever($key, $callback);
+        Log::emergency('✅ CACHE DEBUG - Datos guardados', [
+            'key' => $key,
+            'result_type' => gettype($result),
+            'timestamp' => now()->toDateTimeString(),
+        ]);
+        return $result;
     }
 
     public function makeKey(string $prefixKey, string $suffix): string
