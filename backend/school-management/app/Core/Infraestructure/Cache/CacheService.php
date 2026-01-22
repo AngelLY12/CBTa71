@@ -84,8 +84,9 @@ class CacheService
         $store = Cache::store('redis');
         /** @var RedisStore $store */
         $redis = $store->getRedis();
+        $redisPrefix = config('database.redis.options.prefix');
         $cachePrefix = $store->getPrefix();
-        $searchPattern = $cachePrefix . $prefix . '*';
+        $searchPattern = $redisPrefix . $cachePrefix . $prefix . '*';
         $cursor = 0;
         $allKeys = [];
 
