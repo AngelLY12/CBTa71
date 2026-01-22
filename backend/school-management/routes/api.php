@@ -195,6 +195,26 @@ Route::get('/test-redis-connection', function() {
     }
 });
 
+
+Route::get('/debug/redis-keys', function () {
+    $redis = Cache::getRedis();
+
+    $keys = [];
+    $cursor = 0;
+
+    do {
+        [$cursor, $found] = $redis->scan($cursor);
+        $keys = array_merge($keys, $found);
+    } while ($cursor > 0);
+
+    return $keys;
+});
+
+Route::get('/debug-redis-keys', function () {
+    $redis = Cache::getRedis();
+    return $redis->keys('*');
+});
+
 Route::get('/test-cache-service-complete', function() {
     $cacheService = app(\App\Core\Infraestructure\Cache\CacheService::class);
     $results = [];
