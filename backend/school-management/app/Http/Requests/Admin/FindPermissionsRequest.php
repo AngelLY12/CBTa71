@@ -46,44 +46,24 @@ class FindPermissionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'curps' => ['sometimes', 'array'],
-            'curps.*' => ['string', 'size:18', 'exists:users,curp'],
-            'role' => ['sometimes', 'string', 'exists:roles,name'],
+            'curps' => ['prohibits:role', 'required_without:role', 'array'],
+            'curps.*' => ['required', 'string', 'size:18', 'exists:users,curp'],
+            'role' => ['prohibits:curps', 'required_without:curps', 'string', 'exists:roles,name'],
         ];
     }
 
     protected function prepareForValidation()
     {
-        $curps = $this->input('curps', $this->query('curps'));
-        $role = $this->input('role', $this->query('role'));
+        $curps = $this->input('curps');
 
-        if (!empty($curps) && !is_array($curps)) {
-            $curps = [$curps];
+        if (is_string($curps)) {
+            $curps = array_map('trim', explode(',', $curps));
+            $curps = array_filter($curps);
         }
 
-        $this->merge([
-            'curps' => $curps,
-            'role'  => $role
-        ]);
-    }
-
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            $curps = $this->input('curps');
-            $role = $this->input('role');
-
-            if (empty($curps) && empty($role)) {
-                $validator->errors()->add('curps', 'Debes enviar curps o role.');
-                $validator->errors()->add('role', 'Debes enviar curps o role.');
-                return;
-            }
-
-            if (!empty($curps) && !empty($role)) {
-                $validator->errors()->add('curps', 'Solo debes enviar curps o role, no ambos.');
-                $validator->errors()->add('role', 'Solo debes enviar curps o role, no ambos.');
-            }
-        });
+        if (!empty($curps)) {
+            $this->merge(['curps' => $curps]);
+        }
     }
 
     public function messages(): array
