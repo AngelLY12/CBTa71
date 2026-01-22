@@ -46,24 +46,44 @@ class FindPermissionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'curps' => ['prohibits:role', 'required_without:role', 'array'],
-            'curps.*' => ['required', 'string', 'size:18', 'exists:users,curp'],
-            'role' => ['prohibits:curps', 'required_without:curps', 'string', 'exists:roles,name'],
+            'curps' => ['sometimes', 'array'],
+            'curps.*' => ['required_with:curps', 'string', 'size:18', 'exists:users,curp'],
+            'role' => ['sometimes', 'string', 'exists:roles,name'],
         ];
     }
 
     protected function prepareForValidation()
     {
-        $curps = $this->input('curps');
-
-        if (is_string($curps)) {
-            $curps = array_map('trim', explode(',', $curps));
-            $curps = array_filter($curps);
+        if ($this->has('curps') && is_string($this->curps)) {
+            $this->merge([
+                'curps' => array_filter(array_map('trim', explode(',', $this->curps)))
+            ]);
         }
 
-        if (!empty($curps)) {
-            $this->merge(['curps' => $curps]);
+        if ($this->has('curps') && empty($this->curps)) {
+            $this->request->remove('curps');
         }
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $data = $validator->getData();
+
+            $hasCurps = isset($data['curps']) && !empty($data['curps']);
+            $hasRole = isset($data['role']) && !empty($data['role']);
+
+            // Validar que haya uno u otro, no ambos
+            if (!$hasCurps && !$hasRole) {
+                $validator->errors()->add('curps', 'Debes enviar curps o role.');
+                $validator->errors()->add('role', 'Debes enviar curps o role.');
+            }
+
+            if ($hasCurps && $hasRole) {
+                $validator->errors()->add('curps', 'Solo debes enviar curps o role, no ambos.');
+                $validator->errors()->add('role', 'Solo debes enviar curps o role, no ambos.');
+            }
+        });
     }
 
     public function messages(): array

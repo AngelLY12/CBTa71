@@ -17,7 +17,7 @@ class FindAllPermissionsUseCase
 
     public function execute(?array $curps, ?string $role): PermissionsByUsers
     {
-        $permissionsByUsers=$this->rpqRepo->findPermissionsApplicableByUsers($curps, $role);
+        $permissionsByUsers=$this->rpqRepo->findPermissionsApplicableByUsers($role, $curps);
         if(empty($permissionsByUsers))
         {
             throw new PermissionsByUserNotFoundException();

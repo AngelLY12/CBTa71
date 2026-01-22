@@ -190,10 +190,25 @@ class AdminController extends Controller
 
     public function findAllPermissions(FindPermissionsRequest $request)
     {
-        $curps = $request->input('curps', []);
-        $role = $request->input('role');
-        if ($curps === null && $request->has('curps')) {
-            $curps = [];
+        $validated = $request->validated();
+
+        $curps = [];
+        $role = null;
+
+        if (isset($validated['curps']) && is_array($validated['curps'])) {
+            $curps = $validated['curps'];
+        }
+
+        if (isset($validated['role']) && is_string($validated['role'])) {
+            $role = $validated['role'];
+        }
+
+        if (empty($curps) && empty($role)) {
+            return Response::error('Debes enviar curps o role', 422);
+        }
+
+        if (!empty($curps) && !empty($role)) {
+            return Response::error('Solo debes enviar curps o role, no ambos', 422);
         }
         $permissions= $this->service->findAllPermissions($curps, $role);
         return Response::success(['permissions' => $permissions]);
