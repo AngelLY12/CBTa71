@@ -5,17 +5,21 @@ namespace App\Core\Application\Mappers;
 use App\Core\Application\DTO\Request\User\CreateUserDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
+use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
 use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
 use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
+use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
+use App\Core\Application\DTO\Response\User\UserListItemResponse;
 use App\Core\Application\DTO\Response\User\UserRecipientDTO;
 use App\Core\Application\DTO\Response\User\UserWithPaymentResponse;
 use App\Core\Application\DTO\Response\User\UserWithPendingSumamaryResponse;
 use App\Core\Application\DTO\Response\User\UserWithStudentDetailResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedPermissionsResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
+use App\Core\Domain\Entities\StudentDetail;
 use App\Models\User;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
@@ -228,6 +232,39 @@ class UserMapper{
         return new PromotedStudentsResponse(
             promotedStudents: $data['promotedStudents'] ?? 0,
             desactivatedStudents: $data['desactivatedStudents'] ?? 0,
+        );
+    }
+
+    public static function toUserExtrDataResponse(EloquentUser $user): UserExtraDataResponse
+    {
+        return new UserExtraDataResponse(
+            basicInfo:[
+                'curp' => $user->curp,
+                'phone_number' => $user->phone_number,
+                'address' => $user->address ?? [],
+                'blood_type' => $user->blood_type->value ?? null,
+            ],
+            roles: $user->roles->pluck('name')->toArray(),
+            permissions: $user->permissions->pluck('name')->toArray(),
+            studentDetail: $user->studentDetail ? new StudentDetailDTO(
+                nControl: $user->studentDetail->nControl ?? null,
+                semestre: $user->studentDetail->semestre ?? null,
+                group: $user->studentDetail->group ?? null,
+                careerName: optional($user->studentDetail->career)->career_name,
+            ): null ,
+        );
+    }
+
+    public static function toUserListItemResponse(EloquentUser $user): UserListItemResponse
+    {
+        return new UserListItemResponse(
+            id: $user->id,
+            fullName: $user->name . ' ' . $user->last_name,
+            email: $user->email,
+            status: $user->status->value,
+            roles_count: $user->roles_count,
+            created_at: $user->created_at->format('Y-m-d H:i:s'),
+            createdAtHuman: $user->created_at->diffForHumans(),
         );
     }
 

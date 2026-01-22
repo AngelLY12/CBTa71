@@ -36,6 +36,11 @@ class CacheService
         Cache::putMany($values, $ttl);
     }
 
+    public function add(string $key, $value, $ttl = null): bool
+    {
+        return Cache::add($key, serialize($value), $ttl);
+    }
+
     public function forget(string $key): void
     {
         Cache::forget($key);

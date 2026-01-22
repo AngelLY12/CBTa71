@@ -11,6 +11,7 @@ use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 //use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
+use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Admin\ActivateUserUseCase;
@@ -24,6 +25,7 @@ use App\Core\Application\UseCases\Admin\FindAllRolesUseCase;
 use App\Core\Application\UseCases\Admin\FindPermissionByIdUseCase;
 use App\Core\Application\UseCases\Admin\FindRoleByIdUseCase;
 use App\Core\Application\UseCases\Admin\FindStudentDetailUseCase;
+use App\Core\Application\UseCases\Admin\GetExtraUserDataUseCase;
 use App\Core\Application\UseCases\Admin\ShowAllUsersUseCase;
 use App\Core\Application\UseCases\Admin\SyncPermissionsUseCase;
 use App\Core\Application\UseCases\Admin\SyncRoleUseCase;
@@ -53,6 +55,7 @@ class AdminServiceFacades
         private BulkImportStudentDetailsUseCase $importStudentDetail,
         private SyncPermissionsUseCase          $sync,
         private ShowAllUsersUseCase             $show,
+        private GetExtraUserDataUseCase $extraData,
         private ActivateUserUseCase             $activate,
         private DeleteLogicalUserUseCase        $delete,
         private DisableUserUseCase              $disable,
@@ -108,10 +111,16 @@ class AdminServiceFacades
         $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
         return $import;
     }
-    public function showAllUsers(int $perPage, int $page, bool $forceRefresh, UserStatus $status): PaginatedResponse
+    public function showAllUsers(int $perPage, int $page, bool $forceRefresh, ?UserStatus $status = null): PaginatedResponse
     {
         $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage:$status->value");
         return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page, $status));
+    }
+
+    public function getExtraUserData(int $userId, bool $forceRefresh): UserExtraDataResponse
+    {
+        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:id:$userId");
+        return $this->cache($key, $forceRefresh, fn() => $this->extraData->execute($userId));
     }
     public function syncPermissions(UpdateUserPermissionsDTO $dto):array
     {

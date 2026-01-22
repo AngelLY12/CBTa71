@@ -3,6 +3,7 @@
 namespace App\Core\Infraestructure\Repositories\Query\User;
 
 use App\Core\Application\DTO\Response\User\UserAuthResponse;
+use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\Mappers\UserMapper as MappersUserMapper;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
@@ -339,50 +340,33 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
     public function findAllUsers(int $perPage, int $page, ?UserStatus $status = null): LengthAwarePaginator
     {
-        $paginator = EloquentUser::with([
-            'roles:id,name',
-            'permissions:id,name'
-        ])
-
-        ->whereDoesntHave('roles', function($query) {
+        return EloquentUser::whereDoesntHave('roles', function($query) {
             $query->where('name', UserRoles::ADMIN->value);
         })
-            ->when($status, fn ($q) =>
-            $q->where('status', $status->value)
-            )
-        ->select('id','name','last_name','email','curp', 'phone_number','address','blood_type', 'status')
+            ->when($status, fn ($q) => $q->where('status', $status->value))
+            ->select('id', 'name', 'last_name', 'email', 'status', 'created_at')
+            ->withCount('roles')
             ->latest('users.created_at')
-        ->paginate($perPage, ['*'], 'page', $page);
-
-        $paginator->getCollection()->transform(function ($user) {
-            $user->roles = $user->roles->pluck('name')->toArray();
-            $user->permissions = $user->permissions->pluck('name')->toArray();
-            return $user;
-        });
-
-        $students = $paginator->getCollection()->filter(function ($user) {
-        return in_array(UserRoles::STUDENT->value, $user->roles);
-        });
-
-        if ($students->isNotEmpty()) {
-            $students->load([
-                'studentDetail' => function ($query) {
-                    $query->select('id', 'user_id', 'career_id', 'n_control', 'semestre', 'group')
-                        ->with(['career:id,career_name']);
-                }
-            ]);
-
-             $students->transform(function ($user) {
-                if ($user->relationLoaded('studentDetail') && $user->studentDetail) {
-                    $user->studentDetail->career = optional($user->studentDetail->career)->career_name;
-                    unset($user->studentDetail->career_id);
-                }
-                return $user;
-            });
-        }
-
-        return $paginator;
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->through(fn($p) => MappersUserMapper::toUserListItemResponse($p));
     }
+
+    public function getExtraUserData(int $userId): UserExtraDataResponse
+    {
+        $user = EloquentUser::with([
+            'roles:id,name',
+            'permissions:id,name',
+            'studentDetail' => function($query) {
+                $query->select('id', 'user_id', 'career_id', 'n_control', 'semestre', 'group')
+                    ->with('career:id,career_name');
+            }
+        ])
+            ->select('id', 'curp', 'phone_number', 'address', 'blood_type')
+            ->findOrFail($userId);
+
+        return MappersUserMapper::toUserExtrDataResponse($user);
+    }
+
     public function findAuthUser(): ?UserAuthResponse
     {
         /** @var \App\Models\User $user */

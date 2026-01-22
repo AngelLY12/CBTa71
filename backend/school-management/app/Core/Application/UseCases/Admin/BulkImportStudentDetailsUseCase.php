@@ -20,11 +20,15 @@ class BulkImportStudentDetailsUseCase
     {
         $result = new ImportResponse();
         $result->setTotalRows(count($rows));
+        $hasInsertions = false;
 
         foreach (array_chunk($rows, self::CHUNK_SIZE) as $chunkIndex => $chunk) {
             try {
                 $chunkResult = $this->processChunk($chunk, $chunkIndex);
                 $result->merge($chunkResult);
+                if ($chunkResult->getInserted() > 0) {
+                    $hasInsertions = true;
+                }
             } catch (\Throwable $e) {
                 $result->addGlobalError(
                     "Error procesando chunk {$chunkIndex}: " . $e->getMessage(),
@@ -39,7 +43,10 @@ class BulkImportStudentDetailsUseCase
                 continue;
             }
         }
-        $this->dispatchCacheClear();
+        if($hasInsertions)
+        {
+            $this->dispatchCacheClear();
+        }
 
         return $result;
 

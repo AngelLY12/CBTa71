@@ -134,7 +134,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:import.users')->post('/import-users', [AdminController::class, 'import']);
         Route::middleware('permission:import.users')->post('/import-students', [AdminController::class, 'importStudents']);
         Route::middleware('permission:sync.permissions')->post('/update-permissions',[AdminController::class,'updatePermissions']);
-        Route::middleware('permission:view.users')->get('/showUsers',[AdminController::class,'index']);
+        Route::middleware('permission:view.users')->get('/show-users',[AdminController::class,'index']);
+        Route::middleware('permission:view.users')->get('/show-users/{id}',[AdminController::class,'getExtraUserData']);
         Route::middleware('permission:sync.roles')->post('/updated-roles', [AdminController::class, 'syncRoles']);
         Route::middleware('permission:activate.users')->post('/activate-users', [AdminController::class, 'activateUsers']);
         Route::middleware('permission:disable.users')->post('/disable-users', [AdminController::class, 'disableUsers']);

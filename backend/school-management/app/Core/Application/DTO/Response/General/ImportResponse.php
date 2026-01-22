@@ -232,4 +232,37 @@ class ImportResponse
         $this->totalRows = $totalRows;
     }
 
+    /**
+     * @return int
+     */
+    public function getInserted(): int
+    {
+        return $this->rowsInserted;
+    }
+
+    /**
+     * @return int
+     */
+    public function getProcessed(): int
+    {
+        return $this->rowsProcessed;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalRows(): int
+    {
+        return $this->totalRows;
+    }
+    public function getErrorsCount(): int
+    {
+        return count($this->errors);
+    }
+
+    public function getWarningsCount(): int
+    {
+        return count($this->warnings);
+    }
+
 }

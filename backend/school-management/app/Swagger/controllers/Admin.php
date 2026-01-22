@@ -691,7 +691,7 @@ public function updatePermissions(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/admin-actions/showUsers",
+ *     path="/api/v1/admin-actions/show-users",
  *     summary="Mostrar usuarios existentes",
  *     description="Permite al administrador ver a todos los usuarios registrados, junto con sus roles, permisos y detalles académicos (si aplica).",
  *     operationId="showAllUsers",
@@ -760,30 +760,14 @@ public function updatePermissions(){}
  *                          @OA\Property(
  *                              property="users",
  *                              allOf={
- *                                  @OA\Schema(ref="#/components/schemas/PaginatedResponse")
- *                              },
- *                              example={
- *                                  "items": {
- *                                      {
- *                                          "id": 10,
- *                                          "name": "Juan",
- *                                          "last_name": "Pérez",
- *                                          "email": "juan@mail.com",
- *                                          "curp": "PEPJ800101HDFRRN09",
- *                                          "phone_number": "5512345678",
- *                                          "address": "Av. Siempre Viva 123",
- *                                          "blood_type": "O+",
- *                                          "status": "activo",
- *                                          "roles": {"student"},
- *                                          "permissions": {"view-payments"},
- *                                          "studentDetail": {
- *                                              "career": "Ingeniería en Sistemas",
- *                                              "n_control": "A12345",
- *                                              "semestre": 5,
- *                                              "group": "A"
- *                                          }
- *                                      }
- *                                  },
+ *                                  @OA\Schema(ref="#/components/schemas/PaginatedResponse"),
+ *                                  @OA\Schema(
+ *                                      @OA\Property(
+ *                                          property="items",
+ *                                          type="array",
+ *                                          @OA\Items(ref="#/components/schemas/UserListItemResponse")
+ *                                      )
+ *                                  )
  *                              }
  *                          )
  *                      ),
@@ -809,6 +793,90 @@ public function updatePermissions(){}
  * )
  */
 public function showUsers(){}
+
+
+/**
+ * @OA\Get(
+ *     path="/api/v1/admin-actions/show-users/{id}",
+ *     summary="Mostrar datos extra del usuario existente",
+ *     description="Permite al administrador ver datos extra del usuario, junto con sus roles, permisos y detalles académicos (si aplica).",
+ *     operationId="showUserDetail",
+ *     tags={"Admin"},
+ *     security={{"bearerAuth": {}}},
+ *     @OA\Parameter(
+ *                name="X-User-Role",
+ *                in="header",
+ *                required=false,
+ *                description="Rol requerido para este endpoint",
+ *                @OA\Schema(
+ *                    type="string",
+ *                    example="admin|supervisor"
+ *                )
+ *            ),
+ *       @OA\Parameter(
+ *                name="X-User-Permission",
+ *                in="header",
+ *                required=false,
+ *                description="Permiso requerido para este endpoint",
+ *                @OA\Schema(
+ *                     type="string",
+ *                     example="view.users"
+ *                 )
+ *            ),
+ *
+ *     @OA\Parameter(
+ *         name="forceRefresh",
+ *         in="query",
+ *         description="Forzar actualización del caché (true o false).",
+ *         required=false,
+ *         @OA\Schema(type="boolean", example=false)
+ *     ),
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="query",
+ *         description="ID del usuario",
+ *         required=true,
+ *         @OA\Schema(type="integer", default=15)
+ *     ),
+ *
+ *
+ *     @OA\Response(
+ *          response=200,
+ *          description="Usuarios obtenidos correctamente.",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="user",
+ *                              ref="#/components/schemas/UserExtraDataResponse"
+ *                          )
+ *                      ),
+ *                      @OA\Property(
+ *                          property="message",
+ *                          type="string",
+ *                          example="Usuario encontrado."
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="No autorizado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=500,
+ *          description="Error interno del servidor",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
+ * )
+ */
+public function showUser(){}
 
 /**
  * @OA\Post(

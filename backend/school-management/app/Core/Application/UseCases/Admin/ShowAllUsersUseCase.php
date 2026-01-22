@@ -15,7 +15,7 @@ class ShowAllUsersUseCase
     {
     }
 
-    public function execute(int $perPage, int $page, UserStatus $status): PaginatedResponse
+    public function execute(int $perPage, int $page, ?UserStatus $status=null): PaginatedResponse
     {
         $users= $this->uqRepo->findAllUsers($perPage, $page, $status);
         return GeneralMapper::toPaginatedResponse($users->items(), $users);

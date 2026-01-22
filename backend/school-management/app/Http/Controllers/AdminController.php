@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Core\Application\Mappers\StudentDetailMapper;
 use App\Core\Application\Mappers\UserMapper;
 use App\Core\Application\Services\Admin\AdminServiceFacades;
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Http\Requests\Admin\AttachStudentRequest;
 use App\Http\Requests\Admin\ChangeUserStatusRequest;
 use App\Http\Requests\Admin\FindPermissionsRequest;
@@ -117,10 +118,18 @@ class AdminController extends Controller
         $forceRefresh = $request->boolean('forceRefresh');
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
-        $status=$request->validated()['status'] ?? null;
+        $statusStr=$request->validated()['status'] ?? null;
+        $status = $statusStr ? UserStatus::tryFrom($statusStr) : null;
         $users=$this->service->showAllUsers($perPage, $page,$forceRefresh, $status);
         return Response::success(['users' => $users], 'Usuarios encontrados.');
 
+    }
+
+    public function getExtraUserData(ForceRefreshRequest $request, int $id)
+    {
+        $forceRefresh = $request->boolean('forceRefresh');
+        $user = $this->service->getExtraUserData($id, $forceRefresh);
+        return Response::success(['user' => $user], 'Datos extra de usuario encontrados.');
     }
 
     public function syncRoles(UpdateRolesRequest $request)
