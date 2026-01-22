@@ -8,6 +8,7 @@ use App\Core\Domain\Enum\Cache\StaffCacheSufix;
 use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Closure;
+use Illuminate\Cache\RedisStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -75,14 +76,16 @@ class CacheService
     public function makeKey(string $prefixKey, string $suffix): string
     {
         $prefix = config("cache-prefixes.$prefixKey");
-        return "$prefix:$suffix";
+        return "{$prefix}{$suffix}";
     }
-
 
     public function clearPrefix(string $prefix): void
     {
-        $redis = Cache::getRedis();
-        $searchPattern = Cache::getPrefix() . $prefix . '*';
+        $store = Cache::store('redis');
+        /** @var RedisStore $store */
+        $redis = $store->getRedis();
+        $cachePrefix = $store->getPrefix();
+        $searchPattern = $cachePrefix . $prefix . '*';
         $cursor = 0;
         $allKeys = [];
 
@@ -113,7 +116,7 @@ class CacheService
     public function clearKey(string $prefixKey, string $suffix): void
     {
         $prefix = config("cache-prefixes.$prefixKey");
-        $this->clearPrefix("$prefix:$suffix");
+        $this->clearPrefix("{$prefix}{$suffix}");
     }
 
     public function clearStaffCache(): void

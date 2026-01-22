@@ -222,6 +222,28 @@ Route::get('/debug-redis-keys', function () {
     return $redis->keys('*');
 });
 
+Route::get('/debug-redis-dbs', function () {
+    $default = \Illuminate\Support\Facades\Redis::connection('default')->getDbNum();
+    $cache   = \Illuminate\Support\Facades\Redis::connection('cache')->getDbNum();
+
+    return [
+        'default_db' => $default,
+        'cache_db' => $cache,
+    ];
+});
+
+Route::get('/debug-redis-raw', function () {
+    $redis = \Illuminate\Support\Facades\Redis::connection('cache');
+
+    return [
+        'db' => $redis->getDbNum(),
+        'prefix' => config('database.redis.options.prefix'),
+        'keys' => $redis->keys('*'),
+    ];
+});
+
+
+
 Route::get('/test-cache-service-complete', function() {
     $cacheService = app(\App\Core\Infraestructure\Cache\CacheService::class);
     $results = [];
