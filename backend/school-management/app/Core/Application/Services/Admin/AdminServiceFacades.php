@@ -113,7 +113,8 @@ class AdminServiceFacades
     }
     public function showAllUsers(int $perPage, int $page, bool $forceRefresh, ?UserStatus $status = null): PaginatedResponse
     {
-        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage:$status->value");
+        $statusValue = $status ? $status->value : 'all';
+        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage:$statusValue");
         return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page, $status));
     }
 

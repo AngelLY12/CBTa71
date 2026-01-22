@@ -118,8 +118,18 @@ class AdminController extends Controller
         $forceRefresh = $request->boolean('forceRefresh');
         $perPage = $request->integer('perPage', 15);
         $page = $request->integer('page', 1);
-        $statusStr=$request->validated()['status'] ?? null;
-        $status = $statusStr ? UserStatus::tryFrom($statusStr) : null;
+        $status = null;
+        if ($request->has('status')) {
+            $status = UserStatus::tryFrom($request->validated()['status']);
+
+            if (!$status) {
+                return Response::error(
+                    'Status no válido. Valores permitidos: ' .
+                    implode(', ', array_column(UserStatus::cases(), 'value')),
+                    422
+                );
+            }
+        }
         $users=$this->service->showAllUsers($perPage, $page,$forceRefresh, $status);
         return Response::success(['users' => $users], 'Usuarios encontrados.');
 
