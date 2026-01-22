@@ -46,15 +46,16 @@ class FindPermissionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'curps' => ['sometimes','required', 'array'],
+            'curps' => ['sometimes', 'array'],
             'curps.*' => ['string', 'size:18', 'exists:users,curp'],
-            'role' => ['sometimes', 'required', 'string', 'exists:roles,name'],
+            'role' => ['sometimes', 'string', 'exists:roles,name'],
         ];
     }
 
     protected function prepareForValidation()
     {
-        $curps = $this->query('curps');
+        $curps = $this->input('curps', $this->query('curps'));
+        $role = $this->input('role', $this->query('role'));
 
         if (!empty($curps) && !is_array($curps)) {
             $curps = [$curps];
@@ -62,7 +63,7 @@ class FindPermissionsRequest extends FormRequest
 
         $this->merge([
             'curps' => $curps,
-            'role'  => $this->query('role')
+            'role'  => $role
         ]);
     }
 
@@ -70,11 +71,12 @@ class FindPermissionsRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $curps = $this->input('curps');
-            $role  = $this->input('role');
+            $role = $this->input('role');
 
             if (empty($curps) && empty($role)) {
                 $validator->errors()->add('curps', 'Debes enviar curps o role.');
                 $validator->errors()->add('role', 'Debes enviar curps o role.');
+                return;
             }
 
             if (!empty($curps) && !empty($role)) {
