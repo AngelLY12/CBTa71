@@ -195,6 +195,13 @@ Route::get('/test-redis-connection', function() {
     }
 });
 
+Route::get('/debug-cache-store', function () {
+    return [
+        'cache_default' => config('cache.default'),
+        'store_class' => Cache::getStore()::class,
+    ];
+});
+
 
 Route::get('/debug/redis-keys/cursor', function () {
     $redis = Cache::getRedis();

@@ -15,9 +15,6 @@ if [ "$APP_ROLE" = "app" ]; then
   echo "Limpiando cachés..."
   php artisan optimize:clear || true
 
-  echo "Generando cache optimizado..."
-  php artisan optimize || true
-
   echo "Ejecutando migraciones..."
   php artisan migrate --force
 
