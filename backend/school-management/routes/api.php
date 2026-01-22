@@ -400,25 +400,155 @@ Route::get('/test-cache-service-complete', function() {
     ];
 });
 
-Route::get('/debug-clearprefix', function() {
+Route::get('/test-clearprefix-real', function() {
     $cacheService = app(\App\Core\Infraestructure\Cache\CacheService::class);
     $redis = Cache::getRedis();
+    $timestamp = time();
 
-    // Key de test
-    $testKey = "test_debug:key1";
-    $cacheService->put($testKey, 'value', 60);
+    // 1. Crear keys de test con y sin prefijo
+    $testPrefix = "test_prefix_{$timestamp}";
+    $keys = [
+        "{$testPrefix}:key1",
+        "{$testPrefix}:key2",
+        "other_prefix_{$timestamp}:key3",
+        "{$testPrefix}:nested:key4"
+    ];
 
-    // Ver prefijos
+    // 2. Guardar todas las keys
+    foreach ($keys as $key) {
+        $cacheService->put($key, "value_{$key}", 300);
+    }
+
+    // 3. Verificar que se guardaron (CON prefijo de Laravel)
     $laravelPrefix = Cache::getPrefix();
-    $fullKey = $laravelPrefix . $testKey;
+    $keysBefore = [];
+    foreach ($keys as $key) {
+        $fullKey = $laravelPrefix . $key;
+        $keysBefore[$key] = [
+            'cache_service_has' => $cacheService->has($key),
+            'redis_exists' => (bool) $redis->exists($fullKey),
+            'full_key' => $fullKey,
+        ];
+    }
+
+    // 4. Ejecutar clearPrefix
+    $cacheService->clearPrefix($testPrefix);
+
+    // 5. Verificar después
+    $keysAfter = [];
+    foreach ($keys as $key) {
+        $fullKey = $laravelPrefix . $key;
+        $keysAfter[$key] = [
+            'cache_service_has' => $cacheService->has($key),
+            'redis_exists' => (bool) $redis->exists($fullKey),
+        ];
+    }
+
+    // 6. Resultados
+    $shouldBeCleared = array_filter($keys, fn($k) => strpos($k, $testPrefix) === 0);
+    $shouldRemain = array_filter($keys, fn($k) => strpos($k, $testPrefix) !== 0);
+
+    $clearedCorrectly = true;
+    $remainingCorrectly = true;
+
+    foreach ($shouldBeCleared as $key) {
+        if ($keysAfter[$key]['cache_service_has'] || $keysAfter[$key]['redis_exists']) {
+            $clearedCorrectly = false;
+        }
+    }
+
+    foreach ($shouldRemain as $key) {
+        if (!$keysAfter[$key]['cache_service_has'] || !$keysAfter[$key]['redis_exists']) {
+            $remainingCorrectly = false;
+        }
+    }
+
+    // 7. Buscar keys manualmente en Redis
+    $redisKeysMatching = $redis->keys("{$laravelPrefix}{$testPrefix}*");
+    $otherRedisKeys = $redis->keys("{$laravelPrefix}other_prefix_{$timestamp}*");
 
     return [
-        'test_key' => $testKey,
-        'laravel_prefix' => $laravelPrefix,
-        'full_key_in_redis' => $fullKey,
-        'exists_in_redis' => (bool) $redis->get($fullKey),
-        'cache_service_has' => $cacheService->has($testKey),
-        'keys_in_redis_matching' => $redis->keys("*test_debug*"),
+        'test_details' => [
+            'test_prefix' => $testPrefix,
+            'laravel_prefix' => $laravelPrefix,
+            'search_pattern_in_redis' => "{$laravelPrefix}{$testPrefix}*",
+            'total_keys_created' => count($keys),
+            'keys_should_be_cleared' => $shouldBeCleared,
+            'keys_should_remain' => $shouldRemain,
+        ],
+        'before_clear' => $keysBefore,
+        'after_clear' => $keysAfter,
+        'redis_search_results' => [
+            'matching_test_prefix' => $redisKeysMatching,
+            'matching_other_prefix' => $otherRedisKeys,
+            'count_matching_test' => count($redisKeysMatching),
+            'count_matching_other' => count($otherRedisKeys),
+        ],
+        'test_results' => [
+            'cleared_correctly' => $clearedCorrectly ? '✅' : '❌',
+            'remaining_correctly' => $remainingCorrectly ? '✅' : '❌',
+            'overall' => ($clearedCorrectly && $remainingCorrectly) ? '✅ CLEARPREFIX FUNCIONA' : '❌ CLEARPREFIX FALLÓ',
+        ],
+        'diagnosis' => !$clearedCorrectly ? [
+            'probable_cause' => 'clearPrefix() no incluye el prefijo de Laravel',
+            'current_implementation' => 'Busca "$prefix" pero debería buscar "' . $laravelPrefix . $testPrefix . '*"',
+            'solution' => 'Modificar clearPrefix() para usar Cache::getPrefix()',
+        ] : '✅ Implementación correcta',
+    ];
+});
+
+Route::get('/test-clearkey-real', function() {
+    $cacheService = app(\App\Core\Infraestructure\Cache\CacheService::class);
+    $redis = Cache::getRedis();
+    $timestamp = time();
+
+    // 1. Crear key específica
+    $prefixKey = 'admin';
+    $suffix = "test_suffix_{$timestamp}";
+    $fullKey = $cacheService->makeKey($prefixKey, $suffix);
+
+    // 2. Guardar
+    $cacheService->put($fullKey, 'test_value', 300);
+
+    // 3. Verificar antes
+    $before = [
+        'cache_service_has' => $cacheService->has($fullKey),
+        'redis_exists' => (bool) $redis->exists(Cache::getPrefix() . $fullKey),
+        'full_key_in_redis' => Cache::getPrefix() . $fullKey,
+    ];
+
+    // 4. Ejecutar clearKey
+    $cacheService->clearKey($prefixKey, $suffix);
+
+    // 5. Verificar después
+    $after = [
+        'cache_service_has' => $cacheService->has($fullKey),
+        'redis_exists' => (bool) $redis->exists(Cache::getPrefix() . $fullKey),
+    ];
+
+    // 6. Buscar manualmente
+    $redisKeys = $redis->keys("*{$suffix}*");
+
+    return [
+        'test_details' => [
+            'prefix_key' => $prefixKey,
+            'suffix' => $suffix,
+            'generated_key' => $fullKey,
+            'config_prefix' => config("cache-prefixes.{$prefixKey}"),
+            'laravel_prefix' => Cache::getPrefix(),
+            'complete_redis_key' => Cache::getPrefix() . config("cache-prefixes.{$prefixKey}") . ':' . $suffix,
+        ],
+        'results' => [
+            'before_clear' => $before,
+            'after_clear' => $after,
+            'cleared_successfully' => ($before['cache_service_has'] && !$after['cache_service_has']) ? '✅' : '❌',
+            'redis_keys_found_after' => $redisKeys,
+        ],
+        'diagnosis' => $after['cache_service_has'] ? [
+            'problem' => 'clearKey() no elimina la key',
+            'reason' => 'Usa clearPrefix() internamente, que no incluye el prefijo de Laravel',
+            'solution' => 'Usar Cache::forget() directamente o corregir clearPrefix()',
+        ] : '✅ Funciona correctamente',
     ];
 });
 
