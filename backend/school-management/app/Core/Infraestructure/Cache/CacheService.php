@@ -69,18 +69,7 @@ class CacheService
 
     public function rememberForever(string $key, Closure $callback)
     {
-        Log::emergency('💾 CACHE DEBUG - rememberForever EJECUTADO', [
-            'key' => $key,
-            'full_key' => Cache::getPrefix() . $key,
-            'callback_type' => gettype($callback),
-        ]);
-        $result = Cache::rememberForever($key, $callback);
-        Log::emergency('✅ CACHE DEBUG - Datos guardados', [
-            'key' => $key,
-            'result_type' => gettype($result),
-            'timestamp' => now()->toDateTimeString(),
-        ]);
-        return $result;
+        return Cache::rememberForever($key, $callback);
     }
 
     public function makeKey(string $prefixKey, string $suffix): string
@@ -93,18 +82,32 @@ class CacheService
     public function clearPrefix(string $prefix): void
     {
         $redis = Cache::getRedis();
+        $laravelPrefix = Cache::getPrefix();
+        $searchPattern = $laravelPrefix . $prefix . '*';
         $cursor = 0;
         $allKeys = [];
 
         do {
-            $keys = $redis->scan($cursor, "$prefix", 100);
-            if ($keys !== false && !empty($keys)) {
+            [$cursor, $keys] = $redis->scan($cursor, [
+                'MATCH' => $searchPattern,
+                'COUNT' => 100
+            ]);
+
+            if (!empty($keys)) {
                 $allKeys = array_merge($allKeys, $keys);
             }
         } while ($cursor > 0);
 
         if (!empty($allKeys)) {
             $redis->del($allKeys);
+
+            // Log para debug
+            Log::info('Cache cleared by prefix', [
+                'prefix' => $prefix,
+                'pattern' => $searchPattern,
+                'keys_cleared' => count($allKeys),
+                'keys' => $allKeys,
+            ]);
         }
     }
 
