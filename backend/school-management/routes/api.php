@@ -400,4 +400,25 @@ Route::get('/test-cache-service-complete', function() {
     ];
 });
 
+Route::get('/debug-clearprefix', function() {
+    $cacheService = app(\App\Core\Infraestructure\Cache\CacheService::class);
+    $redis = Cache::getRedis();
+
+    // Key de test
+    $testKey = "test_debug:key1";
+    $cacheService->put($testKey, 'value', 60);
+
+    // Ver prefijos
+    $laravelPrefix = Cache::getPrefix();
+    $fullKey = $laravelPrefix . $testKey;
+
+    return [
+        'test_key' => $testKey,
+        'laravel_prefix' => $laravelPrefix,
+        'full_key_in_redis' => $fullKey,
+        'exists_in_redis' => (bool) $redis->get($fullKey),
+        'cache_service_has' => $cacheService->has($testKey),
+        'keys_in_redis_matching' => $redis->keys("*test_debug*"),
+    ];
+});
 
