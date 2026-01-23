@@ -87,6 +87,15 @@ class CacheService
         $redisPrefix = config('database.redis.options.prefix');
         $cachePrefix = $store->getPrefix();
         $searchPattern = $redisPrefix . $cachePrefix . $prefix . '*';
+
+        Log::info('Redis cache clear debug', [
+            'redis_prefix' => $redisPrefix,
+            'store_prefix' => $cachePrefix,
+            'logical_prefix' => $prefix,
+            'final_pattern' => $searchPattern,
+        ]);
+
+
         $cursor = 0;
         $allKeys = [];
 
@@ -100,6 +109,10 @@ class CacheService
                 $allKeys = array_merge($allKeys, $keys);
             }
         } while ($cursor > 0);
+        Log::info('Redis scan result', [
+            'keys_found' => count($allKeys),
+            'keys' => $allKeys,
+        ]);
 
         if (!empty($allKeys)) {
             $redis->del($allKeys);

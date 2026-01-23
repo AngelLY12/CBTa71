@@ -242,6 +242,36 @@ Route::get('/debug-redis-raw', function () {
     ];
 });
 
+Route::delete('/cache/clear-prefix', function (\Illuminate\Http\Request $request) {
+    $prefix = $request->query('prefix');
+
+    abort_if(!$prefix, 400, 'Prefix is required');
+
+    app(\App\Core\Infraestructure\Cache\CacheService::class)->clearPrefix($prefix);
+
+    return response()->json([
+        'status' => 'ok',
+        'prefix_used' => $prefix,
+    ]);
+});
+
+Route::delete('/cache/clear-key', function (\Illuminate\Http\Request $request) {
+    $prefixKey = $request->query('key');
+    $suffix = $request->query('suffix', '');
+
+    abort_if(!$prefixKey, 400, 'Key is required');
+
+    $prefix = config("cache-prefixes.$prefixKey");
+
+    abort_if(!$prefix, 404, 'Prefix not found');
+
+    app(\App\Core\Infraestructure\Cache\CacheService::class)->clearPrefix($prefix . $suffix);
+
+    return response()->json([
+        'status' => 'ok',
+        'resolved_prefix' => $prefix . $suffix,
+    ]);
+});
 
 
 Route::get('/test-cache-service-complete', function() {
