@@ -84,13 +84,9 @@ class CacheService
         $store = Cache::store('redis');
         /** @var RedisStore $store */
         $redis = $store->getRedis();
-        $redisPrefix = config('database.redis.options.prefix');
-        $cachePrefix = $store->getPrefix();
-        $searchPattern = $redisPrefix . $cachePrefix . $prefix . '*';
+        $searchPattern = $prefix . '*';
 
         Log::info('Redis cache clear debug', [
-            'redis_prefix' => $redisPrefix,
-            'store_prefix' => $cachePrefix,
             'logical_prefix' => $prefix,
             'final_pattern' => $searchPattern,
         ]);
