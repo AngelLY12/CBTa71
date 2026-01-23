@@ -90,10 +90,13 @@ class CacheService
             'redis' => $redis,
             'input_prefix' => $prefix,
             'pattern_used' => $pattern,
-            'expected_to_find' => 'laravel-database-laravel-cache-admin:users:all:page:1:15:all',
+            'memory_usage' => memory_get_usage(true) / 1024 / 1024 . ' MB',
         ]);
 
-        $keys = $redis->keys($pattern);;
+        $allKeysBefore = $redis->keys('*');
+
+        $keys = $redis->keys($pattern);
+
 
         if (empty($keys)) {
             $keys = $redis->keys($prefix . ':*');
@@ -104,29 +107,116 @@ class CacheService
             $keys = array_filter($allKeys, fn($k) => str_contains($k, $prefix));
         }
 
-        Log::info('KEYS found', [
-            'count' => count($keys),
-            'keys' => $keys,
+        Log::info('📊 ESTADO ANTES de eliminar', [
+            'total_keys_redis' => count($allKeysBefore),
+            'keys_con_patron' => count($keys),
+            'matching_keys' => $keys,
+        ]);
+        if (!empty($keys)) {
+            $deletedCount = $redis->del($keys);
+            Log::info('✅ ELIMINACIÓN EJECUTADA', [
+                'keys_intentadas' => count($keys),
+                'keys_eliminadas' => $deletedCount,
+                'keys_especificas' => $keys,
+            ]);
+
+            // 3. Verificar INMEDIATAMENTE después
+            usleep(100000); // 100ms
+            $matchingKeysImmediatelyAfter = $redis->keys($pattern);
+
+            Log::info('🔍 VERIFICACIÓN INMEDIATA (100ms después)', [
+                'keys_encontradas' => count($matchingKeysImmediatelyAfter),
+                'keys' => $matchingKeysImmediatelyAfter,
+                'regeneracion_inmediata' => !empty($matchingKeysImmediatelyAfter),
+            ]);
+
+            // 4. Verificar después de 1 segundo
+            sleep(1);
+            $matchingKeys1SecondAfter = $redis->keys($pattern);
+            $allKeysAfter = $redis->keys('*');
+
+            Log::info('⏰ VERIFICACIÓN 1 SEGUNDO DESPUÉS', [
+                'keys_con_patron' => count($matchingKeys1SecondAfter),
+                'total_keys_redis' => count($allKeysAfter),
+                'keys_regeneradas' => $matchingKeys1SecondAfter,
+                'comparacion_total' => [
+                    'antes' => count($allKeysBefore),
+                    'despues' => count($allKeysAfter),
+                    'diferencia' => count($allKeysAfter) - count($allKeysBefore),
+                ],
+            ]);
+
+            // 5. Si se regeneró, investigar QUIÉN
+            if (!empty($matchingKeys1SecondAfter)) {
+                Log::warning('⚠️ ¡CACHE REGENERADO AUTOMÁTICAMENTE!', [
+                    'keys_regeneradas' => $matchingKeys1SecondAfter,
+                    'posibles_causas' => [
+                        '1. Middleware de cache',
+                        '2. Evento/Listener después de la request',
+                        '3. Job en queue',
+                        '4. Scheduled task',
+                        '5. PHP OPcache manteniendo valores',
+                    ],
+                ]);
+            }
+
+                // 6. Debug adicional
+                $this->debugRegenerationSource($matchingKeys1SecondAfter[0]);
+
+            } else {
+                Log::warning('No keys found with pattern: ' . $prefix . '*');
+
+                $allKeys = $redis->keys('*');
+                Log::info('All keys in Redis', [
+                    'total' => count($allKeys),
+                    'keys' => $allKeys,
+                ]);
+
+            }
+            Log::info('🏁 === FIN CLEAR PREFIX ===', [
+                'timestamp' => now()->toISOString(),
+                'duration' => microtime(true) - LARAVEL_START,
+            ]);
+    }
+
+    private function debugRegenerationSource(string $regeneratedKey): void
+    {
+        Log::info('🔬 INVESTIGANDO REGENERACIÓN DE CACHE', [
+            'key_regenerada' => $regeneratedKey,
+            'investigacion_pasos' => [
+                '1. Buscar en código "rememberForever" con esta key',
+                '2. Revisar controllers que usen esta ruta',
+                '3. Verificar eventos del modelo User',
+                '4. Revisar que no haya middleware global',
+            ],
         ]);
 
-        if (!empty($keys)) {
-            $redis->del($keys);
-            Log::info('DELETED these exact keys:', [
-                'keys' => $keys, // ¿QUÉ está eliminando realmente?
-            ]);
-        }else
-        {
-            Log::warning('No keys found with pattern: ' . $prefix . '*');
+        // Intentar identificar de dónde viene
+        $keyParts = explode(':', $regeneratedKey);
+        $possibleCacheKey = end($keyParts); // Última parte
 
-            $allKeys = $redis->keys('*');
-            Log::info('All keys in Redis', [
-                'total' => count($allKeys),
-                'keys' => $allKeys,
-            ]);
+        Log::info('🧩 ANÁLISIS DE KEY', [
+            'key_completa' => $regeneratedKey,
+            'partes' => $keyParts,
+            'posible_cache_key' => $possibleCacheKey,
+            'parece_ser' => str_contains($regeneratedKey, 'admin:users') ? 'Cache de usuarios admin' : 'Desconocido',
+        ]);
 
-        }
+        // Sugerir búsquedas en código
+        $searchTerms = [
+            'admin:users',
+            'users:all',
+            'page:1:15',
+            'rememberForever',
+            'Cache::',
+        ];
 
+        Log::info('🔍 TÉRMINOS PARA BUSCAR EN CÓDIGO', [
+            'terms' => $searchTerms,
+            'suggestion' => 'Busca estos términos en tu IDE o con grep',
+        ]);
     }
+
 
     public function clearKey(string $prefixKey, string $suffix): void
     {

@@ -80,7 +80,9 @@ use App\Listeners\SendPromotionNotification;
 use App\Listeners\SendStudentsPromotionFailedNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
@@ -134,7 +136,65 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PaymentEventRepInterface::class, EloquentPaymentEventRepository::class);
         $this->app->bind(PaymentEventQueryRepInterface::class, EloquentPaymentEventQueryRepository::class);
 
+        if (config('app.debug')) {
+            DB::listen(function ($query) {
+                if (str_contains($query->sql, 'users') || str_contains($query->sql, 'admin')) {
+                    Log::info('📋 QUERY DETECTADA', [
+                        'sql' => $query->sql,
+                        'time' => $query->time . 'ms',
+                        'connection' => $query->connectionName,
+                        'timestamp' => now()->toISOString(),
+                    ]);
+                }
+            });
+        }
 
+        // 2. Loggear eventos de cache
+        Event::listen('cache*', function ($eventName, $payload) {
+            Log::info('🗂️ EVENTO DE CACHE', [
+                'event' => $eventName,
+                'payload' => $payload,
+                'timestamp' => now()->toISOString(),
+                'trace' => collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5))
+                    ->map(fn($trace) => ($trace['file'] ?? '') . ':' . ($trace['line'] ?? ''))
+                    ->toArray(),
+            ]);
+        });
+
+        // 3. Loggear cuando se llama a rememberForever
+        Event::listen('Illuminate\Cache\Events\KeyWritten', function ($event) {
+            if (str_contains($event->key, 'admin') || str_contains($event->key, 'users')) {
+                Log::info('✍️ CACHE ESCRITO', [
+                    'key' => $event->key,
+                    'value_size' => strlen(serialize($event->value)),
+                    'minutes' => $event->minutes,
+                    'tags' => $event->tags,
+                    'timestamp' => now()->toISOString(),
+                    'caller' => $this->getCallerInfo(),
+                ]);
+            }
+        });
+
+    }
+
+    private function getCallerInfo(): array
+    {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+
+        foreach ($backtrace as $trace) {
+            if (isset($trace['file']) &&
+                !str_contains($trace['file'], 'vendor') &&
+                !str_contains($trace['file'], 'Cache')) {
+                return [
+                    'file' => $trace['file'],
+                    'line' => $trace['line'],
+                    'function' => $trace['function'] ?? null,
+                    'class' => $trace['class'] ?? null,
+                ];
+            }
+        }
+
+        return ['unknown' => true];
     }
 
     /**

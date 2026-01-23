@@ -631,3 +631,64 @@ Route::get('/test-clearkey-real', function() {
     ];
 });
 
+Route::get('/test-full-debug', function(){
+    $redis = Cache::store('redis')->getRedis();
+
+    // Paso 1: Estado actual
+    $allKeys = $redis->keys('*');
+    $adminKeys = $redis->keys('*admin*');
+
+    // Paso 2: Eliminar y monitorear
+    $initialCount = count($adminKeys);
+
+    if (!empty($adminKeys)) {
+        $redis->del($adminKeys);
+    }
+
+    // Paso 3: Esperar y verificar
+    sleep(2);
+
+    $adminKeysAfter = $redis->keys('*admin*');
+    $allKeysAfter = $redis->keys('*');
+
+    // Paso 4: Analizar logs recientes
+    $logFile = storage_path('logs/laravel-' . date('Y-m-d') . '.log');
+    $recentLogs = file_exists($logFile)
+        ? array_slice(file($logFile, FILE_IGNORE_NEW_LINES), -50)
+        : [];
+
+    // Paso 5: Obtener últimas requests
+    $lastRequests = collect($recentLogs)
+        ->filter(fn($line) => str_contains($line, '"GET') || str_contains($line, '"POST'))
+        ->take(10)
+        ->values();
+
+    return response()->json([
+        'debug_session' => uniqid(),
+        'timestamp' => now()->toISOString(),
+
+        'cache_analysis' => [
+            'initial_admin_keys' => $initialCount,
+            'admin_keys_after_2s' => count($adminKeysAfter),
+            'regenerated' => count($adminKeysAfter) > 0,
+            'regenerated_keys' => $adminKeysAfter,
+            'total_keys_before' => count($allKeys),
+            'total_keys_after' => count($allKeysAfter),
+        ],
+
+        'recent_activity' => [
+            'last_requests' => $lastRequests,
+            'cache_events_in_logs' => collect($recentLogs)
+                ->filter(fn($line) => str_contains($line, 'CACHE') || str_contains($line, 'cache'))
+                ->values(),
+        ],
+
+        'next_steps' => [
+            '1. Revisa qué request vino después de esta',
+            '2. Busca en código: rememberForever("admin:users")',
+            '3. Verifica si hay un Job o Schedule que corra cada X segundos',
+            '4. Revisa Network tab en navegador después de eliminar cache',
+        ],
+    ]);
+});
+
