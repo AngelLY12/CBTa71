@@ -18,14 +18,9 @@ trait HasCache
 
     public function cache(string $key, bool $forceRefresh, callable $callback)
     {
-        Log::emergency('🔥 CACHE DEBUG - Método cache() EJECUTADO', [
-            'key' => $key,
-            'forceRefresh' => $forceRefresh,
-            'caller' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'] ?? 'unknown',
-        ]);
 
         if ($forceRefresh) {
-            $this->cacheService->clearPrefix($key);
+            $this->cacheService->forget($key);
         }
 
         return $this->cacheService->rememberForever($key, $callback);
