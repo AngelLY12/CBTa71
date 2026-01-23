@@ -83,8 +83,17 @@ class CacheService
     {
         $store = Cache::store('redis');
         $redis = $store->getRedis();
+        $pattern = $prefix . '*';
 
-        $keys = $redis->keys($prefix . '*');
+        Log::info('=== CLEAR PREFIX DEBUG ===', [
+            'store' => $store,
+            'redis' => $redis,
+            'input_prefix' => $prefix,
+            'pattern_used' => $pattern,
+            'expected_to_find' => 'laravel-database-laravel-cache-admin:users:all:page:1:15:all',
+        ]);
+
+        $keys = $redis->keys($pattern);;
 
         if (empty($keys)) {
             $keys = $redis->keys($prefix . ':*');
@@ -95,18 +104,28 @@ class CacheService
             $keys = array_filter($allKeys, fn($k) => str_contains($k, $prefix));
         }
 
+        Log::info('KEYS found', [
+            'count' => count($keys),
+            'keys' => $keys,
+        ]);
+
         if (!empty($keys)) {
             $redis->del($keys);
-            Log::info("Deleted " . count($keys) . " keys");
-            return;
-        }
-        Log::warning('No keys found with pattern: ' . $prefix . '*');
+            Log::info('DELETED these exact keys:', [
+                'keys' => $keys, // ¿QUÉ está eliminando realmente?
+            ]);
+        }else
+        {
+            Log::warning('No keys found with pattern: ' . $prefix . '*');
 
-        $allKeys = $redis->keys('*');
-        Log::info('All keys in Redis', [
-            'total' => count($allKeys),
-            'keys' => $allKeys,
-        ]);
+            $allKeys = $redis->keys('*');
+            Log::info('All keys in Redis', [
+                'total' => count($allKeys),
+                'keys' => $allKeys,
+            ]);
+
+        }
+
     }
 
     public function clearKey(string $prefixKey, string $suffix): void
