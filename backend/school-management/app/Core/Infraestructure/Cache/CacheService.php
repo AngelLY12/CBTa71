@@ -82,51 +82,51 @@ class CacheService
     public function clearPrefix(string $prefix): void
     {
         $store = Cache::store('redis');
-        /** @var RedisStore $store */
         $redis = $store->getRedis();
-        $searchPattern = $prefix . '*';
 
-        Log::info('Redis cache clear debug', [
-            'logical_prefix' => $prefix,
-            'final_pattern' => $searchPattern,
-        ]);
+        $keys = $redis->keys($prefix . '*');
 
+        if (empty($keys)) {
+            $keys = $redis->keys($prefix . ':*');
+        }
 
-        $cursor = 0;
-        $allKeys = [];
+        if (empty($keys)) {
+            $allKeys = $redis->keys('*');
+            $keys = array_filter($allKeys, fn($k) => str_contains($k, $prefix));
+        }
 
-        do {
-            [$cursor, $keys] = $redis->scan($cursor, [
-                'MATCH' => $searchPattern,
-                'COUNT' => 100
-            ]);
+        if (!empty($keys)) {
+            $redis->del($keys);
+            Log::info("Deleted " . count($keys) . " keys");
+            return;
+        }
+        Log::warning('No keys found with pattern: ' . $prefix . '*');
 
-            if (!empty($keys)) {
-                $allKeys = array_merge($allKeys, $keys);
-            }
-        } while ($cursor > 0);
-        Log::info('Redis scan result', [
-            'keys_found' => count($allKeys),
+        $allKeys = $redis->keys('*');
+        Log::info('All keys in Redis', [
+            'total' => count($allKeys),
             'keys' => $allKeys,
         ]);
-
-        if (!empty($allKeys)) {
-            $redis->del($allKeys);
-
-            // Log para debug
-            Log::info('Cache cleared by prefix', [
-                'prefix' => $prefix,
-                'pattern' => $searchPattern,
-                'keys_cleared' => count($allKeys),
-                'keys' => $allKeys,
-            ]);
-        }
     }
 
     public function clearKey(string $prefixKey, string $suffix): void
     {
         $prefix = config("cache-prefixes.$prefixKey");
-        $this->clearPrefix("{$prefix}{$suffix}");
+
+        $fullPattern = rtrim($prefix, ':') . ':' . ltrim($suffix, ':');
+
+        // Y asegúrate que TERMINA con ':' para el patrón
+        if (!str_ends_with($fullPattern, ':')) {
+            $fullPattern = $fullPattern . ':';
+        }
+
+        Log::info('clearKey pattern', [
+            'full_pattern' => $fullPattern,
+            'will_search' => $fullPattern . '*',
+            'expected_to_match' => 'laravel-database-laravel-cache-admin:users:all:page:1:15:all',
+        ]);
+
+        $this->clearPrefix($fullPattern);
     }
 
     public function clearStaffCache(): void
