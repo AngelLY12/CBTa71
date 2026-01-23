@@ -170,7 +170,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
 });
 
 Route::fallback(function () {
-    return Response::error('No autenticado', 400, null, ErrorCode::BAD_REQUEST->value);
+    return Response::error('Método no existente', 400, null, ErrorCode::BAD_REQUEST->value);
 });
 
 Route::get('/test-redis-connection', function() {
