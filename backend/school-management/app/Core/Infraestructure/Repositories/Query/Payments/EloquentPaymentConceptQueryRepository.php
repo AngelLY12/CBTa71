@@ -333,7 +333,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
         if ($onlyActive) {
             $now = now();
             $query->whereDate('payment_concepts.start_date', '<=', $now)
-                ->where(fn($q) => $q->whereNull('payment_concepts.end_date')->orWhereDate('payment_concepts.end_date', '>=', $now));
+                ->where(fn($q) => $q->whereNull('payment_concepts.end_date')->orWhereDate('payment_concepts.end_date', '>', $now));
         }
 
         if ($status) {
