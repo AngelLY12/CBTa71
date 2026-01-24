@@ -108,7 +108,8 @@ class DashboardController extends Controller
 
     public function refreshDashboard()
     {
-        $this->dashboardService->refreshAll();
+        $userId = Auth::id();
+        $this->dashboardService->refreshAll($userId);
         return Response::success(null, 'Dashboard cache limpiado con éxito');
 
     }
