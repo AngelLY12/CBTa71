@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Parents;
 use App\Core\Application\Services\Parents\ParentsServiceFacades;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\Parents\AcceptInviteRequest;
 use App\Http\Requests\Parents\SendInviteRequest;
 use App\Models\User;
@@ -49,21 +50,23 @@ class ParentsController extends Controller
     }
 
 
-    public function getParetChildren()
+    public function getParetChildren(ForceRefreshRequest $request)
     {
         /** @var User $user */
         $user=Auth::user();
-        $childrenData=$this->parentsFacade->getParentChildren(UserMapper::toDomain($user));
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $childrenData=$this->parentsFacade->getParentChildren(UserMapper::toDomain($user), $forceRefresh);
         return Response::success([
             'children' => $childrenData
         ], 'Datos obtenidos', 200);
     }
 
-    public function getStudentParents()
+    public function getStudentParents(ForceRefreshRequest $request)
     {
         /**@var User $user*/
         $user=Auth::user();
-        $studentParentsData=$this->parentsFacade->getStudentParents(UserMapper::toDomain($user));
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $studentParentsData=$this->parentsFacade->getStudentParents(UserMapper::toDomain($user), $forceRefresh);
         return Response::success(['parents' => $studentParentsData], 'Datos obtenidos', 200);
     }
 
@@ -72,7 +75,7 @@ class ParentsController extends Controller
         /** @var User $user */
         $user=Auth::user();
         $this->parentsFacade->deleteParentStudentRelation($parentId, $user->id);
-        return Response(null, 'Relación eliminada correctamente', 200);
+        return Response::success(null, 'Relación eliminada correctamente', 200);
 
     }
 
