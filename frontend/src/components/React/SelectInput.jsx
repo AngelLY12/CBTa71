@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ButtonPrimary from './ButtonPrimary';
 
-function SelectInput({ className, options = [], setOption = null, setValue, titleEnter = true, title = "Buscar por", titleMovil, children, topTitle = false, filtre = true, upperCase = false, widthText }) {
+function SelectInput({ className, notSelectDefault = false, options = [], setOption = null, setValue, titleEnter = true, title = "Buscar por", titleMovil, children, topTitle = false, filtre = true, upperCase = false, widthText }) {
     const [opentOption, setOpenOptions] = useState(false)
     const [openMovilSelect, setOpenMovilSelect] = useState(false);
-    const [indexSelect, setIndexSelect] = useState(0)
-    const [valueSelect, setValueSelect] = useState(options[0])
+    const [indexSelect, setIndexSelect] = useState(!notSelectDefault ? options[0] : -1)
+    const [valueSelect, setValueSelect] = useState(!notSelectDefault ? options[0] : "")
     const [isMovil, setIsMovil] = useState(false);
     const wrapperRef = useRef(null);
     const buttonRef = useRef(null)
@@ -92,7 +92,8 @@ function SelectInput({ className, options = [], setOption = null, setValue, titl
     }, [closeOption]);
 
     useEffect(() => {
-        setValue(options[0])
+        if (notSelectDefault) return;
+        setValue(options[0]);
     }, [])
 
     useEffect(() => {
@@ -135,8 +136,8 @@ function SelectInput({ className, options = [], setOption = null, setValue, titl
                     }
                     <div className={`flex-grow w-full h-full md:visible md:block hidden`}>
                         <button ref={buttonRef} className="flex h-full w-full cursor-pointer hover:bg-green-100/60 outline-0 group" onClick={showOption}>
-                            <div className='flex h-full w-11/12 items-center px-2 border-[1px] rounded-s group-focus:border-[0.1rem] overflow-hidden'>
-                                <p className={`text-start w-full whitespace-nowrap overflow-hidden overflow-ellipsis text-sm xl:text-lg ${widthText}`}>{titleEnter ? <>{title}: <span className={`font-semibold ${upperCase && "uppercase"}`}>{valueSelect}</span></> : valueSelect}</p>
+                            <div className='flex h-full w-full items-center px-2 border-[1px] rounded-s group-focus:border-[0.1rem] overflow-hidden'>
+                                <p className={`text-start w-full whitespace-nowrap overflow-hidden overflow-ellipsis text-sm xl:text-lg ${widthText}`}>{titleEnter ? <>{title}: <span className={`font-semibold ${upperCase && "uppercase"}`}>{valueSelect ? valueSelect : titleMovil}</span></> : valueSelect > 0 ? valueSelect : titleMovil}</p>
                             </div>
                             <div className='flex h-full w-12 justify-center items-center -ml-[1px] border-[1px] rounded-e group-focus:border-[0.1rem]'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">

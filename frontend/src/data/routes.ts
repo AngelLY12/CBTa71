@@ -1,7 +1,11 @@
-export const routesNavbar = [
-  {
-    name: 'Inicio',
-    url: '/home',
+export const routes = {
+  login: {
+    url: "/",
+    title: "Login"
+  },
+  home: {
+    url: "/home",
+    title: "Inicio",
     svg: {
       filled: `<svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -18,13 +22,12 @@ export const routesNavbar = [
                 </svg>`,
       outline: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
       <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-      </svg>
-`,
+      </svg>`,
     }
   },
-  {
-    name: 'Personal',
-    url: '/roles',
+  roles: {
+    url: "/roles",
+    title: "Personal",
     svg: {
       filled: `<svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -56,9 +59,13 @@ export const routesNavbar = [
                 </svg>`,
     }
   },
-  {
-    name: 'Horario',
-    url: '/classSchedule',
+  rolesAdd: {
+    url: "/rolesAdd",
+    title: "Agregar"
+  },
+  classSchedule: {
+    url: "/classSchedule",
+    title: "Horario",
     svg: {
       filled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
   <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clip-rule="evenodd" /></svg>`,
@@ -66,9 +73,9 @@ export const routesNavbar = [
   <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>`,
     }
   },
-  {
-    name: 'Docentes',
-    url: '/teachers',
+  teachers: {
+    url: "/teachers",
+    title: "Maestros",
     svg: {
       filled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
   <path d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224c0-.131.067-.248.172-.311a54.615 54.615 0 0 1 4.653-2.52.75.75 0 0 0-.65-1.352 56.123 56.123 0 0 0-4.78 2.589 1.858 1.858 0 0 0-.859 1.228 49.803 49.803 0 0 0-4.634-1.527.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z" />
@@ -78,22 +85,25 @@ export const routesNavbar = [
   <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" /></svg>`
     }
   },
-
-  {
-    name: 'Alumnos',
-    url: '/students',
+  teachersAdd: {
+    url: "/teachersAdd",
+    title: "Agregar"
+  },
+  students: {
+    url: "/students",
+    title: "Alumnos",
     svg: {
       filled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
   <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
-</svg>`,
+  </svg>`,
       outline: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
   <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-</svg>`,
+  </svg>`
     }
   },
-  {
-    name: 'Matriculado',
-    url: '/matricule',
+  matricule: {
+    url: "/matricule",
+    title: "Matriculado",
     svg: {
       filled: `<svg xmlns="http://www.w3.org/2000/svg" class="size-6" viewBox="0 -960 960 960" fill="currentColor">
       <path d="M360-600v-80h360v80H360Zm0 120v-80h360v80H360ZM560-80v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q8 9 12.5 20t4.5 22q0 11-4 22.5T903-300L683-80H560Zm263-224 37-39-37-37-38 38 38 38ZM240-80q-50 0-85-35t-35-85v-120h120v-560h600v361q-20-2-40.5 1.5T760-505v-295H320v480h240l-80 80v160H240Z"/></svg>`,
@@ -101,11 +111,14 @@ export const routesNavbar = [
       <path d="M360-600v-80h360v80H360Zm0 120v-80h360v80H360Zm120 320H200h280Zm0 80H240q-50 0-85-35t-35-85v-120h120v-560h600v361q-20-2-40.5 1.5T760-505v-295H320v480h240l-80 80H200v40q0 17 11.5 28.5T240-160h240v80Zm80 0v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q8 9 12.5 20t4.5 22q0 11-4 22.5T903-300L683-80H560Zm300-263-37-37 37 37ZM620-140h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z"/>
       </svg>`,
     }
-  }
-  ,
-  {
-    name: 'Calificaciones',
-    url: '/ratings',
+  },
+  matriculeAdd: {
+    url: "/matriculeAdd",
+    title: "Agregar"
+  },
+  ratings: {
+    url: "/ratings",
+    title: "Calificaciones",
     svg: {
       filled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
   <path fill-rule="evenodd" d="M7.502 6h7.128A3.375 3.375 0 0 1 18 9.375v9.375a3 3 0 0 0 3-3V6.108c0-1.505-1.125-2.811-2.664-2.94a48.972 48.972 0 0 0-.673-.05A3 3 0 0 0 15 1.5h-1.5a3 3 0 0 0-2.663 1.618c-.225.015-.45.032-.673.05C8.662 3.295 7.554 4.542 7.502 6ZM13.5 3A1.5 1.5 0 0 0 12 4.5h4.5A1.5 1.5 0 0 0 15 3h-1.5Z" clip-rule="evenodd" />
@@ -116,9 +129,21 @@ export const routesNavbar = [
 </svg>`,
     }
   },
-  {
-    name: 'Pagos',
-    url: '/payments',
+  matter: {
+    url: "/matter",
+    title: "Materias",
+    svg: {
+      filled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+  <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+</svg>`,
+      outline: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+</svg>`,
+    }
+  },
+  payments: {
+    url: "/payments",
+    title: "Pagos",
     svg: {
       filled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
   <path d="M2.273 5.625A4.483 4.483 0 0 1 5.25 4.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 3H5.25a3 3 0 0 0-2.977 2.625ZM2.273 8.625A4.483 4.483 0 0 1 5.25 7.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 6H5.25a3 3 0 0 0-2.977 2.625ZM5.25 9a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h13.5a3 3 0 0 0 3-3v-6a3 3 0 0 0-3-3H15a.75.75 0 0 0-.75.75 2.25 2.25 0 0 1-4.5 0A.75.75 0 0 0 9 9H5.25Z" />
@@ -128,51 +153,93 @@ export const routesNavbar = [
 </svg>`,
     }
   },
-];
-
-export const routes = {
-  login: {
-    url: "/",
-    title: "Login"
-  },
-  home: {
-    url: routesNavbar[0].url,
-    title: "Inicio"
-  },
-  roles: {
-    url: routesNavbar[1].url,
-    title: "Roles"
-  },
-  rolesAdd: {
-    url: routesNavbar[1].url + "Add",
-    title: "Agregar"
-  },
-  classSchedule: {
-    url: routesNavbar[2].url,
-    title: "Horario"
-  },
-  teachers: {
-    url: routesNavbar[3].url,
-    title: "Maestros"
-  },
-  teachersAdd: {
-    url: routesNavbar[3].url + "Add",
-    title: "Agregar"
-  },
-  students: {
-    url: routesNavbar[4].url,
-    title: "Alumnos"
-  },
-  matricule: {
-    url: routesNavbar[5].url,
-    title: "Matriculado"
-  },
-  matriculeAdd: {
-    url: routesNavbar[5].url + "Add",
-    title: "Agregar"
-  },
-  ratings: {
-    url: routesNavbar[6].url,
-    title: "Calificaciones"
+  profile: {
+    url: "/profile",
+    title: "Mi perfil",
+    svg: {
+      filled: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+  <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+</svg>`,
+      outline: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+</svg>`,
+    }
   }
-}
+};
+
+
+export const routeForRole = {
+  alumno: [
+    {
+      name: routes.home.title,
+      url: routes.home.url,
+      svg: routes.home.svg
+    },
+    {
+      name: routes.classSchedule.title,
+      url: routes.classSchedule.url,
+      svg: routes.classSchedule.svg
+    },
+    {
+      name: routes.ratings.title,
+      url: routes.ratings.url,
+      svg: routes.ratings.svg
+    },
+    {
+      name: routes.profile.title,
+      url: routes.profile.url,
+      svg: routes.profile.svg
+    }
+  ],
+  personal:
+    [
+      {
+        name: routes.home.title,
+        url: routes.home.url,
+        svg: routes.home.svg
+      },
+      {
+        name: routes.roles.title,
+        url: routes.roles.url,
+        svg: routes.roles.svg
+      },
+
+      {
+        name: routes.classSchedule.title,
+        url: routes.classSchedule.url,
+        svg: routes.classSchedule.svg
+      },
+      {
+        name: routes.teachers.title,
+        url: routes.teachers.url,
+        svg: routes.teachers.svg
+      },
+      {
+        name: routes.students.title,
+        url: routes.students.url,
+        svg: routes.students.svg
+      },
+      {
+        name: routes.matricule.title,
+        url: routes.matricule.url,
+        svg: routes.matricule.svg
+      },
+      {
+        name: routes.ratings.title,
+        url: routes.ratings.url,
+        svg: routes.ratings.svg
+      },
+      {
+        name: routes.matter.title,
+        url: routes.matter.url,
+        svg: routes.matter.svg
+      },
+    ],
+  aspirantes: [
+    {
+      name: routes.home.title,
+      url: routes.home.url,
+      svg: routes.home.svg
+    },
+  ]
+};

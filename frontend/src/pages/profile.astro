@@ -1,0 +1,12 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import Layout from "../layouts/Layout.astro";
+import ProfileContent from "../view/profile/ProfileContent";
+
+---
+
+<Layout title="Mi Perfil">
+    <DivWithNavbar title="Mi perfil">
+        <ProfileContent client:load />
+    </DivWithNavbar>
+</Layout>

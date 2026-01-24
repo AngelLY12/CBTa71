@@ -44,7 +44,7 @@ const RatingSeccion1 = () => {
         ]
     );
     const [showModalRang, setShowModalRang] = useState(false);
-    const [showModalEdit, setShowModalEdit] = useState(true);
+    const [showModalEdit, setShowModalEdit] = useState(false);
 
     const [searchStudent, setSearchStudent] = useState("")
     const [studentSelect, setStudentSelect] = useState({ id: -1, matricula: "", nombre: "", apelldios: "", carrera: "", semestre: 0, grupo: "", estatus: "", promedio_general: 0 });

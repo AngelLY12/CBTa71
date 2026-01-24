@@ -27,7 +27,7 @@ const ContentMatriculeAdd = () => {
                     <InputTitleUp className={"md:w-3/12"} title={"Apellidos"} />
                 </div>
 
-                <div className='flex-col md:flex-row flex justify-between gap-4'>
+                <div className='flex-col md:flex-row flex justify-between gap-4 '>
                     <SelectInputOption setValue={setCarrerSelect} options={optionsCarrer} title={"Carrera"} titleSelector={"Selecciona una carrera"} />
                     <SelectInputOption setValue={setMatriculeSelect} options={optionsSemester} title={"Semestre"} titleSelector={"Selecciona el semestre"} />
                     <SelectInputOption setValue={setGroupSelect} options={optionsGroup} title={"Grupo"} titleSelector={"Selecciona el grupo"} />

@@ -145,239 +145,249 @@ function StudentsSeccion2() {
           <Modal onClickAccept={deleteValueApplication} show={showDelete} onDisable={closeModalDelete} text={"¿ Esta seguro de querer rechazar a este estudiante ?"} />
 
           <Modal show={showInfoAspirant} onDisable={() => setShowInfoAspirant(false)} fullScreen={true} aceptModal={false}>
-            <div className='w-full h-full px-6 mb-4'>
+            <div className='w-full h-full pr-1 pl-4'>
               <h3 className='py-4 text-center text-sm md:text-xl font-bold'>Datos del aspirante</h3>
-              <div className='md:min-w-2xl'>
-                <table className='border-collapse  border border-gray-400 w-full table-auto mt-2'>
-                  <thead>
-                    <tr>
-                      <th className='border border-gray-300 p-2 font-semibold'>Nombre</th>
-                      <th className='border border-gray-300 p-2 font-semibold'>Apellidos</th>
-                      <th className='border border-gray-300 p-2 font-semibold'>Teléfono</th>
-                      <th className='border border-gray-300 p-2 font-semibold'>Entidad</th>
-                    </tr>
-                  </thead>
+              <div className='overflow-auto'>
+                <div className='flex flex-col min-w-max pb-4'>
+                  <table className='border-collapse border border-gray-400 w-full table-auto mt-2'>
+                    <thead>
+                      <tr>
+                        <th className='border border-gray-300 p-2 font-semibold'>Nombre</th>
+                        <th colSpan={2} className='border border-gray-300 p-2 font-semibold'>Apellidos</th>
+                        <th className='border border-gray-300 p-2 font-semibold'>Teléfono</th>
+                        <th className='border border-gray-300 p-2 font-semibold'>Entidad</th>
+                      </tr>
+                    </thead>
 
-                  <tbody>
-                    <tr>
-                      <td className='border border-gray-300 px-2 py-4'>
-                        <p className='text-center w-full'>{infoSelectAspirant.nombre}</p>
-                      </td>
-                      <td className='border border-gray-300 px-2 py-4'>
-                        <p className='text-center w-full'>{infoSelectAspirant.lasName}</p>
-                      </td>
-                      <td className='border border-gray-300 px-2 py-4'>
-                        <p className='text-center w-full'>{infoSelectAspirant.phone}</p>
-                      </td>
-                      <td className='border border-gray-300 px-2 py-4'>
-                        <p className='text-center w-full'>{infoSelectAspirant.entity}</p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Edad</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.age}</p>
+                    <tbody>
+                      <tr>
+                        <td className='border border-gray-300 px-2 py-4'>
+                          <p className='text-center w-full'>{infoSelectAspirant.nombre}</p>
+                        </td>
+                        <td colSpan={2} className='border border-gray-300 px-2 py-4'>
+                          <p className='text-center w-full'>{infoSelectAspirant.lasName}</p>
+                        </td>
+                        <td className='border border-gray-300 px-2 py-4'>
+                          <p className='text-center w-full'>{infoSelectAspirant.phone}</p>
+                        </td>
+                        <td className='border border-gray-300 px-2 py-4'>
+                          <p className='text-center w-full'>{infoSelectAspirant.entity}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Edad</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.age}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Fecha de nacimiento</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.birthdays}</p>
+                        </td>
+                        <td className='w-40 border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='w-full font-semibold text-center'>Fecha de nacimiento</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.birthdays}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Sexo</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.gender}</p>
+                        </td>
+                        <td className='w-40 border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Correo</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.correo}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Curp</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.curp}</p>
+                        </td>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Sexo</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.gender}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Curp</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.curp}</p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
 
-                    <tr>
-                      <td className='border border-gray-300' colSpan={4}><h3 className='font-semibold text-center'>Carrera preferida</h3></td>
-                    </tr>
+                      <tr>
+                        <td className='border border-gray-300' colSpan={5}><h3 className='font-semibold text-center'>Carrera preferida</h3></td>
+                      </tr>
 
-                    <tr>
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <div className='flex justify-center items-center min-h-8'>
-                            <h3 className='font-semibold text-center'>Opción 1</h3>
+                      <tr>
+                        <td colSpan={2} className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <div className='flex justify-center items-center min-h-8'>
+                              <h3 className='font-semibold text-center'>Opción 1</h3>
+                            </div>
+                            <div className='border-t-1 border-gray-300 min-h-16 px-2 py-4'>
+                              <p className='w-full text-center uppercase'>{infoSelectAspirant.carrerPrefed}</p>
+                            </div>
                           </div>
-                          <div className='border-t-1 border-gray-300 min-h-16 px-2 py-4'>
-                            <p className='w-full text-center uppercase'>{infoSelectAspirant.carrerPrefed}</p>
+                        </td>
+                        <td colSpan={2} className='border border-gray-300'>
+                          <div className='w-full flex flex-col'>
+                            <div className='flex justify-center items-center min-h-8'>
+                              <h3 className='font-semibold text-center'>Opción 2</h3>
+                            </div>
+                            <div className='border-t-1 border-gray-300 min-h-16 px-2 py-4'>
+                              <p className='w-full text-center uppercase'>{infoSelectAspirant.carrerPrefed2}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td colSpan={2} className='border border-gray-300'>
-                        <div className='w-full flex flex-col'>
-                          <div className='flex justify-center items-center min-h-8'>
-                            <h3 className='font-semibold text-center'>Opción 2</h3>
+                        </td>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <div className='flex justify-center items-center min-h-8'>
+                              <h3 className='font-semibold text-center'>Opción 3</h3>
+                            </div>
+                            <div className='border-t-1 border-gray-300 min-h-16 px-2 py-4'>
+                              <p className='w-full text-center uppercase'>{infoSelectAspirant.carrerPrefed3}</p>
+                            </div>
                           </div>
-                          <div className='border-t-1 border-gray-300 min-h-16 px-2 py-4'>
-                            <p className='w-full text-center uppercase'>{infoSelectAspirant.carrerPrefed2}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <div className='flex justify-center items-center min-h-8'>
-                            <h3 className='font-semibold text-center'>Opción 3</h3>
-                          </div>
-                          <div className='border-t-1 border-gray-300 min-h-16 px-2 py-4'>
-                            <p className='w-full text-center uppercase'>{infoSelectAspirant.carrerPrefed3}</p>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
 
-                    <tr>
-                      <td className='border border-gray-300' colSpan={4}><h3 className='font-semibold text-center'>Secundaria de procedencia</h3></td>
-                    </tr>
+                      <tr>
+                        <td className='border border-gray-300' colSpan={5}><h3 className='font-semibold text-center'>Secundaria de procedencia</h3></td>
+                      </tr>
 
-                    <tr>
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Entidad de procedencia</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.entityOrigin}</p>
+                      <tr>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center px-2'>Entidad de procedencia</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.entityOrigin}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Municipio de procedencia</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.municipalityOrigin}</p>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center px-2'>Municipio de procedencia</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.municipalityOrigin}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td colSpan={2} className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Escuela de procedencia</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.shoolOrigin}</p>
+                        <td colSpan={3} className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Escuela de procedencia</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.shoolOrigin}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
 
-                    <tr>
-                      <td colSpan={2} className='border border-gray-300 h-20'>
-                        <div className='flex flex-col'>
-                          <div className='flex items-center justify-center h-15 md:h-auto'>
-                            <h3 className='font-semibold text-center'>Fecha de egreso de la escuela</h3>
+                      <tr>
+                        <td colSpan={2} className='border border-gray-300 h-20'>
+                          <div className='flex flex-col'>
+                            <div className='flex items-center justify-center h-15 md:h-auto'>
+                              <h3 className='font-semibold text-center'>Fecha de egreso de la escuela</h3>
+                            </div>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.dateGraduation}</p>
+                            </div>
                           </div>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.dateGraduation}</p>
-                          </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td colSpan={2} className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <div className='flex justify-center items-center h-15 md:h-auto'>
-                            <h3 className='font-semibold text-center'>Promedio general <br className='md:hidden' />(6 a 10)</h3>
+                        <td colSpan={3} className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <div className='flex justify-center items-center h-15 md:h-auto'>
+                              <h3 className='font-semibold text-center'>Promedio general <br className='md:hidden' />(6 a 10)</h3>
+                            </div>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.average}</p>
+                            </div>
                           </div>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.average}</p>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
 
-                <table className='mt-6 text-auto border-collapse w-full border border-gray-300'>
-                  <thead>
-                    <tr>
-                      <th colSpan={4}>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Calle (Numero interior y/o exterior)</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.street}</p>
+                  <table className='table-auto mt-6 text-auto border-collapse w-full border border-gray-300'>
+                    <thead>
+                      <tr>
+                        <th colSpan={4}>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Calle (Numero interior y/o exterior)</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.street}</p>
+                            </div>
                           </div>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
+                        </th>
+                      </tr>
+                    </thead>
 
-                  <tbody>
-                    <tr>
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Estado</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.state}</p>
+                    <tbody>
+                      <tr>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Estado</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.state}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Municipio</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.municipality}</p>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Municipio</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.municipality}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Código postal</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.cp}</p>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Código postal</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.cp}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Colonia</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.colony}</p>
+                        <td className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Colonia</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.colony}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
 
-                    <tr>
-                      <td colSpan={2} className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Correo electronico</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.email}</p>
+                      <tr>
+                        <td colSpan={2} className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Correo electronico</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.email}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td colSpan={2} className='border border-gray-300'>
-                        <div className='flex flex-col'>
-                          <h3 className='font-semibold text-center'>Teléfono</h3>
-                          <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
-                            <p className='w-full text-center'>{infoSelectAspirant.phone}</p>
+                        <td colSpan={2} className='border border-gray-300'>
+                          <div className='flex flex-col'>
+                            <h3 className='font-semibold text-center'>Teléfono</h3>
+                            <div className='border-t-1 border-gray-300 min-h-4 px-2 py-4'>
+                              <p className='w-full text-center'>{infoSelectAspirant.phone}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </Modal>

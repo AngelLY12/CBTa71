@@ -2,7 +2,7 @@ import React from 'react'
 import CardInfoMovil from './CardInfoMovil'
 import Modal from './Modal'
 
-function Table({ Heads = [], textModal = "¿ Estas seguro de eliminar este elemento ?", values = [], dates = [], datesCard = ["correo", "status"], showModalDelete, indexDelete, deleteAprob, deleteValue, closeModalDelete, showDelete, svgDeleteButton = [], svgAcceptButton = [], id = "id" }) {
+function Table({ Heads = [], textModal = "¿Estas seguro de eliminar este elemento?", values = [], dates = [], datesCard = ["correo", "status"], showModalDelete, indexDelete, deleteAprob, deleteValue, clickEdit, closeModalDelete, showDelete, svgDeleteButton = [], svgAcceptButton = [], id = "id" }) {
     return (
         <div className='w-full mt-6 overflow-auto'>
             {
@@ -20,11 +20,18 @@ function Table({ Heads = [], textModal = "¿ Estas seguro de eliminar este eleme
                             <tbody>
                                 {values.map((option) => (
                                     <tr className={`text-center transition-opacity duration-300 ease-out ${(option[id] == indexDelete && deleteAprob) && 'opacity-0'}`} key={option[id]}>
-                                        {dates.map((date, i) => (
-                                            <td key={i}>{option[date]}</td>
-                                        ))}
+                                        {dates.length > 0
+                                            ?
+                                            dates.map((date, i) => (
+                                                <td key={i}>{option[date]}</td>
+                                            ))
+                                            :
+                                            Object.values(option).map((value, i) => (
+                                                <td key={i}>{value}</td>
+                                            ))
+                                        }
                                         <td className='flex items-end justify-center'>
-                                            <button className='mr-2 cursor-pointer group hover:text-green-400' title='Editar elemento'>
+                                            <button onClick={() => clickEdit(option)} className='mr-2 cursor-pointer group hover:text-green-400' title='Editar elemento'>
                                                 {svgAcceptButton.length > 0 ?
                                                     svgAcceptButton.map((svg, i) => (
                                                         <div className={`${i == 0 ? "size-6 group-hover:hidden" : "size-6 hidden group-hover:visible group-hover:block"}`}>

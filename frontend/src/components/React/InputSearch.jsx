@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ButtonPrimary from './ButtonPrimary';
 
-function InputSearch({ className, value, setValue, title, options = [], getOptions, valueSearch }) {
+function InputSearch({ className, value, setValue, title = "Buscar", options = [], getOptions, valueSearch }) {
     const [openOption, setOpenOption] = useState(false);
     const [openMovilSearch, setOpenMovilSearch] = useState(false);
     const [isMovil, setIsMovil] = useState(false);

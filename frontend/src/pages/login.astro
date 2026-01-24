@@ -57,7 +57,7 @@ const typeLogin = [
                                 value={type.value}
                                 name={type.name}
                                 classShare={type.classShare}
-                                checked = {type.value == "Alumno"}
+                                checked={type.value == "Alumno"}
                             />
                         ))
                     }
@@ -145,7 +145,7 @@ const typeLogin = [
     <script>
         const form = document.getElementById("loginForm") as HTMLFormElement;
         // Find all buttons with the `alert` class on the page.
-        const checkboxs = document.querySelectorAll("input.login-type");
+        const checkRadioButtons = document.querySelectorAll("input.login-type");
         const inputUser = document.getElementById(
             "usuario",
         ) as HTMLInputElement;
@@ -155,11 +155,20 @@ const typeLogin = [
         const buttonLogin = document.getElementById(
             "loginButton",
         ) as HTMLButtonElement;
+        let selectedRole = "alumno"; // valor por defecto
 
         // Handle clicks on each button.
-        checkboxs.forEach((checkbox) => {
+        const checSelectRadioButton = () => {
+            // Guardar cookie en el navegador
+            document.cookie = `role=${selectedRole}; path=/; SameSite=Lax`;
+            localStorage.setItem("role", selectedRole);
+        };
+
+        checkRadioButtons.forEach((checkbox) => {
             checkbox.addEventListener("change", (e) => {
                 const target = e.target as HTMLInputElement;
+                selectedRole = target.value;
+
                 switch (target.value) {
                     case "Alumno":
                         changeNames();
@@ -180,7 +189,8 @@ const typeLogin = [
         });
 
         form.addEventListener("submit", (e) => {
-            e.preventDefault(); // evita recarga
+            checSelectRadioButton();
+            e.preventDefault();
             onSubmit();
         });
 
@@ -226,7 +236,9 @@ const typeLogin = [
             //     console.error("Error de red:", error);
             //     alert("No se pudo conectar con el servidor.");
             // }
-            window.location.href = "/home"; // o cualquier ruta que necesites
+
+            // Ya tenemos el rol en la cookie, ahora redirigimos
+            window.location.href = "/home";
         };
     </script>
 </div>

@@ -3,7 +3,7 @@ import Modal from "./Modal"
 import SelectInput from "./SelectInput"
 import Button from "./Button"
 
-const TableShedule = ({ options = { smt: [], grp: [], tutor: [], period: [], carrer: [] }, edit = false, updateTable = false, tableTeacher = false, saveTable, closeTable, setBottonEdit, newTable = false, turnSelect = 0, setValueCell, valueCell = [], headValue = [], setHeadValue }) => {
+const TableShedule = ({ className = "", options = { smt: [], grp: [], tutor: [], period: [], carrer: [] }, edit = false, updateTable = false, tableTeacher = false, saveTable, closeTable, setBottonEdit, newTable = false, turnSelect = 0, setValueCell, valueCell = [], headValue = [], setHeadValue }) => {
     const [showNewMater, setShowNewMater] = useState(false)
     const [showNewClassroom, setShowNewClassroom] = useState(false)
     const [showMessageSave, setMessageSave] = useState(false);
@@ -149,8 +149,8 @@ const TableShedule = ({ options = { smt: [], grp: [], tutor: [], period: [], car
 
     return (
         <>
-            <div className={`relative mt-2 rounded-4xl px-2  ${!(newTable || edit) && "border-2 "}`}>
-                {headValue.semester != 0 && !edit &&
+            <div className={`relative mt-2 rounded-4xl px-2 pb-6 ${!(newTable || edit) && "border-2 pb-0"} ${className}`}>
+                {headValue.semester != 0 || !edit &&
                     <div className="absolute -top-4 -end-4">
                         <Button title={"Editar horario"} onClick={setBottonEdit} className={"p-0 ring-1 ring-green-400 bg-white rounded-full hover:text-white hover:ring-3 hover:bg-green-400 active:ring-3 active:text-white active:bg-green-400"}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5 md:size-7">
@@ -160,7 +160,7 @@ const TableShedule = ({ options = { smt: [], grp: [], tutor: [], period: [], car
                     </div>
                 }
                 <div className={`w-full overflow-auto mb-3 px-2 my-1 md:px-4 md:mb-0 h-full ${!(newTable || edit) && "py-8 md:mt-6 mt-0"}`}>
-                    <input type="text" ref={errorFocus} className="text-center w-full text-red-700 font-semibold outline-0 focus:outline-0" readOnly value={error} />
+                    <input type="text" ref={errorFocus} className={`text-center w-full text-red-700 font-semibold outline-0 focus:outline-0 ${error ? "" : "hidden"}`} readOnly value={error} />
                     {headValue.semester == 0 && !newTable && !updateTable
                         ?
                         <p className="font-semibold text-sm md:text-lg text-center md:mb-12">No hay elementos aun</p>
@@ -339,14 +339,16 @@ const TableShedule = ({ options = { smt: [], grp: [], tutor: [], period: [], car
                         </div>
                     }
                 </div>
+
+                {edit &&
+                    <div className='mt-2 flex gap-4 px-4 justify-end'>
+                        <Button onClick={onClickcloseTable} className={"w-30 rounded ring-1 ring-green-300 hover:ring-3 active:bg-green-300 hover:bg-green-300 text-sm md:text-base"} >Cancelar</Button>
+                        <Button onClick={onClicksaveTable} className={"w-30 text-white rounded bg-gray-700 text-sm md:text-base ring-1 ring-gray-700 hover:ring-3"}>Guardar</Button>
+                    </div>
+                }
             </div >
 
-            {edit &&
-                <div className='mt-2 flex gap-4 px-4 justify-end'>
-                    <Button onClick={onClickcloseTable} className={"w-30 rounded ring-1 ring-green-300 hover:ring-3 active:bg-green-300 hover:bg-green-300 text-sm md:text-base"} >Cancelar</Button>
-                    <Button onClick={onClicksaveTable} className={"w-30 text-white rounded bg-gray-700 text-sm md:text-base ring-1 ring-gray-700 hover:ring-3"}>Guardar</Button>
-                </div>
-            }
+
             {
                 edit &&
                 <>

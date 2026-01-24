@@ -1,0 +1,13 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import Layout from "../layouts/Layout.astro";
+import ContentMatter from "../view/matter/ContentMatter.jsx";
+---
+
+<Layout title="Materias">
+    <DivWithNavbar title="Materias">
+        <div class="w-full">
+            <ContentMatter client:load />
+        </div>
+    </DivWithNavbar>
+</Layout>
