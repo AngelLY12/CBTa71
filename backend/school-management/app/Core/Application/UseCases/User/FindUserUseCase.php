@@ -13,6 +13,7 @@ use App\Exceptions\NotFound\UserNotFoundException;
 class FindUserUseCase
 {
     use HasCache;
+    private const TAG_USER = [CachePrefix::USER->value, "profile"];
 
     public function __construct(
         private UserQueryRepInterface $uqRepo,
@@ -29,7 +30,12 @@ class FindUserUseCase
         {
             throw new UserNotFoundException();
         }
-        $key = CachePrefix::USER->value . ":$user->id";
-        return $this->cache($key, $forceRefresh, fn() => $user);
+        $key = $this->generateCacheKey(
+            CachePrefix::USER->value,
+            "profile",
+            ["userId"=>$user->id]
+        );
+        $tags = array_merge(self::TAG_USER, ["userId:{$user->id}"]);
+        return $this->weeklyCache($key, fn() => $user,$tags,$forceRefresh);
     }
 }

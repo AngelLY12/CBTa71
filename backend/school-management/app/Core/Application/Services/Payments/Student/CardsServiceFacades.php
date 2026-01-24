@@ -16,6 +16,8 @@ class CardsServiceFacades
 {
 
     use HasCache;
+    private const TAG_CARDS = [CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value];
+
     public function __construct(
         private SetupCardUseCase $setup,
         private DeletePaymentMethoUseCase $delete,
@@ -25,22 +27,31 @@ class CardsServiceFacades
     {
         $this->setCacheService($service);
     }
+
     public function setupCard(User $user): SetupCardResponse
     {
         $setup= $this->setup->execute($user);
-        $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
+        $this->service->flushTags(array_merge(self::TAG_CARDS, ["userId:{$user->id}"]));
         return $setup;
     }
     public function deletePaymentMethod(User $user, string $paymentMethodId): bool
     {
         $delete=$this->delete->execute($paymentMethodId);
-        $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
+        $this->service->flushTags(array_merge(self::TAG_CARDS, ["userId:{$user->id}"]));
         return $delete;
     }
 
     public function getUserPaymentMethods(int $userId, bool $forceRefresh): array
     {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$userId");
-        return $this->cache($key,$forceRefresh ,fn() =>$this->show->execute($userId));
+        $key = $this->generateCacheKey(
+            CachePrefix::STUDENT->value,
+            StudentCacheSufix::CARDS->value,
+            [
+                'userId' => $userId,
+            ]
+        );
+        $tags = array_merge(self::TAG_CARDS, ["userId:{$userId}"]);
+
+        return $this->longCache($key,fn() =>$this->show->execute($userId), $tags,$forceRefresh );
     }
 }

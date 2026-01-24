@@ -18,7 +18,7 @@ class UserServiceFacades
 {
     use HasCache;
 
-
+    private const TAG_USER = [CachePrefix::USER->value, "profile"];
     public function __construct(
             private UpdateUserUseCase $update,
             private CacheService $service,
@@ -40,7 +40,7 @@ class UserServiceFacades
         $user = $this->userRepo->findById($userId);
         UserValidator::ensureUserIsValidToUpdate($user);
         $updatedUser = $this->update->execute($userId, $fields);
-        $this->service->clearKey(CachePrefix::USER->value, ":$userId");
+        $this->service->flushTags(array_merge(self::TAG_USER, ["userId:$userId"]));
         return $updatedUser;
     }
 
@@ -53,7 +53,7 @@ class UserServiceFacades
         }
         $hashed = Hash::make($newPassword);
         $updatedUser = $this->update->execute($userId, ['password' => $hashed]);
-        $this->service->clearKey(CachePrefix::USER->value, ":$userId");
+        $this->service->flushTags(array_merge(self::TAG_USER, ["userId:$userId"]));
         return $updatedUser;
     }
 }

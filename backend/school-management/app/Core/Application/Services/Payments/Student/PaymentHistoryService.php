@@ -13,6 +13,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class PaymentHistoryService {
     use HasCache;
+    private const TAG_PAYMENTS_HISTORY =[CachePrefix::STUDENT->value, StudentCacheSufix::HISTORY->value];
     public function __construct(
         private GetPaymentHistoryUseCase $history,
         private FindPaymentByIdUseCase $payment,
@@ -22,8 +23,17 @@ class PaymentHistoryService {
     }
 
     public function paymentHistory(User $user, int $perPage, int $page, bool $forceRefresh): PaginatedResponse {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::HISTORY->value . ":$user->id:$perPage:$page");
-        return $this->cache($key,$forceRefresh ,fn() => $this->history->execute($user->id, $perPage, $page));
+        $key = $this->generateCacheKey(
+            CachePrefix::STUDENT->value,
+            StudentCacheSufix::HISTORY->value,
+            [
+                'userId' => $user->id,
+                'perPage' => $perPage,
+                'page' => $page,
+            ]
+        );
+        $tags = array_merge(self::TAG_PAYMENTS_HISTORY, ["userId:{$user->id}"]);
+        return $this->mediumCache($key,fn() => $this->history->execute($user->id, $perPage, $page),$tags,$forceRefresh);
     }
 
     public function findPayment(int $id): Payment

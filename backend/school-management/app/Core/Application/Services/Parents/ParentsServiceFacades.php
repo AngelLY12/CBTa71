@@ -20,6 +20,8 @@ use App\Core\Infraestructure\Cache\CacheService;
 class ParentsServiceFacades
 {
     use HasCache;
+    private const TAG_PARENT_CHILDREN = [CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value];
+    private const TAG_STUDENT_PARENTS = [CachePrefix::STUDENT->value, ParentCacheSufix::PARENTS->value];
     public function __construct(
         private SendParentInviteUseCase $send,
         private AcceptParentInvitationUseCase $accept,
@@ -42,23 +44,35 @@ class ParentsServiceFacades
         $this->accept->execute($token, $relationship);
     }
 
-    public function getParentChildren(User $parent): ParentChildrenResponse
+    public function getParentChildren(User $parent, bool $forceRefresh): ParentChildrenResponse
     {
-        $key = $this->service->makeKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value . ":$parent->id");
-        return $this->cache($key, false, fn() => $this->children->execute($parent));
+        $key = $this->generateCacheKey(
+            CachePrefix::PARENT->value,
+            ParentCacheSufix::CHILDREN->value,
+            ['parentId' => $parent->id]
+        );
+        $tags = array_merge(self::TAG_PARENT_CHILDREN, ["parent:{$parent->id}"]);
+
+        return $this->mediumCache($key, fn() => $this->children->execute($parent), $tags, $forceRefresh);
     }
 
-    public function getStudentParents(User $student): StudentParentsResponse
+    public function getStudentParents(User $student, bool $forceRefresh): StudentParentsResponse
     {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, ParentCacheSufix::PARENTS->value . ":$student->id");
-        return $this->cache($key, false, fn() => $this->parents->execute($student));
+        $key = $this->generateCacheKey(
+            CachePrefix::STUDENT->value,
+            ParentCacheSufix::PARENTS->value,
+            ['studentId' => $student->id]
+        );
+
+        $tags = array_merge(self::TAG_STUDENT_PARENTS, ["student:{$student->id}"]);
+        return $this->mediumCache($key, fn() => $this->parents->execute($student),$tags ,$forceRefresh);
     }
 
     public function deleteParentStudentRelation(int $parentId, int $studentId): bool
     {
         $result=$this->deleteRelation->execute($parentId, $studentId);
-        $this->service->clearKey(CachePrefix::STUDENT->value, ParentCacheSufix::PARENTS->value . ":$studentId");
-        $this->service->clearKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value . ":$parentId");
+        $this->service->flushTags(array_merge(self::TAG_PARENT_CHILDREN, ["parent:{$parentId}"]));
+        $this->service->flushTags(array_merge(self::TAG_STUDENT_PARENTS, ["student:{$studentId}"]));
         return $result;
     }
 

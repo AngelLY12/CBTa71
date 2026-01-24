@@ -12,6 +12,8 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class PaymentsService{
     use HasCache;
+    private const TAG_PAYMENTS = [CachePrefix::STAFF->value, StaffCacheSufix::PAYMENTS->value, "show"];
+    private const TAG_PAYMENTS_BY_CONCEPT = [CachePrefix::STAFF->value, StaffCacheSufix::PAYMENTS->value, "show", "by-concept"];
     public function __construct(
         private ShowAllPaymentUseCase $payments,
         private ShowAllPaymentsByConceptNameUseCase $paymentsByConceptName,
@@ -22,14 +24,30 @@ class PaymentsService{
     }
     public function showAllPayments(?string $search, int $perPage, int $page,  bool $forceRefresh): PaginatedResponse
     {
-        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::PAYMENTS->value . ":show:$search:$perPage:$page");
-        return $this->cache($key,$forceRefresh ,fn() =>$this->payments->execute($search,$perPage, $page));
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::PAYMENTS->value . ":show",
+            [
+                'search' => $search,
+                'perPage' => $perPage,
+                'page' => $page
+            ]
+        );
+        return $this->mediumCache($key,fn() =>$this->payments->execute($search,$perPage, $page), self::TAG_PAYMENTS ,$forceRefresh);
     }
 
     public function showAllPaymentsByConceptName(?string $search, int $perPage, int $page,  bool $forceRefresh): PaginatedResponse
     {
-        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::PAYMENTS->value . ":show-by-name:$search:$perPage:$page");
-        return $this->cache($key,$forceRefresh ,fn() =>$this->payments->execute($search,$perPage, $page));
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::PAYMENTS->value . ":show:by-concept",
+            [
+                'search' => $search,
+                'perPage' => $perPage,
+                'page' => $page
+            ]
+        );
+        return $this->mediumCache($key,fn() =>$this->payments->execute($search,$perPage, $page),self::TAG_PAYMENTS_BY_CONCEPT,$forceRefresh);
     }
 
 }

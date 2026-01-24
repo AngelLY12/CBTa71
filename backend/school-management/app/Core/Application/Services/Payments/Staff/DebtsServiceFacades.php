@@ -14,6 +14,8 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class DebtsServiceFacades{
     use HasCache;
+    private const TAG_DEBTS_PENDING = [CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value, "pending"];
+
     public function __construct(
         private ShowAllPendingPaymentsUseCase $pending,
         private ValidatePaymentUseCase $validate,
@@ -27,14 +29,28 @@ class DebtsServiceFacades{
     }
     public function showAllpendingPayments(?string $search, int $perPage, int $page, bool $forceRefresh): PaginatedResponse
     {
-        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value . ":pending:$search:$perPage:$page");
-        return $this->cache($key,$forceRefresh ,fn() =>$this->pending->execute($search, $perPage, $page));
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::DEBTS->value . ":pending",
+            [
+                'search' => $search,
+                'perPage' => $perPage,
+                'page' => $page
+            ]
+        );
+
+        return $this->shortCache(
+            $key,
+            fn() => $this->pending->execute($search, $perPage, $page),
+            self::TAG_DEBTS_PENDING,
+            $forceRefresh
+        );
     }
 
     public function validatePayment(string $search, string $payment_intent_id): PaymentValidateResponse
     {
         $validate=$this->validate->execute($search,$payment_intent_id);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value . ":pending");
+        $this->service->flushTags(self::TAG_DEBTS_PENDING);
         return $validate;
     }
 

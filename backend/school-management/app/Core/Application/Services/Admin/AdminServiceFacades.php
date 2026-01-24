@@ -41,13 +41,16 @@ use App\Core\Domain\Enum\Cache\AdminCacheSufix;
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Infraestructure\Cache\CacheService;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class AdminServiceFacades
 {
     use HasCache;
     private array $requestCache = [];
+    private const TAG_USERS_ALL = [CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value, "all"];
+    private const TAG_USERS_ID = [CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value, "all:id"];
+    private const TAG_ROLES = [CachePrefix::ADMIN->value, AdminCacheSufix::ROLES->value];
+    private const TAG_USER_PROFILE =[CachePrefix::USER->value, "profile"];
     public function __construct(
         private FindStudentDetailUseCase        $find_student,
         private UpdateStudentDeatilsUseCase     $update_student,
@@ -75,8 +78,8 @@ class AdminServiceFacades
     public function attachStudentDetail(CreateStudentDetailDTO $create): User
     {
         $student=$this->attach->execute($create);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
-        $this->service->clearKey(CachePrefix::USER->value, $student->id);
+        $this->service->flushTags(self::TAG_USERS_ALL);
+        $this->service->flushTags(array_merge(self::TAG_USER_PROFILE,["userId:$student->id"]));
         return $student;
     }
 
@@ -88,92 +91,84 @@ class AdminServiceFacades
     public function updateStudentDetail(int $user_id, array $fields): User
     {
         $sd= $this->update_student->execute($user_id,$fields);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
-        $this->service->clearKey(CachePrefix::USER->value, $user_id);
+        $this->service->flushTags(self::TAG_USERS_ALL);
+        $this->service->flushTags(array_merge(self::TAG_USER_PROFILE,["userId:{$sd->id}"]));
         return $sd;
     }
 
     public function registerUser(CreateUserDTO $user, string $password):User
     {
         $user=$this->register->execute($user, $password);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ALL);
         return $user;
     }
 
     public function importUsers(array $rows): ImportResponse
     {
         $import=$this->import->execute($rows);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ALL);
         return $import;
     }
 
     public function importStudents(array $rows): ImportResponse
     {
         $import=$this->importStudentDetail->execute($rows);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ID);
         return $import;
     }
     public function showAllUsers(int $perPage, int $page, bool $forceRefresh, ?UserStatus $status = null): PaginatedResponse
     {
-        Log::emergency('🟢 CACHE DEBUG - showAllUsers LLAMADO', [
-            'perPage' => $perPage,
-            'page' => $page,
-            'forceRefresh' => $forceRefresh,
-            'status' => $status?->value,
-            'timestamp' => now()->toDateTimeString(),
-        ]);
-
         $statusValue = $status ? $status->value : 'all';
-        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:page:$page:$perPage:$statusValue");
-        Log::emergency('🔑 CACHE DEBUG - Key generada', [
-            'key' => $key,
-            'full_key' => Cache::getPrefix() . $key,
-        ]);
-        return $this->cache($key, $forceRefresh, fn() => $this->show->execute($perPage, $page, $status));
+        $key = $this->generateCacheKey(
+            CachePrefix::ADMIN->value,
+            AdminCacheSufix::USERS->value . ":all",
+            ['page' => $page, 'perPage' => $perPage, 'status' => $statusValue]
+        );
+        return $this->longCache($key, fn() => $this->show->execute($perPage, $page, $status),self::TAG_USERS_ALL,$forceRefresh);
     }
 
     public function getExtraUserData(int $userId, bool $forceRefresh): UserExtraDataResponse
     {
-        $key = $this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:id:$userId");
-        return $this->cache($key, $forceRefresh, fn() => $this->extraData->execute($userId));
+        $key = $this->generateCacheKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all:id",["userId" => $userId]);
+        return $this->shortCache($key, fn() => $this->extraData->execute($userId), self::TAG_USERS_ID ,$forceRefresh);
     }
     public function syncPermissions(UpdateUserPermissionsDTO $dto):array
     {
         $permissions=$this->sync->execute($dto);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ID);
         return $permissions;
     }
 
     public function syncRoles(UpdateUserRoleDTO $dto):UserWithUpdatedRoleResponse
     {
         $roles=$this->syncRoles->execute($dto);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ID);
         return $roles;
     }
 
     public function activateUsers(array $ids): UserChangedStatusResponse
     {
         $users=$this->activate->execute($ids);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ALL);
         return$users;
     }
      public function deleteUsers(array $ids): UserChangedStatusResponse
     {
         $users=$this->delete->execute($ids);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ALL);
         return $users;
     }
      public function disableUsers(array $ids): UserChangedStatusResponse
     {
         $users=$this->disable->execute($ids);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ALL);
         return $users;
     }
 
     public function temporaryDisableUsers(array $ids): UserChangedStatusResponse
     {
         $users=$this->temporaryDisable->execute($ids);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ALL);
         return $users;
     }
 
@@ -191,8 +186,8 @@ class AdminServiceFacades
 
     public function findAllRoles(bool $forceRefresh): array
     {
-        $key=$this->service->makeKey(CachePrefix::ADMIN->value, AdminCacheSufix::ROLES->value);
-        return $this->cache($key, $forceRefresh, fn() => $this->roles->execute());
+        $key=$this->generateCacheKey(CachePrefix::ADMIN->value, AdminCacheSufix::ROLES->value);
+        return $this->weeklyCache($key, fn() => $this->roles->execute(), self::TAG_ROLES ,$forceRefresh);
     }
 
     public function findPermissionById(int $id): Permission

@@ -30,6 +30,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 class ConceptsServiceFacades{
     use HasCache;
 
+    private const TAGS_CONCEPTS_LIST = [CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value,"list"];
     public function __construct(
         private ShowConceptsUseCase                   $show,
         private CreatePaymentConceptUseCase           $create,
@@ -50,8 +51,12 @@ class ConceptsServiceFacades{
     }
 
     public function showConcepts(string $status, int $perPage, int $page, bool $forceRefresh): PaginatedResponse{
-        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:$status:$perPage:$page");
-        return $this->cache($key,$forceRefresh ,fn() => $this->show->execute($status, $perPage, $page));
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::CONCEPTS->value . ":list",
+            ['status' => $status, 'page' => $page, 'perPage' => $perPage]
+        );
+        return $this->mediumCache($key,fn() => $this->show->execute($status, $perPage, $page),self::TAGS_CONCEPTS_LIST ,$forceRefresh);
     }
 
     public function findConcept(int $id): ConceptToDisplay
@@ -61,56 +66,50 @@ class ConceptsServiceFacades{
 
      public function createPaymentConcept(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {
         $concept = $this->create->execute($dto);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status}");
-        return $concept;
+        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+         return $concept;
     }
 
     public function updatePaymentConcept(UpdatePaymentConceptDTO $dto): UpdatePaymentConceptResponse {
         $concept = $this->update->execute($dto);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status}");
+        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
         return $concept;
     }
 
     public function updatePaymentConceptRelations(UpdatePaymentConceptRelationsDTO $dto): UpdatePaymentConceptRelationsResponse
     {
         $concept= $this->updateRelations->execute($dto);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$concept->status}");
+        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
         return $concept;
     }
 
     public function finalizePaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse {
-        $oldStatus = $concept->status;
         $result = $this->finalize->execute($concept);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$oldStatus->value}");
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$result->status->value}");
+        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
         return $result;
     }
 
     public function disablePaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse {
-        $oldStatus = $concept->status;
         $result = $this->disable->execute($concept);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$oldStatus->value}");
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$result->status->value}");
+        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
         return $result;
     }
 
     public function eliminatePaymentConcept(int $conceptId): void {
         $this->eliminate->execute($conceptId);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list");
+        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
     }
 
     public function activatePaymentConcept(PaymentConcept $concept):ConceptChangeStatusResponse
     {
-        $oldStatus = $concept->status;
         $result = $this->activate->execute($concept);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$oldStatus->value}");
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list:{$result->status->value}");
+        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
         return $result;
     }
 
     public function eliminateLogicalPaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse{
         $result = $this->eliminateLogical->execute($concept);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value . ":list");
+        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
         return $result;
     }
 }
