@@ -19,7 +19,8 @@ const currentRouteEntry = Object.values(routes).find((r) => r.url === route);
 ---
 
 <div class="w-full flex flex-col p-3 border-2 rounded-xl lg:p-4">
-    <p class="text-xl lg:text-3xl font-bold">{title}</p>
+  <p class="text-xl lg:text-3xl font-bold">{title}</p>
+
     {
         !ishomeRoute && (
             <div class="select-none hidden lg:visible lg:flex">

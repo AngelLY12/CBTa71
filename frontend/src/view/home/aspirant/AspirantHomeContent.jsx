@@ -184,7 +184,7 @@ const AspirantHomeContent = () => {
                                     </tr>
                                 </tbody>
                             </table>
-                            <div className='md:hiden flex flex-col gap-2'>
+                            <div className='md:hidden flex flex-col gap-2'>
                                 <InputTitleUp title={"Nombre"}></InputTitleUp>
                                 <InputTitleUp title={"Apellidos"}></InputTitleUp>
                                 <InputTitleUp type='tel' title={"Teléfono"}></InputTitleUp>
@@ -284,7 +284,7 @@ const AspirantHomeContent = () => {
                                     </tr>
                                 </tbody>
                             </table>
-                            <div className='md:hiden flex flex-col gap-2'>
+                            <div className='md:hidden flex flex-col gap-2'>
                                 <InputTitleUp title={"Calle (Numero interior y/o exterior)"}></InputTitleUp>
                                 <InputTitleUp title={"Estado"}></InputTitleUp>
                                 <InputTitleUp title={"Municipio"}></InputTitleUp>

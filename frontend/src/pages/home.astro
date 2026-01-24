@@ -2,14 +2,21 @@
 import HomeStaff from "../view/home/staff/homeStaff.astro";
 import ContentHomeAspirant from "../view/home/aspirant/ContentHomeAspirant.astro";
 import HomeStudent from "../view/home/student/homeStudent.astro";
+import Layout from "../layouts/Layout.astro";
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import AspirantHomeContent from "../view/home/aspirant/AspirantHomeContent";
 ---
 
-<div class="alumno hidden">
-    <HomeStudent />
-</div>
-<div class="aspirantes hidden">
-    <ContentHomeAspirant />
-</div>
-<div class="personal hidden">
-    <HomeStaff />
-</div>
+<Layout title={"Inicio"}>
+    <DivWithNavbar title={"Inicio"}>
+        <div class="alumno hidden">
+            <HomeStudent />
+        </div>
+        <div class="aspirantes hidden">
+            <AspirantHomeContent client:only />
+        </div>
+        <div class="personal hidden">
+            <HomeStaff />
+        </div>
+    </DivWithNavbar>
+</Layout>

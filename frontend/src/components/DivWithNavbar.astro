@@ -1,4 +1,5 @@
 ---
+import { routes } from "../data/routes";
 import NavigationSideBar from "./NavigationSideBar.astro";
 import Title from "./Title.astro";
 
@@ -8,13 +9,28 @@ interface Props {
     showTittle?: boolean;
 }
 
-const { title, routesMiddle, showTittle = true } = Astro.props;
+const route = Astro.url.pathname;
+
+const { title, routesMiddle } = Astro.props;
 ---
 
 <div class="flex relative">
     <NavigationSideBar />
     <div id="div-body" class="lg:pl-44 lg:pr-6 px-2 pt-4 w-full">
-       {showTittle &&  <Title title={title} routesMiddle={routesMiddle} />}
+        {
+            route == routes.home.url ? (
+                <div>
+                    <div class="personal hidden">
+                        <Title title={title} routesMiddle={routesMiddle} />
+                    </div>
+                    <div class="alumno hidden">
+                        <Title title={title} routesMiddle={routesMiddle} />
+                    </div>
+                </div>
+            ) : (
+                <Title title={title} routesMiddle={routesMiddle} />
+            )
+        }
         <div class="px-3 mt-2">
             <slot />
         </div>

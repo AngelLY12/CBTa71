@@ -4,8 +4,4 @@ import DivWithNavbar from "../../../components/DivWithNavbar.astro";
 import AspirantHomeContent from "../../../view/home/aspirant/AspirantHomeContent";
 ---
 
-<Layout title={"Inicio"}>
-    <DivWithNavbar showTittle={false} title={"Inicio"}>
-        <AspirantHomeContent client:only />
-    </DivWithNavbar>
-</Layout>
+<AspirantHomeContent client:only />
