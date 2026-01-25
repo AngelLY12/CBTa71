@@ -12028,11 +12028,6 @@
                     "basicInfo": {
                         "description": "Información básica adicional del usuario",
                         "properties": {
-                            "curp": {
-                                "description": "CURP del usuario",
-                                "type": "string",
-                                "example": "MAGJ940528HDFRRN09"
-                            },
                             "phone_number": {
                                 "description": "Número de teléfono",
                                 "type": "string",
@@ -12115,6 +12110,11 @@
                         "type": "string",
                         "format": "email",
                         "example": "juan.perez@example.com"
+                    },
+                    "curp": {
+                        "description": "CURP del usuario",
+                        "type": "string",
+                        "example": "EXMP050408HMSPXNA9"
                     },
                     "status": {
                         "description": "Estado del usuario",

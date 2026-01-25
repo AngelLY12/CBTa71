@@ -66,7 +66,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ->onOneServer();
         $schedule->command('logs:dispatch-clean-older-logs-job')->quarterly()->withoutOverlapping(120);
         $schedule->command('app:dispatch-optimize-database-job')->quarterly()->withoutOverlapping()->onOneServer();
-        $schedule->command('cache:dispatch-clean-cache-job')->cron('0 0 1 */3 *')->withoutOverlapping(30);
         $schedule->command('payments:dispath-clean-older-payment-events-job')->cron('0 0 1 */3 *')->withoutOverlapping(30);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

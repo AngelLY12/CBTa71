@@ -344,7 +344,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             $query->where('name', UserRoles::ADMIN->value);
         })
             ->when($status, fn ($q) => $q->where('status', $status->value))
-            ->select('id', 'name', 'last_name', 'email', 'status', 'created_at')
+            ->select('id', 'name', 'last_name', 'curp' ,'email', 'status', 'created_at')
             ->withCount('roles')
             ->latest('users.created_at')
             ->paginate($perPage, ['*'], 'page', $page)
@@ -361,7 +361,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                     ->with('career:id,career_name');
             }
         ])
-            ->select('id', 'curp', 'phone_number', 'address', 'blood_type')
+            ->select('id', 'phone_number', 'address', 'blood_type')
             ->findOrFail($userId);
 
         return MappersUserMapper::toUserExtrDataResponse($user);

@@ -16,12 +16,6 @@ use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
  *         type="object",
  *         description="Información básica adicional del usuario",
  *         @OA\Property(
- *             property="curp",
- *             type="string",
- *             description="CURP del usuario",
- *             example="MAGJ940528HDFRRN09"
- *         ),
- *         @OA\Property(
  *             property="phone_number",
  *             type="string",
  *             description="Número de teléfono",

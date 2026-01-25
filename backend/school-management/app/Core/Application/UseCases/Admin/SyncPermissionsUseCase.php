@@ -245,7 +245,6 @@ class SyncPermissionsUseCase
         if (!empty($dto->role)) {
             return [UserMapper::toUserUpdatedPermissionsResponse(
                 permissions: $permissions,
-                role: $dto->role,
                 metadata: [
                     'totalFound' => $result['total_users'],
                     'totalUpdated'=> $result['users_affected'],
@@ -255,13 +254,13 @@ class SyncPermissionsUseCase
                         'permissions_added' => $result['permissions_added'],
                         'roles_processed' => $result['roles_processed'],
                     ]
-                ]
+                ],
+                role: $dto->role
             )];
         }
 
         return $users->take(10)
             ->map(fn($user) => UserMapper::toUserUpdatedPermissionsResponse(
-                user: $user,
                 permissions: $permissions,
                 metadata: [
                     'totalFound' => $result['total_users'],
@@ -273,7 +272,8 @@ class SyncPermissionsUseCase
                         'permissions_added' => $result['permissions_added'],
                         'roles_processed' => $result['roles_processed'],
                     ]
-                ]
+                ],
+                user: $user
             ))
             ->toArray();
     }

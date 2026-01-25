@@ -190,7 +190,7 @@ class UserMapper{
         );
     }
 
-    public static function toUserUpdatedPermissionsResponse(?EloquentUser $user=null, array $permissions, ?string $role=null, array $metadata): UserWithUpdatedPermissionsResponse
+    public static function toUserUpdatedPermissionsResponse( array $permissions,array $metadata,?EloquentUser $user=null, ?string $role=null, ): UserWithUpdatedPermissionsResponse
     {
         return new UserWithUpdatedPermissionsResponse(
             fullName: $user?->name && $user?->last_name ? "{$user->name} {$user->last_name}" : null,
@@ -239,7 +239,6 @@ class UserMapper{
     {
         return new UserExtraDataResponse(
             basicInfo:[
-                'curp' => $user->curp,
                 'phone_number' => $user->phone_number,
                 'address' => $user->address ?? [],
                 'blood_type' => $user->blood_type->value ?? null,
@@ -261,6 +260,7 @@ class UserMapper{
             id: $user->id,
             fullName: $user->name . ' ' . $user->last_name,
             email: $user->email,
+            curp: $user->curp,
             status: $user->status->value,
             roles_count: $user->roles_count,
             created_at: $user->created_at->format('Y-m-d H:i:s'),

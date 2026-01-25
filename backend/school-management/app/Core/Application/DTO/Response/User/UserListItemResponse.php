@@ -27,6 +27,12 @@ namespace App\Core\Application\DTO\Response\User;
  *         example="juan.perez@example.com"
  *     ),
  *     @OA\Property(
+ *          property="curp",
+ *          type="string",
+ *          description="CURP del usuario",
+ *          example="EXMP050408HMSPXNA9"
+ *      ),
+ *     @OA\Property(
  *         property="status",
  *         type="string",
  *         description="Estado del usuario",
@@ -61,6 +67,7 @@ class UserListItemResponse
         public readonly int $id,
         public readonly string $fullName,
         public readonly string $email,
+        public readonly string $curp,
         public readonly string $status,
         public readonly int $roles_count,
         public readonly string $created_at,
