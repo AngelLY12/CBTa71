@@ -106,7 +106,8 @@ class EloquentUserRepository implements UserRepInterface
         return DB::transaction(function () use ($thresholdDate) {
             $userIds = DB::table('users')
                 ->where('status', '=', UserStatus::ELIMINADO)
-                ->where('updated_at', '<', $thresholdDate)
+                ->whereNotNull('mark_as_deleted_at')
+                ->where('mark_as_deleted_at', '<', $thresholdDate)
                 ->pluck('id');
 
             if ($userIds->isEmpty()) {
@@ -130,7 +131,12 @@ class EloquentUserRepository implements UserRepInterface
 
         $affected = EloquentUser::whereIn('id', $userIds)
             ->where('status', '!=', $status)
-            ->update(['status' => $status, 'updated_at' => now()]);
+            ->update([
+                'status' => $status,
+                'updated_at' => now(),
+                'mark_as_deleted_at' => $status === UserStatus::ELIMINADO ? now() : null,
+            ]);
+
 
         if ($affected === 0) {
             return new UserChangedStatusResponse($status, 0);

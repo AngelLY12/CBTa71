@@ -155,6 +155,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'registration_date' => 'date',
             'address' => 'array',
             'email_verified_at' => 'datetime',
+            'mark_as_deleted_at' => 'datetime',
             'password' => 'hashed',
             'gender' => UserGender::class,
             'blood_type' => UserBloodType::class,

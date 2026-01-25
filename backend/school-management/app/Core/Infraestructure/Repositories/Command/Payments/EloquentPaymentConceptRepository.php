@@ -36,25 +36,32 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         return $this->update($concept->id, [
             'end_date' => now(),
             'status'   => PaymentConceptStatus::FINALIZADO,
+            'mark_as_deleted_at' => null
         ]);
     }
 
     public function activate(PaymentConcept $concept): PaymentConcept
     {
+        $endDate = $concept->end_date;
+
+        if ($endDate !== null && $endDate < now()) {
+            $endDate = null;
+        }
         return $this->update($concept->id,[
             'status'   => PaymentConceptStatus::ACTIVO,
             'end_date' => null,
+            'mark_as_deleted_at' => null
         ]);
     }
 
     public function disable(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept->id, ['status' => PaymentConceptStatus::DESACTIVADO]);
+        return $this->update($concept->id, ['status' => PaymentConceptStatus::DESACTIVADO, 'mark_as_deleted_at' => null]);
     }
 
     public function deleteLogical(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept->id, ['status' => PaymentConceptStatus::ELIMINADO]);
+        return $this->update($concept->id, ['status' => PaymentConceptStatus::ELIMINADO,'mark_as_deleted_at' => now()]);
     }
 
     public function delete(int $conceptId): void
@@ -190,7 +197,8 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         $thresholdDate = Carbon::now()->subDays(30);
         return DB::table('payment_concepts')
             ->where('status', PaymentConceptStatus::ELIMINADO)
-            ->where('updated_at', '<', $thresholdDate)
+            ->whereNotNull('mark_as_deleted_at')
+            ->where('mark_as_deleted_at', '<', $thresholdDate)
             ->delete();
     }
 
