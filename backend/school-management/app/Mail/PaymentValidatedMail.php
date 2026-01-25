@@ -6,14 +6,14 @@ use App\Core\Application\DTO\Request\Mail\PaymentValidatedEmailDTO;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
-use MailerSend\Helpers\Builder\Personalization;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use MailerSend\LaravelDriver\MailerSendTrait;
 
 class PaymentValidatedMail extends Mailable
 {
-    use Queueable, SerializesModels, MailerSendTrait;
+    use Queueable, SerializesModels;
 
     protected PaymentValidatedEmailDTO $data;
 
@@ -25,45 +25,46 @@ class PaymentValidatedMail extends Mailable
         $this->data = $data;
     }
 
-    public function build()
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
-       try {
-
-        $voucherNumber = $this->data->payment_method_detail['oxxo']['number'] ?? 'No aplica';
-        $speiReference = $this->data->payment_method_detail['spei']['reference'] ?? 'No aplica';
-        $type_payment_method = $this->data->payment_method_detail['type'] ?? 'Desconocido';
-        $paymentLegend = $this->buildPaymentLegend();
-        $messageDetails = "
-            <p><strong>Concepto:</strong> {$this->data->concept_name}</p>
-            <p><strong>Monto:</strong> $". Money::from($this->data->amount)->finalize()."</p>
-            <p><strong>Monto recibido: $". Money::from($this->data->amount_received)->finalize()." </strong></p>
-            <p><strong>Método de pago:</strong> {$type_payment_method}</p>
-            <p><strong>Código de referencia:</strong> {$this->data->payment_intent_id}</p>
-            <p><strong>Voucher OXXO:</strong> {$voucherNumber}</p>
-            <p><strong>Referencia SPEI:</strong> {$speiReference}</p>
-            <p><strong>URL comprobante:</strong> <a href='{$this->data->url}' target='_blank'>{$this->data->url}</a></p>
-            {$paymentLegend}
-        ";
-
-        $personalization = [
-                new Personalization($this->data->recipientEmail, [
-                    'greeting' => "Hola {$this->data->recipientName}",
-                    'header_title' => 'Pago Validado',
-                    'message_intro' => 'Tu pago ha sido validado exitosamente.',
-                    'message_details' => $messageDetails,
-                    'message_footer' => 'Gracias por realizar tu pago a tiempo.',
-                ])
-            ];
-
-        return $this->mailersend(
-                     template_id:'pq3enl6d8z7g2vwr',
-                     personalization: $personalization
-                 );
-
-    } catch (\Throwable $e) {
-        logger()->error('Fallo al construir mail: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-        throw $e;
+        return new Envelope(
+            subject: 'Pago validado',
+        );
     }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.payments.validated',
+            with: [
+                'recipientName' => $this->data->recipientName,
+                'conceptName' => $this->data->concept_name,
+                'amount' => $this->data->amount,
+                'amountReceived' => $this->data->amount_received,
+                'paymentMethodType' => $this->data->payment_method_detail['type'],
+                'paymentIntentId' => $this->data->payment_intent_id,
+                'voucherNumber' => $this->data->payment_method_detail['oxxo']['number'],
+                'speiReference' => $this->data->payment_method_detail['spei']['reference'],
+                'url' => $this->data->url,
+                'paymentLegend' => $this->buildPaymentLegend(),
+            ]
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 
     private function buildPaymentLegend(): string

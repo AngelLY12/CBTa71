@@ -4,6 +4,8 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use MailerSend\Helpers\Builder\Personalization;
 use MailerSend\LaravelDriver\MailerSendTrait;
@@ -21,28 +23,38 @@ class SendPasswordResetLinkMail extends Mailable
         $this->resetUrl = $resetUrl;
     }
 
-    public function build()
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
-        $messageDetails = "
-            <p><a href=\"{$this->resetUrl}\" target=\"_blank\">Verificar mi email</a></p>
-            <p>Si no solicitaste restablecer la contraseña ignora este mensaje.</p>
-        ";
-
-        $personalization = [
-            new Personalization($this->notifiable->email, [
-                'greeting' => "Hola {$this->notifiable->name}",
-                'header_title' => 'Recuperar contraseña',
-                'message_intro' => 'Para restablecer tu contraseña debes ingresar al link.',
-                'message_details' => $messageDetails,
-                'message_footer' => 'Este enlace expirará en 60 minutos.',
-            ])
-        ];
-
-        return $this->mailersend(
-            template_id: 'pq3enl6d8z7g2vwr',
-            personalization: $personalization
+        return new Envelope(
+            subject: 'Recuperar contraseña',
         );
+    }
 
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.auth.password-reset',
+            with: [
+                'user' => $this->notifiable,
+                'resetUrl' => $this->resetUrl,
+            ]
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 
 }

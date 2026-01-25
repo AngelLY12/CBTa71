@@ -6,13 +6,13 @@ use App\Core\Application\DTO\Request\Mail\PaymentCreatedEmailDTO;
 use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use MailerSend\Helpers\Builder\Personalization;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use MailerSend\LaravelDriver\MailerSendTrait;
 
 class PaymentCreatedMail extends Mailable
 {
-    use Queueable, SerializesModels, MailerSendTrait;
+    use Queueable, SerializesModels;
 
     protected PaymentCreatedEmailDTO $data;
 
@@ -24,36 +24,42 @@ class PaymentCreatedMail extends Mailable
         $this->data = $data;
     }
 
-    public function build()
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
-       try {
-        $messageDetails = "
-                <p><strong>Concepto:</strong> {$this->data->concept_name}</p>
-                <p><strong>Monto:</strong> $".Money::from($this->data->amount)->finalize()."</p>
-                <p><strong>Fecha de pago:</strong> {$this->data->created_at}</p>
-                <p><strong>Sesión de pago:</strong> {$this->data->stripe_session_id}</p>
-                <p><strong>URL de la sesión:</strong> <a href='{$this->data->url}' target='_blank'>{$this->data['url']}</a></p>
-            ";
-
-        $personalization = [
-            new Personalization($this->data->recipientEmail, [
-                'greeting' => "Hola {$this->data->recipientName}",
-                'header_title' => 'Confirmación de pago',
-                'message_intro' => 'Hemos recibido tu pago correctamente.',
-                'message_details' => $messageDetails,
-                'message_footer' => 'Gracias por tu puntualidad. Te avisaremos cuando haya sido validado tu pago.',
-            ])
-        ];
-
-        return $this->mailersend(
-                     template_id:'pq3enl6d8z7g2vwr',
-                     personalization: $personalization
-                 );
-
-    } catch (\Throwable $e) {
-        logger()->error('Fallo al construir mail: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-        throw $e;
+        return new Envelope(
+            subject: 'Confirmación de pago',
+        );
     }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.payments.created',
+            with: [
+                'recipientName' => $this->data->recipientName,
+                'conceptName' => $this->data->concept_name,
+                'amount' => Money::from($this->data->amount)->finalize(),
+                'createdAt' => $this->data->created_at,
+                'stripeSessionId' => $this->data->stripe_session_id,
+                'url' => $this->data->url,
+            ]
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 
 }
