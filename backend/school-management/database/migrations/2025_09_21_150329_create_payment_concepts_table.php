@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->decimal('amount', 7,2)->index()->check('amount >= 10');
             $table->string('applies_to',25)->default(PaymentConceptAppliesTo::TODOS->value);
+            $table->timestamp('mark_as_deleted_at')->nullable()->index();
             $table->timestamps();
             $table->index(['created_at']);
             $table->index(['status', 'start_date', 'end_date']);

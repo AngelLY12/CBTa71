@@ -25,6 +25,7 @@ return new class extends Migration
             $table->char('blood_type',4)->nullable();
             $table->date('registration_date');
             $table->string('status',20)->default(UserStatus::ACTIVO->value)->index();
+            $table->timestamp('mark_as_deleted_at')->nullable()->index();
             $table->index('created_at');
             $table->index(['status','created_at']);
             $table->index(['status','curp']);
@@ -73,6 +74,7 @@ return new class extends Migration
                 'address',
                 'registration_date',
                 'status',
+                'mark_as_deleted_at'
             ]);
         });
     }
