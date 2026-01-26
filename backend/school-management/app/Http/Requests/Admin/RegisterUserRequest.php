@@ -110,7 +110,7 @@ class RegisterUserRequest extends FormRequest
                 'string',
                 'in:' . implode(',', array_map(fn($case) => $case->value, UserGender::cases())),
             ],
-            'curp' => 'required|string|size:18|regex:/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z]{2}$/|unique:users,curp',
+            'curp' => 'required|string|size:18|alpha_num|uppercase|unique:users,curp',
             'address' => 'sometimes|required|array',
             'blood_type'   => [
                 'sometimes',
@@ -181,7 +181,8 @@ class RegisterUserRequest extends FormRequest
             'curp.required' => 'La CURP es obligatoria.',
             'curp.string' => 'La CURP debe ser texto.',
             'curp.size' => 'La CURP debe tener exactamente 18 caracteres.',
-            'curp.regex' => 'La CURP no tiene un formato válido.',
+            'curp.alpha_num' => 'La CURP debe contener solo letras y números.',
+            'curp.uppercase' => 'La CURP debe contener solo letras mayusculas.',
             'curp.unique' => 'Esta CURP ya está registrada.',
 
             'address.array' => 'La dirección debe ser un arreglo válido.',
