@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Core\Domain\Enum\User\UserBloodType;
 use App\Core\Domain\Enum\User\UserGender;
 use App\Core\Domain\Enum\User\UserStatus;
+use App\Jobs\SendMailJob;
 use App\Mail\SendPasswordResetLinkMail;
 use App\Mail\SendVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\traits\ResolvesTargetUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\LogOptions;
@@ -113,7 +115,12 @@ class User extends Authenticatable implements MustVerifyEmail
             now()->addMinutes(60),
             ['id' => $this->getKey(), 'hash' => sha1($this->getEmailForVerification())]
         );
-        $this->notify(new SendVerifyEmail($this,$verifyUrl));
+
+        SendMailJob::forUser(
+            new SendVerifyEmail($this, $verifyUrl),
+            $this->email,
+            'email_verification'
+        )->onQueue('emails');
     }
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
@@ -121,7 +128,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'token' => $token,
             'email' => $this->getEmailForPasswordReset(),
         ], false));
-        $this->notify(new SendPasswordResetLinkMail($this,$resetUrl));
+
+        SendMailJob::forUser(
+            new SendPasswordResetLinkMail($this,$resetUrl),
+            $this->email,
+            'password_reset',)
+        ->onQueue('emails');
     }
 
     public function getActivitylogOptions(): LogOptions
