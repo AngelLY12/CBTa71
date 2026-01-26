@@ -17,7 +17,7 @@ class RolesSeeder extends Seeder
         $createdRoles = [];
 
         foreach (UserRoles::values() as $roleName) {
-            $attributes = ['name' => $roleName];
+            $attributes = ['name' => $roleName, 'guard_name' => 'sanctum'];
 
             if ($roleName === UserRoles::ADMIN->value) {
                 $attributes['hidden'] = true;

@@ -83,7 +83,7 @@ class PermissionsSeeder extends Seeder
         $insertPermissions = fn(array $permissions, string $type='role', ?string $belongsTo=null) =>
             collect($permissions)->each(fn($name) =>
                 Permission::updateOrCreate(
-                    ['name' => $name, 'guard_name' => 'web'],
+                    ['name' => $name, 'guard_name' => 'sanctum'],
                     ['type' => $type, 'belongs_to' => $belongsTo]
                 )
             );
