@@ -72,6 +72,8 @@ class SendConceptUpdatedFieldsNotificationJob implements ShouldQueue
 
     public static function forStudents(int $conceptId, array $changes): self
     {
-        return new self($conceptId, $changes);
+        $job= new self($conceptId, $changes);
+        $job->dispatch();
+        return $job;
     }
 }

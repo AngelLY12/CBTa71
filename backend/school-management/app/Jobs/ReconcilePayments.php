@@ -56,6 +56,8 @@ class ReconcilePayments implements ShouldQueue
     }
     public static function forCron(): self
     {
-        return new self();
+        $job= new self();
+        $job->dispatch();
+        return $job;
     }
 }

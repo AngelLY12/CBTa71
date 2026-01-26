@@ -177,11 +177,15 @@ class SendMailJob implements ShouldQueue
 
     public static function forUser(Mailable $mailable, string $recipientEmail, ?string $jobType = null, ?int $paymentEventId=null): self
     {
-        return new self($mailable, $recipientEmail, $jobType, $paymentEventId);
+        $job= new self($mailable, $recipientEmail, $jobType, $paymentEventId);
+        $job->dispatch();
+        return $job;
     }
 
     public static function fromBulkRetry(Mailable $mailable, string $recipientEmail): self
     {
-        return new self($mailable, $recipientEmail, 'bulk_retry');
+        $job = new self($mailable, $recipientEmail, 'bulk_retry');
+        $job->dispatch();
+        return $job;
     }
 }

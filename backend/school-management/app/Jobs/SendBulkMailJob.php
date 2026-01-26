@@ -133,6 +133,8 @@ class SendBulkMailJob implements ShouldQueue
         array $recipientEmails,
         ?string $jobType = null
     ): self {
-        return new self($mailables, $recipientEmails, $jobType);
+        $job= new self($mailables, $recipientEmails, $jobType);
+        $job->dispatch();
+        return $job;
     }
 }
