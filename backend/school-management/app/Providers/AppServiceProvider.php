@@ -98,8 +98,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        Event::listen(Registered::class, SendEmailVerificationNotification::class);
-
         Event::listen(AdministrationEvent::class, SendAmoutExceededNotification::class);
         Event::listen(PaymentConceptStatusChanged::class, NotifyUsersOfConceptStatusChange::class);
         Event::listen(PaymentConceptCreated::class,ProcessRecipientsListener::class);
