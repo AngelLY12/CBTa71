@@ -117,7 +117,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'time' => now()->toDateTimeString()
         ]);
         $verifyUrl = URL::temporarySignedRoute(
-            'api.verification.verify',
+            'verification.verify',
             now()->addMinutes(60),
             ['id' => $this->getKey(), 'hash' => sha1($this->getEmailForVerification())]
         );
@@ -125,25 +125,21 @@ class User extends Authenticatable implements MustVerifyEmail
         Log::info('🎯 URL generada', ['url' => $verifyUrl]);
 
 
-        SendMailJob::forUser(
+        $job=SendMailJob::forUser(
             new SendVerifyEmail($this, $verifyUrl),
             $this->email,
             'email_verification'
         )->onQueue('emails');
 
-        Log::info('🎯 Job creado', ['job_id' => $job->job->getId() ?? 'null']);
+        Log::info('🎯 Job creado', ['job_id' => $job->getJob() ?? 'null']);
     }
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
-        $resetUrl = url(route('password.reset', [
-            'token' => $token,
-            'email' => $this->getEmailForPasswordReset(),
-        ], false));
-
+        $resetUrl=config('app.frontend_url')."/password-reset/$token?email={$this->getEmailForPasswordReset()}";
         SendMailJob::forUser(
             new SendPasswordResetLinkMail($this,$resetUrl),
             $this->email,
-            'password_reset',)
+            'password_reset')
         ->onQueue('emails');
     }
 
