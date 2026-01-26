@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             //\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
+        $middleware->redirectGuestsTo(function ($request){
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return null;
+            }
+        });
         $middleware->append(\App\Http\Middleware\SecureHeadersMiddleware::class);
         $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->alias([
