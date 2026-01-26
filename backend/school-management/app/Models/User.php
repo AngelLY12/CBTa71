@@ -125,7 +125,7 @@ class User extends Authenticatable implements MustVerifyEmail
         Log::info('🎯 URL generada', ['url' => $verifyUrl]);
 
 
-        $job=SendMailJob::forUser(
+        $job=SendMailJob::dispatch(
             new SendVerifyEmail($this, $verifyUrl),
             $this->email,
             'email_verification'
@@ -136,7 +136,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
         $resetUrl=config('app.frontend_url')."/password-reset/$token?email={$this->getEmailForPasswordReset()}";
-        SendMailJob::forUser(
+        SendMailJob::dispatch(
             new SendPasswordResetLinkMail($this,$resetUrl),
             $this->email,
             'password_reset')
