@@ -18,13 +18,14 @@ use Illuminate\Support\Collection;
 class EloquentUserRepository implements UserRepInterface
 {
 
-    public function create(CreateUserDTO $user): User
+    public function create(CreateUserDTO $user): \App\Models\User
     {
          $eloquentUser = EloquentUser::create(
             UserMapper::toPersistence($user)
         );
         $eloquentUser->refresh();
-        return UserMapper::toDomain($eloquentUser);
+
+        return $eloquentUser;
     }
 
     public function update(int $userId, array $fields): User

@@ -7,6 +7,7 @@ use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
+use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Jobs\SendMailJob;
 use App\Mail\CreatedUserMail;
 use Illuminate\Auth\Events\Registered;
@@ -35,12 +36,12 @@ class RegisterUseCase
         } else {
             event(new Registered($user));
         }
-        return $user;
+        return UserMapper::toDomain($user);
     }
 
-    private function notifyRecipients(User $user, $password): void {
+    private function notifyRecipients(\App\Models\User $user, $password): void {
             $dtoData = [
-                'recipientName'  => $user->fullName(),
+                'recipientName'  => $user->name . ' ' . $user->last_name,
                 'recipientEmail' => $user->email,
                 'password'       => $password
             ];

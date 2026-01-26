@@ -9,7 +9,7 @@ use App\Models\User as EloquentUser;
 use Illuminate\Support\Collection;
 
 interface UserRepInterface{
-    public function create(CreateUserDTO $user):User;
+    public function create(CreateUserDTO $user):\App\Models\User;
     public function update(int $userId, array $fields):User;
     public function changeStatus(array $userIds,string $status): UserChangedStatusResponse;
     public function insertManyUsers(array $usersData): Collection;
