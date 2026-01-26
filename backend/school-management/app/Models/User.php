@@ -45,7 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'stripe_customer_id',
         'blood_type',
         'registration_date',
-        'status'
+        'status',
+        'mark_as_deleted_at'
     ];
 
 

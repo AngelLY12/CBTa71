@@ -24,6 +24,7 @@ class PaymentConcept extends Model
         'end_date',
         'amount',
         'applies_to',
+        'mark_as_deleted_at'
     ];
 
     protected function casts(): array
