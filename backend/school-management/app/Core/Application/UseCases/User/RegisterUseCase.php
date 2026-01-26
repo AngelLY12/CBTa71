@@ -11,6 +11,7 @@ use App\Jobs\SendMailJob;
 use App\Mail\CreatedUserMail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RegisterUseCase
 {
@@ -21,6 +22,7 @@ class RegisterUseCase
 
     public function execute(CreateUserDTO $create, ?string $password= null): User
     {
+        Log::info('RegisterUseCase iniciado', ['email' => $create->email, 'has_password' => !empty($password)]);
         $user= DB::transaction(function () use ($create) {
             $user= $this->userRepo->create($create);
             $role= $this->userRepo->assignRole($user->id, UserRoles::UNVERIFIED->value);
@@ -28,12 +30,17 @@ class RegisterUseCase
             return $user;
         });
 
-        if($password)
-        {
+        Log::info('Usuario creado', ['id' => $user->id, 'email' => $user->email]);
+
+        if($password) {
+            Log::info('Disparando job con password');
             $this->notifyRecipients($user, $password);
-            return $user;
+        } else {
+            Log::info('Disparando Registered event');
+            event(new Registered($user));
         }
-        event(new Registered($user));
+
+        Log::info('RegisterUseCase completado');
         return $user;
     }
 
