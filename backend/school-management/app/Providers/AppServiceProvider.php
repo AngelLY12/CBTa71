@@ -78,6 +78,8 @@ use App\Listeners\SendParentInvitationFailedNotification;
 use App\Listeners\SendParentStudentDeleteNotification;
 use App\Listeners\SendPromotionNotification;
 use App\Listeners\SendStudentsPromotionFailedNotification;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\DB;
@@ -96,6 +98,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        Event::listen(Registered::class, SendEmailVerificationNotification::class);
+
         Event::listen(AdministrationEvent::class, SendAmoutExceededNotification::class);
         Event::listen(PaymentConceptStatusChanged::class, NotifyUsersOfConceptStatusChange::class);
         Event::listen(PaymentConceptCreated::class,ProcessRecipientsListener::class);
