@@ -12,7 +12,7 @@ use MailerSend\LaravelDriver\MailerSendTrait;
 
 class SendPasswordResetLinkMail extends Mailable
 {
-    use Queueable, SerializesModels, MailerSendTrait;
+    use Queueable, SerializesModels;
 
     protected $notifiable;
     protected $resetUrl;
