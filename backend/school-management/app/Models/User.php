@@ -19,6 +19,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 
 /**
  * @method bool hasRole(string|array $roles)
@@ -26,7 +27,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser, LogsActivity, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser, LogsActivity, MustVerifyEmailTrait;
 
 
     /**
