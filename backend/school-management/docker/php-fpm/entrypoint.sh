@@ -3,20 +3,23 @@ set -e
 echo "APP_ROLE=${APP_ROLE:-undefined}"
 
 if [ "$APP_ROLE" = "app" ]; then
-  echo "Esperando base de datos..."
-  until php artisan migrate:status >/dev/null 2>&1; do
-    sleep 3
-  done
-fi
-
-if [ "$APP_ROLE" = "app" ]; then
   echo "Inicializando Laravel (APP)..."
 
   echo "Limpiando cachés..."
   php artisan optimize:clear || true
 
+  ATTEMPTS=0
+  MAX_ATTEMPTS=10
   echo "Ejecutando migraciones..."
-  php artisan migrate --force
+  until php artisan migrate --force; do
+    ATTEMPTS=$((ATTEMPTS+1))
+    if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
+        echo "No se pudo conectar a la base de datos tras varios intentos."
+        exit 1
+    fi
+    echo "Esperando base de datos... Intento $ATTEMPTS/$MAX_ATTEMPTS"
+    sleep 5
+  done
 
   echo "Ejecutando seeders..."
   php artisan db:seed --force || true
