@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
 class PasswordResetLinkController extends Controller
 {
-    
+
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -30,6 +31,10 @@ class PasswordResetLinkController extends Controller
             ]);
         }
 
-        return response()->json(['status' => __($status)]);
+        return Response::success(
+            null,
+            'Si el correo existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña.',
+            200
+        );
     }
 }
