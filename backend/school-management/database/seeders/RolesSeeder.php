@@ -23,7 +23,7 @@ class RolesSeeder extends Seeder
                 $attributes['hidden'] = true;
             }
 
-            $createdRoles[$roleName] = Role::firstOrCreate($attributes);
+            $createdRoles[$roleName] = Role::updateOrCreate($attributes);
         }
 
         $studentPaymentPermissions = Permission::where('belongs_to', UserRoles::STUDENT->value . '-payment')
