@@ -134,7 +134,7 @@ class EloquentUserRepository implements UserRepInterface
             ->update([
                 'status' => $status,
                 'updated_at' => now(),
-                'mark_as_deleted_at' => $status === UserStatus::ELIMINADO ? now() : null,
+                'mark_as_deleted_at' => $status === UserStatus::ELIMINADO->value ? now() : null,
             ]);
 
 
