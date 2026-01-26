@@ -79,8 +79,16 @@
 
 <body>
 <div class="container">
-    <div class="header">
-        <h1>@yield('header_title')</h1>
+    <div class="header" style="background: linear-gradient(90deg, #4CA771, #013237); text-align: center; padding: 30px 20px; color: #fff;">
+        <img
+            src="{{ asset('Logo-cbta.png') }}"
+            alt="Logo CBTA"
+            style="max-width: 120px; width: 40%; height: auto; display: block; margin: 0 auto 15px auto;"
+        >
+
+        <h1 style="margin: 0; font-size: 26px; font-weight: 700; line-height: 1.2;">
+            @yield('header_title')
+        </h1>
     </div>
 
     <div class="content">
