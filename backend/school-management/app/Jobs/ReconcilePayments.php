@@ -7,6 +7,7 @@ use App\Core\Application\UseCases\Payments\Reconcile\ReconcilePaymentsBatchUseCa
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
@@ -54,10 +55,8 @@ class ReconcilePayments implements ShouldQueue
             'error' => $exception->getMessage()
         ]);
     }
-    public static function forCron(): self
+    public static function forCron(): PendingDispatch
     {
-        $job= new self();
-        $job->dispatch();
-        return $job;
+        return self::dispatch();
     }
 }

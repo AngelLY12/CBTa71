@@ -8,6 +8,7 @@ use App\Notifications\PaymentConceptUpdated;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
@@ -73,10 +74,8 @@ class SendConceptUpdatedRelationsNotificationJob implements ShouldQueue
         ]);
     }
 
-    public static function forStudents(array $userIds, int $conceptId, array $changes): self
+    public static function forStudents(array $userIds, int $conceptId, array $changes): PendingDispatch
     {
-        $job= new self($userIds, $conceptId, $changes);
-        $job->dispatch();
-        return $job;
+        return self::dispatch($userIds, $conceptId, $changes);
     }
 }

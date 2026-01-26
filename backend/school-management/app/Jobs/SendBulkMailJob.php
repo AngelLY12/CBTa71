@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -132,9 +133,7 @@ class SendBulkMailJob implements ShouldQueue
         array $mailables,
         array $recipientEmails,
         ?string $jobType = null
-    ): self {
-        $job= new self($mailables, $recipientEmails, $jobType);
-        $job->dispatch();
-        return $job;
+    ): PendingDispatch {
+        return self::dispatch($mailables, $recipientEmails, $jobType);
     }
 }

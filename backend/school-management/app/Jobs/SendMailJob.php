@@ -6,6 +6,7 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentEventRepInterface;
 use App\Core\Domain\Repositories\Query\Payments\PaymentEventQueryRepInterface;
 use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -175,17 +176,14 @@ class SendMailJob implements ShouldQueue
             str_contains($message, '554');
     }
 
-    public static function forUser(Mailable $mailable, string $recipientEmail, ?string $jobType = null, ?int $paymentEventId=null): self
+    public static function forUser(Mailable $mailable, string $recipientEmail, ?string $jobType = null, ?int $paymentEventId=null): PendingDispatch
     {
-        $job= new self($mailable, $recipientEmail, $jobType, $paymentEventId);
-        $job->dispatch();
-        return $job;
+         return self::dispatch($mailable, $recipientEmail, $jobType, $paymentEventId);
     }
 
-    public static function fromBulkRetry(Mailable $mailable, string $recipientEmail): self
+    public static function fromBulkRetry(Mailable $mailable, string $recipientEmail): PendingDispatch
     {
-        $job = new self($mailable, $recipientEmail, 'bulk_retry');
-        $job->dispatch();
-        return $job;
+        return self::dispatch($mailable, $recipientEmail, 'bulk_retry');
+
     }
 }
