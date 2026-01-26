@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Utils\Validators\UserValidator;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Exceptions\Unauthorized\UserInactiveException;
@@ -25,14 +26,12 @@ class CheckUserStatus
     {
         /** @var User $user */
         $user=$request->user();
-        try {
-            UserValidator::ensureUserIsActive(UserMapper::toDomain($user));
-        } catch (UserInactiveException $e) {
+        if ($user->status !== UserStatus::ACTIVO) {
             $user->currentAccessToken()?->delete();
             $user->currentRefreshToken()?->delete();
             CheckUserStatusJob::dispatch($user)->onQueue('default');
-            ClearStudentCacheJob::dispatch($user->id)->onQueue('cache');;
-            throw $e;
+            ClearStudentCacheJob::dispatch($user->id)->onQueue('cache');
+            throw new UserInactiveException();
         }
         return $next($request);
 

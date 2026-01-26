@@ -18,13 +18,17 @@ class LogUserAction
     {
         $response = $next($request);
 
-        $user = $request->user();
-        $requestData=[
-            'ip' =>$request->ip(),
-            'method' =>$request->method(),
-            'url' =>$request->fullUrl(),
-        ];
-        LogUserActionJob::dispatch(user:$user, request:$requestData)->onQueue('default');
+        register_shutdown_function(function () use ($request) {
+            $user = $request->user();
+            LogUserActionJob::dispatch(
+                user:$user,
+                request:[
+                    'ip' =>$request->ip(),
+                    'method' =>$request->method(),
+                    'url' =>$request->fullUrl()
+                ]
+            )->onQueue('default');
+        });
 
         return $response;
     }
