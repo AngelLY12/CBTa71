@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptRelationsToDisplay;
 use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper as InfraPaymentConceptMapper;
 use App\Core\Application\Services\Payments\Staff\ConceptsServiceFacades;
@@ -52,6 +53,12 @@ class ConceptsController extends Controller
         $concept=$this->conceptsService->findConcept($id);
         return Response::success(['concept' => $concept], 'Concepto encontrado.');
 
+    }
+
+    public function findRelations(int $id): ConceptRelationsToDisplay
+    {
+        $concept=$this->conceptsService->findRelations($id);
+        return Response::success(['relations' => $concept], 'Relaciones del concepto encontradas.');
     }
 
     public function store(StorePaymentConceptRequest $request)
