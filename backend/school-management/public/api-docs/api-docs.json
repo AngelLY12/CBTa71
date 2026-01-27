@@ -7106,7 +7106,7 @@
         "/api/v1/concepts/{id}": {
             "get": {
                 "tags": [
-                    "FindEntity"
+                    "Payment Concepts"
                 ],
                 "summary": "Buscar concepto de pago por ID",
                 "description": "Obtiene la información de un concepto de pago específico mediante su identificador.",
@@ -7441,6 +7441,132 @@
                     },
                     "409": {
                         "description": "Conflicto",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/concepts/relations/{id}": {
+            "get": {
+                "tags": [
+                    "Payment Concepts"
+                ],
+                "summary": "Buscar relaciones del concepto de pago por ID",
+                "description": "Obtiene la información de las relaciones de un concepto de pago específico mediante su identificador.",
+                "operationId": "b5130254038765096fe8feec5e0161e4",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.concepts"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del concepto a buscar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Concepto encontrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "concept": {
+                                                            "$ref": "#/components/schemas/ConceptRelationsToDisplay"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10940,8 +11066,8 @@
                 },
                 "type": "object"
             },
-            "ConceptToDisplay": {
-                "description": "Representa un concepto de pago",
+            "ConceptRelationsToDisplay": {
+                "description": "Representa las relaciones de un concepto de pago",
                 "properties": {
                     "id": {
                         "type": "integer",
@@ -10950,18 +11076,6 @@
                     "concept_name": {
                         "type": "string",
                         "example": "Pago de inscripción"
-                    },
-                    "status": {
-                        "$ref": "#/components/schemas/PaymentConceptStatus"
-                    },
-                    "start_date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-09-01"
-                    },
-                    "amount": {
-                        "type": "string",
-                        "example": "1500.00"
                     },
                     "applies_to": {
                         "$ref": "#/components/schemas/PaymentConceptAppliesTo"
@@ -11015,6 +11129,32 @@
                         "items": {
                             "$ref": "#/components/schemas/PaymentConceptApplicantType"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "ConceptToDisplay": {
+                "description": "Representa un concepto de pago",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "concept_name": {
+                        "type": "string",
+                        "example": "Pago de inscripción"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/PaymentConceptStatus"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-01"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "example": "1500.00"
                     },
                     "description": {
                         "type": "string",
@@ -14364,12 +14504,12 @@
             "description": "Payouts"
         },
         {
-            "name": "FindEntity",
-            "description": "FindEntity"
-        },
-        {
             "name": "Payment History",
             "description": "Payment History"
+        },
+        {
+            "name": "FindEntity",
+            "description": "FindEntity"
         },
         {
             "name": "Pending Payment",

@@ -94,67 +94,129 @@ class PaymentConcepts
  */
 public function concepts(){}
 
-    /**
-     * @OA\Get(
-     *     path="/api/v1/concepts/{id}",
-     *     summary="Buscar concepto de pago por ID",
-     *     description="Obtiene la información de un concepto de pago específico mediante su identificador.",
-     *     tags={"FindEntity"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *                         name="X-User-Role",
-     *                         in="header",
-     *                         required=false,
-     *                         description="Rol requerido para este endpoint",
-     *                         @OA\Schema(
-     *                             type="string",
-     *                             example="financial-staff"
-     *                         )
-     *                     ),
-     *                     @OA\Parameter(
-     *                         name="X-User-Permission",
-     *                         in="header",
-     *                         required=false,
-     *                         description="Permiso requerido para este endpoint",
-     *                         @OA\Schema(
-     *                              type="string",
-     *                              example="view.concepts"
-     *                          )
-     *                     ),
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="ID del concepto a buscar",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *          response=200,
-     *          description="Concepto encontrado correctamente",
-     *          @OA\JsonContent(
-     *              allOf={
-     *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
-     *                  @OA\Schema(
-     *                      @OA\Property(
-     *                          property="data",
-     *                          type="object",
-     *                          @OA\Property(
-     *                              property="concept",
-     *                              ref="#/components/schemas/ConceptToDisplay"
-     *                          )
-     *                      )
-     *                  )
-     *              }
-     *          )
-     *      ),
-     *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
-     *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
-     *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
-     *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
-     *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
-     * )
-     */
-    public function getConcept(){}
+/**
+ * @OA\Get(
+ *     path="/api/v1/concepts/{id}",
+ *     summary="Buscar concepto de pago por ID",
+ *     description="Obtiene la información de un concepto de pago específico mediante su identificador.",
+ *     tags={"Payment Concepts"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                         name="X-User-Role",
+ *                         in="header",
+ *                         required=false,
+ *                         description="Rol requerido para este endpoint",
+ *                         @OA\Schema(
+ *                             type="string",
+ *                             example="financial-staff"
+ *                         )
+ *                     ),
+ *                     @OA\Parameter(
+ *                         name="X-User-Permission",
+ *                         in="header",
+ *                         required=false,
+ *                         description="Permiso requerido para este endpoint",
+ *                         @OA\Schema(
+ *                              type="string",
+ *                              example="view.concepts"
+ *                          )
+ *                     ),
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID del concepto a buscar",
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *          response=200,
+ *          description="Concepto encontrado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/ConceptToDisplay"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ * )
+ */
+public function getConcept(){}
+
+/**
+ * @OA\Get(
+ *     path="/api/v1/concepts/relations/{id}",
+ *     summary="Buscar relaciones del concepto de pago por ID",
+ *     description="Obtiene la información de las relaciones de un concepto de pago específico mediante su identificador.",
+ *     tags={"Payment Concepts"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                         name="X-User-Role",
+ *                         in="header",
+ *                         required=false,
+ *                         description="Rol requerido para este endpoint",
+ *                         @OA\Schema(
+ *                             type="string",
+ *                             example="financial-staff"
+ *                         )
+ *                     ),
+ *                     @OA\Parameter(
+ *                         name="X-User-Permission",
+ *                         in="header",
+ *                         required=false,
+ *                         description="Permiso requerido para este endpoint",
+ *                         @OA\Schema(
+ *                              type="string",
+ *                              example="view.concepts"
+ *                          )
+ *                     ),
+ *     @OA\Parameter(
+ *         name="id",
+ *         in="path",
+ *         required=true,
+ *         description="ID del concepto a buscar",
+ *         @OA\Schema(type="integer", example=1)
+ *     ),
+ *     @OA\Response(
+ *          response=200,
+ *          description="Concepto encontrado correctamente",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="concept",
+ *                              ref="#/components/schemas/ConceptRelationsToDisplay"
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *      @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ * )
+ */
+public function getConceptRelations(){}
 
 
 /**
