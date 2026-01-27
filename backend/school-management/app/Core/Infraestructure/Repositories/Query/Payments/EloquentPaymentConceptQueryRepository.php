@@ -2,6 +2,7 @@
 
 namespace App\Core\Infraestructure\Repositories\Query\Payments;
 
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptRelationsToDisplay;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptToDisplay;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
 use App\Core\Application\Mappers\PaymentConceptMapper as MappersPaymentConceptMapper;
@@ -33,19 +34,32 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     public function findByIdToDisplay(int $id): ?ConceptToDisplay
     {
-        $concept = EloquentPaymentConcept::query()
-            ->with([
-                'users.studentDetail:id,user_id,n_control',
-                'careers:id,career_name',
-                'paymentConceptSemesters:id,payment_concept_id,semestre',
-                'exceptions.studentDetail:id,user_id,n_control',
-                'applicantTypes:id,tag',
-            ])
-        ->find($id);
+        $concept = EloquentPaymentConcept::select(
+            [
+                'id',
+                'concept_name',
+                'description',
+                'amount',
+                'status',
+                'start_date',
+                'end_date'
+            ])->find($id);
         if (! $concept) {
             return null;
         }
         return MappersPaymentConceptMapper::toDisplay($concept);
+    }
+
+    public function findRelationsByIdToDisplay(int $id): ?ConceptRelationsToDisplay
+    {
+        $concept = EloquentPaymentConcept::query()
+            ->select(['id', 'concept_name', 'applies_to'])
+            ->find($id);
+        if (! $concept) {
+            return null;
+        }
+        $this->loadRelationsBasedOnAppliesTo($concept);
+        return MappersPaymentConceptMapper::toRelationsDisplay($concept);
     }
 
     public function getPendingPaymentConcepts(User $user, bool $onlyThisYear): PendingSummaryResponse {
@@ -463,6 +477,39 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'total_amount' => '0.00',
                 'total_count' => 0
             ];
+        }
+    }
+
+    private function loadRelationsBasedOnAppliesTo(EloquentPaymentConcept $concept): void
+    {
+        $relationMap = [
+            PaymentConceptAppliesTo::ESTUDIANTES->value => ['users'],
+            PaymentConceptAppliesTo::TAG->value => ['applicantTypes'],
+            PaymentConceptAppliesTo::CARRERA->value => ['careers'],
+            PaymentConceptAppliesTo::SEMESTRE->value => ['paymentConceptSemesters'],
+            PaymentConceptAppliesTo::CARRERA_SEMESTRE->value => ['careers', 'paymentConceptSemesters'],
+        ];
+
+        $neededRelations = $relationMap[$concept->applies_to->value] ?? [];
+
+        foreach ($neededRelations as $relation) {
+            switch($relation) {
+                case 'users':
+                    $concept->loadMissing(['users.studentDetail:id,user_id,n_control']);
+                    break;
+                case 'careers':
+                    $concept->loadMissing(['careers:id,career_name']);
+                    break;
+                case 'paymentConceptSemesters':
+                    $concept->loadMissing(['paymentConceptSemesters:id,payment_concept_id,semestre']);
+                    break;
+                case 'applicantTypes':
+                    $concept->loadMissing(['applicantTypes:id,tag']);
+                    break;
+            }
+        }
+        if (method_exists($concept, 'exceptions')) {
+            $concept->loadMissing(['exceptions.studentDetail:id,user_id,n_control']);
         }
     }
 

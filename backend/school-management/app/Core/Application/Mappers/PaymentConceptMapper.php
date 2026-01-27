@@ -7,6 +7,7 @@ use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptChangeStatusResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptNameAndAmountResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptRelationsToDisplay;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptsToDashboardResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptToDisplay;
 use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
@@ -48,37 +49,40 @@ class PaymentConceptMapper{
             status: $concept->status->value,
             start_date: $concept->start_date->toDateString(),
             amount: $concept->amount,
-            applies_to: $concept->applies_to->value,
-
-            users: $concept->users
-                ->map(fn ($u) => $u->studentDetail?->n_control)
-                ->filter()
-                ->values()
-                ->toArray(),
-
-            careers: $concept->careers
-                ->pluck('id')
-                ->values()
-                ->toArray(),
-
-            semesters: $concept->paymentConceptSemesters
-                ->pluck('semestre')
-                ->values()
-                ->toArray(),
-
-            exceptionUsers: $concept->exceptions
-                ->map(fn ($u) => $u->studentDetail?->n_control)
-                ->filter()
-                ->values()
-                ->toArray(),
-
-            applicantTags: $concept->applicantTypes
-                ->pluck('tag')
-                ->values()
-                ->toArray(),
-
-            description: $concept->description,
+            description: $concept->description ?? null,
             end_date: $concept->end_date?->toDateString(),
+        );
+    }
+
+    public static function toRelationsDisplay(PaymentConcept $concept): ConceptRelationsToDisplay
+    {
+        return new ConceptRelationsToDisplay(
+            id: $concept->id,
+            concept_name: $concept->concept_name,
+            applies_to: $concept->applies_to->value,
+            users: $concept->relationLoaded('users')
+                ? $concept->users
+                    ->map(fn ($u) => $u->studentDetail?->n_control)
+                    ->filter()
+                    ->values()
+                    ->toArray()
+                : [],
+            careers: $concept->relationLoaded('careers')
+                ? $concept->careers->pluck('id')->toArray()
+                : [],
+            semesters: $concept->relationLoaded('paymentConceptSemesters')
+                ? $concept->paymentConceptSemesters->pluck('semestre')->toArray()
+                : [],
+            exceptionUsers: $concept->relationLoaded('exceptions')
+                ? $concept->exceptions
+                    ->map(fn ($u) => $u->studentDetail?->n_control)
+                    ->filter()
+                    ->values()
+                    ->toArray()
+                : [],
+            applicantTags: $concept->relationLoaded('applicantTypes')
+                ? $concept->applicantTypes->pluck('tag')->toArray()
+                : [],
         );
     }
 

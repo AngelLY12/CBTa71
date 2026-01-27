@@ -7,12 +7,14 @@ use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptChangeStatusResponse;
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptRelationsToDisplay;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptToDisplay;
 use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptRelationsResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptResponse;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\FindConceptByIdUseCase;
+use App\Core\Application\UseCases\Payments\Staff\Concepts\FindConceptRelationsToDisplay;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\UpdatePaymentConceptRelationsUseCase;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\ActivatePaymentConceptUseCase;
@@ -42,6 +44,7 @@ class ConceptsServiceFacades{
         private EliminateLogicalPaymentConceptUseCase $eliminateLogical,
         private ActivatePaymentConceptUseCase         $activate,
         private FindConceptByIdUseCase $concept,
+        private FindConceptRelationsToDisplay $relations,
 
         private CacheService                          $service
     )
@@ -64,7 +67,12 @@ class ConceptsServiceFacades{
         return $this->concept->execute($id);
     }
 
-     public function createPaymentConcept(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {
+    public function findRelations(int $id): ConceptRelationsToDisplay
+    {
+        return $this->relations->execute($id);
+    }
+
+    public function createPaymentConcept(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {
         $concept = $this->create->execute($dto);
         $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
          return $concept;
