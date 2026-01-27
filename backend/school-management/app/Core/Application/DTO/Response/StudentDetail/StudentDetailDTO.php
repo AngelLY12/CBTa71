@@ -29,6 +29,13 @@ namespace App\Core\Application\DTO\Response\StudentDetail;
  *         nullable=true
  *     ),
  *     @OA\Property(
+ *          property="workshop",
+ *          type="string",
+ *          description="Taller al que pertenece el estudiante",
+ *          example="Dibujo",
+ *          nullable=true
+ *      ),
+ *     @OA\Property(
  *         property="careerName",
  *         type="string",
  *         description="Nombre de la carrera del estudiante",
@@ -43,6 +50,7 @@ class StudentDetailDTO
         public readonly ?string $nControl,
         public readonly ?int $semestre,
         public readonly ?string $group,
+        public readonly ?String $workshop,
         public readonly ?string $careerName
 
     ){}

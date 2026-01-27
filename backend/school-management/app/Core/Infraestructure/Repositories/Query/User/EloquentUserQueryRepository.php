@@ -356,13 +356,19 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         $user = EloquentUser::with([
             'roles:id,name',
             'permissions:id,name',
-            'studentDetail' => function($query) {
-                $query->select('id', 'user_id', 'career_id', 'n_control', 'semestre', 'group')
-                    ->with('career:id,career_name');
-            }
         ])
             ->select('id', 'phone_number', 'address', 'blood_type')
             ->findOrFail($userId);
+
+        $isStudent = $user->roles->contains('name', UserRoles::STUDENT->value);
+        if ($isStudent) {
+            $user->load([
+                'studentDetail' => function($query) {
+                    $query->select('id', 'user_id', 'career_id', 'n_control', 'semestre', 'group', 'workshop')
+                        ->with('career:id,career_name');
+                }
+            ]);
+        }
 
         return MappersUserMapper::toUserExtrDataResponse($user);
     }
@@ -373,11 +379,6 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         $user=Auth::user();
         if (! $user) {
             return null;
-        }
-        if ($this->hasRole($user->id, UserRoles::STUDENT->value)) {
-            $user->load([
-                'studentDetail.career:id,career_name',
-            ]);
         }
         return  MappersUserMapper::toUserAuthResponse($user);
     }

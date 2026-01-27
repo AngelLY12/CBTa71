@@ -51,6 +51,8 @@ class AdminServiceFacades
     private const TAG_USERS_ID = [CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value, "all:id"];
     private const TAG_ROLES = [CachePrefix::ADMIN->value, AdminCacheSufix::ROLES->value];
     private const TAG_USER_PROFILE =[CachePrefix::USER->value, "profile"];
+    private const TAG_STUDENT_DETAILS = [CachePrefix::USER->value, "student-details"];
+
     public function __construct(
         private FindStudentDetailUseCase        $find_student,
         private UpdateStudentDeatilsUseCase     $update_student,
@@ -78,8 +80,8 @@ class AdminServiceFacades
     public function attachStudentDetail(CreateStudentDetailDTO $create): User
     {
         $student=$this->attach->execute($create);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        $this->service->flushTags(array_merge(self::TAG_USER_PROFILE,["userId:$student->id"]));
+        $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$student->id"]));
+        $this->service->flushTags(array_merge(self::TAG_STUDENT_DETAILS,["userId:$student->id"]));
         return $student;
     }
 
@@ -91,8 +93,8 @@ class AdminServiceFacades
     public function updateStudentDetail(int $user_id, array $fields): User
     {
         $sd= $this->update_student->execute($user_id,$fields);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        $this->service->flushTags(array_merge(self::TAG_USER_PROFILE,["userId:{$sd->id}"]));
+        $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$user_id"]));
+        $this->service->flushTags(array_merge(self::TAG_STUDENT_DETAILS,["userId:$user_id"]));
         return $sd;
     }
 

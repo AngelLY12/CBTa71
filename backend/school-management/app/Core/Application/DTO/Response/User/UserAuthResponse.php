@@ -22,7 +22,6 @@ namespace App\Core\Application\DTO\Response\User;
  *     @OA\Property(property="address", type="array", nullable=true, @OA\Items(type="string"), example={"Calle Falsa 123", "Colonia Centro"}),
  *     @OA\Property(property="stripe_customer_id", type="string", nullable=true, example="cus_ABC123XYZ"),
  *     @OA\Property(property="blood_type", ref="#/components/schemas/UserBloodType", nullable=true, example="O+"),
- *     @OA\Property(property="studentDetail", ref="#/components/schemas/DomainStudentDetail", nullable=true),
  * )
  */
 class UserAuthResponse
@@ -43,6 +42,5 @@ class UserAuthResponse
         public readonly ?array $address = null,
         public readonly ?string $blood_type = null,
         public readonly ?string $stripe_customer_id = null,
-        public readonly ?array $studentDetail=null,
     ){}
 }

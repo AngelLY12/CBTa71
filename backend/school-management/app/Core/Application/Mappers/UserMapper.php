@@ -67,15 +67,6 @@ class UserMapper{
             address:$user->address,
             blood_type: $user->blood_type?->value,
             stripe_customer_id: $user->stripe_customer_id,
-            studentDetail: $user->studentDetail ?
-                [
-                    'control_number' => $user->studentDetail?->n_control,
-                    'semester'       => $user->studentDetail?->semestre,
-                    'group' => $user->studentDetail?->group,
-                    'career'         => $user->studentDetail?->career?->career_name,
-                    'workshop' => $user->studentDetail?->workshop ?? null,
-                ]
-                : null
         );
     }
 
@@ -237,20 +228,26 @@ class UserMapper{
 
     public static function toUserExtrDataResponse(EloquentUser $user): UserExtraDataResponse
     {
+        $studentDetail = null;
+
+        if ($user->relationLoaded('studentDetail') && $user->studentDetail) {
+            $studentDetail = new StudentDetailDTO(
+                nControl: $user->studentDetail->n_control,
+                semestre: $user->studentDetail->semestre,
+                group: $user->studentDetail->group,
+                workshop: $user->studentDetail->workshop,
+                careerName: $user->studentDetail->career?->career_name,
+            );
+        }
         return new UserExtraDataResponse(
             basicInfo:[
                 'phone_number' => $user->phone_number,
                 'address' => $user->address ?? [],
-                'blood_type' => $user->blood_type->value ?? null,
+                'blood_type' => $user->blood_type?->value ?? null,
             ],
             roles: $user->roles->pluck('name')->toArray(),
             permissions: $user->permissions->pluck('name')->toArray(),
-            studentDetail: $user->studentDetail ? new StudentDetailDTO(
-                nControl: $user->studentDetail->nControl ?? null,
-                semestre: $user->studentDetail->semestre ?? null,
-                group: $user->studentDetail->group ?? null,
-                careerName: optional($user->studentDetail->career)->career_name,
-            ): null ,
+            studentDetail: $studentDetail
         );
     }
 

@@ -3,6 +3,7 @@
 namespace App\Core\Infraestructure\Repositories\Command\User;
 
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
+use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Entities\StudentDetail;
 use App\Core\Domain\Enum\User\UserRoles;
@@ -21,6 +22,17 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
     {
         $eloquentStudentDetails = EloquentStudentDetail::where('user_id',$userId)->first();
         return $eloquentStudentDetails ? StudentDetailMapper::toDomain($eloquentStudentDetails): null;
+    }
+
+    public function findStudentDetailsToDisplay(int $userId): ?StudentDetailDTO
+    {
+        $eloquentStudentDetails = EloquentStudentDetail::with('career:id,career_name')
+            ->where('user_id', $userId)
+            ->first();
+
+        return $eloquentStudentDetails
+            ? \App\Core\Application\Mappers\StudentDetailMapper::toStudentDetailDTO($eloquentStudentDetails)
+            : null;
     }
 
     public function insertStudentDetails(array $studentDetails): int {

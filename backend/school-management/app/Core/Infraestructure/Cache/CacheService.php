@@ -55,6 +55,11 @@ class CacheService
         return Cache::tags($tags)->remember($key, $ttl, $callback);
     }
 
+    public function rememberForever(string $key, Closure $callback)
+    {
+        return Cache::rememberForever($key, $callback);
+    }
+
     public function flushTags(array $tags)
     {
         return Cache::tags($tags)->flush();

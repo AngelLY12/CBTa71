@@ -31,6 +31,15 @@ class UserController extends Controller
 
     }
 
+    public function findStudentDetails(ForceRefreshRequest $request)
+    {
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $userId = Auth::id();
+        $user=$this->service->findStudentDetails($userId,$forceRefresh);
+        return Response::success(['student_details' => $user], 'Detalles encontrados.');
+
+    }
+
     public function update(UpdateUserRequest $request)
     {
         $userId=Auth::id();
