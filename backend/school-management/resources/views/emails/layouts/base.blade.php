@@ -81,7 +81,7 @@
 <div class="container">
     <div class="header" style="background: linear-gradient(90deg, #4CA771, #013237); text-align: center; padding: 30px 20px; color: #fff;">
         <img
-            src="{{ asset('Logo-cbta.png') }}"
+            src="{{ $message->embed(public_path('Logo-cbta.webp')) }}"
             alt="Logo CBTA"
             style="max-width: 120px; width: 40%; height: auto; display: block; margin: 0 auto 15px auto;"
         >
