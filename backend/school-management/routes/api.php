@@ -161,6 +161,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::patch('/update', [UserController::class, 'update']);
         Route::patch('/update/password', [UserController::class, 'updatePassword']);
         Route::get('/user',[UserController::class,'findUser']);
+        Route::get('/student-details', [UserController::class,'findStudentDetails']);
     });
 
 

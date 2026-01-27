@@ -9721,6 +9721,112 @@
                     }
                 ]
             }
+        },
+        "/api/v1/users/student-details": {
+            "get": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Obtener detalles de estudiante del usuario autenticado",
+                "description": "Devuelve la información del estudiante autenticado en el sistema.",
+                "operationId": "989aac9c2405fa23b570abcbd5dd607b",
+                "parameters": [
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario autenticado encontrado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "student_details": {
+                                                            "$ref": "#/components/schemas/StudentDetailDTO"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -11859,6 +11965,12 @@
                         "example": "8A",
                         "nullable": true
                     },
+                    "workshop": {
+                        "description": "Taller al que pertenece el estudiante",
+                        "type": "string",
+                        "example": "Dibujo",
+                        "nullable": true
+                    },
                     "careerName": {
                         "description": "Nombre de la carrera del estudiante",
                         "type": "string",
@@ -11959,14 +12071,6 @@
                         ],
                         "nullable": true,
                         "example": "O+"
-                    },
-                    "studentDetail": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/DomainStudentDetail"
-                            }
-                        ],
-                        "nullable": true
                     }
                 },
                 "type": "object"
