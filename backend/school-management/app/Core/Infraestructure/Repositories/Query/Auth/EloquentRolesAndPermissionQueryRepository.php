@@ -147,7 +147,13 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
 
     public function hasAdminMissingError(int $adminRoleId, array $rolesToRemoveIds, array $rolesToAddIds): bool
     {
-        if (!in_array($adminRoleId, $rolesToRemoveIds) || !empty($rolesToAddIds)) return false;
+        if (!in_array($adminRoleId, $rolesToRemoveIds)) {
+            return false;
+        }
+        $hasReplacement = in_array($adminRoleId, $rolesToAddIds);
+        if ($hasReplacement) {
+            return false;
+        }
 
         $adminCount = DB::table('model_has_roles')
             ->where('role_id', $adminRoleId)
