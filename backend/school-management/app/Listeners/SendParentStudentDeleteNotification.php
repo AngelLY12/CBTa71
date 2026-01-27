@@ -13,6 +13,8 @@ class SendParentStudentDeleteNotification implements ShouldQueue
     /**
      * Create the event listener.
      */
+    public $queue = 'default';
+
     public function __construct(
         private UserQueryRepInterface $userQueryRep,
     )

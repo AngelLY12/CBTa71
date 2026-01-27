@@ -15,6 +15,7 @@ class SendAmoutExceededNotification
     /**
      * Create the event listener.
      */
+    public $queue = 'default';
 
     public function __construct()
     {
