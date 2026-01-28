@@ -61,9 +61,9 @@ class GeneralMapper{
     public static function toPermissionsByUsers(array $data): PermissionsByUsers
     {
         return new PermissionsByUsers(
-            role: $data['role'],
-            users: $data['users'],
-            permissions: $data['permissions']
+            role: $data['role'] ?? null,
+            users: $data['users'] ?? [],
+            permissions: $data['permissions'] ?? []
         );
     }
 

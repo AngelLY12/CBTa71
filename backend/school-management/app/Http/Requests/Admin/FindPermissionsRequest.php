@@ -46,7 +46,7 @@ class FindPermissionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'curps' => ['sometimes', 'array'],
+            'curps' => ['sometimes', 'array', 'max:15'],
             'curps.*' => ['required_with:curps', 'string', 'size:18', 'exists:users,curp'],
             'role' => ['sometimes', 'string', 'exists:roles,name'],
         ];
@@ -55,8 +55,15 @@ class FindPermissionsRequest extends FormRequest
     protected function prepareForValidation()
     {
         if ($this->has('curps') && is_string($this->curps)) {
+            $curps = array_unique(array_filter(array_map('trim', explode(',', $this->curps))));
             $this->merge([
-                'curps' => array_filter(array_map('trim', explode(',', $this->curps)))
+                'curps' => array_slice($curps, 0, 15)
+            ]);
+        }
+        elseif ($this->has('curps') && is_array($this->curps)) {
+            $curps = array_unique(array_filter(array_map('trim', $this->curps)));
+            $this->merge([
+                'curps' => array_slice($curps, 0, 15)
             ]);
         }
 
@@ -65,31 +72,11 @@ class FindPermissionsRequest extends FormRequest
         }
     }
 
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            $data = $validator->getData();
-
-            $hasCurps = isset($data['curps']) && !empty($data['curps']);
-            $hasRole = isset($data['role']) && !empty($data['role']);
-
-            // Validar que haya uno u otro, no ambos
-            if (!$hasCurps && !$hasRole) {
-                $validator->errors()->add('curps', 'Debes enviar curps o role.');
-                $validator->errors()->add('role', 'Debes enviar curps o role.');
-            }
-
-            if ($hasCurps && $hasRole) {
-                $validator->errors()->add('curps', 'Solo debes enviar curps o role, no ambos.');
-                $validator->errors()->add('role', 'Solo debes enviar curps o role, no ambos.');
-            }
-        });
-    }
-
     public function messages(): array
     {
         return [
             'curps.array' => 'El campo curps debe ser un array.',
+            'curps.max' => 'No se pueden enviar más de 15 CURPs a la vez.',
             'curps.*.exists' => 'Una o más CURPs no existen en el sistema.',
             'curps.*.size' => 'Las CURPs deben ser de 18 caracteres',
             'role.exists' => 'El rol proporcionado no existe.',

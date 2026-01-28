@@ -18,7 +18,7 @@ namespace App\Core\Application\DTO\Response\General;
 class PermissionsByUsers
 {
     public function __construct(
-        public readonly string $role,
+        public readonly ?string $role,
         public readonly array $users,
         public readonly array $permissions
     )
