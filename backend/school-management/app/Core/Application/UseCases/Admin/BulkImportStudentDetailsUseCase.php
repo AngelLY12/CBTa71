@@ -12,6 +12,12 @@ class BulkImportStudentDetailsUseCase
 {
     private const CHUNK_SIZE = 200;
     private const USER_BATCH_SIZE = 1000;
+    private const COL_CURP = 0;
+    private const COL_CAREER_ID = 1;
+    private const COL_N_CONTROL = 2;
+    private const COL_SEMESTRE = 3;
+    private const COL_GROUP = 4;
+    private const COL_WORKSHOP = 5;
     private ImportResponse $importResponse;
     private array $cachedCareerIds =[];
 
@@ -150,8 +156,8 @@ class BulkImportStudentDetailsUseCase
         $curps = [];
 
         foreach ($rows as $row) {
-            if (!empty($row['curp'])) {
-                $curps[] = $row['curp'];
+            if (!empty($row[self::COL_CURP])) {
+                $curps[] = $row[self::COL_CURP];
             }
         }
 
@@ -221,17 +227,17 @@ class BulkImportStudentDetailsUseCase
                 continue;
             }
 
-            $user = $userMap[$row['curp']];
-            $careerId = (int) $row['career_id'];
+            $user = $userMap[$row[self::COL_CURP]];
+            $careerId = (int) $row[self::COL_CAREER_ID];
 
-            $semestre = (int) $row['semestre'];
+            $semestre = (int) $row[self::COL_SEMESTRE];
             $maxSemester=config('promotions.max_semester');
 
             if ($semestre < 1 || $semestre > $maxSemester) {
                 $this->importResponse->addError(
                     "Semestre {$semestre} fuera de rango válido (1-12)",
                     $rowNumber,
-                    ['curp' => $row['curp'], 'semestre' => $semestre]
+                    ['curp' => $row[self::COL_CURP], 'semestre' => $semestre]
                 );
                 continue;
             }
@@ -242,7 +248,7 @@ class BulkImportStudentDetailsUseCase
                     "Carrera con ID {$careerId} no encontrada",
                     $rowNumber,
                     [
-                        'curp' => $row['curp'],
+                        'curp' => $row[self::COL_CURP],
                         'career_id' => $careerId
                     ]
                 );
@@ -252,10 +258,10 @@ class BulkImportStudentDetailsUseCase
             $studentDetailsToInsert[] = [
                 'user_id' => $user->id,
                 'career_id' => $careerId,
-                'n_control' => trim($row['n_control']),
+                'n_control' => trim($row[self::COL_N_CONTROL]),
                 'semestre' => $semestre,
-                'group' => isset($row['group']) ? trim($row['group']) : null,
-                'workshop' => isset($row['workshop']) ? trim($row['workshop']) : null,
+                'group' => isset($row[self::COL_GROUP]) ? trim($row[self::COL_GROUP]) : null,
+                'workshop' => isset($row[self::COL_WORKSHOP]) ? trim($row[self::COL_WORKSHOP]) : null,
                 'created_at' => $now,
                 'updated_at' => $now,
                 '_original_row_number' => $rowNumber,
@@ -283,26 +289,26 @@ class BulkImportStudentDetailsUseCase
     {
         $errors = [];
 
-        if (empty($row['curp'])) {
+        if (empty($row[self::COL_CURP])) {
             $errors[] = 'CURP requerida';
-        } elseif (!isset($userMap[$row['curp']])) {
+        } elseif (!isset($userMap[$row[self::COL_CURP]])) {
             $errors[] = 'CURP no encontrada en el sistema';
         }
 
-        if (empty($row['career_id'])) {
+        if (empty($row[self::COL_CAREER_ID])) {
             $errors[] = 'career_id requerido';
-        }elseif (!is_numeric($row['career_id'])) { // <-- Nuevo
+        }elseif (!is_numeric($row[self::COL_CAREER_ID])) { // <-- Nuevo
             $errors[] = 'career_id debe ser numérico';
         }
 
 
-        if (empty($row['n_control'])) {
+        if (empty($row[self::COL_N_CONTROL])) {
             $errors[] = 'n_control requerido';
         }
 
-        if (empty($row['semestre'])) {
+        if (empty($row[self::COL_SEMESTRE])) {
             $errors[] = 'semestre requerido';
-        }elseif (!is_numeric($row['semestre'])) {
+        }elseif (!is_numeric($row[self::COL_SEMESTRE])) {
             $errors[] = 'semestre debe ser numérico';
         }
 
@@ -310,7 +316,7 @@ class BulkImportStudentDetailsUseCase
             $this->importResponse->addError(
                 implode(', ', $errors),
                 $rowNumber,
-                ['curp' => $row['curp'] ?? 'N/A']
+                ['curp' => $row[self::COL_CURP] ?? 'N/A']
             );
             return false;
         }

@@ -27,6 +27,25 @@ use Illuminate\Support\Str;
 class BulkImportUsersUseCase
 {
     private const CHUNK_SIZE = 200;
+    private const COL_NAME = 0;
+    private const COL_LAST_NAME = 1;
+    private const COL_EMAIL = 2;
+    private const COL_PHONE = 3;
+    private const COL_BIRTHDATE = 4;
+    private const COL_GENDER = 5;
+    private const COL_CURP = 6;
+    private const COL_STREET = 7;
+    private const COL_CITY = 8;
+    private const COL_STATE = 9;
+    private const COL_ZIP_CODE = 10;
+    private const COL_BLOOD_TYPE = 11;
+    private const COL_REGISTRATION_DATE = 12;
+    private const COL_STATUS = 13;
+    private const COL_CAREER_ID = 14;
+    private const COL_N_CONTROL = 15;
+    private const COL_SEMESTRE = 16;
+    private const COL_GROUP = 17;
+    private const COL_WORKSHOP = 18;
     private ImportResponse $importResponse;
     private array $cachedCareerIds =[];
 
@@ -164,27 +183,27 @@ class BulkImportUsersUseCase
     {
         $errors = [];
 
-        if (empty($row[0]) || trim($row[0]) === '') {
+        if (empty($row[self::COL_NAME]) || trim($row[self::COL_NAME]) === '') {
             $errors[] = 'Nombre requerido';
         }
 
-        if (empty($row[1]) || trim($row[1]) === '') {
+        if (empty($row[self::COL_LAST_NAME]) || trim($row[self::COL_LAST_NAME]) === '') {
             $errors[] = 'Apellido requerido';
         }
 
-        if (empty($row[2]) || trim($row[2]) === '') {
+        if (empty($row[self::COL_EMAIL]) || trim($row[self::COL_EMAIL]) === '') {
             $errors[] = 'Email requerido';
         } else{
-            $email = trim($row[2]);
+            $email = trim($row[self::COL_EMAIL]);
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = 'Email inválido';
             }
         }
-        if(empty($row[3]) || trim($row[3]) === ''){
+        if(empty($row[self::COL_PHONE]) || trim($row[self::COL_PHONE]) === ''){
             $errors[] = 'Número de telefono requerido';
         }else
         {
-            $phone = trim($row[3]);
+            $phone = trim($row[self::COL_PHONE]);
 
             if (!preg_match('/^\+52\d{10}$/', $phone)) {
                 $normalized = $this->normalizePhoneNumber($phone);
@@ -200,7 +219,7 @@ class BulkImportUsersUseCase
             }
         }
 
-        if (empty($row[6]) || trim($row[6]) === '') {
+        if (empty($row[self::COL_CURP]) || trim($row[self::COL_CURP]) === '') {
             $errors[] = 'CURP requerida';
         }
 
@@ -209,9 +228,9 @@ class BulkImportUsersUseCase
                 implode(', ', $errors),
                 $rowNumber,
                 [
-                    'email' => $row[2] ?? 'N/A',
-                    'curp' => $row[6] ?? 'N/A',
-                    'phone' => $row[3] ?? 'N/A'
+                    'email' => $row[self::COL_EMAIL] ?? 'N/A',
+                    'curp' => $row[self::COL_CURP] ?? 'N/A',
+                    'phone' => $row[self::COL_PHONE] ?? 'N/A'
                 ]
             );
             return false;
@@ -240,16 +259,16 @@ class BulkImportUsersUseCase
         $usersToNotify = [];
         $invalidStudentDetailsCount = 0;
         $invalidSemesterCount = 0;
+        $maxSemester=config('promotions.max_semester');
         foreach ($insertedUsers as $index => $user) {
             $row = $rows[$index];
             $tempPassword = $tempPasswords[$index];
-            $rowNumber = ($chunkIndex * self::CHUNK_SIZE) + $index + 1;
             $hasStudentDetails = $this->hasStudentDetails($row);
-            $hasStudentFields = !empty($row[14]) || !empty($row[15]) || !empty($row[16]);
+            $hasStudentFields = !empty($row[self::COL_CAREER_ID]) || !empty($row[self::COL_N_CONTROL]) || !empty($row[self::COL_SEMESTRE]);
             if ($hasStudentFields && !$hasStudentDetails) {
                 $invalidStudentDetailsCount++;
-                $semestre = isset($row[16]) ? (int) trim($row[16]) : 0;
-                if ($semestre < 1 || $semestre > 10) {
+                $semestre = isset($row[self::COL_SEMESTRE]) ? (int) trim($row[self::COL_SEMESTRE]) : 0;
+                if ($semestre < 1 || $semestre > $maxSemester) {
                     $invalidSemesterCount++;
                 }
             }
@@ -276,7 +295,7 @@ class BulkImportUsersUseCase
             $warningMessage = "{$invalidStudentDetailsCount} usuario(s) tenían campos de estudiante inválidos";
 
             if ($invalidSemesterCount > 0) {
-                $warningMessage .= " ({$invalidSemesterCount} con semestre fuera de rango 1-10)";
+                $warningMessage .= " ({$invalidSemesterCount} con semestre fuera de rango 1-{$maxSemester})";
             }
 
             $warningMessage .= ". Se asignó rol UNVERIFIED.";
@@ -368,9 +387,9 @@ class BulkImportUsersUseCase
 
     private function hasStudentDetails(array $row): bool
     {
-        $careerId = isset($row[14]) ? trim($row[14]) : '';
-        $nControl = isset($row[15]) ? trim($row[15]) : '';
-        $semestre = isset($row[16]) ? trim($row[16]) : '';
+        $careerId = isset($row[self::COL_CAREER_ID]) ? trim($row[self::COL_CAREER_ID]) : '';
+        $nControl = isset($row[self::COL_N_CONTROL]) ? trim($row[self::COL_N_CONTROL]) : '';
+        $semestre = isset($row[self::COL_SEMESTRE]) ? trim($row[self::COL_SEMESTRE]) : '';
 
         if (empty($careerId) || empty($nControl) || empty($semestre)) {
             return false;
@@ -395,32 +414,32 @@ class BulkImportUsersUseCase
         }, $row);
 
         $addressData = [
-            'street' => isset($trimmedRow[7]) ? $trimmedRow[7] : null,
-            'city' => isset($trimmedRow[8]) ? $trimmedRow[8] : null,
-            'state' => isset($trimmedRow[9]) ? $trimmedRow[9] : null,
-            'zip_code' => isset($trimmedRow[10]) ? $trimmedRow[10] : null,
+            'street' => isset($trimmedRow[self::COL_STREET]) ? $trimmedRow[self::COL_STREET] : null,
+            'city' => isset($trimmedRow[self::COL_CITY]) ? $trimmedRow[self::COL_CITY] : null,
+            'state' => isset($trimmedRow[self::COL_STATE]) ? $trimmedRow[self::COL_STATE] : null,
+            'zip_code' => isset($trimmedRow[self::COL_ZIP_CODE]) ? $trimmedRow[self::COL_ZIP_CODE] : null,
         ];
 
         $filteredAddress = array_filter($addressData, fn($value) => !is_null($value));
         $addressJson = !empty($filteredAddress) ? json_encode($addressData, JSON_UNESCAPED_UNICODE) : null;
 
-        $phone = $trimmedRow[3];
+        $phone = $trimmedRow[self::COL_PHONE];
         $normalizedPhone = $this->normalizePhoneNumber($phone);
 
         return [
-            'name' => $trimmedRow[0],
-            'last_name' => $trimmedRow[1],
-            'email' => $trimmedRow[2],
+            'name' => $trimmedRow[self::COL_NAME],
+            'last_name' => $trimmedRow[self::COL_LAST_NAME],
+            'email' => $trimmedRow[self::COL_EMAIL],
             'password' => Hash::make($tempPassword),
             'phone_number' => $normalizedPhone, // ← Normalizado
-            'birthdate' => !empty($trimmedRow[4]) ? Carbon::parse($trimmedRow[4]) : null,
-            'gender' => !empty($trimmedRow[5]) ? EnumMapper::toUserGender($trimmedRow[5])->value : null,
-            'curp' => $trimmedRow[6],
+            'birthdate' => !empty($trimmedRow[self::COL_BIRTHDATE]) ? Carbon::parse($trimmedRow[self::COL_BIRTHDATE]) : null,
+            'gender' => !empty($trimmedRow[self::COL_GENDER]) ? EnumMapper::toUserGender($trimmedRow[self::COL_GENDER])->value : null,
+            'curp' => $trimmedRow[self::COL_CURP],
             'address' => $addressJson,
             'stripe_customer_id' => null,
-            'blood_type' => !empty($trimmedRow[11]) ? EnumMapper::toUserBloodType($trimmedRow[11])->value : null,
-            'registration_date' => !empty($trimmedRow[12]) ? Carbon::parse($trimmedRow[12]) : now(),
-            'status' => !empty($trimmedRow[13]) ? EnumMapper::toUserStatus($trimmedRow[13])->value : UserStatus::ACTIVO->value,
+            'blood_type' => !empty($trimmedRow[self::COL_BLOOD_TYPE]) ? EnumMapper::toUserBloodType($trimmedRow[self::COL_BLOOD_TYPE])->value : null,
+            'registration_date' => !empty($trimmedRow[self::COL_REGISTRATION_DATE]) ? Carbon::parse($trimmedRow[self::COL_REGISTRATION_DATE]) : now(),
+            'status' => !empty($trimmedRow[self::COL_STATUS]) ? EnumMapper::toUserStatus($trimmedRow[self::COL_STATUS])->value : UserStatus::ACTIVO->value,
             'created_at' => now(),
             'updated_at' => now(),
             'email_verified_at' => null,
@@ -430,13 +449,13 @@ class BulkImportUsersUseCase
 
     private function prepareStudentDetails($user, array $row): ?array
     {
-        $careerId = (int) trim($row[14]);
+        $careerId = (int) trim($row[self::COL_CAREER_ID]);
 
         if (!in_array($careerId, $this->cachedCareerIds, true)) {
             return null;
         }
 
-        $semestre = (int) $row[16];
+        $semestre = (int) $row[self::COL_SEMESTRE];
         $maxSemester=config('promotions.max_semester');
         if ($semestre < 1 || $semestre > $maxSemester) {
             return null;
@@ -445,10 +464,10 @@ class BulkImportUsersUseCase
         return [
             'user_id' => $user->id,
             'career_id' => $careerId,
-            'n_control' => trim($row[15]),
+            'n_control' => trim($row[self::COL_N_CONTROL]),
             'semestre' => $semestre,
-            'group' => isset($row[17]) ? trim($row[17]) : null,
-            'workshop' => isset($row[18]) ? trim($row[18]) : null,
+            'group' => isset($row[self::COL_GROUP]) ? trim($row[self::COL_GROUP]) : null,
+            'workshop' => isset($row[self::COL_WORKSHOP]) ? trim($row[self::COL_WORKSHOP]) : null,
             'created_at' => now(),
             'updated_at' => now(),
         ];
