@@ -2,7 +2,6 @@
 
 namespace App\Imports;
 
-use App\Core\Application\DTO\Response\General\ImportResponse;
 use App\Core\Application\Services\Admin\AdminServiceFacades;
 use App\Models\User;
 use App\Notifications\ImportFailedNotification;
