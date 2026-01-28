@@ -4,6 +4,7 @@ namespace App\Core\Application\UseCases\Admin;
 
 use App\Core\Application\DTO\Response\General\ImportResponse;
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
+use App\Core\Domain\Repositories\Query\Misc\CareerQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Jobs\ClearStaffCacheJob;
 
@@ -11,26 +12,30 @@ class BulkImportStudentDetailsUseCase
 {
     private const CHUNK_SIZE = 200;
     private const USER_BATCH_SIZE = 1000;
+    private ImportResponse $importResponse;
+    private array $cachedCareerIds =[];
+
     public function __construct(
         private StudentDetailReInterface $sdRepo,
-        private UserQueryRepInterface $userRepo
+        private UserQueryRepInterface $userRepo,
+        private CareerQueryRepInterface $cqRepo,
     ) {}
 
     public function execute(array $rows): ImportResponse
     {
-        $result = new ImportResponse();
-        $result->setTotalRows(count($rows));
+        $this->importResponse = new ImportResponse();
+        $this->importResponse->setTotalRows(count($rows));
         $hasInsertions = false;
+        $this->loadCareerIds();
 
         foreach (array_chunk($rows, self::CHUNK_SIZE) as $chunkIndex => $chunk) {
             try {
                 $chunkResult = $this->processChunk($chunk, $chunkIndex);
-                $result->merge($chunkResult);
                 if ($chunkResult->getInserted() > 0) {
                     $hasInsertions = true;
                 }
             } catch (\Throwable $e) {
-                $result->addGlobalError(
+                $this->importResponse->addGlobalError(
                     "Error procesando chunk {$chunkIndex}: " . $e->getMessage(),
                     $chunkIndex,
                     count($chunk)
@@ -48,49 +53,55 @@ class BulkImportStudentDetailsUseCase
             $this->dispatchCacheClear();
         }
 
-        return $result;
+        return $this->importResponse;
 
+    }
+
+    private function loadCareerIds(): void
+    {
+        if (empty($this->cachedCareerIds)) {
+            $this->cachedCareerIds = $this->cqRepo->findAllIds();
+        }
     }
 
     private function processChunk(array $rows, int $chunkIndex): ImportResponse
     {
-        $result = new ImportResponse();
         $curps = $this->extractValidCurps($rows);
 
         if (empty($curps)) {
-            $result->addWarning(
+            $this->importResponse->addWarning(
                 "Chunk {$chunkIndex} sin CURPs válidas",
                 $chunkIndex,
                 count($rows)
             );
-            return $result;
+            return $this->importResponse;
         }
         $userMap = $this->buildUserMap($curps);
-        $studentDetailsToInsert = $this->prepareStudentDetails($rows, $userMap, $result, $chunkIndex);
+        $studentDetailsToInsert = $this->prepareStudentDetails($rows, $userMap, $chunkIndex);
 
         if (empty($studentDetailsToInsert)) {
-            $result->addWarning(
+            $this->importResponse->addWarning(
                 "Chunk {$chunkIndex} sin registros válidos para insertar",
                 $chunkIndex,
                 count($rows)
             );
-            return $result;
+            return $this->importResponse;
         }
 
         try {
             $cleanData = $this->cleanForBatchInsert($studentDetailsToInsert);
             $inserted = $this->sdRepo->insertStudentDetails($cleanData);
-            $result->incrementInserted($inserted);
+            $this->importResponse->incrementInserted($inserted);
         } catch (\Exception $e) {
             if ($this->isDuplicateError($e)) {
                 $individualResult = $this->insertIndividually($studentDetailsToInsert);
-                $result->incrementInserted($individualResult['inserted']);
+                $this->importResponse->incrementInserted($individualResult['inserted']);
 
                 foreach ($individualResult['errors'] as $error) {
-                    $result->addError($error['message'], $error['row_number'], $error['context']);
+                    $this->importResponse->addError($error['message'], $error['row_number'], $error['context']);
                 }
             } else {
-                $result->addGlobalError(
+                $this->importResponse->addGlobalError(
                     "Error insertando chunk {$chunkIndex}: " . $e->getMessage(),
                     $chunkIndex,
                     count($studentDetailsToInsert)
@@ -98,7 +109,7 @@ class BulkImportStudentDetailsUseCase
             }
         }
 
-        return $result;
+        return $this->importResponse;
     }
 
     private function insertIndividually(array $studentDetails): array
@@ -197,27 +208,52 @@ class BulkImportStudentDetailsUseCase
     private function prepareStudentDetails(
         array $rows,
         array $userMap,
-        ImportResponse $result,
         int $chunkIndex
     ): array
     {
         $studentDetailsToInsert = [];
         $now = now();
-
+        $invalidCareerCount = 0;
         foreach ($rows as $index => $row) {
             $rowNumber = ($chunkIndex * self::CHUNK_SIZE) + $index + 1;
 
-            if (!$this->isValidRow($row, $userMap, $result, $rowNumber)) {
+            if (!$this->isValidRow($row, $userMap, $rowNumber)) {
                 continue;
             }
 
             $user = $userMap[$row['curp']];
+            $careerId = (int) $row['career_id'];
+
+            $semestre = (int) $row['semestre'];
+            $maxSemester=config('promotions.max_semester');
+
+            if ($semestre < 1 || $semestre > $maxSemester) {
+                $this->importResponse->addError(
+                    "Semestre {$semestre} fuera de rango válido (1-12)",
+                    $rowNumber,
+                    ['curp' => $row['curp'], 'semestre' => $semestre]
+                );
+                continue;
+            }
+
+            if (!in_array($careerId, $this->cachedCareerIds, true)) {
+                $invalidCareerCount++;
+                $this->importResponse->addError(
+                    "Carrera con ID {$careerId} no encontrada",
+                    $rowNumber,
+                    [
+                        'curp' => $row['curp'],
+                        'career_id' => $careerId
+                    ]
+                );
+                continue;
+            }
 
             $studentDetailsToInsert[] = [
                 'user_id' => $user->id,
-                'career_id' => $row['career_id'],
-                'n_control' => $row['n_control'],
-                'semestre' => $row['semestre'],
+                'career_id' => $careerId,
+                'n_control' => trim($row['n_control']),
+                'semestre' => $semestre,
                 'group' => isset($row['group']) ? trim($row['group']) : null,
                 'workshop' => isset($row['workshop']) ? trim($row['workshop']) : null,
                 'created_at' => $now,
@@ -225,8 +261,16 @@ class BulkImportStudentDetailsUseCase
                 '_original_row_number' => $rowNumber,
             ];
 
-            $result->incrementProcessed();
+            $this->importResponse->incrementProcessed();
         }
+        if ($invalidCareerCount > 0) {
+            $this->importResponse->addWarning(
+                "{$invalidCareerCount} registro(s) con career_id inválido en el chunk",
+                $chunkIndex,
+                count($rows)
+            );
+        }
+
 
         return $studentDetailsToInsert;
     }
@@ -234,7 +278,6 @@ class BulkImportStudentDetailsUseCase
     private function isValidRow(
         array $row,
         array $userMap,
-        ImportResponse $result,
         int $rowNumber
     ): bool
     {
@@ -248,7 +291,10 @@ class BulkImportStudentDetailsUseCase
 
         if (empty($row['career_id'])) {
             $errors[] = 'career_id requerido';
+        }elseif (!is_numeric($row['career_id'])) { // <-- Nuevo
+            $errors[] = 'career_id debe ser numérico';
         }
+
 
         if (empty($row['n_control'])) {
             $errors[] = 'n_control requerido';
@@ -256,10 +302,12 @@ class BulkImportStudentDetailsUseCase
 
         if (empty($row['semestre'])) {
             $errors[] = 'semestre requerido';
+        }elseif (!is_numeric($row['semestre'])) {
+            $errors[] = 'semestre debe ser numérico';
         }
 
         if (!empty($errors)) {
-            $result->addError(
+            $this->importResponse->addError(
                 implode(', ', $errors),
                 $rowNumber,
                 ['curp' => $row['curp'] ?? 'N/A']

@@ -55,7 +55,7 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
 
     public function incrementSemesterForAll(): int
     {
-        return EloquentStudentDetail::where('semestre', '<', 10)
+        return EloquentStudentDetail::where('semestre', '<', 11)
             ->whereHas('user', function ($query) {
                 $query->whereIn('status', [UserStatus::ACTIVO, UserStatus::BAJA_TEMPORAL]);
             })

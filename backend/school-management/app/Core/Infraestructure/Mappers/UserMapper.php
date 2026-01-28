@@ -11,7 +11,14 @@ use Illuminate\Support\Facades\Hash;
 class UserMapper{
     public static function toDomain(EloquentUser $user): DomainUser
     {
-
+        $addressData = null;
+        if (!empty($user->address)) {
+            if (is_string($user->address)) {
+                $addressData = json_decode($user->address, true);
+            } elseif (is_array($user->address)) {
+                $addressData = $user->address;
+            }
+        }
         $domainUser = new DomainUser(
             curp: $user->curp,
             name: $user->name,
@@ -25,7 +32,7 @@ class UserMapper{
             id: $user->id,
             birthdate: $user->birthdate,
             gender: $user->gender,
-            address: $user->address,
+            address: $addressData,
             blood_type: $user->blood_type,
             stripe_customer_id: $user->stripe_customer_id
         );

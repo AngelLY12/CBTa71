@@ -11,6 +11,7 @@ use App\Core\Domain\Repositories\Command\Auth\RolesAndPermissionsRepInterface;
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Auth\RolesAndPermissosQueryRepInterface;
+use App\Core\Domain\Repositories\Query\Misc\CareerQueryRepInterface;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Jobs\ClearStaffCacheJob;
 use App\Jobs\SendBulkMailJob;
@@ -26,27 +27,30 @@ use Illuminate\Support\Str;
 class BulkImportUsersUseCase
 {
     private const CHUNK_SIZE = 200;
+    private ImportResponse $importResponse;
+    private array $cachedCareerIds =[];
+
 
     public function __construct(
         private UserRepInterface $userRepo,
         private RolesAndPermissionsRepInterface $rpRepo,
         private StudentDetailReInterface $sdRepo,
-        private RolesAndPermissosQueryRepInterface $rpqRepo
-    ) {}
-
+        private RolesAndPermissosQueryRepInterface $rpqRepo,
+        private CareerQueryRepInterface $cqRepo,
+    ) {
+    }
     public function execute(array $rows): ImportResponse
     {
-        $result = new ImportResponse();
-        $result->setTotalRows(count($rows));
+        $this->importResponse = new ImportResponse();
+        $this->importResponse->setTotalRows(count($rows));
         $allUsersToNotify = [];
-
+        $this->loadCareerIds();
         foreach (array_chunk($rows, self::CHUNK_SIZE) as $chunkIndex => $chunk) {
             try {
                 $chunkResult = $this->processChunk($chunk, $chunkIndex);
-                $result->merge($chunkResult['importResult']);
                 $allUsersToNotify = array_merge($allUsersToNotify, $chunkResult['usersToNotify']);
             } catch (\Throwable $e) {
-                $result->addGlobalError(
+                $this->importResponse->addGlobalError(
                     "Error procesando chunk {$chunkIndex}: " . $e->getMessage(),
                     $chunkIndex,
                     count($chunk)
@@ -64,15 +68,21 @@ class BulkImportUsersUseCase
 
         $this->dispatchCacheClear();
 
-        return $result;
+        return $this->importResponse;
+    }
+
+    private function loadCareerIds(): void
+    {
+        if (empty($this->cachedCareerIds)) {
+            $this->cachedCareerIds = $this->cqRepo->findAllIds();
+        }
     }
 
     private function processChunk(array $rows, int $chunkIndex): array
     {
-        $importResult = new ImportResponse();
         $roles = $this->loadRoles();
 
-        return DB::transaction(function () use ($rows, $roles, $chunkIndex, $importResult) {
+        return DB::transaction(function () use ($rows, $roles, $chunkIndex) {
             $usersData = [];
             $tempPasswords = [];
             $validRows = [];
@@ -80,7 +90,7 @@ class BulkImportUsersUseCase
             foreach ($rows as $rowIndex => $row) {
                 $rowNumber = ($chunkIndex * self::CHUNK_SIZE) + $rowIndex + 1;
 
-                if (!$this->isValidRow($row, $importResult, $rowNumber)) {
+                if (!$this->isValidRow($row, $rowNumber)) {
                     continue;
                 }
                 $tempPassword = Str::random(12);
@@ -91,18 +101,17 @@ class BulkImportUsersUseCase
                 $usersData[] = $userData;
 
                 $validRows[] = $row;
-                $importResult->incrementProcessed();
+                $this->importResponse->incrementProcessed();
 
             }
 
             if (empty($usersData)) {
-                $importResult->addWarning(
+                $this->importResponse->addWarning(
                     "Chunk {$chunkIndex} sin datos válidos para insertar",
                     $chunkIndex,
                     count($rows)
                 );
                 return [
-                    'importResult' => $importResult,
                     'usersToNotify' => []
                 ];
             }
@@ -110,29 +119,29 @@ class BulkImportUsersUseCase
             try {
                 $cleanData = $this->cleanForBatchInsert($usersData);
                 $insertedUsers = $this->userRepo->insertManyUsers($cleanData);
-                $importResult->incrementInserted($insertedUsers->count());
+                $this->importResponse->incrementInserted($insertedUsers->count());
 
             } catch (\Exception $e) {
                 if ($this->isDuplicateError($e)) {
                     $individualResult = $this->insertUsersIndividually($usersData, $validRows, $tempPasswords, $chunkIndex);
 
-                    $importResult->incrementInserted($individualResult['inserted']);
+                    $this->importResponse->incrementInserted($individualResult['inserted']);
 
                     $processingResult = $this->processInsertedUsers(
                         $individualResult['insertedUsers'],
                         $individualResult['validRows'],
                         $individualResult['tempPasswords'],
-                        $roles
+                        $roles,
+                        $chunkIndex
                     );
 
                     foreach ($individualResult['errors'] as $error) {
-                        $importResult->addError($error['message'], $error['row_number'], $error['context']);
+                        $this->importResponse->addError($error['message'], $error['row_number'], $error['context']);
                     }
 
                     app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
                     return [
-                        'importResult' => $importResult,
                         'usersToNotify' => $processingResult['usersToNotify']
                     ];
 
@@ -141,18 +150,17 @@ class BulkImportUsersUseCase
                 }
             }
 
-            $processingResult = $this->processInsertedUsers($insertedUsers, $validRows, $tempPasswords, $roles);
+            $processingResult = $this->processInsertedUsers($insertedUsers, $validRows, $tempPasswords, $roles, $chunkIndex);
 
             app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
             return [
-                'importResult' => $importResult,
                 'usersToNotify' => $processingResult['usersToNotify']
             ];
         });
     }
 
-    private function isValidRow(array $row, ImportResponse $importResult, int $rowNumber): bool
+    private function isValidRow(array $row, int $rowNumber): bool
     {
         $errors = [];
 
@@ -166,8 +174,30 @@ class BulkImportUsersUseCase
 
         if (empty($row[2]) || trim($row[2]) === '') {
             $errors[] = 'Email requerido';
-        } elseif (!filter_var($row[2], FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Email inválido';
+        } else{
+            $email = trim($row[2]);
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = 'Email inválido';
+            }
+        }
+        if(empty($row[3]) || trim($row[3]) === ''){
+            $errors[] = 'Número de telefono requerido';
+        }else
+        {
+            $phone = trim($row[3]);
+
+            if (!preg_match('/^\+52\d{10}$/', $phone)) {
+                $normalized = $this->normalizePhoneNumber($phone);
+                if ($normalized && preg_match('/^\+52\d{10}$/', $normalized)) {
+                    logger()->info('Teléfono normalizado durante importación', [
+                        'original' => $phone,
+                        'normalized' => $normalized,
+                        'row' => $rowNumber
+                    ]);
+                } else {
+                    $errors[] = 'Teléfono debe tener formato exacto: +52 seguido de 10 dígitos (ej: +521234567890)';
+                }
+            }
         }
 
         if (empty($row[6]) || trim($row[6]) === '') {
@@ -175,12 +205,13 @@ class BulkImportUsersUseCase
         }
 
         if (!empty($errors)) {
-            $importResult->addError(
+            $this->importResponse->addError(
                 implode(', ', $errors),
                 $rowNumber,
                 [
                     'email' => $row[2] ?? 'N/A',
-                    'curp' => $row[6] ?? 'N/A'
+                    'curp' => $row[6] ?? 'N/A',
+                    'phone' => $row[3] ?? 'N/A'
                 ]
             );
             return false;
@@ -201,25 +232,39 @@ class BulkImportUsersUseCase
         Collection $insertedUsers,
         array $rows,
         array $tempPasswords,
-        array $roles
+        array $roles,
+        int $chunkIndex
     ): array {
         $studentDetails = [];
         $roleRows = [];
         $usersToNotify = [];
-
+        $invalidStudentDetailsCount = 0;
+        $invalidSemesterCount = 0;
         foreach ($insertedUsers as $index => $user) {
             $row = $rows[$index];
             $tempPassword = $tempPasswords[$index];
-
+            $rowNumber = ($chunkIndex * self::CHUNK_SIZE) + $index + 1;
             $hasStudentDetails = $this->hasStudentDetails($row);
+            $hasStudentFields = !empty($row[14]) || !empty($row[15]) || !empty($row[16]);
+            if ($hasStudentFields && !$hasStudentDetails) {
+                $invalidStudentDetailsCount++;
+                $semestre = isset($row[16]) ? (int) trim($row[16]) : 0;
+                if ($semestre < 1 || $semestre > 10) {
+                    $invalidSemesterCount++;
+                }
+            }
 
             $roleId = $hasStudentDetails ? $roles['student']->id : $roles['unverified']->id;
             $roleRows[] = $this->prepareRole($roleId, $user);
 
             if ($hasStudentDetails) {
-                $studentDetails[] = $this->prepareStudentDetails($user, $row);
-
-                $this->rpRepo->givePermissionsByType($user, UserRoles::STUDENT->value);
+                $studentDetail = $this->prepareStudentDetails($user, $row);
+                if ($studentDetail) {
+                    $studentDetails[] = $studentDetail;
+                    $this->rpRepo->givePermissionsByType($user, UserRoles::STUDENT->value);
+                }else {
+                    $invalidStudentDetailsCount++;
+                }
             }
 
             $usersToNotify[] = [
@@ -227,7 +272,21 @@ class BulkImportUsersUseCase
                 'password' => $tempPassword,
             ];
         }
+        if ($invalidStudentDetailsCount > 0) {
+            $warningMessage = "{$invalidStudentDetailsCount} usuario(s) tenían campos de estudiante inválidos";
 
+            if ($invalidSemesterCount > 0) {
+                $warningMessage .= " ({$invalidSemesterCount} con semestre fuera de rango 1-10)";
+            }
+
+            $warningMessage .= ". Se asignó rol UNVERIFIED.";
+
+            $this->importResponse->addWarning(
+                $warningMessage,
+                $chunkIndex,
+                count($rows)
+            );
+        }
         if (!empty($studentDetails)) {
             $this->sdRepo->insertStudentDetails($studentDetails);
         }
@@ -309,47 +368,87 @@ class BulkImportUsersUseCase
 
     private function hasStudentDetails(array $row): bool
     {
-        return !empty($row[16]) && !empty($row[17]) && !empty($row[18]);
+        $careerId = isset($row[14]) ? trim($row[14]) : '';
+        $nControl = isset($row[15]) ? trim($row[15]) : '';
+        $semestre = isset($row[16]) ? trim($row[16]) : '';
+
+        if (empty($careerId) || empty($nControl) || empty($semestre)) {
+            return false;
+        }
+        if (!is_numeric($careerId) || !is_numeric($semestre)) {
+            return false;
+        }
+        $semestreValue = (int) $semestre;
+        $maxSemester=config('promotions.max_semester');
+
+        if ($semestreValue < 1 || $semestreValue > $maxSemester) {
+            return false;
+        }
+        $careerId = (int) $careerId;
+        return in_array($careerId, $this->cachedCareerIds, true);
     }
 
     private function prepareUserData(array $row, string $tempPassword, int $rowNumber): array
     {
+        $trimmedRow = array_map(function($value) {
+            return is_string($value) ? trim($value) : $value;
+        }, $row);
+
+        $addressData = [
+            'street' => isset($trimmedRow[7]) ? $trimmedRow[7] : null,
+            'city' => isset($trimmedRow[8]) ? $trimmedRow[8] : null,
+            'state' => isset($trimmedRow[9]) ? $trimmedRow[9] : null,
+            'zip_code' => isset($trimmedRow[10]) ? $trimmedRow[10] : null,
+        ];
+
+        $filteredAddress = array_filter($addressData, fn($value) => !is_null($value));
+        $addressJson = !empty($filteredAddress) ? json_encode($addressData, JSON_UNESCAPED_UNICODE) : null;
+
+        $phone = $trimmedRow[3];
+        $normalizedPhone = $this->normalizePhoneNumber($phone);
 
         return [
-            'name' => trim($row[0]),
-            'last_name' => trim($row[1]),
-            'email' => trim($row[2]),
+            'name' => $trimmedRow[0],
+            'last_name' => $trimmedRow[1],
+            'email' => $trimmedRow[2],
             'password' => Hash::make($tempPassword),
-            'phone_number' => isset($row[3]) ? trim($row[3]) : null,
-            'birthdate' => !empty($row[4]) ? Carbon::parse(trim($row[4])) : null,
-            'gender' => !empty($row[5]) ? EnumMapper::toUserGender(trim($row[5]))->value : null,
-            'curp' => trim($row[6]),
-            'address' => [
-                'street' => isset($row[7]) ? trim($row[7]) : null,
-                'city' => isset($row[8]) ? trim($row[8]) : null,
-                'state' => isset($row[9]) ? trim($row[9]) : null,
-                'zip_code' => isset($row[10]) ? trim($row[10]) : null,
-            ],
-            'stripe_customer_id' => isset($row[11]) ? trim($row[11]) : null,
-            'blood_type' => !empty($row[12]) ? EnumMapper::toUserBloodType(trim($row[12]))->value : null,
-            'registration_date' => !empty($row[13]) ? Carbon::parse(trim($row[13])) : now(),
-            'status' => !empty($row[14]) ? EnumMapper::toUserStatus(trim($row[14]))->value : UserStatus::ACTIVO->value,
+            'phone_number' => $normalizedPhone, // ← Normalizado
+            'birthdate' => !empty($trimmedRow[4]) ? Carbon::parse($trimmedRow[4]) : null,
+            'gender' => !empty($trimmedRow[5]) ? EnumMapper::toUserGender($trimmedRow[5])->value : null,
+            'curp' => $trimmedRow[6],
+            'address' => $addressJson,
+            'stripe_customer_id' => null,
+            'blood_type' => !empty($trimmedRow[11]) ? EnumMapper::toUserBloodType($trimmedRow[11])->value : null,
+            'registration_date' => !empty($trimmedRow[12]) ? Carbon::parse($trimmedRow[12]) : now(),
+            'status' => !empty($trimmedRow[13]) ? EnumMapper::toUserStatus($trimmedRow[13])->value : UserStatus::ACTIVO->value,
             'created_at' => now(),
             'updated_at' => now(),
-            'email_verified_at' => false,
+            'email_verified_at' => null,
             '_original_row_number' => $rowNumber,
         ];
     }
 
-    private function prepareStudentDetails($user, array $row): array
+    private function prepareStudentDetails($user, array $row): ?array
     {
+        $careerId = (int) trim($row[14]);
+
+        if (!in_array($careerId, $this->cachedCareerIds, true)) {
+            return null;
+        }
+
+        $semestre = (int) $row[16];
+        $maxSemester=config('promotions.max_semester');
+        if ($semestre < 1 || $semestre > $maxSemester) {
+            return null;
+        }
+
         return [
             'user_id' => $user->id,
-            'career_id' => $row[16],
-            'n_control' => $row[17],
-            'semestre' => $row[18],
-            'group' => isset($row[19]) ? trim($row[19]) : null,
-            'workshop' => isset($row[20]) ? trim($row[20]) : null,
+            'career_id' => $careerId,
+            'n_control' => trim($row[15]),
+            'semestre' => $semestre,
+            'group' => isset($row[17]) ? trim($row[17]) : null,
+            'workshop' => isset($row[18]) ? trim($row[18]) : null,
             'created_at' => now(),
             'updated_at' => now(),
         ];
@@ -399,6 +498,51 @@ class BulkImportUsersUseCase
                 ->onQueue('emails')
                 ->delay(now()->addSeconds(5));
         }
+    }
+
+    private function normalizePhoneNumber(string $phoneNumber): ?string
+    {
+        $phone = trim($phoneNumber);
+
+        $clean = preg_replace('/[\s\-\.\(\)]/', '', $phone);
+
+        if (preg_match('/^\+52\d{10}$/', $phone)) {
+            return $phone;
+        }
+
+        if (preg_match('/^52\d{10}$/', $clean)) {
+            return '+' . $clean;
+        }
+
+        if (preg_match('/^\d{10}$/', $clean)) {
+            return '+52' . $clean;
+        }
+
+        if (preg_match('/^\+\s*\d{10}$/', $phone)) {
+            $digits = preg_replace('/^\+\s*/', '', $phone);
+            $digits = preg_replace('/\D/', '', $digits);
+
+            if (strlen($digits) === 10) {
+                return '+52' . $digits;
+            }
+        }
+
+        if (preg_match('/^\+\s*52/', $phone)) {
+            $withoutPlus = preg_replace('/^\+\s*/', '', $phone);
+            $digitsOnly = preg_replace('/\D/', '', $withoutPlus);
+
+            if (strlen($digitsOnly) === 10) {
+                return '+52' . $digitsOnly;
+            }
+        }
+
+        $digitsOnly = preg_replace('/\D/', '', $phone);
+        if (strlen($digitsOnly) === 10) {
+            return '+52' . $digitsOnly;
+        }
+
+        return null;
+
     }
 
     private function dispatchCacheClear(): void
