@@ -175,7 +175,7 @@ class RegisterUserRequest extends FormRequest
             'birthdate.required' => 'La fecha de nacimiento es obligatoria.',
 
             'gender.required' => 'El género es obligatorio.',
-            'gender.in'          => 'El género no es válido.',
+            'gender.in'          => 'El género no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserGender::cases())),
             'gender.string' => 'El género debe ser texto.',
 
             'curp.required' => 'La CURP es obligatoria.',
@@ -189,7 +189,7 @@ class RegisterUserRequest extends FormRequest
             'address.required' => 'La dirección es obligatoria.',
 
             'blood_type.required' => 'El tipo de sangre es obligatorio.',
-            'blood_type.in'      => 'El tipo de sangre no es válido.',
+            'blood_type.in'      => 'El tipo de sangre no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserBloodType::cases())),
             'blood_type.string' => 'El tipo de sangre debe ser texto.',
 
             'registration_date.date' => 'La fecha de registro debe ser una fecha válida.',
@@ -197,7 +197,7 @@ class RegisterUserRequest extends FormRequest
             'registration_date.required' => 'La fecha de registro es obligatoria.',
 
             'status.required' => 'El estatus es obligatorio.',
-            'status.in' => 'El estatus proporcionado no es válido.',
+            'status.in' => 'El estatus proporcionado no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserStatus::cases())),
             'status.string' => 'El estatus debe ser texto.',
 
             'name.string' => 'El nombre debe ser una cadena de texto.',

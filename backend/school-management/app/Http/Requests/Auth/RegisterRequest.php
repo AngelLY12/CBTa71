@@ -116,7 +116,7 @@ class RegisterRequest extends FormRequest
                 'string',
                 'in:' . implode(',', array_map(fn($case) => $case->value, UserGender::cases())),
             ],
-            'curp' => 'required|string|size:18|regex:/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z]{2}$/|unique:users,curp',
+            'curp' => 'required|string|size:18|alpha_num|uppercase|unique:users,curp',
             'address' => 'sometimes|required|array',
             'blood_type'   => [
                 'sometimes',
@@ -189,12 +189,13 @@ class RegisterRequest extends FormRequest
 
             'gender.required' => 'El género es obligatorio.',
             'gender.string' => 'El género debe ser texto.',
-            'gender.in' => 'El género no es válido.',
+            'gender.in' => 'El género no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserGender::cases())),
 
             'curp.required' => 'La CURP es obligatoria.',
             'curp.string' => 'La CURP debe ser texto.',
-            'curp.max' => 'La CURP debe tener máximo 18 caracteres.',
-            'curp.regex' => 'La CURP no tiene un formato válido.',
+            'curp.size' => 'La CURP debe tener exactamente 18 caracteres.',
+            'curp.alpha_num' => 'La CURP debe contener solo letras y números.',
+            'curp.uppercase' => 'La CURP debe contener solo letras mayusculas.',
             'curp.unique' => 'Esta CURP ya está registrada.',
 
             'address.required' => 'La dirección es obligatoria.',
@@ -202,7 +203,7 @@ class RegisterRequest extends FormRequest
 
             'blood_type.required' => 'El tipo de sangre es obligatorio.',
             'blood_type.string' => 'El tipo de sangre debe ser texto.',
-            'blood_type.in' => 'El tipo de sangre no es válido.',
+            'blood_type.in' => 'El tipo de sangre no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserBloodType::cases())),
 
             'registration_date.required' => 'La fecha de registro es obligatoria.',
             'registration_date.date' => 'La fecha de registro debe ser una fecha válida.',
@@ -210,7 +211,7 @@ class RegisterRequest extends FormRequest
 
             'status.required' => 'El estatus es obligatorio.',
             'status.string' => 'El estatus debe ser texto.',
-            'status.in' => 'El estatus proporcionado no es válido.',
+            'status.in' => 'El estatus proporcionado no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserStatus::cases())),
         ];
     }
 }
