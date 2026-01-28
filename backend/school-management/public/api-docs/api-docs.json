@@ -700,7 +700,7 @@
                     "Admin"
                 ],
                 "summary": "Importar detalles estudiantiles desde un archivo Excel",
-                "description": "Permite subir un archivo Excel (.xlsx) con los detalles estudiantiles de los usuarios.\r\n *      Solo se insertarán filas con CURP existente en la base de datos y con career_id, n_control y semestre definidos.\r\n *      Columnas esperadas:\r\n *     1. curp (CURP del usuario)\r\n *     2. career_id (ID de la carrera)\r\n *     3. n_control (Número de control)\r\n *     4. semestre (Semestre)\r\n *     5. group (opcional)\r\n *     6. workshop (opcional)",
+                "description": "Permite subir un archivo Excel (.xlsx) con los detalles estudiantiles de los usuarios.\r\n *      Solo se insertarán filas con CURP existente en la base de datos y con career_id, n_control y semestre definidos.\r\n *      Columnas esperadas:\r\n *     0. curp (CURP del usuario)\r\n *     1. career_id (ID de la carrera)\r\n *     2. n_control (Número de control)\r\n *     3. semestre (Semestre)\r\n *     4. group (opcional grupo)\r\n *     5. workshop (opcional taller)",
                 "operationId": "a2fb9e09634f7bad889068a279fd8a45",
                 "parameters": [
                     {

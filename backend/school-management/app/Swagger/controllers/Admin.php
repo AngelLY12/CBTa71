@@ -519,12 +519,12 @@ public function import(){}
  *      description="Permite subir un archivo Excel (.xlsx) con los detalles estudiantiles de los usuarios.
  *      Solo se insertarán filas con CURP existente en la base de datos y con career_id, n_control y semestre definidos.
  *      Columnas esperadas:
- *     1. curp (CURP del usuario)
- *     2. career_id (ID de la carrera)
- *     3. n_control (Número de control)
- *     4. semestre (Semestre)
- *     5. group (opcional)
- *     6. workshop (opcional)",
+ *     0. curp (CURP del usuario)
+ *     1. career_id (ID de la carrera)
+ *     2. n_control (Número de control)
+ *     3. semestre (Semestre)
+ *     4. group (opcional grupo)
+ *     5. workshop (opcional taller)",
  *     tags={"Admin"},
  *     security={{"bearerAuth":{}}},
  *      @OA\Parameter(
