@@ -8,7 +8,8 @@ use App\Core\Application\Services\Admin\AdminServiceFacades;
 use App\Core\Domain\Enum\User\UserStatus;
 use App\Http\Requests\Admin\AttachStudentRequest;
 use App\Http\Requests\Admin\ChangeUserStatusRequest;
-use App\Http\Requests\Admin\FindPermissionsRequest;
+use App\Http\Requests\Admin\FindPermissionsByCurpsRequest;
+use App\Http\Requests\Admin\FindPermissionsByRoleRequest;
 use App\Http\Requests\Admin\RegisterUserRequest;
 use App\Http\Requests\Admin\ShowUsersPaginationRequest;
 use App\Http\Requests\Admin\UpdatePermissionsRequest;
@@ -188,29 +189,18 @@ class AdminController extends Controller
 
     }
 
-    public function findAllPermissions(FindPermissionsRequest $request)
+    public function findAllPermissionsByCurps(FindPermissionsByCurpsRequest $request)
     {
-        $validated = $request->validated();
+        $curps = $request->validated('curps', []);
+        $permissions= $this->service->findAllPermissionsByCurps($curps);
+        return Response::success(['permissions' => $permissions]);
 
-        $curps = [];
-        $role = null;
+    }
 
-        if (isset($validated['curps']) && is_array($validated['curps'])) {
-            $curps = $validated['curps'];
-        }
-
-        if (isset($validated['role']) && is_string($validated['role'])) {
-            $role = $validated['role'];
-        }
-
-        if (empty($curps) && empty($role)) {
-            return Response::error('Debes enviar curps o role', 422);
-        }
-
-        if (!empty($curps) && !empty($role)) {
-            return Response::error('Solo debes enviar curps o role, no ambos', 422);
-        }
-        $permissions= $this->service->findAllPermissions($curps, $role);
+    public function findAllPermissionsByRole(FindPermissionsByRoleRequest $request)
+    {
+        $role = $request->validated('role');
+        $permissions= $this->service->findAllPermissionsByRole($role);
         return Response::success(['permissions' => $permissions]);
 
     }

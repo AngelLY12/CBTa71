@@ -6,12 +6,12 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * @OA\Schema(
- *     schema="FindPermissionsRequest",
+ *     schema="FindPermissionsByCurpsRequest",
  *     type="object",
  *     @OA\Property(
  *         property="curps",
  *         type="array",
- *         description="Array de CURPs de los usuarios a consultar permisos (opcional, no enviar si se usa role)",
+ *         description="Array de CURPs de los usuarios a consultar permisos",
  *         example={"LOPA800101HDFRNL09", "MARA900202MDFRTN05"},
  *         @OA\Items(
  *             type="string",
@@ -19,16 +19,11 @@ use Illuminate\Foundation\Http\FormRequest;
  *             description="CURP de un usuario existente"
  *         )
  *     ),
- *     @OA\Property(
- *         property="role",
- *         type="string",
- *        description="Nombre del rol para consultar permisos (opcional, no enviar si se usan curps)",
- *        example="admin"
- *     )
+ *
  * )
  */
 
-class FindPermissionsRequest extends FormRequest
+class FindPermissionsByCurpsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -46,9 +41,8 @@ class FindPermissionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'curps' => ['sometimes', 'array', 'max:15'],
-            'curps.*' => ['required_with:curps', 'string', 'size:18', 'exists:users,curp'],
-            'role' => ['sometimes', 'string', 'exists:roles,name'],
+            'curps' => ['required', 'array', 'min:1', 'max:100'],
+            'curps.*' => [ 'bail','string', 'size:18', 'exists:users,curp'],
         ];
     }
 
@@ -57,13 +51,13 @@ class FindPermissionsRequest extends FormRequest
         if ($this->has('curps') && is_string($this->curps)) {
             $curps = array_unique(array_filter(array_map('trim', explode(',', $this->curps))));
             $this->merge([
-                'curps' => array_slice($curps, 0, 15)
+                'curps' => array_slice($curps, 0, 100)
             ]);
         }
         elseif ($this->has('curps') && is_array($this->curps)) {
             $curps = array_unique(array_filter(array_map('trim', $this->curps)));
             $this->merge([
-                'curps' => array_slice($curps, 0, 15)
+                'curps' => array_slice($curps, 0, 100)
             ]);
         }
 
@@ -75,11 +69,14 @@ class FindPermissionsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'curps.array' => 'El campo curps debe ser un array.',
-            'curps.max' => 'No se pueden enviar más de 15 CURPs a la vez.',
-            'curps.*.exists' => 'Una o más CURPs no existen en el sistema.',
-            'curps.*.size' => 'Las CURPs deben ser de 18 caracteres',
-            'role.exists' => 'El rol proporcionado no existe.',
+            'curps.required' => 'Se requiere al menos un CURP.',
+            'curps.array' => 'Los CURPs deben proporcionarse como un array.',
+            'curps.min' => 'Debe proporcionar al menos un CURP.',
+            'curps.max' => 'No se pueden procesar más de 50 CURPs a la vez.',
+            'curps.*.required' => 'Cada CURP es requerido.',
+            'curps.*.string' => 'Cada CURP debe ser una cadena de texto.',
+            'curps.*.size' => 'El CURP :input debe tener exactamente 18 caracteres.',
+            'curps.*.exists' => 'El CURP :input no existe o el usuario ha sido eliminado.',
         ];
     }
 }
