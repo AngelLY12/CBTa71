@@ -1254,10 +1254,10 @@ public function temporaryDisableUsers(){}
 
 /**
  * @OA\Post(
- *     path="/api/v1/admin-actions/find-permissions",
- *     summary="Mostrar permisos existentes",
+ *     path="/api/v1/admin-actions/permissions/by-curps",
+ *     summary="Mostrar permisos existentes para usuarios especificos",
  *     description="Permite al administrador ver todos los permisos registrados.",
- *     operationId="showAllPermissions",
+ *     operationId="showAllPermissionsByCurps",
  *     tags={"Admin"},
  *     security={{"bearerAuth": {}}},
  *      @OA\Parameter(
@@ -1284,7 +1284,7 @@ public function temporaryDisableUsers(){}
  *      @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
- *             ref="#/components/schemas/FindPermissionsRequest"
+ *             ref="#/components/schemas/FindPermissionsByCurpsRequest"
  *         )
  *     ),
  *
@@ -1304,9 +1304,12 @@ public function temporaryDisableUsers(){}
  *                                  @OA\Schema(ref="#/components/schemas/PermissionsByUsers"),
  *                                  @OA\Schema(
  *                                      @OA\Property(
- *                                          property="role",
- *                                          type="string",
- *                                          example="student"
+ *                                          property="roles",
+ *                                          type="array",
+ *                                          example={"admin","user","editor"},
+ *                                          @OA\Items(
+ *                                              type="string"
+ *                                          )
  *                                      )
  *                                  ),
  *                                  @OA\Schema(
@@ -1353,6 +1356,103 @@ public function temporaryDisableUsers(){}
  * )
  */
 public function findPermissions(){}
+
+/**
+ * @OA\Post(
+ *     path="/api/v1/admin-actions/permissions/by-role",
+ *     summary="Mostrar permisos existentes por role",
+ *     description="Permite al administrador ver todos los permisos registrados por role.",
+ *     operationId="showAllPermissionsByRole",
+ *     tags={"Admin"},
+ *     security={{"bearerAuth": {}}},
+ *      @OA\Parameter(
+ *                     name="X-User-Role",
+ *                     in="header",
+ *                     required=false,
+ *                     description="Rol requerido para este endpoint",
+ *                     @OA\Schema(
+ *                         type="string",
+ *                         example="admin|supervisor"
+ *                     )
+ *                 ),
+ *            @OA\Parameter(
+ *                     name="X-User-Permission",
+ *                     in="header",
+ *                     required=false,
+ *                     description="Permiso requerido para este endpoint",
+ *                     @OA\Schema(
+ *                          type="string",
+ *                          example="view.permissions"
+ *                      )
+ *                 ),
+ *
+ *      @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             ref="#/components/schemas/FindPermissionsByCurpsRequest"
+ *         )
+ *     ),
+ *
+ *     @OA\Response(
+ *          response=200,
+ *          description="Permisos obtenidos correctamente.",
+ *          @OA\JsonContent(
+ *              allOf={
+ *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                  @OA\Schema(
+ *                      @OA\Property(
+ *                          property="data",
+ *                          type="object",
+ *                          @OA\Property(
+ *                              property="permissions",
+ *                              allOf={
+ *                                  @OA\Schema(ref="#/components/schemas/PermissionsByRole"),
+ *                                  @OA\Schema(
+ *                                      @OA\Property(
+ *                                          property="role",
+ *                                          type="string",
+ *                                          example="student"
+ *                                      )
+ *                                  ),
+ *                                  @OA\Schema(
+ *                                      @OA\Property(
+ *                                          property="usersCount",
+ *                                          type="integer",
+ *                                          example=130
+ *                                      )
+ *                                  ),
+ *                                  @OA\Schema(
+ *                                      @OA\Property(
+ *                                          property="permissions",
+ *                                          type="array",
+ *                                          @OA\Items(ref="#/components/schemas/Permission")
+ *                                      )
+ *                                  )
+ *                              }
+ *                          )
+ *                      )
+ *                  )
+ *              }
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="No autorizado",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Error de validación",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      ),
+ *      @OA\Response(
+ *          response=500,
+ *          description="Error interno del servidor",
+ *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+ *      )
+ * )
+ */
+public function findPermissionsByRole(){}
 
 
 /**

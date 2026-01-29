@@ -1733,14 +1733,14 @@
                 ]
             }
         },
-        "/api/v1/admin-actions/find-permissions": {
+        "/api/v1/admin-actions/permissions/by-curps": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Mostrar permisos existentes",
+                "summary": "Mostrar permisos existentes para usuarios especificos",
                 "description": "Permite al administrador ver todos los permisos registrados.",
-                "operationId": "showAllPermissions",
+                "operationId": "showAllPermissionsByCurps",
                 "parameters": [
                     {
                         "name": "X-User-Role",
@@ -1768,7 +1768,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/FindPermissionsRequest"
+                                "$ref": "#/components/schemas/FindPermissionsByCurpsRequest"
                             }
                         }
                     }
@@ -1794,9 +1794,16 @@
                                                                 },
                                                                 {
                                                                     "properties": {
-                                                                        "role": {
-                                                                            "type": "string",
-                                                                            "example": "student"
+                                                                        "roles": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "example": [
+                                                                                "admin",
+                                                                                "user",
+                                                                                "editor"
+                                                                            ]
                                                                         }
                                                                     },
                                                                     "type": "object"
@@ -1822,6 +1829,145 @@
                                                                                 },
                                                                                 "type": "object"
                                                                             }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "permissions": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "$ref": "#/components/schemas/Permission"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/permissions/by-role": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar permisos existentes por role",
+                "description": "Permite al administrador ver todos los permisos registrados por role.",
+                "operationId": "showAllPermissionsByRole",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.permissions"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FindPermissionsByCurpsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permisos obtenidos correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "permissions": {
+                                                            "allOf": [
+                                                                {
+                                                                    "$ref": "#/components/schemas/PermissionsByRole"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "role": {
+                                                                            "type": "string",
+                                                                            "example": "student"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "usersCount": {
+                                                                            "type": "integer",
+                                                                            "example": 130
                                                                         }
                                                                     },
                                                                     "type": "object"
@@ -10681,11 +10827,36 @@
                 },
                 "type": "object"
             },
-            "PermissionsByUsers": {
+            "PermissionsByRole": {
                 "properties": {
                     "role": {
                         "type": "string",
                         "example": "student"
+                    },
+                    "usersCount": {
+                        "type": "integer",
+                        "example": 120
+                    },
+                    "permissions": {
+                        "description": "Lista de permisos de los usuarios",
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        },
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PermissionsByUsers": {
+                "properties": {
+                    "roles": {
+                        "description": "Lista de roles de los usuarios a los que aplican los permisos",
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        },
+                        "nullable": false
                     },
                     "users": {
                         "description": "Lista de usuarios a los que aplican los permisos",
@@ -10693,7 +10864,7 @@
                         "items": {
                             "type": "object"
                         },
-                        "nullable": true
+                        "nullable": false
                     },
                     "permissions": {
                         "description": "Lista de permisos de los usuarios",
@@ -13484,10 +13655,10 @@
                 },
                 "type": "object"
             },
-            "FindPermissionsRequest": {
+            "FindPermissionsByCurpsRequest": {
                 "properties": {
                     "curps": {
-                        "description": "Array de CURPs de los usuarios a consultar permisos (opcional, no enviar si se usa role)",
+                        "description": "Array de CURPs de los usuarios a consultar permisos",
                         "type": "array",
                         "items": {
                             "description": "CURP de un usuario existente",
@@ -13498,11 +13669,16 @@
                             "LOPA800101HDFRNL09",
                             "MARA900202MDFRTN05"
                         ]
-                    },
+                    }
+                },
+                "type": "object"
+            },
+            "FindPermissionsByRoleRequest": {
+                "properties": {
                     "role": {
-                        "description": "Nombre del rol para consultar permisos (opcional, no enviar si se usan curps)",
+                        "description": "Nombre del rol para consultar permisos",
                         "type": "string",
-                        "example": "admin"
+                        "example": "student"
                     }
                 },
                 "type": "object"
