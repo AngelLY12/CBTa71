@@ -13963,7 +13963,10 @@
                     "PAYMENT_METHOD_NOT_SUPPORTED",
                     "SEMESTERS_NOT_FOUND",
                     "PAYOUT_VALIDATION",
-                    "REQUIRED_FOR_APPLIES_TO"
+                    "REQUIRED_FOR_APPLIES_TO",
+                    "METHOD_NOT_ALLOWED",
+                    "PAYLOAD_TOO_LARGE",
+                    "SERVICE_UNAVAILABLE"
                 ],
                 "example": "VALIDATION_ERROR"
             },
