@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Application\UseCases\Admin;
+namespace App\Core\Application\UseCases\Admin\UserManagement;
 
 use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;

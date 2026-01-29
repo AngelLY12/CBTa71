@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Application\UseCases\Admin;
+namespace App\Core\Application\UseCases\Admin\RolePermissionManagement;
 
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;

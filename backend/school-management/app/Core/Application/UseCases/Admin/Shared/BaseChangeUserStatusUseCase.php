@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Application\UseCases\Admin;
+namespace App\Core\Application\UseCases\Admin\Shared;
 
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Domain\Enum\User\UserStatus;

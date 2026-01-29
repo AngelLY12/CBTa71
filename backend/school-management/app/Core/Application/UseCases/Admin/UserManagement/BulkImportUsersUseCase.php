@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Application\UseCases\Admin;
+namespace App\Core\Application\UseCases\Admin\UserManagement;
 
 use App\Core\Application\DTO\Response\General\ImportResponse;
 use App\Core\Application\Mappers\EnumMapper;
@@ -18,7 +18,6 @@ use App\Jobs\SendBulkMailJob;
 use App\Mail\CreatedUserMail;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

@@ -1,13 +1,10 @@
 <?php
 
-namespace App\Core\Application\UseCases\Admin;
+namespace App\Core\Application\UseCases\Admin\UserManagement;
 
-use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
+use App\Core\Application\UseCases\Admin\Shared\BaseChangeUserStatusUseCase;
 use App\Core\Domain\Enum\User\UserStatus;
-use App\Core\Domain\Repositories\Command\User\UserRepInterface;
-use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\UserValidator;
-use App\Jobs\ClearStaffCacheJob;
 
 class TemporaryDisableUserUseCase extends BaseChangeUserStatusUseCase
 {

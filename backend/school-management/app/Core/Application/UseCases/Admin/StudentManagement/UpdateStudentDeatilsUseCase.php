@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Application\UseCases\Admin;
+namespace App\Core\Application\UseCases\Admin\StudentManagement;
 
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;

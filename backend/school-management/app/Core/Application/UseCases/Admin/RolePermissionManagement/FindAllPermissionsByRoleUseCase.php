@@ -2,26 +2,24 @@
 
 namespace App\Core\Application\UseCases\Admin\RolePermissionManagement;
 
-use App\Core\Application\DTO\Response\General\PermissionsByUsers;
-use App\Core\Application\Mappers\GeneralMapper;
+use App\Core\Application\DTO\Response\General\PermissionsByRole;
 use App\Core\Domain\Repositories\Query\Auth\RolesAndPermissosQueryRepInterface;
 use App\Exceptions\NotFound\PermissionsByUserNotFoundException;
 
-class FindAllPermissionsByCurpsUseCase
+class FindAllPermissionsByRoleUseCase
 {
     public function __construct(
         private RolesAndPermissosQueryRepInterface $rpqRepo
-    )
-    {
-    }
+    ){}
 
-    public function execute(array $curps): PermissionsByUsers
+    public function execute(string $role): PermissionsByRole
     {
-        $permissionsByUsers=$this->rpqRepo->findPermissionsApplicableByCurps($curps);
-        if(empty($permissionsByUsers))
+        $permissions = $this->rpqRepo->findPermissionsApplicableByRole($role);
+        if(!$permissions)
         {
             throw new PermissionsByUserNotFoundException();
         }
-        return $permissionsByUsers;
+        return $permissions;
     }
+
 }

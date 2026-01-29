@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Core\Application\UseCases\Admin;
+namespace App\Core\Application\UseCases\Admin\UserManagement;
 
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\Mappers\GeneralMapper;
