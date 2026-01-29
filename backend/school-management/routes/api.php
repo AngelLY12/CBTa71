@@ -140,8 +140,11 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:disable.users')->post('/disable-users', [AdminController::class, 'disableUsers']);
         Route::middleware('permission:disable.users')->post('/temporary-disable-users', [AdminController::class, 'temporaryDisableUsers']);
         Route::middleware('permission:delete.users')->post('/delete-users', [AdminController::class, 'deleteUsers']);
-        Route::middleware('permission:view.permissions')->post('/find-permissions', [AdminController::class, 'findAllPermissions']);
-        Route::middleware('permission:view.permissions')->get('/permissions/{id}', [AdminController::class, 'findPermissionById']);
+        Route::middleware('permission:view.permissions')->group(function () {
+            Route::post('/permissions/by-curps', [AdminController::class, 'findAllPermissionsByCurps']);
+            Route::post('/permissions/by-role', [AdminController::class, 'findAllPermissionsByRole']);
+            Route::get('/permissions/{id}', [AdminController::class, 'findPermissionById']);
+        });
         Route::middleware('permission:view.roles')->get('/find-roles', [AdminController::class, 'findAllRoles']);
         Route::middleware('permission:view.roles')->get('/roles/{id}', [AdminController::class, 'findRoleById']);
         Route::middleware('permission:create.user')->post('/register',[AdminController::class,'registerUser']);
