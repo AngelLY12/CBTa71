@@ -12,6 +12,12 @@ use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
  *     description="Respuesta con información adicional detallada del usuario",
  *     type="object",
  *     @OA\Property(
+ *          property="userId",
+ *          type="integer",
+ *          description="ID del usuario",
+ *          example=45
+ *      ),
+ *     @OA\Property(
  *         property="basicInfo",
  *         type="object",
  *         description="Información básica adicional del usuario",
@@ -57,6 +63,7 @@ use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
 class UserExtraDataResponse
 {
     public function __construct(
+        public readonly int $userId,
         public readonly array $basicInfo,
         public readonly array $roles,
         public readonly array $permissions,

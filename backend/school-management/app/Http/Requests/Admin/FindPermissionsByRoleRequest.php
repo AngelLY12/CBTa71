@@ -14,7 +14,12 @@ use Illuminate\Foundation\Http\FormRequest;
  *         type="string",
  *        description="Nombre del rol para consultar permisos",
  *        example="student"
- *     )
+ *     ),
+ *     @OA\Property(
+ *          property="forceRefresh",
+ *          type="boolean",
+ *          description="Indica si se debe forzar la actualización (opcional)"
+ *      ),
  * )
  */
 class FindPermissionsByRoleRequest extends FormRequest
@@ -36,6 +41,7 @@ class FindPermissionsByRoleRequest extends FormRequest
     {
         return [
             'role' => ['required', 'string', 'exists:roles,name'],
+            'forceRefresh' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -45,11 +51,17 @@ class FindPermissionsByRoleRequest extends FormRequest
             $role = strtolower(trim($this->input('role')));
             $this->merge(['role' => $role]);
         }
+        if ($this->has('forceRefresh')) {
+            $this->merge([
+                'forceRefresh' => filter_var($this->forceRefresh, FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
     }
 
     public function messages(): array
     {
         return [
+            'forceRefresh.boolean' => 'El valor de forceRefresh debe ser verdadero o falso.',
             'role.required' => 'El campo rol es requerido.',
             'role.string' => 'El rol debe ser una cadena de texto.',
             'role.exists' => 'El rol proporcionado no existe.',

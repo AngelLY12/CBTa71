@@ -12,10 +12,10 @@ namespace App\Core\Application\DTO\Response\User;
  *     @OA\Property(property="role", type="string", description="Rol actual del usuario", example="student"),
  *     @OA\Property(
  *         property="updatedPermissions",
- *         type="array",
+ *         type="object",
  *         description="Lista de permisos actualizados (añadidos o removidos)",
- *         @OA\Items(type="string"),
- *         example={"find user", "create payment"}
+ *         @OA\Property(property="added", type="array", @OA\Items(type="string"), example={"view.students"}),
+ *         @OA\Property(property="removed", type="array", @OA\Items(type="string"), example={"create.student"})
  *     ),
  *     @OA\Property(
  *           property="metadata",

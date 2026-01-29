@@ -111,6 +111,23 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
         );
     }
 
+    public function findPermissionsApplicablesToUser(int $userId, array $roles): ?array
+    {
+        $rolesToCheck = empty($roles)
+            ? User::with('roles:name')->find($userId)?->roles->pluck('name')->toArray() ?? []
+            : $roles;
+
+        if (empty($rolesToCheck)) {
+            return [];
+        }
+
+        return collect($rolesToCheck)
+            ->flatMap(fn($role) => $this->getPermissionsForRole($role))
+            ->unique(fn($permission) => $permission->id)
+            ->values()
+            ->toArray();
+    }
+
     public function findPermissionIds(array $names, string $role): array
     {
         return Permission::whereIn('name', $names)

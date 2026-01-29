@@ -2,7 +2,11 @@
 
 namespace App\Core\Infraestructure\Repositories\Command\Auth;
 
+use App\Core\Application\DTO\Response\General\PermissionsUpdatedToUserResponse;
+use App\Core\Application\DTO\Response\General\RolesUpdatedToUserResponse;
+use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Domain\Repositories\Command\Auth\RolesAndPermissionsRepInterface;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use App\Models\User as EloquentUser;
@@ -234,5 +238,43 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
                 return [$item->model_id => $item->roles];
             })
             ->toArray();
+    }
+
+    public function updateUserRoles(int $userId, array $rolesToAdd, array $rolesToRemove): ?RolesUpdatedToUserResponse
+    {
+        $user =User::findOrFail($userId);
+        if(!empty($rolesToAdd))
+        {
+            $user->addRoles($rolesToAdd);
+        }
+        if(!empty($rolesToRemove))
+        {
+            $user->removeRoles($rolesToRemove);
+        }
+        $rolesUpdated =
+            [
+                'rolesAdded' => $rolesToAdd,
+                'rolesRemoved' => $rolesToRemove,
+            ];
+        return GeneralMapper::toRolesUpdatedToUserResponse($user, $rolesUpdated );
+    }
+
+    public function updateUserPermissions(int $userId, array $permissionsToAdd, array $permissionsToRemove): ?PermissionsUpdatedToUserResponse
+    {
+
+        $user=User::findOrFail($userId);
+        if(!empty($permissionsToAdd))
+        {
+            $user->addPermissions($permissionsToAdd);
+        }
+        if(!empty($permissionsToRemove))
+        {
+            $user->removePermissions($permissionsToRemove);
+        }
+        $permissionsUpdated = [
+            'permissionsAdded' => $permissionsToAdd,
+            'permissionsRemoved' => $permissionsToRemove,
+        ];
+        return GeneralMapper::toPermissionsUpdatedToUserResponse($user, $permissionsUpdated );
     }
 }

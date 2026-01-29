@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Core\Application\Services\Admin\AdminServiceFacades;
+use App\Core\Application\Services\Admin\AdminUsersServiceFacades;
 use App\Models\User;
 use App\Notifications\ImportFailedNotification;
 use App\Notifications\ImportFinishedNotification;
@@ -15,11 +15,11 @@ use Maatwebsite\Excel\Events\ImportFailed;
 
 class UsersImport implements ToCollection, ShouldQueue, WithEvents
 {
-    protected AdminServiceFacades $adminService;
+    protected AdminUsersServiceFacades $adminService;
     protected User $user;
     private array $importResult = [];
 
-    public function __construct(AdminServiceFacades $adminService, User $user)
+    public function __construct(AdminUsersServiceFacades $adminService, User $user)
     {
         $this->adminService = $adminService;
         $this->user = $user;

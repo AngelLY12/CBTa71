@@ -16,6 +16,7 @@ interface RolesAndPermissosQueryRepInterface
     public function findPermissionById(int $id):?Permission;
     public function findPermissionsApplicableByRole(string $role): ?PermissionsByRole;
     public function findPermissionsApplicableByCurps(array $curps): ?PermissionsByUsers;
+    public function findPermissionsApplicablesToUser(int $userId, array $roles): ?array;
     public function findPermissionIds(array $names, string $role): array;
     public function getRoleIdsByNames(array $names): array;
     public function hasAdminAssignError(int $adminRoleId, array $rolesToAddIds, Collection $users): bool;

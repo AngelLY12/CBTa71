@@ -73,7 +73,6 @@ class FindPermissionsByCurpsRequest extends FormRequest
             'curps.array' => 'Los CURPs deben proporcionarse como un array.',
             'curps.min' => 'Debe proporcionar al menos un CURP.',
             'curps.max' => 'No se pueden procesar más de 50 CURPs a la vez.',
-            'curps.*.required' => 'Cada CURP es requerido.',
             'curps.*.string' => 'Cada CURP debe ser una cadena de texto.',
             'curps.*.size' => 'El CURP :input debe tener exactamente 18 caracteres.',
             'curps.*.exists' => 'El CURP :input no existe o el usuario ha sido eliminado.',

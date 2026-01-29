@@ -240,6 +240,7 @@ class UserMapper{
             );
         }
         return new UserExtraDataResponse(
+            userId: $user->id,
             basicInfo:[
                 'phone_number' => $user->phone_number,
                 'address' => $user->address ?? [],

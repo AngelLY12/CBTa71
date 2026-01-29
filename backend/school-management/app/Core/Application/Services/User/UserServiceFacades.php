@@ -23,6 +23,7 @@ class UserServiceFacades
 
     private const TAG_USER = [CachePrefix::USER->value, "profile"];
     private const TAG_STUDENT_DETAILS = [CachePrefix::USER->value, "student-details"];
+    private const TAG_USERS_ID = [CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value, "all:id"];
 
     public function __construct(
             private UpdateUserUseCase $update,
@@ -57,6 +58,7 @@ class UserServiceFacades
         $user = $this->userRepo->findById($userId);
         UserValidator::ensureUserIsValidToUpdate($user);
         $updatedUser = $this->update->execute($userId, $fields);
+        $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$userId"]));
         $this->service->flushTags(array_merge(self::TAG_USER, ["userId:$userId"]));
         return $updatedUser;
     }

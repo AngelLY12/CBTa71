@@ -7,9 +7,12 @@ use App\Core\Application\DTO\Response\General\LoginResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\PermissionsByRole;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
+use App\Core\Application\DTO\Response\General\PermissionsUpdatedToUserResponse;
+use App\Core\Application\DTO\Response\General\RolesUpdatedToUserResponse;
 use App\Core\Application\DTO\Response\General\StripePaymentsResponse;
 use App\Core\Application\DTO\Response\General\StripePayoutResponse;
 use App\Core\Domain\Utils\Helpers\Money;
+use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Stripe\Checkout\Session;
 
@@ -80,5 +83,23 @@ class GeneralMapper{
     public static function toStripePayoutResponse(array $data):StripePayoutResponse
     {
         return StripePayoutResponse::fromArray($data);
+    }
+
+    public static function toRolesUpdatedToUserResponse(User $user, array $roles): RolesUpdatedToUserResponse
+    {
+        return new RolesUpdatedToUserResponse(
+            userId: $user->id,
+            fullName: $user->name . ' ' . $user->last_name,
+            roles: $roles
+        );
+    }
+
+    public static function toPermissionsUpdatedToUserResponse(User $user, array $permissions): PermissionsUpdatedToUserResponse
+    {
+        return new PermissionsUpdatedToUserResponse(
+            userId: $user->id,
+            fullName: $user->name . ' ' . $user->last_name,
+            permissions: $permissions
+        );
     }
 }
