@@ -102,6 +102,15 @@ return Application::configure(basePath: dirname(__DIR__))
             return Response::error('No tienes permisos para realizar esta acción.', 403, null, ErrorCode::FORBIDDEN->value);
         });
 
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, Request $request) {
+            return Response::error(
+                'Acceso denegado para esta acción.',
+                403,
+                null,
+                ErrorCode::FORBIDDEN->value
+            );
+        });
+
         $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, Request $request) {
             return Response::error(
                 'No tienes permisos para acceder a este recurso',
@@ -111,16 +120,38 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        $exceptions->render(function (QueryException $e, Request $request) {
-            if ($e->errorInfo[1] === 1062) {
-                return Response::error('Registro duplicado, ya existe una entidad con esos datos.', 409, $e->errorInfo, ErrorCode::DUPLICATE_ENTRY->value);
-            }
-            return Response::error('Error interno al procesar la base de datos.', 500, $e->errorInfo, ErrorCode::DATABASE_ERROR->value);
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) {
+            return Response::error('Ruta no encontrada', 404, null, ErrorCode::NOT_FOUND->value);
         });
 
         $exceptions->render(function (ModelNotFoundException $e, Request $request) {
             return Response::error('Recurso no encontrado', 404, null, ErrorCode::NOT_FOUND->value);
         });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e, Request $request) {
+            return Response::error('Método no permitido', 405, null, ErrorCode::METHOD_NOT_ALLOWED->value);
+        });
+
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, Request $request) {
+            return Response::error('El payload es demasiado grande', 413, null, ErrorCode::PAYLOAD_TOO_LARGE->value);
+        });
+
+        $exceptions->render(function (QueryException $e, Request $request) {
+            $errorCode = $e->errorInfo[1] ?? null;
+
+            $connectionErrors = [2002, 2003, 2006, 2013];
+
+            if (in_array($errorCode, $connectionErrors)) {
+                return Response::error('Error de conexión a la base de datos', 503, null, ErrorCode::SERVICE_UNAVAILABLE->value);
+            }
+
+            if ($errorCode === 1062) {
+                return Response::error('Registro duplicado', 409, $e->errorInfo, ErrorCode::DUPLICATE_ENTRY->value);
+            }
+
+            return Response::error('Error interno al procesar la base de datos', 500, $e->errorInfo, ErrorCode::DATABASE_ERROR->value);
+        });
+
 
         $exceptions->render(function (\InvalidArgumentException $e, Request $request) {
             return Response::error($e->getMessage(), 422, null, ErrorCode::INVALID_ARGUMENT->value);
@@ -166,23 +197,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (ValidationException $e, Request $request) {
             return Response::error('Errores de validación', 422, $e->errors(),ErrorCode::VALIDATION_ERROR->value);
-        });
-
-        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, Request $request) {
-            $headers = $e->getHeaders();
-            $retryAfter = $headers['Retry-After'] ?? 60;
-
-            return Response::error(
-                "Demasiadas solicitudes. Intenta de nuevo en {$retryAfter} segundos.",
-                429,
-                [
-                    'retry_after' => $retryAfter,
-                    'retry_after_seconds' => (int) $retryAfter,
-                    'limit' => $headers['X-RateLimit-Limit'] ?? null,
-                    'remaining' => $headers['X-RateLimit-Remaining'] ?? null,
-                ],
-                ErrorCode::RATE_LIMIT_EXCEEDED->value ?? 'RATE_LIMIT_EXCEEDED'
-            );
         });
 
         $exceptions->render(function (\Throwable $e, Request $request) {

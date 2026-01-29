@@ -90,7 +90,10 @@ namespace App\Core\Domain\Enum\Exceptions;
  *         "PAYMENT_METHOD_NOT_SUPPORTED",
  *         "SEMESTERS_NOT_FOUND",
  *         "PAYOUT_VALIDATION",
- *         "REQUIRED_FOR_APPLIES_TO"
+ *         "REQUIRED_FOR_APPLIES_TO",
+ *          "METHOD_NOT_ALLOWED",
+ *          "PAYLOAD_TOO_LARGE",
+ *          "SERVICE_UNAVAILABLE"
  *     },
  *     description="Códigos de error estandarizados del sistema",
  *     example="VALIDATION_ERROR"
@@ -201,6 +204,11 @@ enum ErrorCode:string
     case SEMESTERS_NOT_FOUND = 'SEMESTERS_NOT_FOUND';
     case PAYOUT_VALIDATION = 'PAYOUT_VALIDATION';
     case REQUIRED_FOR_APPLIES_TO = 'REQUIRED_FOR_APPLIES_TO';
+
+    // ========== Otros ==========
+    case METHOD_NOT_ALLOWED = 'METHOD_NOT_ALLOWED';
+    case PAYLOAD_TOO_LARGE = 'PAYLOAD_TOO_LARGE';
+    case SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE';
 
 
 }
