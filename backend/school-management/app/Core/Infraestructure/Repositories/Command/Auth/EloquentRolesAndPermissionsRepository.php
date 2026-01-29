@@ -242,39 +242,75 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
 
     public function updateUserRoles(int $userId, array $rolesToAdd, array $rolesToRemove): ?RolesUpdatedToUserResponse
     {
-        $user =User::findOrFail($userId);
-        if(!empty($rolesToAdd))
-        {
-            $user->addRoles($rolesToAdd);
-        }
-        if(!empty($rolesToRemove))
-        {
-            $user->removeRoles($rolesToRemove);
-        }
-        $rolesUpdated =
-            [
-                'rolesAdded' => $rolesToAdd,
-                'rolesRemoved' => $rolesToRemove,
+        return DB::transaction(function () use ($userId, $rolesToAdd, $rolesToRemove) {
+
+            $user = User::findOrFail($userId);
+            $actuallyAdded = [];
+            $actuallyRemoved = [];
+            if (!empty($rolesToAdd)) {
+                foreach ($rolesToAdd as $role) {
+                    if (!$user->hasRole($role)) {
+                        $user->assignRole($role);
+                        $actuallyAdded[] = $role;
+                    }
+                }
+            }
+            if (!empty($rolesToRemove)) {
+                foreach ($rolesToRemove as $role) {
+                    if ($user->hasRole($role)) {
+                        $user->removeRole($role);
+                        $actuallyRemoved[] = $role;
+                    }
+                }
+            }
+
+            $user->load('roles');
+
+            $rolesUpdated = [
+                'rolesAdded' => $actuallyAdded,
+                'rolesRemoved' => $actuallyRemoved,
+                'currentRoles' => $user->roles->pluck('name')->toArray(),
             ];
-        return GeneralMapper::toRolesUpdatedToUserResponse($user, $rolesUpdated );
+            return GeneralMapper::toRolesUpdatedToUserResponse($user, $rolesUpdated);
+        });
     }
 
     public function updateUserPermissions(int $userId, array $permissionsToAdd, array $permissionsToRemove): ?PermissionsUpdatedToUserResponse
     {
 
-        $user=User::findOrFail($userId);
-        if(!empty($permissionsToAdd))
-        {
-            $user->addPermissions($permissionsToAdd);
-        }
-        if(!empty($permissionsToRemove))
-        {
-            $user->removePermissions($permissionsToRemove);
-        }
-        $permissionsUpdated = [
-            'permissionsAdded' => $permissionsToAdd,
-            'permissionsRemoved' => $permissionsToRemove,
-        ];
-        return GeneralMapper::toPermissionsUpdatedToUserResponse($user, $permissionsUpdated );
+        return DB::transaction(function () use ($userId, $permissionsToAdd, $permissionsToRemove) {
+
+            $user = User::findOrFail($userId);
+            $actuallyAdded = [];
+            $actuallyRemoved = [];
+            if (!empty($permissionsToAdd)) {
+                foreach ($permissionsToAdd as $permission) {
+                    if (!$user->hasPermissionTo($permission)) {
+                        $user->givePermissionTo($permission);
+                        $actuallyAdded[] = $permission;
+                    }
+                }
+            }
+
+            if (!empty($permissionsToRemove)) {
+                foreach ($permissionsToRemove as $permission) {
+                    if ($user->hasPermissionTo($permission)) {
+                        $user->revokePermissionTo($permission);
+                        $actuallyRemoved[] = $permission;
+                    }
+                }
+
+            }
+
+            $user->load('permissions');
+
+            $permissionsUpdated = [
+                'permissionsAdded' => $actuallyAdded,
+                'permissionsRemoved' => $actuallyRemoved,
+                'currentPermissions' => $user->permissions->pluck('name')->toArray(),
+            ];
+
+            return GeneralMapper::toPermissionsUpdatedToUserResponse($user, $permissionsUpdated);
+        });
     }
 }
