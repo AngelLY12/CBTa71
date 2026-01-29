@@ -1,6 +1,8 @@
 <?php
 
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\AdminStudentController;
+use App\Http\Controllers\Admin\AdminRolesPermissionsController;
+use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\CareerController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\Parents\ParentsController;
@@ -129,28 +131,45 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
 
     Route::prefix('admin-actions')->middleware(['role:admin|supervisor', 'throttle:global', 'log.action', 'user.status'])->group(function(){
-        Route::middleware('permission:attach.student')->post('/attach-student',[AdminController::class,'attachStudent']);
-        Route::middleware('permission:import.users')->post('/import-users', [AdminController::class, 'import']);
-        Route::middleware('permission:import.users')->post('/import-students', [AdminController::class, 'importStudents']);
-        Route::middleware('permission:sync.permissions')->post('/update-permissions',[AdminController::class,'updatePermissions']);
-        Route::middleware('permission:view.users')->get('/show-users',[AdminController::class,'index']);
-        Route::middleware('permission:view.users')->get('/show-users/{id}',[AdminController::class,'getExtraUserData']);
-        Route::middleware('permission:sync.roles')->post('/updated-roles', [AdminController::class, 'syncRoles']);
-        Route::middleware('permission:activate.users')->post('/activate-users', [AdminController::class, 'activateUsers']);
-        Route::middleware('permission:disable.users')->post('/disable-users', [AdminController::class, 'disableUsers']);
-        Route::middleware('permission:disable.users')->post('/temporary-disable-users', [AdminController::class, 'temporaryDisableUsers']);
-        Route::middleware('permission:delete.users')->post('/delete-users', [AdminController::class, 'deleteUsers']);
-        Route::middleware('permission:view.permissions')->group(function () {
-            Route::post('/permissions/by-curps', [AdminController::class, 'findAllPermissionsByCurps']);
-            Route::post('/permissions/by-role', [AdminController::class, 'findAllPermissionsByRole']);
-            Route::get('/permissions/{id}', [AdminController::class, 'findPermissionById']);
+
+        Route::controller(AdminStudentController::class)->group(function(){
+            Route::middleware('permission:attach.student')->post('/attach-student','attachStudent');
+            Route::middleware('permission:import.users')->post('/import-students','importStudents');
+            Route::middleware('permission:view.student')->get('/get-student/{id}','findStudentDetail');
+            Route::middleware('permission:update.student')->patch('/update-student/{id}','updateStudentDetail');
+            Route::middleware('permission:promote.student')->patch('/promote','promotionStudents');
         });
-        Route::middleware('permission:view.roles')->get('/find-roles', [AdminController::class, 'findAllRoles']);
-        Route::middleware('permission:view.roles')->get('/roles/{id}', [AdminController::class, 'findRoleById']);
-        Route::middleware('permission:create.user')->post('/register',[AdminController::class,'registerUser']);
-        Route::middleware('permission:view.student')->get('/get-student/{id}', [AdminController::class, 'findStudentDetail']);
-        Route::middleware('permission:update.student')->patch('/update-student/{id}',[AdminController::class,'updateStudentDetail']);
-        Route::middleware('permission:promote.student')->patch('/promote',[AdminController::class,'promotionStudents']);
+        Route::controller(AdminUsersController::class)->group(function(){
+            Route::middleware('permission:import.users')->post('/import-users', 'import');
+            Route::middleware('permission:view.users')->get('/show-users','index');
+            Route::middleware('permission:view.users')->get('/show-users/{id}','getExtraUserData');
+            Route::middleware('permission:disable.users')->post('/disable-users', 'disableUsers');
+            Route::middleware('permission:disable.users')->post('/temporary-disable-users', 'temporaryDisableUsers');
+            Route::middleware('permission:delete.users')->post('/delete-users','deleteUsers');
+            Route::middleware('permission:activate.users')->post('/activate-users', 'activateUsers');
+            Route::middleware('permission:create.user')->post('/register','registerUser');
+        });
+        Route::controller(AdminRolesPermissionsController::class)->group(function(){
+            Route::middleware('permission:sync.permissions')->group(function(){
+                Route::post('/update-permissions','updatePermissions');
+                Route::post('/update-permissions/{userId}','updatePermissionsToUser');
+            });
+            Route::middleware('permission:sync.roles')->group(function(){
+                Route::post('/updated-roles', 'syncRoles');
+                Route::post('/updated-roles/{userId}','updateRolesToUser');
+            });
+            Route::middleware('permission:view.permissions')->group(function () {
+                Route::post('/permissions/by-curps','findAllPermissionsByCurps');
+                Route::post('/permissions/by-role', 'findAllPermissionsByRole');
+                Route::post('/permissions/by-user/{userId}','findPermissionsToUser');
+                Route::get('/permissions/{id}', 'findPermissionById');
+            });
+            Route::middleware('permission:view.roles')->group(function () {
+                Route::get('/find-roles', 'findAllRoles');
+                Route::get('/roles/{id}', 'findRoleById');
+            });
+
+        });
     });
 
     Route::prefix('careers')->middleware(['role:admin|supervisor', 'log.action', 'user.status'])->group(function(){
