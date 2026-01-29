@@ -25,50 +25,60 @@
     ],
     "paths": {
         "/api": {},
-        "/api/v1/admin-actions/register": {
+        "/api/v1/admin-actions/update-permissions/{userId}": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Registrar un nuevo usuario",
-                "description": "Crea un nuevo usuario en el sistema con los datos proporcionados.",
-                "operationId": "adminRegisterUser",
+                "summary": "Actualizar permisos a un usuario",
+                "description": "Permite al administrador agregar o eliminar permisos a un usuario.",
+                "operationId": "updateSingleUserPermissions",
                 "parameters": [
                     {
                         "name": "X-User-Role",
                         "in": "header",
-                        "description": "Rol requerido para este endpoint",
+                        "description": "Rol requerido para este endpoint ",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "example": "admin"
+                            "example": "admin|supervisor"
                         }
                     },
                     {
                         "name": "X-User-Permission",
                         "in": "header",
-                        "description": "Permiso requerido para este endpoint",
+                        "description": "Permiso requerido para este endpoint ",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "example": "create.user"
+                            "example": "sync.permissions"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID del usuario a consultar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
                         }
                     }
                 ],
                 "requestBody": {
-                    "description": "Datos necesarios para el registro del usuario. Nota: La contraseña no debe ser incluida en la request, se genera para cada usuario desde el sistema",
+                    "description": "Datos necesarios para actualizar permisos de usuario.",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/RegisterUserRequest"
+                                "$ref": "#/components/schemas/UpdatePermissionsToUserRequest"
                             }
                         }
                     }
                 },
                 "responses": {
-                    "201": {
-                        "description": "Usuario creado con éxito",
+                    "200": {
+                        "description": "Respuesta de usuarios actualizados.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -80,15 +90,19 @@
                                             "properties": {
                                                 "data": {
                                                     "properties": {
-                                                        "user": {
-                                                            "$ref": "#/components/schemas/DomainUser"
+                                                        "updated": {
+                                                            "description": "Usuarios con permisos actualizados",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/PermissionsUpdatedToUserResponse"
+                                                            }
                                                         }
                                                     },
                                                     "type": "object"
                                                 },
                                                 "message": {
                                                     "type": "string",
-                                                    "example": "El usuario ha sido creado con éxito."
+                                                    "example": "Permisos actualizados correctamente."
                                                 }
                                             },
                                             "type": "object"
@@ -99,7 +113,17 @@
                         }
                     },
                     "422": {
-                        "description": "Error en la validación de datos",
+                        "description": "Error de validación en los datos enviados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado: el usuario autenticado no tiene permiso para ejecutar esta acción",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -109,7 +133,7 @@
                         }
                     },
                     "500": {
-                        "description": "Error inesperado en el servidor",
+                        "description": "Error interno del servidor",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -126,8 +150,1094 @@
                 ]
             }
         },
-        "/api/v1/admin-actions/promotion": {
+        "/api/v1/admin-actions/updated-roles/{userId}": {
             "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Sincroniza roles de un usuario",
+                "description": "Permite agregar o eliminar roles a un usuario.",
+                "operationId": "updateSingleUserRoles",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "sync.roles"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID del usuario a consultar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRolesToUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Roles actualizados correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "updated": {
+                                                            "$ref": "#/components/schemas/RolesUpdatedToUserResponse"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Roles actualizados correctamente."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/update-permissions": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Actualizar permisos a múltiples usuarios",
+                "description": "Permite al administrador agregar o eliminar permisos a varios usuarios al mismo tiempo.\n     *     Se puede especificar una lista de CURP o role (solo uno de los dos) y los permisos que se añadirán o eliminarán.",
+                "operationId": "updateManyUserPermissions",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint ",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint ",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "sync.permissions"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Datos necesarios para actualizar permisos de usuario.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePermissionsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Respuesta de usuarios actualizados.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "users_permissions": {
+                                                            "description": "Usuarios con permisos actualizados",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/UserWithUpdatedPermissionsResponse"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Permisos actualizados correctamente."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación en los datos enviados",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado: el usuario autenticado no tiene permiso para ejecutar esta acción",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/updated-roles": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Sincroniza roles de múltiples usuarios",
+                "description": "Permite agregar o eliminar roles a varios usuarios simultáneamente.",
+                "operationId": "updateManyUserRoles",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "sync.roles"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRolesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Roles actualizados correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "users_roles": {
+                                                            "$ref": "#/components/schemas/UserWithUpdatedRoleResponse"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Roles actualizados correctamente."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/permissions/by-curps": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar permisos existentes para usuarios especificos",
+                "description": "Permite al administrador ver todos los permisos registrados.",
+                "operationId": "showAllPermissionsByCurps",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.permissions"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FindPermissionsByCurpsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permisos obtenidos correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "permissions": {
+                                                            "allOf": [
+                                                                {
+                                                                    "$ref": "#/components/schemas/PermissionsByUsers"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "roles": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "example": [
+                                                                                "admin",
+                                                                                "user",
+                                                                                "editor"
+                                                                            ]
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "users": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "id": {
+                                                                                        "type": "integer",
+                                                                                        "example": 1
+                                                                                    },
+                                                                                    "fullName": {
+                                                                                        "type": "string",
+                                                                                        "example": "Ana García"
+                                                                                    },
+                                                                                    "curp": {
+                                                                                        "type": "string",
+                                                                                        "example": "GAAA900101HDFRRN05"
+                                                                                    }
+                                                                                },
+                                                                                "type": "object"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "permissions": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "$ref": "#/components/schemas/Permission"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/permissions/by-role": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar permisos existentes por role",
+                "description": "Permite al administrador ver todos los permisos registrados por role.",
+                "operationId": "showAllPermissionsByRole",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.permissions"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FindPermissionsByCurpsRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permisos obtenidos correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "permissions": {
+                                                            "allOf": [
+                                                                {
+                                                                    "$ref": "#/components/schemas/PermissionsByRole"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "role": {
+                                                                            "type": "string",
+                                                                            "example": "student"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "usersCount": {
+                                                                            "type": "integer",
+                                                                            "example": 130
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                {
+                                                                    "properties": {
+                                                                        "permissions": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "$ref": "#/components/schemas/Permission"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/permissions/by-user/{userId}": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar permisos existentes para los roles del usuario",
+                "description": "Permite al administrador ver todos los permisos registrados para el usuario.",
+                "operationId": "showAllPermissionsByUser",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.permissions"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID del usuario a consultar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FindPermissionsToUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permisos obtenidos correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "permissions": {
+                                                            "allOf": [
+                                                                {
+                                                                    "properties": {
+                                                                        "permissions": {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "$ref": "#/components/schemas/Permission"
+                                                                            }
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            ]
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/find-roles": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar roles existentes",
+                "description": "Permite al administrador ver todos los roles registrados.",
+                "operationId": "showAllRoles",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.roles"
+                        }
+                    },
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar actualización del caché (true o false).",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Roles obtenidos correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "roles": {
+                                                            "description": "Lista de roles disponibles.",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/Role"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/roles/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar rol por ID",
+                "description": "Permite al administrador ver la información de un rol específico por su identificador.",
+                "operationId": "showRoleById",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.roles"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del rol a consultar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rol obtenido correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "role": {
+                                                            "$ref": "#/components/schemas/Role"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Rol no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/permissions/{id}": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Mostrar permiso por ID",
+                "description": "Permite al administrador ver la información de un permiso específico por su identificador.",
+                "operationId": "showPermissionById",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.permissions"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del permiso a consultar",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Permiso obtenido correctamente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "permission": {
+                                                            "$ref": "#/components/schemas/Permission"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Permiso no encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/promote": {
+            "patch": {
                 "tags": [
                     "Admin"
                 ],
@@ -574,134 +1684,14 @@
                 ]
             }
         },
-        "/api/v1/admin-actions/import": {
-            "post": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Importar usuarios desde un archivo Excel",
-                "description": "Permite subir un archivo Excel (.xlsx) con los datos de los usuarios y sus detalles estudiantiles.\r\n *     El archivo debe contener las columnas en el siguiente orden:\r\n *     0. name (Nombre)\r\n *     1. last_name (Apellidos)\r\n *     2. email (Correo electrónico)\r\n *     3. phone_number (Teléfono, formato +52)\r\n *     4. birthdate (Fecha de nacimiento, formato YYYY-MM-DD)\r\n *     5. gender (Género, hombre/mujer)\r\n *     6. curp (CURP)\r\n *     7. street (Calle)\r\n *     8. city (Ciudad)\r\n *     9. state (Estado)\r\n *     10. zip_code (Código postal)\r\n *     11. blood_type (Tipo de sangre, A+, B+, O-, etc)\r\n *     12. registration_date (Fecha de registro, si no se especifica se usa la actual, formato YYYY-MM-DD)\r\n *     13. status (Estado del usuario, por defecto 'activo')\r\n *     14. career_id (ID de la carrera)\r\n *     15. n_control (Número de control)\r\n *     16. semestre (Semestre)\r\n *     17. group (Grupo)\r\n *     18. workshop (Taller)\r\n *     ",
-                "operationId": "178a4e0d1920f7589e9e38d7710f5b25",
-                "parameters": [
-                    {
-                        "name": "X-User-Role",
-                        "in": "header",
-                        "description": "Rol requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "admin|supervisor"
-                        }
-                    },
-                    {
-                        "name": "X-User-Permission",
-                        "in": "header",
-                        "description": "Permiso requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "import.users"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "file"
-                                ],
-                                "properties": {
-                                    "file": {
-                                        "description": "Archivo Excel (.xlsx) con las columnas en el orden especificado",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Importación completada",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "summary": {
-                                                            "$ref": "#/components/schemas/ImportResponse"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "message": {
-                                                    "type": "string",
-                                                    "example": "Usuarios importados correctamente."
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Error en la validación o formato del archivo.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Error de validación de datos",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/v1/admin-actions/import-students": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
                 "summary": "Importar detalles estudiantiles desde un archivo Excel",
-                "description": "Permite subir un archivo Excel (.xlsx) con los detalles estudiantiles de los usuarios.\r\n *      Solo se insertarán filas con CURP existente en la base de datos y con career_id, n_control y semestre definidos.\r\n *      Columnas esperadas:\r\n *     0. curp (CURP del usuario)\r\n *     1. career_id (ID de la carrera)\r\n *     2. n_control (Número de control)\r\n *     3. semestre (Semestre)\r\n *     4. group (opcional grupo)\r\n *     5. workshop (opcional taller)",
-                "operationId": "a2fb9e09634f7bad889068a279fd8a45",
+                "description": "Permite subir un archivo Excel (.xlsx) con los detalles estudiantiles de los usuarios.\n     *      Solo se insertarán filas con CURP existente en la base de datos y con career_id, n_control y semestre definidos.\n     *      Columnas esperadas:\n     *     0. curp (CURP del usuario)\n     *     1. career_id (ID de la carrera)\n     *     2. n_control (Número de control)\n     *     3. semestre (Semestre)\n     *     4. group (opcional grupo)\n     *     5. workshop (opcional taller)",
+                "operationId": "d15aa377793fce1451dbc014606e59a3",
                 "parameters": [
                     {
                         "name": "X-User-Role",
@@ -814,50 +1804,50 @@
                 ]
             }
         },
-        "/api/v1/admin-actions/update-permissions": {
+        "/api/v1/admin-actions/register": {
             "post": {
                 "tags": [
                     "Admin"
                 ],
-                "summary": "Actualizar permisos a múltiples usuarios",
-                "description": "Permite al administrador agregar o eliminar permisos a varios usuarios al mismo tiempo.\r\n *     Se puede especificar una lista de CURP o role (solo uno de los dos) y los permisos que se añadirán o eliminarán.",
-                "operationId": "updateManyUserPermissions",
+                "summary": "Registrar un nuevo usuario",
+                "description": "Crea un nuevo usuario en el sistema con los datos proporcionados.",
+                "operationId": "adminRegisterUser",
                 "parameters": [
                     {
                         "name": "X-User-Role",
                         "in": "header",
-                        "description": "Rol requerido para este endpoint ",
+                        "description": "Rol requerido para este endpoint",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "example": "admin|supervisor"
+                            "example": "admin"
                         }
                     },
                     {
                         "name": "X-User-Permission",
                         "in": "header",
-                        "description": "Permiso requerido para este endpoint ",
+                        "description": "Permiso requerido para este endpoint",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "example": "sync.permissions"
+                            "example": "create.user"
                         }
                     }
                 ],
                 "requestBody": {
-                    "description": "Datos necesarios para actualizar permisos de usuario.",
+                    "description": "Datos necesarios para el registro del usuario. Nota: La contraseña no debe ser incluida en la request, se genera para cada usuario desde el sistema",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/UpdatePermissionsRequest"
+                                "$ref": "#/components/schemas/RegisterUserRequest"
                             }
                         }
                     }
                 },
                 "responses": {
-                    "200": {
-                        "description": "Respuesta de usuarios actualizados.",
+                    "201": {
+                        "description": "Usuario creado con éxito",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -869,19 +1859,15 @@
                                             "properties": {
                                                 "data": {
                                                     "properties": {
-                                                        "users_permissions": {
-                                                            "description": "Usuarios con permisos actualizados",
-                                                            "type": "array",
-                                                            "items": {
-                                                                "$ref": "#/components/schemas/UserWithUpdatedPermissionsResponse"
-                                                            }
+                                                        "user": {
+                                                            "$ref": "#/components/schemas/DomainUser"
                                                         }
                                                     },
                                                     "type": "object"
                                                 },
                                                 "message": {
                                                     "type": "string",
-                                                    "example": "Permisos actualizados correctamente."
+                                                    "example": "El usuario ha sido creado con éxito."
                                                 }
                                             },
                                             "type": "object"
@@ -892,7 +1878,7 @@
                         }
                     },
                     "422": {
-                        "description": "Error de validación en los datos enviados",
+                        "description": "Error en la validación de datos",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -901,8 +1887,118 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "No autorizado: el usuario autenticado no tiene permiso para ejecutar esta acción",
+                    "500": {
+                        "description": "Error inesperado en el servidor",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/admin-actions/import-users": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Importar usuarios desde un archivo Excel",
+                "description": "Permite subir un archivo Excel (.xlsx) con los datos de los usuarios y sus detalles estudiantiles.\n     *     El archivo debe contener las columnas en el siguiente orden:\n     *     0. name (Nombre)\n     *     1. last_name (Apellidos)\n     *     2. email (Correo electrónico)\n     *     3. phone_number (Teléfono, formato +52)\n     *     4. birthdate (Fecha de nacimiento, formato YYYY-MM-DD)\n     *     5. gender (Género, hombre/mujer)\n     *     6. curp (CURP)\n     *     7. street (Calle)\n     *     8. city (Ciudad)\n     *     9. state (Estado)\n     *     10. zip_code (Código postal)\n     *     11. blood_type (Tipo de sangre, A+, B+, O-, etc)\n     *     12. registration_date (Fecha de registro, si no se especifica se usa la actual, formato YYYY-MM-DD)\n     *     13. status (Estado del usuario, por defecto 'activo')\n     *     14. career_id (ID de la carrera)\n     *     15. n_control (Número de control)\n     *     16. semestre (Semestre)\n     *     17. group (Grupo)\n     *     18. workshop (Taller)\n     *     ",
+                "operationId": "fa1f1c088e7e0d44b3d2e3fdc43ded26",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "admin|supervisor"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "import.users"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "description": "Archivo Excel (.xlsx) con las columnas en el orden especificado",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Importación completada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "summary": {
+                                                            "$ref": "#/components/schemas/ImportResponse"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Usuarios importados correctamente."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en la validación o formato del archivo.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación de datos",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1183,116 +2279,6 @@
                 ]
             }
         },
-        "/api/v1/admin-actions/updated-roles": {
-            "post": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Sincroniza roles de múltiples usuarios",
-                "description": "Permite agregar o eliminar roles a varios usuarios simultáneamente.",
-                "operationId": "updateManyUserRoles",
-                "parameters": [
-                    {
-                        "name": "X-User-Role",
-                        "in": "header",
-                        "description": "Rol requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "admin|supervisor"
-                        }
-                    },
-                    {
-                        "name": "X-User-Permission",
-                        "in": "header",
-                        "description": "Permiso requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "sync.roles"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateRolesRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Roles actualizados correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "users_roles": {
-                                                            "$ref": "#/components/schemas/UserWithUpdatedRoleResponse"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
-                                                "message": {
-                                                    "type": "string",
-                                                    "example": "Roles actualizados correctamente."
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Error de validación",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/api/v1/admin-actions/activate-users": {
             "post": {
                 "tags": [
@@ -1300,7 +2286,7 @@
                 ],
                 "summary": "Activa múltiples usuarios",
                 "description": "Cambia el estado de los usuarios seleccionados a 'activado'.",
-                "operationId": "c91d83e3748e694a996b1e64fa782f83",
+                "operationId": "f7ce3f1373295027e08c56968a226ff5",
                 "parameters": [
                     {
                         "name": "X-User-Role",
@@ -1410,7 +2396,7 @@
                 ],
                 "summary": "Elimina múltiples usuarios",
                 "description": "Cambia el estado de los usuarios seleccionados a 'eliminado'.",
-                "operationId": "7c9bf99943dfe8c45c4e013b6f21ad99",
+                "operationId": "61edd8d43e0fc610e76bcb6342cd6b78",
                 "parameters": [
                     {
                         "name": "X-User-Role",
@@ -1520,7 +2506,7 @@
                 ],
                 "summary": "Da de baja múltiples usuarios",
                 "description": "Cambia el estado de los usuarios seleccionados a 'baja'.",
-                "operationId": "fdfddee8ed6255a0160e6a49045870aa",
+                "operationId": "a57f61894b8fe54f9a87437e89db8ddc",
                 "parameters": [
                     {
                         "name": "X-User-Role",
@@ -1630,7 +2616,7 @@
                 ],
                 "summary": "Da de baja temporal múltiples usuarios",
                 "description": "Cambia el estado de los usuarios seleccionados a 'baja-temporal'.",
-                "operationId": "5d3b588afbaedf14d6a3b0cbeee57c5f",
+                "operationId": "fad12f94592de78cb5a7193bd4d1983c",
                 "parameters": [
                     {
                         "name": "X-User-Role",
@@ -1697,619 +2683,6 @@
                     },
                     "409": {
                         "description": "Conflicto en los datos",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/admin-actions/permissions/by-curps": {
-            "post": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Mostrar permisos existentes para usuarios especificos",
-                "description": "Permite al administrador ver todos los permisos registrados.",
-                "operationId": "showAllPermissionsByCurps",
-                "parameters": [
-                    {
-                        "name": "X-User-Role",
-                        "in": "header",
-                        "description": "Rol requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "admin|supervisor"
-                        }
-                    },
-                    {
-                        "name": "X-User-Permission",
-                        "in": "header",
-                        "description": "Permiso requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "view.permissions"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FindPermissionsByCurpsRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Permisos obtenidos correctamente.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "permissions": {
-                                                            "allOf": [
-                                                                {
-                                                                    "$ref": "#/components/schemas/PermissionsByUsers"
-                                                                },
-                                                                {
-                                                                    "properties": {
-                                                                        "roles": {
-                                                                            "type": "array",
-                                                                            "items": {
-                                                                                "type": "string"
-                                                                            },
-                                                                            "example": [
-                                                                                "admin",
-                                                                                "user",
-                                                                                "editor"
-                                                                            ]
-                                                                        }
-                                                                    },
-                                                                    "type": "object"
-                                                                },
-                                                                {
-                                                                    "properties": {
-                                                                        "users": {
-                                                                            "type": "array",
-                                                                            "items": {
-                                                                                "properties": {
-                                                                                    "id": {
-                                                                                        "type": "integer",
-                                                                                        "example": 1
-                                                                                    },
-                                                                                    "fullName": {
-                                                                                        "type": "string",
-                                                                                        "example": "Ana García"
-                                                                                    },
-                                                                                    "curp": {
-                                                                                        "type": "string",
-                                                                                        "example": "GAAA900101HDFRRN05"
-                                                                                    }
-                                                                                },
-                                                                                "type": "object"
-                                                                            }
-                                                                        }
-                                                                    },
-                                                                    "type": "object"
-                                                                },
-                                                                {
-                                                                    "properties": {
-                                                                        "permissions": {
-                                                                            "type": "array",
-                                                                            "items": {
-                                                                                "$ref": "#/components/schemas/Permission"
-                                                                            }
-                                                                        }
-                                                                    },
-                                                                    "type": "object"
-                                                                }
-                                                            ]
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Error de validación",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/admin-actions/permissions/by-role": {
-            "post": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Mostrar permisos existentes por role",
-                "description": "Permite al administrador ver todos los permisos registrados por role.",
-                "operationId": "showAllPermissionsByRole",
-                "parameters": [
-                    {
-                        "name": "X-User-Role",
-                        "in": "header",
-                        "description": "Rol requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "admin|supervisor"
-                        }
-                    },
-                    {
-                        "name": "X-User-Permission",
-                        "in": "header",
-                        "description": "Permiso requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "view.permissions"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/FindPermissionsByCurpsRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Permisos obtenidos correctamente.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "permissions": {
-                                                            "allOf": [
-                                                                {
-                                                                    "$ref": "#/components/schemas/PermissionsByRole"
-                                                                },
-                                                                {
-                                                                    "properties": {
-                                                                        "role": {
-                                                                            "type": "string",
-                                                                            "example": "student"
-                                                                        }
-                                                                    },
-                                                                    "type": "object"
-                                                                },
-                                                                {
-                                                                    "properties": {
-                                                                        "usersCount": {
-                                                                            "type": "integer",
-                                                                            "example": 130
-                                                                        }
-                                                                    },
-                                                                    "type": "object"
-                                                                },
-                                                                {
-                                                                    "properties": {
-                                                                        "permissions": {
-                                                                            "type": "array",
-                                                                            "items": {
-                                                                                "$ref": "#/components/schemas/Permission"
-                                                                            }
-                                                                        }
-                                                                    },
-                                                                    "type": "object"
-                                                                }
-                                                            ]
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Error de validación",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/admin-actions/find-roles": {
-            "get": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Mostrar roles existentes",
-                "description": "Permite al administrador ver todos los roles registrados.",
-                "operationId": "showAllRoles",
-                "parameters": [
-                    {
-                        "name": "X-User-Role",
-                        "in": "header",
-                        "description": "Rol requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "admin|supervisor"
-                        }
-                    },
-                    {
-                        "name": "X-User-Permission",
-                        "in": "header",
-                        "description": "Permiso requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "view.roles"
-                        }
-                    },
-                    {
-                        "name": "forceRefresh",
-                        "in": "query",
-                        "description": "Forzar actualización del caché (true o false).",
-                        "required": false,
-                        "schema": {
-                            "type": "boolean",
-                            "example": false
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Roles obtenidos correctamente.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "roles": {
-                                                            "description": "Lista de roles disponibles.",
-                                                            "type": "array",
-                                                            "items": {
-                                                                "$ref": "#/components/schemas/Role"
-                                                            }
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/admin-actions/roles/{id}": {
-            "get": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Mostrar rol por ID",
-                "description": "Permite al administrador ver la información de un rol específico por su identificador.",
-                "operationId": "showRoleById",
-                "parameters": [
-                    {
-                        "name": "X-User-Role",
-                        "in": "header",
-                        "description": "Rol requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "admin|supervisor"
-                        }
-                    },
-                    {
-                        "name": "X-User-Permission",
-                        "in": "header",
-                        "description": "Permiso requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "view.roles"
-                        }
-                    },
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del rol a consultar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 2
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Rol obtenido correctamente.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "role": {
-                                                            "$ref": "#/components/schemas/Role"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Rol no encontrado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/admin-actions/permissions/{id}": {
-            "get": {
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Mostrar permiso por ID",
-                "description": "Permite al administrador ver la información de un permiso específico por su identificador.",
-                "operationId": "showPermissionById",
-                "parameters": [
-                    {
-                        "name": "X-User-Role",
-                        "in": "header",
-                        "description": "Rol requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "admin|supervisor"
-                        }
-                    },
-                    {
-                        "name": "X-User-Permission",
-                        "in": "header",
-                        "description": "Permiso requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "view.permissions"
-                        }
-                    },
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID del permiso a consultar",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 5
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Permiso obtenido correctamente.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "allOf": [
-                                        {
-                                            "$ref": "#/components/schemas/SuccessResponse"
-                                        },
-                                        {
-                                            "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "permission": {
-                                                            "$ref": "#/components/schemas/Permission"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Permiso no encontrado",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10877,6 +11250,46 @@
                 },
                 "type": "object"
             },
+            "PermissionsUpdatedToUserResponse": {
+                "description": "Respuesta con los permisos actualizados de un usuario",
+                "properties": {
+                    "userId": {
+                        "description": "ID del usuario",
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "fullName": {
+                        "description": "Nombre completos del usuario afectados",
+                        "type": "string",
+                        "example": "Juan Perez"
+                    },
+                    "permissions": {
+                        "description": "Lista de permisos actualizados (añadidos o removidos)",
+                        "properties": {
+                            "added": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "view.students"
+                                ]
+                            },
+                            "removed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "create.student"
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "ReconciliationResult": {
                 "properties": {
                     "processed": {
@@ -10894,6 +11307,46 @@
                     "failed": {
                         "type": "integer",
                         "example": 0
+                    }
+                },
+                "type": "object"
+            },
+            "RolesUpdatedToUserResponse": {
+                "description": "Respuesta con los roles actualizados de un usuario",
+                "properties": {
+                    "userId": {
+                        "description": "ID del usuario",
+                        "type": "integer",
+                        "example": 4
+                    },
+                    "fullName": {
+                        "description": "Nombre completos del usuario afectados",
+                        "type": "string",
+                        "example": "Juan Perez"
+                    },
+                    "roles": {
+                        "description": "Roles agregados y removidos",
+                        "properties": {
+                            "added": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "student"
+                                ]
+                            },
+                            "removed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "guest"
+                                ]
+                            }
+                        },
+                        "type": "object"
                     }
                 },
                 "type": "object"
@@ -12440,6 +12893,11 @@
             "UserExtraDataResponse": {
                 "description": "Respuesta con información adicional detallada del usuario",
                 "properties": {
+                    "userId": {
+                        "description": "ID del usuario",
+                        "type": "integer",
+                        "example": 45
+                    },
                     "basicInfo": {
                         "description": "Información básica adicional del usuario",
                         "properties": {
@@ -12709,14 +13167,27 @@
                     },
                     "updatedPermissions": {
                         "description": "Lista de permisos actualizados (añadidos o removidos)",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
+                        "properties": {
+                            "added": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "view.students"
+                                ]
+                            },
+                            "removed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "create.student"
+                                ]
+                            }
                         },
-                        "example": [
-                            "find user",
-                            "create payment"
-                        ]
+                        "type": "object"
                     },
                     "metadata": {
                         "description": "Datos extra sobre la operación",
@@ -13679,6 +14150,32 @@
                         "description": "Nombre del rol para consultar permisos",
                         "type": "string",
                         "example": "student"
+                    },
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "FindPermissionsToUserRequest": {
+                "properties": {
+                    "roles": {
+                        "description": "Array de roles del usuario a consultar permisos",
+                        "type": "array",
+                        "items": {
+                            "description": "Rol de un usuario existente",
+                            "type": "string",
+                            "example": "parent"
+                        },
+                        "example": [
+                            "financial-staff",
+                            "parent"
+                        ]
+                    },
+                    "forceRefresh": {
+                        "description": "Indica si se debe forzar la actualización (opcional)",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -13833,6 +14330,37 @@
                 },
                 "type": "object"
             },
+            "UpdatePermissionsToUserRequest": {
+                "properties": {
+                    "permissionsToAdd": {
+                        "description": "Array de nombres de permisos a agregar",
+                        "type": "array",
+                        "items": {
+                            "description": "Nombre de un permiso existente",
+                            "type": "string",
+                            "example": "users.create"
+                        },
+                        "example": [
+                            "users.create",
+                            "reports.view"
+                        ]
+                    },
+                    "permissionsToRemove": {
+                        "description": "Array de nombres de permisos a remover",
+                        "type": "array",
+                        "items": {
+                            "description": "Nombre de un permiso existente",
+                            "type": "string",
+                            "example": "users.delete"
+                        },
+                        "example": [
+                            "users.delete",
+                            "settings.update"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
             "UpdateRolesRequest": {
                 "required": [
                     "curps"
@@ -13851,6 +14379,40 @@
                             "PEMJ800101MDFLRS08"
                         ]
                     },
+                    "rolesToAdd": {
+                        "description": "Array de nombres de roles a agregar",
+                        "type": "array",
+                        "items": {
+                            "description": "Nombre de un rol existente",
+                            "type": "string",
+                            "example": "editor"
+                        },
+                        "example": [
+                            "editor",
+                            "supervisor"
+                        ]
+                    },
+                    "rolesToRemove": {
+                        "description": "Array de nombres de roles a remover",
+                        "type": "array",
+                        "items": {
+                            "description": "Nombre de un rol existente",
+                            "type": "string",
+                            "example": "viewer"
+                        },
+                        "example": [
+                            "viewer",
+                            "assistant"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateRolesToUserRequest": {
+                "required": [
+                    "curps"
+                ],
+                "properties": {
                     "rolesToAdd": {
                         "description": "Array de nombres de roles a agregar",
                         "type": "array",
