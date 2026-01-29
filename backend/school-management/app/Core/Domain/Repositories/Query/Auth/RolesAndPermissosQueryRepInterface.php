@@ -2,6 +2,8 @@
 
 namespace App\Core\Domain\Repositories\Query\Auth;
 
+use App\Core\Application\DTO\Response\General\PermissionsByRole;
+use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Domain\Entities\Permission;
 use App\Core\Domain\Entities\Role;
 use Illuminate\Support\Collection;
@@ -12,7 +14,8 @@ interface RolesAndPermissosQueryRepInterface
     public function findRoleByName(string $name): ?Role;
     public function findAllRoles(): array;
     public function findPermissionById(int $id):?Permission;
-    public function findPermissionsApplicableByUsers(?string $role, ?array $curps): array;
+    public function findPermissionsApplicableByRole(string $role): ?PermissionsByRole;
+    public function findPermissionsApplicableByCurps(array $curps): ?PermissionsByUsers;
     public function findPermissionIds(array $names, string $role): array;
     public function getRoleIdsByNames(array $names): array;
     public function hasAdminAssignError(int $adminRoleId, array $rolesToAddIds, Collection $users): bool;

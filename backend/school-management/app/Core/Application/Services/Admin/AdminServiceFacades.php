@@ -8,30 +8,30 @@ use App\Core\Application\DTO\Request\User\UpdateUserPermissionsDTO;
 use App\Core\Application\DTO\Request\User\UpdateUserRoleDTO;
 use App\Core\Application\DTO\Response\General\ImportResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\General\PermissionsByRole;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
-//use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Application\Traits\HasCache;
-use App\Core\Application\UseCases\Admin\ActivateUserUseCase;
-use App\Core\Application\UseCases\Admin\AttachStudentDetailUserCase;
-use App\Core\Application\UseCases\Admin\BulkImportStudentDetailsUseCase;
-use App\Core\Application\UseCases\Admin\BulkImportUsersUseCase;
-use App\Core\Application\UseCases\Admin\DeleteLogicalUserUseCase;
-use App\Core\Application\UseCases\Admin\DisableUserUseCase;
-use App\Core\Application\UseCases\Admin\FindAllPermissionsUseCase;
-use App\Core\Application\UseCases\Admin\FindAllRolesUseCase;
-use App\Core\Application\UseCases\Admin\FindPermissionByIdUseCase;
-use App\Core\Application\UseCases\Admin\FindRoleByIdUseCase;
-use App\Core\Application\UseCases\Admin\FindStudentDetailUseCase;
-use App\Core\Application\UseCases\Admin\GetExtraUserDataUseCase;
-use App\Core\Application\UseCases\Admin\ShowAllUsersUseCase;
-use App\Core\Application\UseCases\Admin\SyncPermissionsUseCase;
-use App\Core\Application\UseCases\Admin\SyncRoleUseCase;
-use App\Core\Application\UseCases\Admin\TemporaryDisableUserUseCase;
-use App\Core\Application\UseCases\Admin\UpdateStudentDeatilsUseCase;
-//use App\Core\Application\UseCases\Jobs\PromoteStudentsUseCase;
+use App\Core\Application\UseCases\Admin\RolePermissionManagement\FindAllPermissionsByCurpsUseCase;
+use App\Core\Application\UseCases\Admin\RolePermissionManagement\FindAllPermissionsByRoleUseCase;
+use App\Core\Application\UseCases\Admin\RolePermissionManagement\FindAllRolesUseCase;
+use App\Core\Application\UseCases\Admin\RolePermissionManagement\FindPermissionByIdUseCase;
+use App\Core\Application\UseCases\Admin\RolePermissionManagement\FindRoleByIdUseCase;
+use App\Core\Application\UseCases\Admin\RolePermissionManagement\SyncPermissionsUseCase;
+use App\Core\Application\UseCases\Admin\RolePermissionManagement\SyncRoleUseCase;
+use App\Core\Application\UseCases\Admin\StudentManagement\AttachStudentDetailUserCase;
+use App\Core\Application\UseCases\Admin\StudentManagement\BulkImportStudentDetailsUseCase;
+use App\Core\Application\UseCases\Admin\StudentManagement\FindStudentDetailUseCase;
+use App\Core\Application\UseCases\Admin\StudentManagement\UpdateStudentDeatilsUseCase;
+use App\Core\Application\UseCases\Admin\UserManagement\ActivateUserUseCase;
+use App\Core\Application\UseCases\Admin\UserManagement\BulkImportUsersUseCase;
+use App\Core\Application\UseCases\Admin\UserManagement\DeleteLogicalUserUseCase;
+use App\Core\Application\UseCases\Admin\UserManagement\DisableUserUseCase;
+use App\Core\Application\UseCases\Admin\UserManagement\GetExtraUserDataUseCase;
+use App\Core\Application\UseCases\Admin\UserManagement\ShowAllUsersUseCase;
+use App\Core\Application\UseCases\Admin\UserManagement\TemporaryDisableUserUseCase;
 use App\Core\Application\UseCases\User\RegisterUseCase;
 use App\Core\Domain\Entities\Permission;
 use App\Core\Domain\Entities\Role;
@@ -41,7 +41,9 @@ use App\Core\Domain\Enum\Cache\AdminCacheSufix;
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Infraestructure\Cache\CacheService;
-use Illuminate\Support\Facades\Log;
+
+//use App\Core\Application\DTO\Response\User\PromotedStudentsResponse;
+//use App\Core\Application\UseCases\Jobs\PromoteStudentsUseCase;
 
 class AdminServiceFacades
 {
@@ -58,21 +60,22 @@ class AdminServiceFacades
         private UpdateStudentDeatilsUseCase     $update_student,
         private AttachStudentDetailUserCase     $attach,
         private RegisterUseCase                 $register,
-        private BulkImportUsersUseCase          $import,
-        private BulkImportStudentDetailsUseCase $importStudentDetail,
-        private SyncPermissionsUseCase          $sync,
-        private ShowAllUsersUseCase             $show,
-        private GetExtraUserDataUseCase $extraData,
-        private ActivateUserUseCase             $activate,
-        private DeleteLogicalUserUseCase        $delete,
-        private DisableUserUseCase              $disable,
-        private TemporaryDisableUserUseCase     $temporaryDisable,
-        private FindAllRolesUseCase             $roles,
-        private FindAllPermissionsUseCase       $permissions,
-        private FindRoleByIdUseCase             $role,
-        private FindPermissionByIdUseCase       $permission,
-        private SyncRoleUseCase                 $syncRoles,
-        private CacheService $service
+        private BulkImportUsersUseCase           $import,
+        private BulkImportStudentDetailsUseCase  $importStudentDetail,
+        private SyncPermissionsUseCase           $sync,
+        private ShowAllUsersUseCase              $show,
+        private GetExtraUserDataUseCase          $extraData,
+        private ActivateUserUseCase              $activate,
+        private DeleteLogicalUserUseCase         $delete,
+        private DisableUserUseCase               $disable,
+        private TemporaryDisableUserUseCase      $temporaryDisable,
+        private FindAllRolesUseCase              $roles,
+        private FindAllPermissionsByCurpsUseCase $permissions,
+        private FindAllPermissionsByRoleUseCase      $permissionsByRole,
+        private FindRoleByIdUseCase              $role,
+        private FindPermissionByIdUseCase        $permission,
+        private SyncRoleUseCase                  $syncRoles,
+        private CacheService                     $service
     )
     {
         $this->setCacheService($service);
@@ -174,13 +177,25 @@ class AdminServiceFacades
         return $users;
     }
 
-    public function findAllPermissions(?array $curps, ?string $role): PermissionsByUsers
+    public function findAllPermissionsByCurps(array $curps): PermissionsByUsers
     {
         $key = implode(',', $curps);
         if (isset($this->requestCache[$key])) {
             return $this->requestCache[$key];
         }
-        $permissions = $this->permissions->execute($curps, $role);
+        $permissions = $this->permissions->execute($curps);
+        $this->requestCache[$key] = $permissions;
+
+        return $permissions;
+    }
+
+    public function findAllPermissionsByRole(string $role): PermissionsByRole
+    {
+        $key = $role;
+        if (isset($this->requestCache[$key])) {
+            return $this->requestCache[$key];
+        }
+        $permissions = $this->permissionsByRole->execute($role);
         $this->requestCache[$key] = $permissions;
 
         return $permissions;

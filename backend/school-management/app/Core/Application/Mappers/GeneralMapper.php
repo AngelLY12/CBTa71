@@ -5,6 +5,7 @@ namespace App\Core\Application\Mappers;
 use App\Core\Application\DTO\Request\General\LoginDTO;
 use App\Core\Application\DTO\Response\General\LoginResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\General\PermissionsByRole;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\General\StripePaymentsResponse;
 use App\Core\Application\DTO\Response\General\StripePayoutResponse;
@@ -58,12 +59,21 @@ class GeneralMapper{
             );
     }
 
-    public static function toPermissionsByUsers(array $data): PermissionsByUsers
+    public static function toPermissionsByUsers(array $roles, array $users, array $permissions): PermissionsByUsers
     {
         return new PermissionsByUsers(
-            role: $data['role'] ?? null,
-            users: $data['users'] ?? [],
-            permissions: $data['permissions'] ?? []
+            roles: $roles,
+            users: $users,
+            permissions: $permissions
+        );
+    }
+
+    public static function toPermissionsByRole(string $role, int $usersCount, array $permissions): PermissionsByRole
+    {
+        return new PermissionsByRole(
+            role: $role,
+            usersCount: $usersCount,
+            permissions: $permissions
         );
     }
 
