@@ -130,17 +130,8 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
 
     public function findPermissionIds(array $names, string $role): array
     {
-        return Permission::whereIn('name', $names)
-            ->where(function($q) use ($role) {
-                $q->where('belongs_to', $role)
-                  ->orWhere('belongs_to', 'global-payment');
-                  if ($role === UserRoles::SUPERVISOR->value) {
-                        $q->orWhere('belongs_to', 'administration');
-                  }
-                if($role === UserRoles::STUDENT->value){
-                    $q->orWhere('belongs_to', $role . '-payment');
-                }
-            })
+        return \App\Models\Permission::whereIn('name', $names)
+            ->whereHas('contexts', fn($q) => $q->where('target_role', $role))
             ->pluck('id')
             ->toArray();
     }
