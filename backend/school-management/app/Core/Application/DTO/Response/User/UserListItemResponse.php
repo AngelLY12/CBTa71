@@ -46,19 +46,19 @@ namespace App\Core\Application\DTO\Response\User;
  *         minimum=0,
  *         example=2
  *     ),
- *     @OA\Property(
- *         property="created_at",
- *         type="string",
- *         format="date-time",
- *         description="Fecha y hora de creación en formato Y-m-d H:i:s",
- *         example="2024-01-22 10:30:45"
- *     ),
+ *
  *     @OA\Property(
  *         property="createdAtHuman",
  *         type="string",
  *         description="Fecha de creación en formato humano relativo",
  *         example="hace 2 horas"
- *     )
+ *     ),
+ *     @OA\Property(
+ *          property="deletedAtHuman",
+ *          type="string",
+ *          description="Fecha de creación en formato humano relativo",
+ *          example="hace 2 horas"
+ *      )
  * )
  */
 class UserListItemResponse
@@ -70,8 +70,8 @@ class UserListItemResponse
         public readonly string $curp,
         public readonly string $status,
         public readonly int $roles_count,
-        public readonly string $created_at,
-        public readonly string $createdAtHuman
+        public readonly string $createdAtHuman,
+        public readonly ?string $deletedAtHuman,
     ){}
 
 }

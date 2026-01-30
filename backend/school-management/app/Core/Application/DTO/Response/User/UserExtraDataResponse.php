@@ -27,6 +27,20 @@ use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
  *             description="Número de teléfono",
  *             example="+5215512345678"
  *         ),
+ *     @OA\Property(
+ *          property="birthdate",
+ *          type="string",
+ *          format="date",
+ *          description="Fecha de nacimiento en formato YYYY-MM-DD",
+ *          example="1995-03-15"
+ *      ),
+ *      @OA\Property(
+ *          property="age",
+ *          type="integer",
+ *          description="Edad calculada a partir de la fecha de nacimiento",
+ *          example=28
+ *      ),
+ *
  *         @OA\Property(
  *             property="address",
  *             type="string",
@@ -38,7 +52,14 @@ use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
  *             type="string",
  *             description="Tipo de sangre",
  *             example="O+"
- *         )
+ *         ),
+ *     @OA\Property(
+ *          property="registration_date",
+ *          type="string",
+ *          format="date",
+ *          description="Fecha de registro del usuario en formato YYYY-MM-DD",
+ *          example="2023-01-15"
+ *          )
  *     ),
  *     @OA\Property(
  *         property="roles",

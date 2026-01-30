@@ -230,12 +230,12 @@ class UserMapper{
     {
         $studentDetail = null;
 
-        if ($user->relationLoaded('studentDetail') && $user->studentDetail) {
+        if ($user->studentDetail) {
             $studentDetail = new StudentDetailDTO(
-                nControl: $user->studentDetail->n_control,
-                semestre: $user->studentDetail->semestre,
-                group: $user->studentDetail->group,
-                workshop: $user->studentDetail->workshop,
+                nControl: $user->studentDetail->n_control ?? null,
+                semestre: $user->studentDetail->semestre ?? null,
+                group: $user->studentDetail->group ?? null,
+                workshop: $user->studentDetail->workshop ?? null,
                 careerName: $user->studentDetail->career?->career_name,
             );
         }
@@ -243,8 +243,11 @@ class UserMapper{
             userId: $user->id,
             basicInfo:[
                 'phone_number' => $user->phone_number,
+                'birthdate' => $user->birthdate?->format('Y-m-d'),
+                'age' => $user->birthdate?->age,
                 'address' => $user->address ?? [],
-                'blood_type' => $user->blood_type?->value ?? null,
+                'blood_type' => $user->blood_type?->value,
+                'registration_date' => $user->registration_date->format('Y-m-d'),
             ],
             roles: $user->roles->pluck('name')->toArray(),
             permissions: $user->permissions->pluck('name')->toArray(),
@@ -260,9 +263,9 @@ class UserMapper{
             email: $user->email,
             curp: $user->curp,
             status: $user->status->value,
-            roles_count: $user->roles_count,
-            created_at: $user->created_at->format('Y-m-d H:i:s'),
+            roles_count: (int) $user->roles_count,
             createdAtHuman: $user->created_at->diffForHumans(),
+            deletedAtHuman: $user->mark_as_deleted_at ? $user->mark_as_deleted_at->diffForHumans() : null,
         );
     }
 

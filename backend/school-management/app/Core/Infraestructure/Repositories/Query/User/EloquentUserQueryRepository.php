@@ -344,11 +344,18 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             $query->where('name', UserRoles::ADMIN->value);
         })
             ->when($status, fn ($q) => $q->where('status', $status->value))
-            ->select('id', 'name', 'last_name', 'curp' ,'email', 'status', 'created_at')
-            ->withCount('roles')
+            ->select('id', 'name', 'last_name', 'curp' ,'email', 'status', 'created_at', 'mark_as_deleted_at')
+            ->selectRaw(
+                '(
+                    SELECT COUNT(*)
+                    FROM model_has_roles
+                    WHERE model_has_roles.model_id = users.id
+                    AND model_has_roles.model_type = ?
+                ) as roles_count', [EloquentUser::class]
+            )
             ->latest('users.created_at')
             ->paginate($perPage, ['*'], 'page', $page)
-            ->through(fn($p) => MappersUserMapper::toUserListItemResponse($p));
+            ->through(fn($user) => MappersUserMapper::toUserListItemResponse($user));
     }
 
     public function getExtraUserData(int $userId): UserExtraDataResponse
@@ -357,7 +364,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             'roles:id,name',
             'permissions:id,name',
         ])
-            ->select('id', 'phone_number', 'address', 'blood_type')
+            ->select('id', 'birthdate', 'phone_number', 'address', 'blood_type', 'registration_date')
             ->findOrFail($userId);
 
         $isStudent = $user->roles->contains('name', UserRoles::STUDENT->value);
