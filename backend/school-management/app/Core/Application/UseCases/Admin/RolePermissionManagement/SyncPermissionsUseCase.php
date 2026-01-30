@@ -11,6 +11,7 @@ use App\Exceptions\NotFound\UsersNotFoundForUpdateException;
 use App\Exceptions\Validation\ValidationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SyncPermissionsUseCase
 {
@@ -27,8 +28,21 @@ class SyncPermissionsUseCase
 
     public function execute(UpdateUserPermissionsDTO $dto): array
     {
+        Log::info('=== INICIO execute ===');
+        Log::info('DTO recibido en execute:', [
+            'curps' => $dto->curps,
+            'role' => $dto->role,
+            'permissionsToAdd' => $dto->permissionsToAdd,
+            'permissionsToRemove' => $dto->permissionsToRemove,
+        ]);
+        Log::info('1. Validando permisos duplicados...');
         $this->validateNoDuplicatePermissions($dto);
+        Log::info('✅ Sin permisos duplicados');
+
+        // 2. Obtener usuarios
+        Log::info('2. Obteniendo usuarios...');
         $usersGenerator = $this->getUsers($dto);
+        Log::info('✅ Generator creado');
         $processedData = $this->processUsersFromGenerator($usersGenerator);
 
         if ($processedData['users']->isEmpty()) {
@@ -59,14 +73,34 @@ class SyncPermissionsUseCase
 
     private function getUsers(UpdateUserPermissionsDTO $dto): \Generator
     {
+        Log::info('--- INICIO getUsers ---');
+        Log::info('Evaluando criterios:', [
+            'dto_role' => $dto->role,
+            'dto_curps' => $dto->curps,
+            'curps_is_array' => is_array($dto->curps),
+            'curps_count' => is_array($dto->curps) ? count($dto->curps) : 'N/A',
+            'role_not_empty' => !empty($dto->role),
+            'curps_not_empty' => is_array($dto->curps) && count($dto->curps) > 0,
+        ]);
         if ($dto->role) {
-            return $this->uqRepo->getUsersByRoleCursor($dto->role);
+            Log::info('🔍 Buscando usuarios por rol:', ['role' => $dto->role]);
+            $generator = $this->uqRepo->getUsersByRoleCursor($dto->role);
+            Log::info('✅ Generator obtenido para rol');
+            return $generator;
         }
 
         if (is_array($dto->curps) && count($dto->curps) > 0) {
-            return $this->uqRepo->getUsersByCurpCursor($dto->curps);
+            Log::info('🔍 Buscando usuarios por CURPs:', [
+                'curps' => $dto->curps,
+                'total_curps' => count($dto->curps)
+            ]);
+            $generator = $this->uqRepo->getUsersByCurpCursor($dto->curps);
+            Log::info('✅ Generator obtenido para CURPs');
+            return $generator;
         }
 
+        Log::warning('⚠️ No se especificó criterio de búsqueda válido');
+        Log::info('--- FIN getUsers (vacío) ---');
         yield from [];
     }
 

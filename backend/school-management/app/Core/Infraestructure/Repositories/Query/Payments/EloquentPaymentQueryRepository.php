@@ -47,19 +47,27 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     private function getMonthlyAggregation(Builder $query): array
     {
         $results = $query->selectRaw("
-        DATE_FORMAT(created_at, '%Y-%m') as month,
-        SUM(amount_received) as month_total
-    ")
-            ->groupBy('month')
+            YEAR(created_at) as year,
+            MONTH(created_at) as month,
+            SUM(amount_received) as month_total
+        ")
+            ->groupBy('year', 'month')
+            ->orderBy('year')
             ->orderBy('month')
             ->get();
 
-        $total = $results->sum('month_total');
+        $total = Money::from('0');
+        foreach ($results as $row) {
+            $total=$total->add($row->month_total);
+        }
 
         return [
-            'total' => Money::from($total)->finalize(),
-            'by_month' => $results->pluck('month_total', 'month')
-                ->map(fn($amount) => Money::from($amount)->finalize())
+            'total' => $total->finalize(),
+            'by_month' => $results
+                ->mapWithKeys(fn ($row) => [
+                    sprintf('%04d-%02d', $row->year, $row->month)
+                    => Money::from($row->month_total)->finalize()
+                ])
                 ->toArray()
         ];
     }
