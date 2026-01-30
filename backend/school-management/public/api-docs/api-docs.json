@@ -13671,11 +13671,6 @@
                         "description": "Tipo de permiso.",
                         "type": "string",
                         "example": "model"
-                    },
-                    "belongsTo": {
-                        "description": "Identifica el rol al que pertenece el permiso.",
-                        "type": "string",
-                        "example": "STUDENT"
                     }
                 },
                 "type": "object"
