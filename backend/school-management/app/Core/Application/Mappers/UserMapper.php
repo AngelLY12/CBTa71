@@ -173,10 +173,10 @@ class UserMapper{
     public static function toUpdateUserPermissionsDTO(array $data): UpdateUserPermissionsDTO
     {
         return new UpdateUserPermissionsDTO(
-            curps: $data['curps'],
-            role: $data['role'],
-            permissionsToAdd: $data['permissionsToAdd'],
-            permissionsToRemove: $data['permissionsToRemove']
+            curps: $data['curps'] ?? null,
+            role: $data['role'] ?? null,
+            permissionsToAdd: $data['permissionsToAdd'] ?? null,
+            permissionsToRemove: $data['permissionsToRemove'] ?? null,
 
         );
     }
