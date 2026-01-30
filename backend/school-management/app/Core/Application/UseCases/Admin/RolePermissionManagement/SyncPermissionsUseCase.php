@@ -59,11 +59,11 @@ class SyncPermissionsUseCase
 
     private function getUsers(UpdateUserPermissionsDTO $dto): \Generator
     {
-        if (!empty($dto->role)) {
+        if ($dto->role) {
             return $this->uqRepo->getUsersByRoleCursor($dto->role);
         }
 
-        if (!empty($dto->curps)) {
+        if (is_array($dto->curps) && count($dto->curps) > 0) {
             return $this->uqRepo->getUsersByCurpCursor($dto->curps);
         }
 
