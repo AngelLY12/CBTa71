@@ -200,20 +200,9 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
 
     private function getPermissionsForRole(string $roleName): array
     {
-        return Permission::where('type', 'model')
-            ->where(function($q) use ($roleName) {
-                $q->where('belongs_to', $roleName)
-                    ->orWhere('belongs_to', 'global-payment');
 
-                if ($roleName === UserRoles::SUPERVISOR->value) {
-                    $q->orWhere('belongs_to', 'administration');
-                }
-
-                if ($roleName === UserRoles::STUDENT->value ||
-                    $roleName === UserRoles::APPLICANT->value) {
-                    $q->orWhere('belongs_to', UserRoles::STUDENT->value . '-payment');
-                }
-            })
+        return \App\Models\Permission::where('type', 'model')
+            ->whereHas('contexts', fn($q) => $q->where('target_role', $roleName))
             ->select('id', 'name', 'type')
             ->get()
             ->map(fn($permission) => RolesAndPermissionMapper::toPermissionDomain($permission))

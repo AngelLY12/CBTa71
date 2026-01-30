@@ -5,6 +5,7 @@ namespace App\Core\Infraestructure\Repositories\Command\Auth;
 use App\Core\Application\DTO\Response\General\PermissionsUpdatedToUserResponse;
 use App\Core\Application\DTO\Response\General\RolesUpdatedToUserResponse;
 use App\Core\Application\Mappers\GeneralMapper;
+use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Repositories\Command\Auth\RolesAndPermissionsRepInterface;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -22,9 +23,9 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
     }
 
 
-    public function givePermissionsByType(EloquentUser $user, string $belongsTo, string $type = 'model'): void
+    public function givePermissionsByType(EloquentUser $user, string $targetRole, string $type = 'model'): void
     {
-        $permissions = Permission::where('belongs_to', $belongsTo)
+        $permissions = \App\Models\Permission::whereHas('contexts', fn($q) => $q->where('target_role', $targetRole))
             ->where('type', $type)
             ->pluck('name')
             ->toArray();
@@ -263,7 +264,10 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
                     }
                 }
             }
-
+            if($user->hasRole(UserRoles::UNVERIFIED->value)) {
+                $user->removeRole(UserRoles::UNVERIFIED);
+                $actuallyRemoved[] = UserRoles::UNVERIFIED->value;
+            }
             $user->load('roles');
 
             $rolesUpdated = [

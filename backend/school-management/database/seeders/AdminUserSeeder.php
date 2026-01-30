@@ -25,7 +25,7 @@ class AdminUserSeeder extends Seeder
                 'last_name' => 'Lopez Yáñez',
                 'email' => 'lopezyanezangell@gmail.com',
                 'password' => Hash::make(config('auth.admin_password')),
-                'phone_number' => '7352770097',
+                'phone_number' => '+527352770097',
                 'birthdate' => '2003-05-04',
                 'gender' => UserGender::HOMBRE,
                 'curp' => 'LOYA030504HMSPXNA8',
