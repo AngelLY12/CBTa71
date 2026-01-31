@@ -12,6 +12,7 @@ use App\Imports\StudentDetailsImport;
 use App\Jobs\PromoteStudentsJob;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -66,7 +67,7 @@ class AdminStudentController extends Controller
     {
         $file= $request->file('file');
         $fileName = 'import_' . time() . '_' . Str::random(10) . '.xlsx';
-        $filePath = $file->storeAs('imports/temp', $fileName);
+        $filePath = Storage::disk('local')->putFileAs('imports/temp', $file, $fileName);
         $fullPath = storage_path('app/' . $filePath);
         $import= new StudentDetailsImport($this->service, Auth::user(), $fullPath);
         Excel::queueImport($import,$fullPath)->onQueue('imports');
