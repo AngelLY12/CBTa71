@@ -2,24 +2,25 @@
 
 namespace App\Imports;
 
-use App\Core\Application\Services\Admin\AdminUsersServiceFacades;
+use App\Core\Application\Services\Admin\AdminStudentServiceFacades;
 use App\Models\User;
 use App\Notifications\ImportFailedNotification;
 use App\Notifications\ImportFinishedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents
+class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, WithChunkReading
 {
-    protected AdminUsersServiceFacades $adminService;
+    protected AdminStudentServiceFacades $adminService;
     protected User $user;
     private array $importResult = [];
 
-    public function __construct(AdminUsersServiceFacades $adminService, User $user)
+    public function __construct(AdminStudentServiceFacades $adminService, User $user)
     {
         $this->adminService = $adminService;
         $this->user = $user;
@@ -55,5 +56,10 @@ class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents
                 ));
             }
         ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000;
     }
 }
