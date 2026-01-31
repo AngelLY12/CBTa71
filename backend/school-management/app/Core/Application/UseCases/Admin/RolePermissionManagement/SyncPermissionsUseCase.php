@@ -28,84 +28,76 @@ class SyncPermissionsUseCase
 
     public function execute(UpdateUserPermissionsDTO $dto): array
     {
-        Log::info('=== INICIO execute ===');
-        Log::info('DTO recibido en execute:', [
-            'curps' => $dto->curps,
-            'role' => $dto->role,
-            'permissionsToAdd' => $dto->permissionsToAdd,
-            'permissionsToRemove' => $dto->permissionsToRemove,
-        ]);
-        Log::info('1. Validando permisos duplicados...');
-        $this->validateNoDuplicatePermissions($dto);
-        Log::info('✅ Sin permisos duplicados');
+        Log::info('=== INICIO execute ===', ['dto' => $dto]);
 
-        // 2. Obtener usuarios
-        Log::info('2. Obteniendo usuarios...');
+        $this->validateNoDuplicatePermissions($dto);
+
         $usersGenerator = $this->getUsers($dto);
-        Log::info('✅ Generator creado');
+        Log::info('✅ Generator obtenido', ['generator' => $usersGenerator]);
+
         $processedData = $this->processUsersFromGenerator($usersGenerator);
 
         if ($processedData['users']->isEmpty()) {
+            Log::error('❌ No se encontraron usuarios procesados', ['processedData' => $processedData]);
             throw new UsersNotFoundForUpdateException();
         }
 
-        $result=$this->processPermissionsInTransaction($processedData['groupedByRole'], $dto);
+        $result = $this->processPermissionsInTransaction($processedData['groupedByRole'], $dto);
 
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
-        return $this->buildResponse($processedData['users'], $dto, $result);
+        $response = $this->buildResponse($processedData['users'], $dto, $result);
+        Log::info('✅ execute finalizado', ['response' => $response]);
+
+        return $response;
     }
 
     private function validateNoDuplicatePermissions(UpdateUserPermissionsDTO $dto): void
     {
+        Log::info('1. Validando permisos duplicados', ['dto' => $dto]);
+
         $add = $dto->permissionsToAdd ?? [];
         $remove = $dto->permissionsToRemove ?? [];
 
         $duplicates = array_intersect($add, $remove);
 
         if (!empty($duplicates)) {
+            Log::error('❌ Permisos duplicados encontrados', ['duplicates' => $duplicates]);
             throw new ValidationException(
                 "Los siguientes permisos no pueden estar simultáneamente en add y remove: "
                 . implode(', ', $duplicates)
             );
         }
+
+        Log::info('✅ Sin permisos duplicados');
     }
 
     private function getUsers(UpdateUserPermissionsDTO $dto): \Generator
     {
-        Log::info('--- INICIO getUsers ---');
-        Log::info('Evaluando criterios:', [
+        Log::info('--- INICIO getUsers ---', [
             'dto_role' => $dto->role,
-            'dto_curps' => $dto->curps,
-            'curps_is_array' => is_array($dto->curps),
-            'curps_count' => is_array($dto->curps) ? count($dto->curps) : 'N/A',
-            'role_not_empty' => !empty($dto->role),
-            'curps_not_empty' => is_array($dto->curps) && count($dto->curps) > 0,
+            'dto_curps' => $dto->curps
         ]);
+
         if ($dto->role) {
-            Log::info('🔍 Buscando usuarios por rol:', ['role' => $dto->role]);
             $generator = $this->uqRepo->getUsersByRoleCursor($dto->role);
-            Log::info('✅ Generator obtenido para rol');
-            return $generator;
-        }
-
-        if (is_array($dto->curps) && count($dto->curps) > 0) {
-            Log::info('🔍 Buscando usuarios por CURPs:', [
-                'curps' => $dto->curps,
-                'total_curps' => count($dto->curps)
-            ]);
+            Log::info('🔍 Obteniendo usuarios por role', ['role' => $dto->role]);
+            yield from $generator;
+        } elseif (is_array($dto->curps) && count($dto->curps) > 0) {
             $generator = $this->uqRepo->getUsersByCurpCursor($dto->curps);
-            Log::info('✅ Generator obtenido para CURPs');
-            return $generator;
+            Log::info('🔍 Obteniendo usuarios por CURPs', ['curps' => $dto->curps]);
+            yield from $generator;
+        } else {
+            Log::info('⚠ No se recibieron CURPs ni role, generator vacío');
+            yield from [];
         }
-
-        Log::warning('⚠️ No se especificó criterio de búsqueda válido');
-        Log::info('--- FIN getUsers (vacío) ---');
-        yield from [];
     }
+
 
     private function processUsersFromGenerator(\Generator $usersGenerator): array
     {
+        Log::info('--- INICIO processUsersFromGenerator ---');
+
         $usersGroupedByRole = collect();
         $allUsers = collect();
         $currentChunk = [];
@@ -114,6 +106,7 @@ class SyncPermissionsUseCase
         foreach ($usersGenerator as $user) {
             $hasUsers = true;
             $currentChunk[] = $user;
+            Log::debug('Usuario agregado al chunk', ['user_id' => $user->id, 'chunk_size' => count($currentChunk)]);
 
             if (count($currentChunk) >= self::CHUNK_SIZE) {
                 $this->processChunk(collect($currentChunk), $usersGroupedByRole, $allUsers);
@@ -125,7 +118,10 @@ class SyncPermissionsUseCase
             $this->processChunk(collect($currentChunk), $usersGroupedByRole, $allUsers);
         }
 
+        Log::info('Total de usuarios procesados', ['count' => $allUsers->count()]);
+
         if (!$hasUsers) {
+            Log::error('❌ No se encontraron usuarios en generator');
             throw new UsersNotFoundForUpdateException();
         }
 
@@ -135,11 +131,20 @@ class SyncPermissionsUseCase
         ];
     }
 
+
     private function processChunk(Collection $chunk, Collection &$usersGroupedByRole, Collection &$allUsers): void
     {
+        Log::debug('--- processChunk ---', [
+            'chunk_count' => $chunk->count(),
+            'allUsers_before' => $allUsers->count()
+        ]);
+
         $allUsers = $allUsers->merge($chunk);
+        Log::debug('Usuarios totales después de merge', ['allUsers_after' => $allUsers->count()]);
 
         $groupedChunk = $this->groupUsersByRole($chunk);
+
+        Log::debug('Usuarios agrupados por rol en chunk', ['groupedChunk' => $groupedChunk->map(fn($c) => $c->pluck('id'))]);
 
         foreach ($groupedChunk as $role => $users) {
             if ($usersGroupedByRole->has($role)) {
@@ -148,6 +153,8 @@ class SyncPermissionsUseCase
                 $usersGroupedByRole[$role] = $users;
             }
         }
+
+        Log::debug('Usuarios agrupados por rol totales', ['usersGroupedByRole' => $usersGroupedByRole->map(fn($c) => $c->pluck('id'))]);
     }
 
     private function processPermissionsInTransaction(Collection $usersGroupedByRole, UpdateUserPermissionsDTO $dto): array
@@ -260,9 +267,13 @@ class SyncPermissionsUseCase
 
     private function groupUsersByRole(Collection $users): Collection
     {
+        Log::debug('--- groupUsersByRole ---', ['users_count' => $users->count()]);
+
         return $users->flatMap(function ($user) {
-            return $user->roles->map(fn($role) => [
-                'role' => $role->name,
+            $roles = collect($user->roles); // convierte a Collection por seguridad
+            Log::debug('Roles del usuario', ['user_id' => $user->id, 'roles' => $roles->pluck('name')]);
+            return $roles->map(fn($role) => [
+                'role' => $role->name ?? $role,
                 'user' => $user
             ]);
         })->groupBy('role')->map(fn($items) => $items->pluck('user'));
