@@ -91,13 +91,13 @@ class AdminUsers
      *     2. email (Correo electrónico)
      *     3. phone_number (Teléfono, formato +52)
      *     4. birthdate (Fecha de nacimiento, formato YYYY-MM-DD)
-     *     5. gender (Género, hombre/mujer)
+     *     5. gender (Género, hombre/mujer, opcional)
      *     6. curp (CURP)
      *     7. street (Calle)
      *     8. city (Ciudad)
      *     9. state (Estado)
      *     10. zip_code (Código postal)
-     *     11. blood_type (Tipo de sangre, A+, B+, O-, etc)
+     *     11. blood_type (Tipo de sangre, A+, B+, O-, etc, opcional)
      *     12. registration_date (Fecha de registro, si no se especifica se usa la actual, formato YYYY-MM-DD)
      *     13. status (Estado del usuario, por defecto 'activo')
      *     14. career_id (ID de la carrera)
@@ -105,6 +105,7 @@ class AdminUsers
      *     16. semestre (Semestre)
      *     17. group (Grupo)
      *     18. workshop (Taller)
+     *     El género, dirección y tipo de sangre son opcionales, ademas, los detalles de estudiante del 14 a 18 no son obligatorios, si decides ponerlos  los primeros tres son obligatorios, ID de la carrera, número de control y semestre
      *     ",
      *     tags={"Admin"},
      *     security={{"bearerAuth":{}}},
