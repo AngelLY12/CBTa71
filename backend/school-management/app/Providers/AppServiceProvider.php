@@ -15,7 +15,6 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
 use App\Core\Domain\Repositories\Command\User\ParentStudentRepInterface;
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
-use App\Core\Domain\Repositories\Command\User\UserLogActionRepInterface;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 use App\Core\Domain\Repositories\Query\Auth\RolesAndPermissosQueryRepInterface;
 use App\Core\Domain\Repositories\Query\Misc\CareerQueryRepInterface;
@@ -41,7 +40,6 @@ use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentMethod
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentRepository;
 use App\Core\Infraestructure\Repositories\Command\User\EloquentParentStudentRepository;
 use App\Core\Infraestructure\Repositories\Command\User\EloquentStudentDetailRepository;
-use App\Core\Infraestructure\Repositories\Command\User\EloquentUserLogActionRepository;
 use App\Core\Infraestructure\Repositories\Command\User\EloquentUserRepository;
 use App\Core\Infraestructure\Repositories\Query\Auth\EloquentRolesAndPermissionQueryRepository;
 use App\Core\Infraestructure\Repositories\Query\Misc\EloquentCareerQueryRepository;
@@ -78,11 +76,8 @@ use App\Listeners\SendParentInvitationFailedNotification;
 use App\Listeners\SendParentStudentDeleteNotification;
 use App\Listeners\SendPromotionNotification;
 use App\Listeners\SendStudentsPromotionFailedNotification;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -134,7 +129,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ParentInviteRepInterface::class, EloquentParentInviteRepository::class);
         $this->app->bind(ParentInviteQueryRepInterface::class, EloquentParentInviteQueryRepository::class);
         $this->app->bind(SemesterPromotionsRepInterface::class, EloquentSemesterPromotionsRepository::class);
-        $this->app->bind(UserLogActionRepInterface::class, EloquentUserLogActionRepository::class);
         $this->app->bind(PaymentEventRepInterface::class, EloquentPaymentEventRepository::class);
         $this->app->bind(PaymentEventQueryRepInterface::class, EloquentPaymentEventQueryRepository::class);
 
