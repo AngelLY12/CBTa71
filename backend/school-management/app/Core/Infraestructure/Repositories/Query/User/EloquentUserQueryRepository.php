@@ -24,7 +24,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class EloquentUserQueryRepository implements UserQueryRepInterface
 {
@@ -410,91 +409,24 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
     public function getUsersByRoleCursor(string $role): \Generator
     {
-        Log::info('📁 REPOSITORIO: getUsersByRoleCursor INICIO', ['role_buscado' => $role]);
-
-        $query = EloquentUser::role($role)
-            ->select('id', 'name', 'last_name', 'curp')
-            ->with('roles:id,name')
-            ->orderBy('id');
-
-        // Debug: Ver la query SQL
-        Log::debug('📁 Query SQL por rol:', [
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings()
-        ]);
-
-        $count = 0;
-        foreach ($query->cursor() as $user) {
-            $count++;
-            Log::info("📁 Usuario #{$count} encontrado por rol '{$role}':", [
-                'id' => $user->id,
-                'curp' => $user->curp,
-                'name' => $user->name,
-                'roles' => $user->roles->pluck('name')->toArray()
-            ]);
+        foreach (EloquentUser::role($role)
+                     ->select('id', 'name', 'last_name', 'curp')
+                     ->with('roles:id,name')
+            ->orderBy('id')
+                     ->cursor() as $user) {
             yield $user;
         }
-
-        Log::info("📁 REPOSITORIO: Total usuarios encontrados por rol '{$role}': {$count}");
-
-        if ($count === 0) {
-            Log::warning("📁 ⚠️ No se encontró ningún usuario con el rol '{$role}'");
-        }
-
-        Log::info('📁 REPOSITORIO: getUsersByRoleCursor FIN');
     }
 
     public function getUsersByCurpCursor(array $curps): \Generator
     {
-        Log::info('📁 REPOSITORIO: getUsersByCurpCursor INICIO', [
-            'curps_recibidos' => $curps,
-            'total_curps' => count($curps),
-            'primer_curp' => $curps[0] ?? 'N/A'
-        ]);
-
-        $query = EloquentUser::whereIn('curp', $curps)
-            ->select('id', 'name', 'last_name', 'curp')
-            ->with('roles:id,name')
-            ->orderBy('id');
-
-        // Debug crítico: Ver la query exacta
-        Log::debug('📁 Query SQL por CURPs:', [
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings(),
-            'curps_en_whereIn' => $curps
-        ]);
-
-        // Ejecutar primero un count para debug
-        $totalCount = $query->count();
-        Log::info("📁 Count total de usuarios (antes del cursor): {$totalCount}");
-
-        $count = 0;
-        foreach ($query->cursor() as $user) {
-            $count++;
-            Log::info("📁 Usuario #{$count} encontrado por CURP:", [
-                'id' => $user->id,
-                'curp' => $user->curp,
-                'curp_coincide' => in_array($user->curp, $curps) ? '✅' : '❌',
-                'name' => $user->name,
-                'roles' => $user->roles->pluck('name')->toArray()
-            ]);
+        foreach (EloquentUser::whereIn('curp', $curps)
+                     ->select('id', 'name', 'last_name', 'curp')
+                     ->with('roles:id,name')
+                     ->orderBy('id')
+                     ->cursor() as $user) {
             yield $user;
         }
-
-        Log::info("📁 REPOSITORIO: Total usuarios procesados en cursor: {$count} de {$totalCount}");
-
-        if ($count === 0) {
-            Log::error('📁 ❌ REPOSITORIO: CURSOR VACÍO - No se encontró NINGÚN usuario');
-            Log::error('📁 CURPs buscados:', $curps);
-
-            // Debug adicional: verificar uno por uno
-            foreach ($curps as $curp) {
-                $exists = EloquentUser::where('curp', $curp)->exists();
-                Log::info("📁 Verificación individual CURP '{$curp}': " . ($exists ? '✅ EXISTE' : '❌ NO EXISTE'));
-            }
-        }
-
-        Log::info('📁 REPOSITORIO: getUsersByCurpCursor FIN');
     }
     public function userHasUnreadNotifications(int $userId): bool
     {
