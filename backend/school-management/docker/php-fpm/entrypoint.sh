@@ -25,6 +25,10 @@ if [ "$APP_ROLE" = "app" ]; then
   php artisan db:seed --force || true
 fi
 
+mkdir -p /var/www/storage/app/imports/temp
+chown -R www-data:www-data /var/www/storage/app/imports/temp
+chmod -R 775 /var/www/storage/app/imports/temp
+
 echo "Laravel listo. Iniciando proceso principal..."
 
 exec "$@"
