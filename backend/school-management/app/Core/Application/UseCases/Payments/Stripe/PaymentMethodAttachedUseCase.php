@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class PaymentMethodAttachedUseCase
 {
+    private const TAG_CARDS = [CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value];
     public function __construct(
         private PaymentMethodRepInterface $pmRepo,
         private PaymentMethodQueryRepInterface $pmqRepo,
@@ -64,7 +65,7 @@ class PaymentMethodAttachedUseCase
                 $this->pmRepo->create($pmDomain);
 
             });
-            $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
+            $this->service->flushTags(array_merge(self::TAG_CARDS, ["userId:{$user->id}"]));
             $this->paymentEventRep->update($event->id, [
                 'processed' => true,
                 'processed_at' => now(),
@@ -75,7 +76,6 @@ class PaymentMethodAttachedUseCase
             return true;
 
         } catch (\Exception $e) {
-            // Registrar error en el evento
             $this->paymentEventRep->update($event->id, [
                 'error_message' => $e->getMessage(),
                 'retry_count' => ($event->retryCount ?? 0) + 1,

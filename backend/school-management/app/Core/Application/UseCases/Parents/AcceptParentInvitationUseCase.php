@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\DB;
 
 class AcceptParentInvitationUseCase
 {
+    private const TAG_PARENT_CHILDREN = [CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value];
+    private const TAG_STUDENT_PARENTS = [CachePrefix::STUDENT->value, ParentCacheSufix::PARENTS->value];
    public function __construct(
         private ParentInviteQueryRepInterface $inviteQRepo,
         private ParentInviteRepInterface $inviteRepo,
@@ -47,7 +49,7 @@ class AcceptParentInvitationUseCase
             DB::beginTransaction();
             if (!$parent->isParent()) {
                 $this->userRepo->assignRole($parent->id, UserRoles::PARENT->value);
-                $parent = $this->userQRepo->findById($parent->id); // Recargar
+                $parent = $this->userQRepo->findById($parent->id);
             }
             $parentRole = $parent->getRole(UserRoles::PARENT->value);
             $studentRole = $student->getRole(UserRoles::STUDENT->value);
@@ -63,8 +65,8 @@ class AcceptParentInvitationUseCase
             $this->parentRepo->create(ParentStudentMapper::toDomain($data));
 
             $this->inviteRepo->markAsUsed($inv->id);
-            $this->service->clearKey(CachePrefix::STUDENT->value, ParentCacheSufix::PARENTS->value . ":$student->id");
-            $this->service->clearKey(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value . ":$parent->id");
+            $this->service->flushTags(array_merge(self::TAG_PARENT_CHILDREN, ["parent:{$parent->id}"]));
+            $this->service->flushTags(array_merge(self::TAG_STUDENT_PARENTS, ["student:{$student->id}"]));
             DB::commit();
 
             event(new ParentInvitationAccepted(

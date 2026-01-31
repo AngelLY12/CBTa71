@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 
 trait HasPaymentSession
 {
+    private const TAG_CARDS = [CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value];
     public function __construct(
         private UserQueryRepInterface $userRepo,
         private PaymentRepInterface $paymentRepo,
@@ -136,7 +137,7 @@ trait HasPaymentSession
             $pm= DB::transaction(function() use ($paymentMethod) {
                 return $this->pmRepo->create($paymentMethod);
             });
-            $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::CARDS->value . ":show:$user->id");
+            $this->service->flushTags(array_merge(self::TAG_CARDS, ["userId:{$user->id}"]));
             return true;
         } catch (DomainException $e) {
             logger()->warning("Excepción de dominio en webhook: " . $e->getMessage(), [

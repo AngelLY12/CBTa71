@@ -28,38 +28,33 @@ class PayConceptUseCase
         private StripeGatewayInterface $stripe,
     ) {}
     public function execute(User $user, int $conceptId): string {
-        return DB::transaction(function() use ($user, $conceptId) {
+        $concept = $this->pcqRepo->findById($conceptId);
+        if (!$concept) throw new ConceptNotFoundException();
+        PaymentConceptValidator::ensureConceptIsActiveAndValid($concept, $user);
 
-            $concept = $this->pcqRepo->findById($conceptId);
-            if (!$concept) throw new ConceptNotFoundException();
-            PaymentConceptValidator::ensureConceptIsActiveAndValid($concept, $user);
-            $lastPayment = $this->paymentQueryRep->getLastPaymentForConcept(
-                $user->id,
-                $conceptId,
-                allowedStatuses: PaymentStatus::nonTerminalStatuses()
-            );
+        $customerId = $this->verifyStripeCustomer($user);
 
-            $amountToPay = $concept->amount;
-            if ($lastPayment && $lastPayment->isUnderPaid()) {
-                $amountToPay = $lastPayment->getPendingAmount();
-            }
-            if($lastPayment && $lastPayment->isNonPaid())
+        $lastPayment = $this->paymentQueryRep->getLastPaymentForConcept(
+            $user->id,
+            $conceptId,
+            allowedStatuses: PaymentStatus::nonTerminalStatuses()
+        );
+
+        $amountToPay = $concept->amount;
+        if ($lastPayment && $lastPayment->isUnderPaid()) {
+            $amountToPay = $lastPayment->getPendingAmount();
+        }
+        if($lastPayment && $lastPayment->isNonPaid())
+        {
+            PaymentValidator::ensurePaymentIsValidToRepay($lastPayment);
+            if(!$this->stripe->expireSessionIfPending($lastPayment->stripe_session_id))
             {
-                PaymentValidator::ensurePaymentIsValidToRepay($lastPayment);
-                if(!$this->stripe->expireSessionIfPending($lastPayment->stripe_session_id))
-                {
-                    throw new PaymentRetryNotAllowedException('El reintento de pago no es válido, espera a que expire la sesión anterior o realiza el pago con la sesión actual.');
-                }
+                throw new PaymentRetryNotAllowedException('El reintento de pago no es válido, espera a que expire la sesión anterior o realiza el pago con la sesión actual.');
             }
-            $customerId= $user->stripe_customer_id;
-            if(!$customerId)
-            {
-                $createdCustomerId=$this->stripe->createStripeUser($user);
-                $this->userRep->update($user->id, ['stripe_customer_id' => $createdCustomerId]);
-                $customerId=$createdCustomerId;
-            }
-            $session = $this->stripe->createCheckoutSession($customerId, $concept, $amountToPay, $user->id);
+        }
 
+        $session = $this->stripe->createCheckoutSession($customerId, $concept, $amountToPay, $user->id);
+        return DB::transaction(function() use ($lastPayment, $session, $concept, $user) {
             if ($lastPayment) {
                 $this->paymentRepo->update($lastPayment->id, [
                     'stripe_session_id' => $session->id,
@@ -71,5 +66,17 @@ class PayConceptUseCase
 
             return $session->url;
         });
+    }
+
+    private function verifyStripeCustomer(User $user): string
+    {
+        $customerId= $user->stripe_customer_id;
+        if(!$customerId)
+        {
+            $createdCustomerId=$this->stripe->createStripeUser($user);
+            $this->userRep->update($user->id, ['stripe_customer_id' => $createdCustomerId]);
+            $customerId=$createdCustomerId;
+        }
+        return $customerId;
     }
 }
