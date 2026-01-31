@@ -40,36 +40,10 @@ class AdminRolesPermissionsController extends Controller
     }
     public function updatePermissions(UpdatePermissionsRequest $request)
     {
-        Log::info('=== INICIO updatePermissions ===');
-        Log::info('1. Validando request...');
+
         $validated=$request->validated();
-        Log::info('✅ Request validado:', $validated);
-        Log::info('2. Creando DTO...');
         $dto = UserMapper::toUpdateUserPermissionsDTO($validated);
-        Log::info('✅ DTO creado:', [
-            'curps' => $dto->curps,
-            'role' => $dto->role,
-            'permissionsToAdd' => $dto->permissionsToAdd,
-            'permissionsToRemove' => $dto->permissionsToRemove,
-            'curps_is_array' => is_array($dto->curps),
-            'curps_count' => is_array($dto->curps) ? count($dto->curps) : 'N/A',
-            'curps_empty' => empty($dto->curps),
-        ]);
-        Log::info('3. Ejecutando servicio syncPermissions...');
-        try {
-            $updated = $this->service->syncPermissions($dto);
-            Log::info('✅ Servicio ejecutado exitosamente');
-        } catch (\Exception $e) {
-            Log::error('❌ Error en servicio:', [
-                'message' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
-        Log::info('=== FIN updatePermissions ===');
+        $updated = $this->service->syncPermissions($dto);
         return Response::success(['users_permissions' => $updated], 'Permisos actualizados correctamente.');
 
     }
