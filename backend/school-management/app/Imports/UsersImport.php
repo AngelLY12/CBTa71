@@ -8,6 +8,7 @@ use App\Notifications\ImportFailedNotification;
 use App\Notifications\ImportFinishedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -66,7 +67,7 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
     private function cleanupFile(): void
     {
         if ($this->filePath && file_exists($this->filePath)) {
-            unlink($this->filePath);
+            Storage::disk('local')->delete($this->filePath);
         }
     }
 }

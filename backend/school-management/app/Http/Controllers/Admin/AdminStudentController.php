@@ -68,9 +68,8 @@ class AdminStudentController extends Controller
         $file= $request->file('file');
         $fileName = 'import_' . time() . '_' . Str::random(10) . '.xlsx';
         $filePath = Storage::disk('local')->putFileAs('imports/temp', $file, $fileName);
-        $fullPath = storage_path('app/' . $filePath);
-        $import= new StudentDetailsImport($this->service, Auth::user(), $fullPath);
-        Excel::queueImport($import,$fullPath)->onQueue('imports');
+        $import= new StudentDetailsImport($this->service, Auth::user(), $filePath);
+        Excel::queueImport($import,$filePath, 'local')->onQueue('imports');
         return Response::success(null, 'Usuarios procesandose, se te notificara cuando termine.');
     }
 }
