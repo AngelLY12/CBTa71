@@ -86,6 +86,59 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
         return $insertados;
     }
 
+    public function getUsersWithPermissionChanges(
+        array $userIds,
+        array $permissionsToAddIds,
+        array $permissionsToRemoveIds
+    ): array {
+        $result = [
+            'affected' => [],
+            'unchanged' => [],
+        ];
+
+        if (empty($permissionsToAddIds) && empty($permissionsToRemoveIds)) {
+            $result['unchanged'] = $userIds;
+            return $result;
+        }
+
+        $permsPorUsuario = DB::table('model_has_permissions')
+            ->whereIn('model_id', $userIds)
+            ->where('model_type', EloquentUser::class)
+            ->select('model_id', DB::raw('GROUP_CONCAT(permission_id) as perms'))
+            ->groupBy('model_id')
+            ->pluck('perms', 'model_id');
+
+        foreach ($userIds as $userId) {
+            $permsStr = $permsPorUsuario[$userId] ?? '';
+            $actuales = $permsStr ? explode(',', $permsStr) : [];
+            $actualesMap = array_flip($actuales);
+
+            $faltan = false;
+            foreach ($permissionsToAddIds as $pid) {
+                if (!isset($actualesMap[$pid])) {
+                    $faltan = true;
+                    break;
+                }
+            }
+
+            $sobran = false;
+            foreach ($permissionsToRemoveIds as $pid) {
+                if (isset($actualesMap[$pid])) {
+                    $sobran = true;
+                    break;
+                }
+            }
+
+            if ($faltan || $sobran) {
+                $result['affected'][] = $userId;
+            } else {
+                $result['unchanged'][] = $userId;
+            }
+        }
+
+        return $result;
+    }
+
     public function syncRoles(Collection $users, array $rolesToAddIds, array $rolesToRemoveIds): array
     {
         $userIds = $users->pluck('id')->toArray();
@@ -99,10 +152,15 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
         $resultado = [
             'removed' => 0,
             'added' => 0,
-            'users_affected' => count($usuariosConCambios)
+            'users_affected' => $usuariosConCambios['affected'],
+            'users_unchanged' => $usuariosConCambios['unchanged'],
         ];
 
-        DB::transaction(function () use ($userIds, $rolesToAddIds, $rolesToRemoveIds, &$resultado) {
+        DB::transaction(function () use ($usuariosConCambios, $rolesToAddIds, $rolesToRemoveIds, &$resultado) {
+            $userIds = $usuariosConCambios['affected'];
+            if (empty($userIds)) {
+                return;
+            }
             if (!empty($rolesToRemoveIds)) {
                 $resultado['removed'] = DB::table('model_has_roles')
                     ->whereIn('model_id', $userIds)
@@ -143,36 +201,18 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
             }
         });
 
-        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
-
         return $resultado;
-    }
-
-    private function insertRolesWithCount(array $userIds, array $roleIds): int
-    {
-        $insertados = 0;
-        foreach ($userIds as $userId) {
-            foreach ($roleIds as $roleId) {
-                try {
-                    $insertado = DB::table('model_has_roles')->insertOrIgnore([
-                        'role_id' => $roleId,
-                        'model_type' => EloquentUser::class,
-                        'model_id' => $userId,
-                    ]);
-                    if ($insertado) {
-                        $insertados++;
-                    }
-                } catch (\Exception $e) {
-                }
-            }
-        }
-        return $insertados;
     }
 
     private function getUsersWithRoleChanges(array $userIds, array $rolesToAddIds, array $rolesToRemoveIds): array
     {
+        $result = [
+            'affected' => [],
+            'unchanged' => [],
+        ];
         if (empty($rolesToAddIds) && empty($rolesToRemoveIds)) {
-            return [];
+            $result['unchanged'] = $userIds;
+            return $result;
         }
 
         $rolesPorUsuario = DB::table('model_has_roles')
@@ -181,8 +221,6 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
             ->select('model_id', DB::raw('GROUP_CONCAT(role_id) as roles'))
             ->groupBy('model_id')
             ->pluck('roles', 'model_id');
-
-        $usuariosConCambios = [];
 
         foreach ($userIds as $userId) {
             $rolesActualesStr = $rolesPorUsuario[$userId] ?? '';
@@ -206,11 +244,15 @@ class EloquentRolesAndPermissionsRepository implements RolesAndPermissionsRepInt
             }
 
             if ($faltanRoles || $tienenRolesNoRemovidos) {
-                $usuariosConCambios[] = $userId;
+                $result['affected'][] = $userId;
+            }
+            else{
+                $result['unchanged'][] = $userId;
+
             }
         }
 
-        return $usuariosConCambios;
+        return $result;
     }
 
     public function getUsersPermissions(array $userIds): array

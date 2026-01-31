@@ -13,6 +13,11 @@ interface RolesAndPermissionsRepInterface
     public function givePermissionsByType(User $user, string $targetRole, string $type = 'model'): void;
     public function removePermissions(array $userIds, array $permissionIds): int;
     public function addPermissions(array $userIds, array $permissionIds): int;
+    public function getUsersWithPermissionChanges(
+        array $userIds,
+        array $permissionsToAddIds,
+        array $permissionsToRemoveIds
+    ): array;
     public function syncRoles(Collection $users, array $rolesToAddIds, array $rolesToRemoveIds): array;
     public function getUsersPermissions(array $userIds): array;
     public function getUsersRoles(array $userIds): array;
