@@ -12906,6 +12906,17 @@
                                 "type": "string",
                                 "example": "+5215512345678"
                             },
+                            "birthdate": {
+                                "description": "Fecha de nacimiento en formato YYYY-MM-DD",
+                                "type": "string",
+                                "format": "date",
+                                "example": "1995-03-15"
+                            },
+                            "age": {
+                                "description": "Edad calculada a partir de la fecha de nacimiento",
+                                "type": "integer",
+                                "example": 28
+                            },
                             "address": {
                                 "description": "Dirección del usuario",
                                 "type": "string",
@@ -12915,6 +12926,12 @@
                                 "description": "Tipo de sangre",
                                 "type": "string",
                                 "example": "O+"
+                            },
+                            "registration_date": {
+                                "description": "Fecha de registro del usuario en formato YYYY-MM-DD",
+                                "type": "string",
+                                "format": "date",
+                                "example": "2023-01-15"
                             }
                         },
                         "type": "object"
@@ -13006,13 +13023,12 @@
                         "minimum": 0,
                         "example": 2
                     },
-                    "created_at": {
-                        "description": "Fecha y hora de creación en formato Y-m-d H:i:s",
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2024-01-22 10:30:45"
-                    },
                     "createdAtHuman": {
+                        "description": "Fecha de creación en formato humano relativo",
+                        "type": "string",
+                        "example": "hace 2 horas"
+                    },
+                    "deletedAtHuman": {
                         "description": "Fecha de creación en formato humano relativo",
                         "type": "string",
                         "example": "hace 2 horas"
@@ -13148,25 +13164,97 @@
                 "type": "object"
             },
             "UserWithUpdatedPermissionsResponse": {
-                "description": "Respuesta con los permisos actualizados de un usuario o grupo de usuarios",
+                "description": "Respuesta de una operación masiva de actualización de permisos sobre usuarios",
                 "properties": {
-                    "fullName": {
-                        "description": "Nombre completo del usuario",
-                        "type": "string",
-                        "example": "Juan Pérez"
+                    "summary": {
+                        "description": "Resumen global de la operación",
+                        "properties": {
+                            "totalFound": {
+                                "description": "Total de usuarios encontrados",
+                                "type": "integer",
+                                "example": 30
+                            },
+                            "totalUpdated": {
+                                "description": "Total de usuarios actualizados",
+                                "type": "integer",
+                                "example": 20
+                            },
+                            "totalUnchanged": {
+                                "description": "Total de usuarios sin cambios",
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "totalFailed": {
+                                "description": "Total de usuarios que fallaron",
+                                "type": "integer",
+                                "example": 5
+                            },
+                            "operations": {
+                                "description": "Operaciones realizadas",
+                                "properties": {
+                                    "permissions_removed": {
+                                        "description": "Total de permisos removidos",
+                                        "type": "integer",
+                                        "example": 15
+                                    },
+                                    "permissions_added": {
+                                        "description": "Total de permisos agregados",
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "roles_processed": {
+                                        "description": "Total de roles procesados",
+                                        "type": "integer",
+                                        "example": 3
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
                     },
-                    "curp": {
-                        "description": "CURP del usuario",
-                        "type": "string",
-                        "example": "PEPJ800101HDFRRN09"
-                    },
-                    "role": {
-                        "description": "Rol actual del usuario",
-                        "type": "string",
-                        "example": "student"
+                    "usersProcessed": {
+                        "description": "Detalle de usuarios procesados",
+                        "properties": {
+                            "processed_users": {
+                                "description": "IDs de primeros 10 usuarios procesados exitosamente",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    1,
+                                    2,
+                                    3
+                                ]
+                            },
+                            "failed_users": {
+                                "description": "IDs de usuarios que fallaron",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    4,
+                                    5
+                                ]
+                            },
+                            "unchanged_users": {
+                                "description": "IDs de usuarios que no tuvieron cambios",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    6,
+                                    7
+                                ]
+                            }
+                        },
+                        "type": "object"
                     },
                     "updatedPermissions": {
-                        "description": "Lista de permisos actualizados (añadidos o removidos)",
+                        "description": "Permisos modificados durante la operación",
                         "properties": {
                             "added": {
                                 "type": "array",
@@ -13174,7 +13262,8 @@
                                     "type": "string"
                                 },
                                 "example": [
-                                    "view.students"
+                                    "view.students",
+                                    "edit.students"
                                 ]
                             },
                             "removed": {
@@ -13188,68 +13277,6 @@
                             }
                         },
                         "type": "object"
-                    },
-                    "metadata": {
-                        "description": "Datos extra sobre la operación",
-                        "properties": {
-                            "totalFound": {
-                                "description": "Número total de usuarios encontrados",
-                                "type": "integer",
-                                "example": 30
-                            },
-                            "totalUpdated": {
-                                "description": "Número total de usuarios afectados",
-                                "type": "integer",
-                                "example": 20
-                            },
-                            "failed": {
-                                "description": "Número total de usuarios no afectados por fallo",
-                                "type": "integer",
-                                "example": 10
-                            },
-                            "failedUsers": {
-                                "description": "Lista de ID de usuarios fallidos",
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "example": [
-                                    1,
-                                    2,
-                                    3,
-                                    4
-                                ]
-                            },
-                            "operations": {
-                                "description": "Operaciones realizadas",
-                                "properties": {
-                                    "permissions_removed": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        },
-                                        "example": [
-                                            "view"
-                                        ]
-                                    },
-                                    "permissions_added": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
-                                        },
-                                        "example": [
-                                            "create"
-                                        ]
-                                    },
-                                    "roles_processed": {
-                                        "type": "integer",
-                                        "example": 5
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        },
-                        "type": "object"
                     }
                 },
                 "type": "object"
@@ -13257,69 +13284,28 @@
             "UserWithUpdatedRoleResponse": {
                 "description": "Respuesta con los roles actualizados de varios usuarios",
                 "properties": {
-                    "fullNames": {
-                        "description": "Nombres completos de los usuarios afectados",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "example": [
-                            "Juan Pérez",
-                            "Ana Gómez"
-                        ]
-                    },
-                    "curps": {
-                        "description": "CURPs de los usuarios afectados",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "example": [
-                            "PEPJ800101HDFRRN09",
-                            "GOMA900202MDFLRN05"
-                        ]
-                    },
-                    "updatedRoles": {
-                        "description": "Roles agregados y removidos",
-                        "properties": {
-                            "added": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "example": [
-                                    "student"
-                                ]
-                            },
-                            "removed": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "example": [
-                                    "guest"
-                                ]
-                            }
-                        },
-                        "type": "object"
-                    },
-                    "metadata": {
-                        "description": "Datos extra sobre la operación",
+                    "summary": {
+                        "description": "Resumen global de la operación",
                         "properties": {
                             "totalFound": {
-                                "description": "Número total de usuarios encontrados",
+                                "description": "Total de usuarios encontrados",
                                 "type": "integer",
                                 "example": 30
                             },
                             "totalUpdated": {
-                                "description": "Número total de usuarios afectados",
+                                "description": "Total de usuarios actualizados",
                                 "type": "integer",
                                 "example": 20
                             },
-                            "failed": {
-                                "description": "Número total de usuarios no afectados por fallo",
+                            "totalUnchanged": {
+                                "description": "Total de usuarios sin cambios",
                                 "type": "integer",
-                                "example": 10
+                                "example": 5
+                            },
+                            "totalFailed": {
+                                "description": "Total de usuarios que fallaron",
+                                "type": "integer",
+                                "example": 5
                             },
                             "operations": {
                                 "description": "Operaciones realizadas",
@@ -13348,6 +13334,70 @@
                                     }
                                 },
                                 "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "usersProcessed": {
+                        "description": "Detalle de usuarios procesados",
+                        "properties": {
+                            "processed_users": {
+                                "description": "IDs de primeros 10 usuarios procesados exitosamente",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    1,
+                                    2,
+                                    3
+                                ]
+                            },
+                            "unchanged_users": {
+                                "description": "IDs de usuarios que no tuvieron cambios",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    4,
+                                    5
+                                ]
+                            },
+                            "failed_users": {
+                                "description": "IDs de usuarios que fallaron",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    6,
+                                    7
+                                ]
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "updatedRoles": {
+                        "description": "Roles agregados y removidos",
+                        "properties": {
+                            "added": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "student"
+                                ]
+                            },
+                            "removed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": [
+                                    "guest"
+                                ]
                             }
                         },
                         "type": "object"
