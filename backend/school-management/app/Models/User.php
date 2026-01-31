@@ -111,27 +111,18 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function sendEmailVerificationNotification(): void
     {
-        Log::info('🎯 sendEmailVerificationNotification EJECUTADO', [
-            'user_id' => $this->id,
-            'email' => $this->email,
-            'time' => now()->toDateTimeString()
-        ]);
         $verifyUrl = URL::temporarySignedRoute(
             'verification.verify',
             now()->addMinutes(60),
             ['id' => $this->getKey(), 'hash' => sha1($this->getEmailForVerification())]
         );
 
-        Log::info('🎯 URL generada', ['url' => $verifyUrl]);
-
-
-        $job=SendMailJob::dispatch(
+        SendMailJob::dispatch(
             new SendVerifyEmail($this, $verifyUrl),
             $this->email,
             'email_verification'
         )->onQueue('emails');
 
-        Log::info('🎯 Job creado', ['job_id' => $job->getJob() ?? 'null']);
     }
     public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
