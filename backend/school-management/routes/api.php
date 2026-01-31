@@ -60,7 +60,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
 
-    Route::prefix('parents')->middleware(['throttle:5,1', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('parents')->middleware(['throttle:5,1'])->group(function(){
         Route::middleware(['role:student',])->post('/invite',[ParentsController::class, 'sendInvitation']);
         Route::middleware(['role:parent'])->post('/invite/accept',[ParentsController::class, 'acceptInvitation']);
         Route::middleware(['role:parent'])->get('/get-children',[ParentsController::class,'getParetChildren']);
@@ -68,31 +68,31 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['role:student'])->delete('/delete-parent/{parentId}',[ParentsController::class,'delete']);
     });
 
-    Route::prefix('dashboard')->middleware(['role:student|parent', 'throttle:global', 'log.action', 'user.status'])->group(function (){
+    Route::prefix('dashboard')->middleware(['role:student|parent', 'throttle:global'])->group(function (){
         Route::middleware('permission:view.own.pending.concepts.summary')->get('/pending/{id}',[DashboardController::class,'pending']);
         Route::middleware('permission:view.own.paid.concepts.summary')->get('/paid/{id}',[DashboardController::class,'paid']);
         Route::middleware('permission:view.own.overdue.concepts.summary')->get('/overdue/{id}',[DashboardController::class,'overdue']);
         Route::middleware('permission:view.payments.history')->get('/history/{id}',[DashboardController::class,'history']);
         Route::middleware('permission:refresh.all.dashboard')->post('/refresh',[DashboardController::class,'refreshDashboard']);
     });
-    Route::prefix('cards')->middleware(['role:student|parent', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('cards')->middleware(['role:student|parent'])->group(function(){
         Route::middleware(['permission:view.cards','throttle:global'])->get('/{id}',[CardsController::class,'index']);
         Route::middleware(['permission:create.setup', 'throttle:10,1440'])->post('/',[CardsController::class,'store']);
         Route::middleware(['permission:delete.card', 'throttle:10,1'])->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
-    Route::prefix('history')->middleware(['role:student|parent','throttle:global', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('history')->middleware(['role:student|parent','throttle:global'])->group(function(){
         Route::middleware('permission:view.payment.history')->get('/{id}',[PaymentHistoryController::class,'index']);
         Route::middleware('permission:view.payment')->get('/payment/{id}',[PaymentHistoryController::class,'findPayment']);
 
     });
-    Route::prefix('pending-payment')->middleware(['role:student|parent', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('pending-payment')->middleware(['role:student|parent'])->group(function(){
         Route::middleware(['permission:view.pending.concepts','throttle:global'])->get('/{id}',[PendingPaymentController::class,'index']);
         Route::middleware(['permission:create.payment','throttle:10,1440'])->post('/',[PendingPaymentController::class,'store']);
         Route::middleware(['permission:view.overdue.concepts','throttle:global'])->get('/overdue/{id}',[PendingPaymentController::class,'overdue']);
 
     });
 
-    Route::prefix('dashboard-staff')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('dashboard-staff')->middleware(['role:financial-staff'])->group(function(){
         Route::middleware(['permission:view.all.pending.concepts.summary', 'throttle:global'])->get('/pending',[StaffDashboardController::class,'pendingPayments']);
         Route::middleware(['permission:view.all.students.summary', 'throttle:global'])->get('/students',[StaffDashboardController::class,'allStudents']);
         Route::middleware(['permission:view.all.paid.concepts.summary', 'throttle:global'])->get('/payments',[StaffDashboardController::class,'paymentsMade']);
@@ -100,7 +100,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:create.payout', 'throttle:5,1'])->post('/payout',[StaffDashboardController::class,'payout']);
         Route::middleware(['permission:refresh.all.dashboard', 'throttle:5,1'])->post('/refresh',[StaffDashboardController::class,'refreshDashboard']);
     });
-    Route::prefix('concepts')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('concepts')->middleware(['role:financial-staff'])->group(function(){
         Route::middleware(['permission:view.concepts', 'throttle:global'])->get('/', [ConceptsController::class, 'index']);
         Route::middleware(['permission:view.concepts', 'throttle:10,1'])->get('/{id}',[ConceptsController::class,'findConcept']);
         Route::middleware(['permission:view.concepts','throttle:10,1'])->get('/relations/{id}',[ConceptsController::class,'findRelations']);
@@ -115,22 +115,22 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:activate.concepts', 'throttle:10,1'])->post('/{concept}/activate',[ConceptsController::class,'activate']);
     });
 
-    Route::prefix('debts')->middleware(['role:financial-staff', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('debts')->middleware(['role:financial-staff'])->group(function(){
         Route::middleware(['permission:view.debts', 'throttle:global'])->get('/', [DebtsController::class, 'index']);
         Route::middleware(['permission:validate.debt', 'throttle:10,1'])->post('/validate', [DebtsController::class, 'validatePayment']);
         Route::middleware(['permission:view.stripe.payments', 'throttle:10,1'])->get('/stripe-payments', [DebtsController::class, 'getStripePayments']);
     });
 
-    Route::prefix('payments')->middleware(['role:financial-staff', 'throttle:global', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('payments')->middleware(['role:financial-staff', 'throttle:global'])->group(function(){
         Route::middleware('permission:view.payments')->get('/', [PaymentsController::class, 'index']);
         Route::middleware('permission:view.payments')->get('/by-concept',[PaymentsController::class,'showByName']);
     });
 
-     Route::prefix('students')->middleware(['role:financial-staff','throttle:global','log.action', 'user.status' ])->group(function(){
+     Route::prefix('students')->middleware(['role:financial-staff','throttle:global' ])->group(function(){
         Route::middleware('permission:view.students')->get('/', [StudentsController::class, 'index']);
     });
 
-    Route::prefix('admin-actions')->middleware(['role:admin|supervisor', 'throttle:global', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('admin-actions')->middleware(['role:admin|supervisor', 'throttle:global'])->group(function(){
 
         Route::controller(AdminStudentController::class)->group(function(){
             Route::middleware('permission:attach.student')->post('/attach-student','attachStudent');
@@ -172,7 +172,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         });
     });
 
-    Route::prefix('careers')->middleware(['role:admin|supervisor', 'log.action', 'user.status'])->group(function(){
+    Route::prefix('careers')->middleware(['role:admin|supervisor'])->group(function(){
         Route::get('/', [CareerController::class, 'index']);
         Route::get('/{id}', [CareerController::class, 'show']);
         Route::post('/', [CareerController::class, 'store']);
@@ -180,7 +180,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::delete('/{id}', [CareerController::class, 'destroy']);
     });
 
-    Route::prefix('users')->middleware(['throttle:10,1', 'log.action', 'user.status'])->group(function () {
+    Route::prefix('users')->middleware(['throttle:10,1'])->group(function () {
         Route::patch('/update', [UserController::class, 'update']);
         Route::patch('/update/password', [UserController::class, 'updatePassword']);
         Route::get('/user',[UserController::class,'findUser']);
