@@ -8,6 +8,7 @@ use App\Core\Application\DTO\Response\General\PermissionsByRole;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\General\PermissionsUpdatedToUserResponse;
 use App\Core\Application\DTO\Response\General\RolesUpdatedToUserResponse;
+use App\Core\Application\DTO\Response\User\UserWithUpdatedPermissionsResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Admin\RolePermissionManagement\FindAllPermissionsByCurpsUseCase;
@@ -68,7 +69,7 @@ class AdminRolePermissionsServiceFacades
         $this->service->flushTags(array_merge(self::TAG_PERMISSIONS_BY_ROLE,["userId:{$userId}"]));
         return $permissions;
     }
-    public function syncPermissions(UpdateUserPermissionsDTO $dto):array
+    public function syncPermissions(UpdateUserPermissionsDTO $dto): UserWithUpdatedPermissionsResponse
     {
         $permissions=$this->sync->execute($dto);
         $this->service->flushTags(self::TAG_USERS_ID);

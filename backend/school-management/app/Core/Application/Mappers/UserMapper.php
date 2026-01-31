@@ -181,14 +181,12 @@ class UserMapper{
         );
     }
 
-    public static function toUserUpdatedPermissionsResponse( array $permissions,array $metadata,?EloquentUser $user=null, ?string $role=null, ): UserWithUpdatedPermissionsResponse
+    public static function toUserUpdatedPermissionsResponse(array $summary,array $usersProcessed, array $updatedPermissions ): UserWithUpdatedPermissionsResponse
     {
         return new UserWithUpdatedPermissionsResponse(
-            fullName: $user?->name && $user?->last_name ? "{$user->name} {$user->last_name}" : null,
-            curp: $user?->curp ?? null,
-            role: $role,
-            updatedPermissions: $permissions,
-            metadata: $metadata ?? []
+            summary: $summary,
+            usersProcessed:$usersProcessed,
+            updatedPermissions: $updatedPermissions,
         );
     }
     public static function toUpdateUserRoleDTO(array $data): UpdateUserRoleDTO
@@ -200,13 +198,12 @@ class UserMapper{
         );
     }
 
-    public static function toUserWithUptadedRoleResponse(array $data): UserWithUpdatedRoleResponse
+    public static function toUserWithUptadedRoleResponse(array $summary, array $usersProcessed, array $updatedRoles): UserWithUpdatedRoleResponse
     {
         return new UserWithUpdatedRoleResponse(
-            fullNames:$data['names'] ?? [],
-            curps: $data['curps'] ?? [],
-            updatedRoles:$data['roles'] ?? [],
-            metadata: $data['metadata'] ?? []
+            summary: $summary,
+            usersProcessed: $usersProcessed,
+            updatedRoles:$updatedRoles,
         );
     }
 

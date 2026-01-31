@@ -82,10 +82,8 @@ class SyncRoleUseCase
         }
         $rolesToRemoveIds = $this->handleUnverifiedRole($rolesToRemoveIds);
         $totalSync= $this->syncRolesInChunks($users, $rolesToAddIds, $rolesToRemoveIds);
-        $data = $this->formatData($users, $dto, $totalSync);
-
-        return UserMapper::toUserWithUptadedRoleResponse($data);
-
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        return  $this->buildResponse($users, $dto, $totalSync);
     }
 
     private function processUsersFromGenerator(\Generator $usersGenerator): Collection
@@ -129,7 +127,12 @@ class SyncRoleUseCase
         $totalResult = [
             'removed' => 0,
             'added' => 0,
-            'users_affected' => 0,
+            'users_affected_count' => 0,
+            'users_unchanged_count' => 0,
+            'users_failed_count' => 0,
+            'users_affected' => [],
+            'users_unchanged' => [],
+            'users_failed' => [],
             'total_chunks' => 0
         ];
 
@@ -138,7 +141,8 @@ class SyncRoleUseCase
 
             $totalResult['removed'] += $resultado['removed'];
             $totalResult['added'] += $resultado['added'];
-            $totalResult['users_affected'] += $resultado['users_affected'];
+            $totalResult['users_affected'] = array_values(array_unique(array_merge($totalResult['users_affected'],$resultado['users_affected'])));
+            $totalResult['users_unchanged'] = array_values(array_unique(array_merge($totalResult['users_unchanged'],$resultado['users_unchanged'])));
             $totalResult['total_chunks']++;
         };
 
@@ -147,29 +151,45 @@ class SyncRoleUseCase
         } else {
             $callback($users);
         }
-
+        $allIds = array_unique($users->pluck('id')->toArray());
+        $processedIds = array_merge(
+            $totalResult['users_affected'],
+            $totalResult['users_unchanged']
+        );
+        $totalResult['users_affected_count'] = count($totalResult['users_affected']);
+        $totalResult['users_unchanged_count'] = count($totalResult['users_unchanged']);
+        $totalResult['users_failed'] = array_diff($allIds, $processedIds);
+        $totalResult['users_failed_count'] = count($totalResult['users_failed']);
         return $totalResult;
     }
 
-    private function formatData(Collection $users, UpdateUserRoleDTO $dto,  array $totalSync): array
+    private function buildResponse(Collection $users, UpdateUserRoleDTO $dto,  array $totalSync): UserWithUpdatedRoleResponse
     {
-        return [
-            'names' => $users->map(fn($u) => "{$u->name} {$u->last_name}")->toArray(),
-            'curps' => $users->take(10)->pluck('curp')->toArray(),
-            'roles' => [
-                'added' => $dto->rolesToAdd ?? [],
-                'removed' => $dto->rolesToRemove ?? [],
-            ],
-            'metadata' => [
+        return UserMapper::toUserWithUptadedRoleResponse(
+            summary: [
                 'totalFound' => $users->count(),
-                'totalUpdated' => $totalSync['users_affected'],
-                'failed' => $users->count() - $totalSync['users_affected'],
+                'totalUpdated' => $totalSync['users_affected_count'],
+                'totalUnchanged' => $totalSync['users_unchanged_count'],
+                'totalFailed' => $totalSync['users_failed_count'],
                 'operations' => [
                     'roles_removed' => $totalSync['removed'],
                     'roles_added' => $totalSync['added'],
                     'chunks_processed' => $totalSync['total_chunks'],
-                ]
+                ],
+                'unverified_policy' => [
+                    'auto_removed' => true,
+                    'reason' => 'UNVERIFIED rol siempre es removido al actualizar roles',
+                ],
             ],
-        ];
+            usersProcessed: [
+                'processed_users' => array_slice($totalSync['users_affected'], 0, 10),
+                'unchanged_users' => $totalSync['users_unchanged'],
+                'failed_users' => $totalSync['users_failed'],
+            ] ,
+            updatedRoles: [
+                'added' => $dto->rolesToAdd ?? [],
+                'removed' => $dto->rolesToRemove ?? []
+            ]
+        );
     }
 }
