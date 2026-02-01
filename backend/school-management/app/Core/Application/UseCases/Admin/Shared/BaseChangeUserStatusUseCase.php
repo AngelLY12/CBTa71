@@ -9,6 +9,7 @@ use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Exceptions\NotFound\UsersNotFoundForUpdateException;
 use App\Jobs\ClearStaffCacheJob;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 abstract class BaseChangeUserStatusUseCase
 {
@@ -40,7 +41,14 @@ abstract class BaseChangeUserStatusUseCase
         }
 
         $validIds = $allValidUsers->pluck('id')->toArray();
-        $response = $this->userRepo->changeStatus($validIds, $this->getTargetStatus()->value);
+        $response=DB::transaction(function () use ($validIds) {
+            $response = $this->userRepo->changeStatus($validIds, $this->getTargetStatus()->value);
+            if($this->getTargetStatus() === UserStatus::ELIMINADO)
+            {
+                $this->userRepo->revokeTokensByUserIds($validIds);
+            }
+            return $response;
+        });
 
         if ($this->shouldClearCache()) {
             $this->dispatchCacheClear();

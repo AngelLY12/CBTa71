@@ -18,5 +18,6 @@ interface UserRepInterface{
     public function createToken(int $userId, string $name): string;
     public function assignRole(int $userId, string $role): bool;
     public function createRefreshToken(int $userId, string $name): string;
+    public function revokeTokensByUserIds(array $userIds): int;
 
 }

@@ -149,4 +149,15 @@ class EloquentUserRepository implements UserRepInterface
         ]);
     }
 
+    public function revokeTokensByUserIds(array $userIds): int
+    {
+        $sanctumDeleted = DB::table('personal_access_tokens')
+            ->whereIn('tokenable_id', $userIds)
+            ->delete();
+        $refreshTokenDeleted = DB::table('refresh_tokens')
+            ->whereIn('user_id', $userIds)
+            ->delete();
+        return $sanctumDeleted + $refreshTokenDeleted;
+    }
+
 }
