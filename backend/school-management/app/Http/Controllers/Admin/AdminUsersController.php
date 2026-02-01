@@ -46,25 +46,19 @@ class AdminUsersController extends Controller
 
     }
 
-
     public function import(ImportRequest $request)
     {
         $file= $request->file('file');
-        $filename = 'users_import_' . time() . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs('imports', $filename, 'local');
-
         $import = new UsersImport(
             $this->service,
             Auth::user(),
-            storage_path('app/' . $filePath)
         );
 
-        Excel::queueImport($import, storage_path('app/' . $filePath))->onQueue('imports');
+        Excel::Import($import, $file);
 
         return Response::success(null, 'Usuarios procesandose, se te notificara cuando termine.');
 
     }
-
 
     public function index(ShowUsersPaginationRequest $request)
     {
