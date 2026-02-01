@@ -9,6 +9,7 @@ use App\Notifications\ImportFinishedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -32,14 +33,25 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
 
     public function collection(Collection $collection)
     {
-        $rows = $collection->skip(1)->toArray();
-        $importResponse = $this->adminService->importUsers($rows);
-        $this->importResult = $importResponse->toArray();
+        try {
+            Log::info("Processing chunk with ".count($collection)." rows, filePath={$this->filePath}");
+            $rows = $collection->skip(1)->toArray();
+            $importResponse = $this->adminService->importUsers($rows);
+            $this->importResult = $importResponse->toArray();
+            Log::info("Chunk processed successfully.");
+        } catch (\Throwable $e) {
+            Log::error("Error processing chunk: ".$e->getMessage(), [
+                'exception' => $e,
+                'filePath' => $this->filePath,
+            ]);
+            throw $e;
+        }
     }
     public function registerEvents(): array
     {
         return [
             AfterImport::class => function() {
+                Log::info("AfterImport event triggered, filePath={$this->filePath}");
                 $this->cleanupFile();
                 $result = $this->importResult ?: [
                     'summary' => [],
@@ -48,11 +60,12 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
                     'has_errors' => true,
                     'message' => 'El import terminó pero no se pudo generar el resumen.'
                 ];
-                $this->user->notify(new ImportFinishedNotification(
-                    $result
-                ));
+                $this->user->notify(new ImportFinishedNotification($result));
             },
             ImportFailed::class => function(ImportFailed $event) {
+                Log::error("ImportFailed event triggered, filePath={$this->filePath}", [
+                    'exception' => $event->getException()
+                ]);
                 $this->cleanupFile();
                 $this->user->notify(new ImportFailedNotification(
                     $event->getException()->getMessage()
@@ -69,9 +82,14 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
     {
         if ($this->filePath) {
             $file = $this->filePath;
-            Bus::dispatch(function() use ($file) {
+            try {
+                Log::info("Scheduling cleanup for file: {$file}");
+                // Simplemente borra directo si no necesitas delay
                 Storage::disk('local')->delete($file);
-            })->delay(now()->addSeconds(30));
+                Log::info("File deleted: {$file}");
+            } catch (\Throwable $e) {
+                Log::error("Error deleting file: ".$e->getMessage(), ['filePath' => $file]);
+            }
         }
     }
 }
