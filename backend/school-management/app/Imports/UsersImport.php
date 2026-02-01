@@ -21,13 +21,11 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
     protected AdminUsersServiceFacades $adminService;
     protected User $user;
     private array $importResult = [];
-    private string $filePath = '';
 
-    public function __construct(AdminUsersServiceFacades $adminService, User $user, string $filePath = '')
+    public function __construct(AdminUsersServiceFacades $adminService, User $user)
     {
         $this->adminService = $adminService;
         $this->user = $user;
-        $this->filePath = $filePath;
     }
 
     public function collection(Collection $collection)
@@ -40,7 +38,6 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
     {
         return [
             AfterImport::class => function() {
-                $this->cleanupFile();
                 $result = $this->importResult ?: [
                     'summary' => [],
                     'errors' => [],
@@ -53,7 +50,6 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
                 ));
             },
             ImportFailed::class => function(ImportFailed $event) {
-                $this->cleanupFile();
                 $this->user->notify(new ImportFailedNotification(
                     $event->getException()->getMessage()
                 ));
@@ -64,14 +60,5 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
     public function chunkSize(): int
     {
         return 1000;
-    }
-    private function cleanupFile(): void
-    {
-        if ($this->filePath) {
-            $file = $this->filePath;
-            Bus::dispatch(function() use ($file) {
-                Storage::disk('local')->delete($file);
-            })->delay(now()->addSeconds(30));
-        }
     }
 }
