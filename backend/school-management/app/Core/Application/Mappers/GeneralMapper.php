@@ -25,7 +25,10 @@ class GeneralMapper{
             perPage: $paginated->perPage() ?? null,
             total: $paginated->total() ?? null,
             hasMorePages: $paginated->hasMorePages(),
-            nextPage: $paginated->currentPage() < $paginated->lastPage() ? $paginated->currentPage() + 1 : null
+            nextPage: $paginated->currentPage() < $paginated->lastPage() ? $paginated->currentPage() + 1 : null,
+            previousPage: $paginated->currentPage() > 1
+                ? $paginated->currentPage() - 1
+                : null
         );
     }
 

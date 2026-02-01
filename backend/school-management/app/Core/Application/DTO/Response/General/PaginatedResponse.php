@@ -14,12 +14,13 @@ namespace App\Core\Application\DTO\Response\General;
  *         nullable=true,
  *         description="Lista de elementos paginados"
  *     ),
- *     @OA\Property(property="currentPage", type="integer", example=1),
- *     @OA\Property(property="lastPage", type="integer", example=5),
- *     @OA\Property(property="perPage", type="integer", example=15),
- *     @OA\Property(property="total", type="integer", example=72),
- *     @OA\Property(property="hasMorePages", type="boolean", example=true),
- *     @OA\Property(property="nextPage", type="integer", example=2)
+ *     @OA\Property(property="currentPage", nullable=true, type="integer", example=1),
+ *     @OA\Property(property="lastPage", nullable=true, type="integer", example=5),
+ *     @OA\Property(property="perPage", nullable=true, type="integer", example=15),
+ *     @OA\Property(property="total", nullable=true, type="integer", example=72),
+ *     @OA\Property(property="hasMorePages", nullable=true, type="boolean", example=true),
+ *     @OA\Property(property="nextPage", nullable=true, type="integer", example=2),
+ *     @OA\Property(property="previousPage", nullable=true, type="integer", example=null)
  * )
  */
 
@@ -32,6 +33,7 @@ class PaginatedResponse{
         public readonly ?int $perPage,
         public readonly ?int $total,
         public readonly ?bool $hasMorePages,
-        public readonly ?int $nextPage
+        public readonly ?int $nextPage,
+        public readonly ?int $previousPage,
     ) {}
 }
