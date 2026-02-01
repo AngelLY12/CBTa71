@@ -21,11 +21,13 @@ class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, Wit
     protected AdminStudentServiceFacades $adminService;
     protected User $user;
     private array $importResult = [];
+    private string $filePath = '';
 
-    public function __construct(AdminStudentServiceFacades $adminService, User $user)
+    public function __construct(AdminStudentServiceFacades $adminService, User $user, string $filePath = '')
     {
         $this->adminService = $adminService;
         $this->user = $user;
+        $this->filePath = $filePath;
     }
     /**
     * @param Collection $collection
@@ -41,6 +43,7 @@ class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, Wit
     {
         return [
             AfterImport::class => function() {
+                $this->cleanupFile();
                 $result = $this->importResult ?: [
                     'summary' => [],
                     'errors' => [],
@@ -53,6 +56,7 @@ class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, Wit
                 ));
             },
             ImportFailed::class => function(ImportFailed $event) {
+                $this->cleanupFile();
                 $this->user->notify(new ImportFailedNotification(
                     $event->getException()->getMessage()
                 ));
@@ -63,5 +67,15 @@ class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, Wit
     public function chunkSize(): int
     {
         return 1000;
+    }
+
+    private function cleanupFile(): void
+    {
+        if ($this->filePath) {
+            $file = $this->filePath;
+            Bus::dispatch(function() use ($file) {
+                Storage::disk('local')->delete($file);
+            })->delay(now()->addSeconds(30));
+        }
     }
 }
