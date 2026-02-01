@@ -43,7 +43,7 @@ class SyncPermissionsUseCase
 
         app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
 
-        return $this->buildResponse($processedData['users'], $dto, $result);
+        return $this->buildResponse($dto, $result);
     }
 
     private function validateNoDuplicatePermissions(UpdateUserPermissionsDTO $dto): void
@@ -129,13 +129,14 @@ class SyncPermissionsUseCase
     private function processPermissionsInTransaction(Collection $usersGroupedByRole, UpdateUserPermissionsDTO $dto): array
     {
         $totalResult = [
-            'total_users' => 0,
+            'total_users_count' => 0,
             'users_affected_count' => 0,
             'users_unchanged_count' => 0,
             'users_failed_count' => 0,
             'permissions_removed' => 0,
             'permissions_added' => 0,
             'roles_processed' => 0,
+            'total_users' => [],
             'users_affected' => [],
             'failed_users' => [],
             'unchanged_users' => [],
@@ -194,7 +195,8 @@ class SyncPermissionsUseCase
         $allUserIds = array_unique($allUserIds);
         $totalResult['users_affected_count'] = count(array_unique($totalResult['users_affected']));
         $totalResult['users_unchanged_count'] = count(array_unique($totalResult['unchanged_users']));
-        $totalResult['total_users'] = count(array_unique($allUserIds));
+        $totalResult['total_users_count'] = count(array_unique($allUserIds));
+        $totalResult['total_users'] = array_unique($allUserIds);
         $totalResult['failed_users'] = array_diff(
             $allUserIds,
             array_merge(
@@ -229,36 +231,30 @@ class SyncPermissionsUseCase
         })->groupBy('role')->map(fn($items) => $items->pluck('user'));
     }
 
-    private function buildResponse(Collection $users, UpdateUserPermissionsDTO $dto, array $result): UserWithUpdatedPermissionsResponse
+    private function buildResponse(UpdateUserPermissionsDTO $dto, array $result): UserWithUpdatedPermissionsResponse
     {
         $permissions = [
-            'added' => $dto->permissionsToAdd ?? [],
-            'removed' => $dto->permissionsToRemove ?? [],
+            'processed_added' => $dto->permissionsToAdd ?? [],
+            'processed_removed' => $dto->permissionsToRemove ?? [],
         ];
 
         return UserMapper::toUserUpdatedPermissionsResponse(
             summary: [
-                'totalFound' => $result['total_users'],
+                'totalFound' => $result['total_users_count'],
                 'totalUpdated'=> $result['users_affected_count'],
                 'totalUnchanged' => $result['users_unchanged_count'],
                 'totalFailed' => $result['users_failed_count'],
                 'operations' => [
-                    'permissions_removed' => $result['permissions_removed'],
-                    'permissions_added' => $result['permissions_added'],
-                    'roles_processed' => $result['roles_processed'],
+                    'total_permissions_removed' => $result['permissions_removed'],
+                    'total_permissions_added' => $result['permissions_added'],
+                    'total_roles_processed' => $result['roles_processed'],
                 ]
             ],
             usersProcessed: [
-                'processed_users' => array_slice(
-                    array_diff(
-                        $users->pluck('id')->toArray(),
-                        array_merge($result['failed_users'], $result['unchanged_users'])
-                    ),
-                    0,
-                    10
-                ),
-                'failed_users' => $result['failed_users'],
-                'unchanged_users' => $result['unchanged_users'],
+                'processed_users_id' => array_slice($result['total_users'],0,10),
+                'affected_users_id' => array_slice($result['users_affected'],0,10),
+                'failed_users_id' => $result['failed_users'],
+                'unchanged_users_id' => $result['unchanged_users'],
             ],
             updatedPermissions: $permissions
         );

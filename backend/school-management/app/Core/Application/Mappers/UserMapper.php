@@ -185,8 +185,8 @@ class UserMapper{
     {
         return new UserWithUpdatedPermissionsResponse(
             summary: $summary,
-            usersProcessed:$usersProcessed,
-            updatedPermissions: $updatedPermissions,
+            users:$usersProcessed,
+            permissionsProcessed: $updatedPermissions,
         );
     }
     public static function toUpdateUserRoleDTO(array $data): UpdateUserRoleDTO
@@ -202,8 +202,8 @@ class UserMapper{
     {
         return new UserWithUpdatedRoleResponse(
             summary: $summary,
-            usersProcessed: $usersProcessed,
-            updatedRoles:$updatedRoles,
+            users: $usersProcessed,
+            rolesProcessed:$updatedRoles,
         );
     }
 

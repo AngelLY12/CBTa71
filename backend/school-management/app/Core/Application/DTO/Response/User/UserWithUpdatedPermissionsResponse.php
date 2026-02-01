@@ -18,31 +18,38 @@ namespace App\Core\Application\DTO\Response\User;
  *             property="operations",
  *             type="object",
  *             description="Operaciones realizadas",
- *             @OA\Property(property="permissions_removed", type="integer", example=15, description="Total de permisos removidos"),
- *             @OA\Property(property="permissions_added", type="integer", example=10, description="Total de permisos agregados"),
- *             @OA\Property(property="roles_processed", type="integer", example=3, description="Total de roles procesados")
+ *             @OA\Property(property="total_permissions_removed", type="integer", example=15, description="Total de permisos removidos"),
+ *             @OA\Property(property="total_permissions_added", type="integer", example=10, description="Total de permisos agregados"),
+ *             @OA\Property(property="total_roles_processed", type="integer", example=3, description="Total de roles procesados")
  *         )
  *     ),
  *     @OA\Property(
- *         property="usersProcessed",
+ *         property="users",
  *         type="object",
  *         description="Detalle de usuarios procesados",
  *         @OA\Property(
- *             property="processed_users",
+ *             property="processed_users_id",
  *             type="array",
  *             @OA\Items(type="integer"),
  *             example={1, 2, 3},
  *             description="IDs de primeros 10 usuarios procesados exitosamente"
  *         ),
+ *      @OA\Property(
+ *              property="affected_users_id",
+ *              type="array",
+ *              @OA\Items(type="integer"),
+ *              example={1, 2, 3},
+ *              description="IDs de primeros 10 usuarios procesados exitosamente"
+ *          ),
  *         @OA\Property(
- *             property="failed_users",
+ *             property="failed_users_id",
  *             type="array",
  *             @OA\Items(type="integer"),
  *             example={4, 5},
  *             description="IDs de usuarios que fallaron"
  *         ),
  *         @OA\Property(
- *             property="unchanged_users",
+ *             property="unchanged_users_id",
  *             type="array",
  *             @OA\Items(type="integer"),
  *             example={6, 7},
@@ -50,17 +57,17 @@ namespace App\Core\Application\DTO\Response\User;
  *         )
  *     ),
  *     @OA\Property(
- *         property="updatedPermissions",
+ *         property="permissionsProcessed",
  *         type="object",
- *         description="Permisos modificados durante la operación",
+ *         description="Permisos procesados durante la operación",
  *         @OA\Property(
- *             property="added",
+ *             property="processed_added",
  *             type="array",
  *             @OA\Items(type="string"),
  *             example={"view.students", "edit.students"}
  *         ),
  *         @OA\Property(
- *             property="removed",
+ *             property="processed_removed",
  *             type="array",
  *             @OA\Items(type="string"),
  *             example={"create.student"}
@@ -72,8 +79,8 @@ class UserWithUpdatedPermissionsResponse
 {
     public function __construct(
         public readonly ?array $summary,
-        public readonly ?array $usersProcessed,
-        public readonly ?array $updatedPermissions,
+        public readonly ?array $users,
+        public readonly ?array $permissionsProcessed,
     )
     {
     }

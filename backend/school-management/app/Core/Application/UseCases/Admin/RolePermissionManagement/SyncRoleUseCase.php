@@ -172,9 +172,9 @@ class SyncRoleUseCase
                 'totalUnchanged' => $totalSync['users_unchanged_count'],
                 'totalFailed' => $totalSync['users_failed_count'],
                 'operations' => [
-                    'roles_removed' => $totalSync['removed'],
-                    'roles_added' => $totalSync['added'],
-                    'chunks_processed' => $totalSync['total_chunks'],
+                    'total_roles_removed' => $totalSync['removed'],
+                    'total_roles_added' => $totalSync['added'],
+                    'total_chunks_processed' => $totalSync['total_chunks'],
                 ],
                 'unverified_policy' => [
                     'auto_removed' => true,
@@ -182,13 +182,14 @@ class SyncRoleUseCase
                 ],
             ],
             usersProcessed: [
-                'processed_users' => array_slice($totalSync['users_affected'], 0, 10),
-                'unchanged_users' => $totalSync['users_unchanged'],
-                'failed_users' => $totalSync['users_failed'],
+                'processed_users_id' => array_slice($users->pluck('id')->toArray(),0,10),
+                'affected_users_id' => array_slice($totalSync['users_affected'], 0, 10),
+                'unchanged_users_id' => $totalSync['users_unchanged'],
+                'failed_users_id' => $totalSync['users_failed'],
             ] ,
             updatedRoles: [
-                'added' => $dto->rolesToAdd ?? [],
-                'removed' => $dto->rolesToRemove ?? []
+                'processed_added' => $dto->rolesToAdd ?? [],
+                'processed_removed' => $dto->rolesToRemove ?? []
             ]
         );
     }
