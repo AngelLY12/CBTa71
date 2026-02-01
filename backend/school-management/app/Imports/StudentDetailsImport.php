@@ -8,6 +8,7 @@ use App\Notifications\ImportFailedNotification;
 use App\Notifications\ImportFinishedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -70,8 +71,11 @@ class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, Wit
 
     private function cleanupFile(): void
     {
-        if ($this->filePath && file_exists($this->filePath)) {
-            Storage::disk('local')->delete($this->filePath);
+        if ($this->filePath) {
+            $file = $this->filePath;
+            Bus::dispatch(function() use ($file) {
+                Storage::disk('local')->delete($file);
+            })->delay(now()->addSeconds(30));
         }
     }
 }

@@ -56,9 +56,8 @@ class AdminUsersController extends Controller
             $file,
             $fileName
         );
-        $filePath = storage_path('app/' . $relativePath);
-        $import=new UsersImport($this->service, Auth::user(), $filePath);
-        Excel::queueImport($import,$filePath, 'local')->onQueue('imports');
+        $import=new UsersImport($this->service, Auth::user(), $relativePath);
+        Excel::queueImport($import,$relativePath, 'local')->onQueue('imports');
         return Response::success(null, 'Usuarios procesandose, se te notificara cuando termine.');
 
     }
