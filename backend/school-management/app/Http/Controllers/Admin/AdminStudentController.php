@@ -67,7 +67,12 @@ class AdminStudentController extends Controller
     {
         $file= $request->file('file');
         $fileName = 'import_' . time() . '_' . Str::random(10) . '.xlsx';
-        $filePath = Storage::disk('local')->putFileAs('framework/cache/laravel-excel', $file, $fileName);
+        $relativePath = Storage::disk('local')->putFileAs(
+            'framework/cache/laravel-excel',
+            $file,
+            $fileName
+        );
+        $filePath = storage_path('app/' . $relativePath);
         $import= new StudentDetailsImport($this->service, Auth::user(), $filePath);
         Excel::queueImport($import,$filePath, 'local')->onQueue('imports');
         return Response::success(null, 'Usuarios procesandose, se te notificara cuando termine.');
