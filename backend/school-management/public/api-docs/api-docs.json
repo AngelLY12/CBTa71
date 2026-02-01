@@ -13192,17 +13192,17 @@
                             "operations": {
                                 "description": "Operaciones realizadas",
                                 "properties": {
-                                    "permissions_removed": {
+                                    "total_permissions_removed": {
                                         "description": "Total de permisos removidos",
                                         "type": "integer",
                                         "example": 15
                                     },
-                                    "permissions_added": {
+                                    "total_permissions_added": {
                                         "description": "Total de permisos agregados",
                                         "type": "integer",
                                         "example": 10
                                     },
-                                    "roles_processed": {
+                                    "total_roles_processed": {
                                         "description": "Total de roles procesados",
                                         "type": "integer",
                                         "example": 3
@@ -13213,10 +13213,10 @@
                         },
                         "type": "object"
                     },
-                    "usersProcessed": {
+                    "users": {
                         "description": "Detalle de usuarios procesados",
                         "properties": {
-                            "processed_users": {
+                            "processed_users_id": {
                                 "description": "IDs de primeros 10 usuarios procesados exitosamente",
                                 "type": "array",
                                 "items": {
@@ -13228,7 +13228,19 @@
                                     3
                                 ]
                             },
-                            "failed_users": {
+                            "affected_users_id": {
+                                "description": "IDs de primeros 10 usuarios procesados exitosamente",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    1,
+                                    2,
+                                    3
+                                ]
+                            },
+                            "failed_users_id": {
                                 "description": "IDs de usuarios que fallaron",
                                 "type": "array",
                                 "items": {
@@ -13239,7 +13251,7 @@
                                     5
                                 ]
                             },
-                            "unchanged_users": {
+                            "unchanged_users_id": {
                                 "description": "IDs de usuarios que no tuvieron cambios",
                                 "type": "array",
                                 "items": {
@@ -13253,10 +13265,10 @@
                         },
                         "type": "object"
                     },
-                    "updatedPermissions": {
-                        "description": "Permisos modificados durante la operación",
+                    "permissionsProcessed": {
+                        "description": "Permisos procesados durante la operación",
                         "properties": {
-                            "added": {
+                            "processed_added": {
                                 "type": "array",
                                 "items": {
                                     "type": "string"
@@ -13266,7 +13278,7 @@
                                     "edit.students"
                                 ]
                             },
-                            "removed": {
+                            "processed_removed": {
                                 "type": "array",
                                 "items": {
                                     "type": "string"
@@ -13310,7 +13322,7 @@
                             "operations": {
                                 "description": "Operaciones realizadas",
                                 "properties": {
-                                    "roles_removed": {
+                                    "total_roles_removed": {
                                         "type": "array",
                                         "items": {
                                             "type": "string"
@@ -13319,7 +13331,7 @@
                                             "student"
                                         ]
                                     },
-                                    "roles_added": {
+                                    "total_roles_added": {
                                         "type": "array",
                                         "items": {
                                             "type": "string"
@@ -13328,7 +13340,7 @@
                                             "guest"
                                         ]
                                     },
-                                    "chunks_processed": {
+                                    "total_chunks_processed": {
                                         "type": "integer",
                                         "example": 5
                                     }
@@ -13338,10 +13350,10 @@
                         },
                         "type": "object"
                     },
-                    "usersProcessed": {
+                    "users": {
                         "description": "Detalle de usuarios procesados",
                         "properties": {
-                            "processed_users": {
+                            "processed_users_id": {
                                 "description": "IDs de primeros 10 usuarios procesados exitosamente",
                                 "type": "array",
                                 "items": {
@@ -13353,7 +13365,19 @@
                                     3
                                 ]
                             },
-                            "unchanged_users": {
+                            "affected_users_id": {
+                                "description": "IDs de primeros 10 usuarios procesados exitosamente",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    1,
+                                    2,
+                                    3
+                                ]
+                            },
+                            "unchanged_users_id": {
                                 "description": "IDs de usuarios que no tuvieron cambios",
                                 "type": "array",
                                 "items": {
@@ -13364,7 +13388,7 @@
                                     5
                                 ]
                             },
-                            "failed_users": {
+                            "failed_users_id": {
                                 "description": "IDs de usuarios que fallaron",
                                 "type": "array",
                                 "items": {
@@ -13378,10 +13402,10 @@
                         },
                         "type": "object"
                     },
-                    "updatedRoles": {
+                    "rolesProcessed": {
                         "description": "Roles agregados y removidos",
                         "properties": {
-                            "added": {
+                            "processed_added": {
                                 "type": "array",
                                 "items": {
                                     "type": "string"
@@ -13390,7 +13414,7 @@
                                     "student"
                                 ]
                             },
-                            "removed": {
+                            "processed_removed": {
                                 "type": "array",
                                 "items": {
                                     "type": "string"
