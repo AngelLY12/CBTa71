@@ -15,13 +15,12 @@ services:
     app:
         build:
             context: .
-            dockerfile: Dockerfile
+            dockerfile: Dockerfile.dev
         container_name: laravel-app
         restart: unless-stopped
         working_dir: /var/www
         volumes:
-#            - .:/var/www
-            - ./storage:/var/www/storage
+            - .:/var/www
         ports:
             - "9000:9000"
         depends_on:
@@ -33,12 +32,12 @@ services:
     laravel-worker:
         build:
             context: .
+            dockerfile: Dockerfile.dev
         container_name: laravel-worker
         command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --backoff=5 --verbose
         restart: unless-stopped
         volumes:
-#            - ./:/var/www
-            - ./storage:/var/www/storage
+            - ./:/var/www
         depends_on:
             - app
             - redis
@@ -49,10 +48,10 @@ services:
         container_name: db-laravel
         restart: unless-stopped
         environment:
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-            MYSQL_DATABASE: ${DB_DATABASE}
-            MYSQL_USER: ${DB_USER}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: cbta71_db
+            MYSQL_USER: laravel_db
+            MYSQL_PASSWORD: 123
         ports:
           - "3306:3306"
         volumes:
