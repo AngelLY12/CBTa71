@@ -3528,7 +3528,7 @@
                 ]
             }
         },
-        "/api/v1/cards/{id}": {
+        "/api/v1/cards/{studentId?}": {
             "get": {
                 "tags": [
                     "Cards"
@@ -3570,8 +3570,8 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del children",
-                        "required": true,
+                        "description": "ID del children (opcional)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 3
@@ -5072,7 +5072,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/refresh": {
+        "/api/v1/dashboard/refresh/{studentId?}": {
             "post": {
                 "tags": [
                     "Dashboard"
@@ -5099,6 +5099,16 @@
                         "schema": {
                             "type": "string",
                             "example": "refresh.all.dashboard"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID del children (opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
                         }
                     }
                 ],
@@ -5161,7 +5171,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/history/{id}": {
+        "/api/v1/dashboard/history/{studentId?}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -5223,8 +5233,8 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del children",
-                        "required": true,
+                        "description": "ID del children (opcional)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 3
@@ -5342,7 +5352,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/overdue/{id}": {
+        "/api/v1/dashboard/overdue/{studentId?}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -5384,8 +5394,8 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del children",
-                        "required": true,
+                        "description": "ID del children (opcional)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 3
@@ -5478,7 +5488,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/paid/{id}": {
+        "/api/v1/dashboard/paid/{studentId?}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -5520,8 +5530,8 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del children",
-                        "required": true,
+                        "description": "ID del children (opcional)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 3
@@ -5609,7 +5619,7 @@
                 ]
             }
         },
-        "/api/v1/dashboard/pending/{id}": {
+        "/api/v1/dashboard/pending/{studentId?}": {
             "get": {
                 "tags": [
                     "Dashboard"
@@ -5651,8 +5661,8 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del children",
-                        "required": true,
+                        "description": "ID del children (opcional)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 3
@@ -8806,7 +8816,7 @@
                 ]
             }
         },
-        "/api/v1/history/{id}": {
+        "/api/v1/history/{studentId?}": {
             "get": {
                 "tags": [
                     "Payment History"
@@ -8868,8 +8878,8 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del children",
-                        "required": true,
+                        "description": "ID del children (opcional)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 3
@@ -9475,7 +9485,7 @@
                 ]
             }
         },
-        "/api/v1/pending-payments/{id}": {
+        "/api/v1/pending-payments/{studentId?}": {
             "get": {
                 "tags": [
                     "Pending Payment"
@@ -9517,8 +9527,8 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del children",
-                        "required": true,
+                        "description": "ID del children, (opcional)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 3
@@ -9772,7 +9782,7 @@
                 ]
             }
         },
-        "/api/v1/pending-payments/overdue/{id}": {
+        "/api/v1/pending-payments/overdue/{studentId?}": {
             "get": {
                 "tags": [
                     "Pending Payment"
@@ -9814,8 +9824,8 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID del children",
-                        "required": true,
+                        "description": "ID del children, (opcional)",
+                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 3

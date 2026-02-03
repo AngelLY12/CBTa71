@@ -127,7 +127,7 @@ public function createCard(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/cards/{id}",
+ *     path="/api/v1/cards/{studentId?}",
  *     tags={"Cards"},
  *     summary="Listar métodos de pago del usuario autenticado",
  *     description="Obtiene la lista de tarjetas o métodos de pago asociados al usuario autenticado. Permite forzar actualización del caché.",
@@ -163,8 +163,8 @@ public function createCard(){}
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID del children",
- *         required=true,
+ *         description="ID del children (opcional)",
+ *         required=false,
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(

@@ -7,7 +7,7 @@ class PaymentHistory
 
 /**
  * @OA\Get(
- *     path="/api/v1/history/{id}",
+ *     path="/api/v1/history/{studentId?}",
  *     tags={"Payment History"},
  *     summary="Obtener historial de pagos del usuario autenticado",
  *     description="Devuelve el historial de pagos del usuario logueado, con soporte para paginación y cacheo.",
@@ -58,8 +58,8 @@ class PaymentHistory
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID del children",
- *         required=true,
+ *         description="ID del children (opcional)",
+ *         required=false,
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(

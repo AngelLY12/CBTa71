@@ -6,7 +6,7 @@ class PendingPayment
 {
 /**
  * @OA\Get(
- *     path="/api/v1/pending-payments/{id}",
+ *     path="/api/v1/pending-payments/{studentId?}",
  *     tags={"Pending Payment"},
  *     summary="Obtener pagos pendientes del usuario autenticado",
  *     description="Devuelve todos los conceptos pendientes de pago del usuario logueado.",
@@ -43,8 +43,8 @@ class PendingPayment
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID del children",
- *         required=true,
+ *         description="ID del children, (opcional)",
+ *         required=false,
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(
@@ -149,7 +149,7 @@ public function payConcept(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/pending-payments/overdue/{id}",
+ *     path="/api/v1/pending-payments/overdue/{studentId?}",
  *     summary="Obtener pagos vencidos del usuario autenticado",
  *     description="Devuelve los pagos que ya están vencidos para el usuario autenticado.",
  *     operationId="getUserOverduePayments",
@@ -186,8 +186,8 @@ public function payConcept(){}
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID del children",
- *         required=true,
+ *         description="ID del children, (opcional)",
+ *         required=false,
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(

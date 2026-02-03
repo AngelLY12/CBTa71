@@ -6,7 +6,7 @@ class DashboardStudent
 {
 /**
  * @OA\Post(
- *     path="/api/v1/dashboard/refresh",
+ *     path="/api/v1/dashboard/refresh/{studentId?}",
  *     tags={"Dashboard"},
  *     summary="Limpiar caché del dashboard",
  *     description="Limpia el caché de datos almacenados en el dashboard (estadísticas, pagos, etc.)",
@@ -32,6 +32,13 @@ class DashboardStudent
  *                      example="refresh.all.dashboard"
  *                  )
  *             ),
+ *     @OA\Parameter(
+ *          name="id",
+ *          in="path",
+ *          description="ID del children (opcional)",
+ *          required=false,
+ *          @OA\Schema(type="integer", example=3)
+ *      ),
  *     @OA\Response(
  *          response=200,
  *          description="Caché del dashboard limpiado con éxito",
@@ -48,7 +55,7 @@ public function refresh(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/dashboard/history/{id}",
+ *     path="/api/v1/dashboard/history/{studentId?}",
  *     tags={"Dashboard"},
  *     summary="Obtener historial de pagos del usuario autenticado",
  *     description="Devuelve una lista paginada con el historial de pagos realizados por el usuario autenticado. Permite forzar la actualización del caché.",
@@ -99,8 +106,8 @@ public function refresh(){}
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID del children",
- *         required=true,
+ *         description="ID del children (opcional)",
+ *         required=false,
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(
@@ -144,7 +151,7 @@ public function history(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/dashboard/overdue/{id}",
+ *     path="/api/v1/dashboard/overdue/{studentId?}",
  *     tags={"Dashboard"},
  *     summary="Obtener total de pagos vencidos del usuario",
  *     description="Devuelve el monto total de los pagos vencidos asociados al usuario autenticado.",
@@ -180,8 +187,8 @@ public function history(){}
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID del children",
- *         required=true,
+ *         description="ID del children (opcional)",
+ *         required=false,
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(
@@ -214,7 +221,7 @@ public function overdue(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/dashboard/paid/{id}",
+ *     path="/api/v1/dashboard/paid/{studentId?}",
  *     tags={"Dashboard"},
  *     summary="Obtener total de pagos realizados por el usuario",
  *     description="Devuelve el monto total de pagos completados por el usuario autenticado.",
@@ -250,8 +257,8 @@ public function overdue(){}
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID del children",
- *         required=true,
+ *         description="ID del children (opcional)",
+ *         required=false,
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *     @OA\Response(
@@ -281,7 +288,7 @@ public function paid(){}
 
 /**
  * @OA\Get(
- *     path="/api/v1/dashboard/pending/{id}",
+ *     path="/api/v1/dashboard/pending/{studentId?}",
  *     tags={"Dashboard"},
  *     summary="Obtener total de pagos pendientes del usuario",
  *     description="Devuelve la cantidad y monto total de los pagos pendientes del usuario autenticado.",
@@ -317,8 +324,8 @@ public function paid(){}
  *     @OA\Parameter(
  *         name="id",
  *         in="path",
- *         description="ID del children",
- *         required=true,
+ *         description="ID del children (opcional)",
+ *         required=false,
  *         @OA\Schema(type="integer", example=3)
  *     ),
  *      @OA\Response(
