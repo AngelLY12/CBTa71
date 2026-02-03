@@ -131,8 +131,6 @@ class StripeGateway implements StripeGatewayInterface
             $pm = StripePaymentMethod::retrieve($paymentMethodId);
             $pm->detach();
             return true;
-        }catch (InvalidArgumentException $e) {
-            throw $e;
         }catch (ApiErrorException $e) {
             logger()->error("Stripe error detaching PaymentMethod: " . $e->getMessage());
             throw new StripeGatewayException("Error eliminando el método de pago", 500);
