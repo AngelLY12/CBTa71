@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 
 interface UserQueryRepInterface{
     public function findUserByEmail(string $email):?User;
+    public function findByCustomerId(string $customerId):?User;
     public function findById(int $userId): ?User;
     public function getUserWithStudentDetail(int $userId):User;
     public function getUserByStripeCustomer(string $customerId): User;

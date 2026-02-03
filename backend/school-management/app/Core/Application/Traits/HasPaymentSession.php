@@ -115,8 +115,13 @@ trait HasPaymentSession
 
     public function finalizeSetupSession($obj)
     {
+        if(empty($obj->customer))
+        {
+            logger()->error("Checkout session {$obj->id} sin customer");
+            return false;
+        }
         try {
-            $user = $this->userRepo->findUserByEmail($obj->customer_email ?? null);
+            $user = $this->userRepo->findByCustomerId($obj->customer);
             if (!$user) {
                 logger()->error("Usuario no encontrado para session_id={$obj->id}");
                 return false;
