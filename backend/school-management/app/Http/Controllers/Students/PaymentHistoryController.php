@@ -24,12 +24,12 @@ class PaymentHistoryController extends Controller
     }
 
 
-    public function index(PaginationRequest $request, ?int $id)
+    public function index(PaginationRequest $request, ?int $studentId=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
+        $targetUser = $user->resolveTargetUser($studentId);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
