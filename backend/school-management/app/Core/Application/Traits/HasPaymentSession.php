@@ -121,11 +121,7 @@ trait HasPaymentSession
             return false;
         }
         try {
-            $user = $this->userRepo->findByCustomerId($obj->customer);
-            if (!$user) {
-                logger()->error("Usuario no encontrado para session_id={$obj->id}");
-                return false;
-            }
+            $user = $this->userRepo->getUserByStripeCustomer($obj->customer);
 
             $setupIntent = $this->stripe->getSetupIntentFromSession($obj->id);
             $pm = $this->stripe->retrievePaymentMethod($setupIntent->payment_method);

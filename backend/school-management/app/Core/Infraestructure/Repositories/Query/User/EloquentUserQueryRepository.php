@@ -65,12 +65,6 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
 
     }
 
-    public function findByCustomerId(string $customerId): ?User
-    {
-        $user=EloquentUser::where('stripe_customer_id',$customerId)->first();
-        return $user ? UserMapper::toDomain($user): null;
-    }
-
     public function getUserIdsByControlNumbers(array $controlNumbers): UserIdListDTO
     {
         $ids = EloquentUser::whereHas('studentDetail', fn($q) => $q->whereIn('n_control', $controlNumbers))
