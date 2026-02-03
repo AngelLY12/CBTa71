@@ -6,15 +6,18 @@ use App\Core\Domain\Entities\PaymentMethod;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Infraestructure\Mappers\PaymentMethodMapper;
 use App\Models\PaymentMethod as EloquentPaymentMethod;
+use Illuminate\Support\Arr;
 
 class EloquentPaymentMethodRepository implements PaymentMethodRepInterface
 {
 
-
     public function create(PaymentMethod $paymentMethod):PaymentMethod
     {
-        $pm = EloquentPaymentMethod::create(PaymentMethodMapper::toPersistence($paymentMethod));
-        $pm->refresh();
+        $data = PaymentMethodMapper::toPersistence($paymentMethod);
+        $pm = EloquentPaymentMethod::updateOrCreate(
+            ['stripe_payment_method_id' => $data['stripe_payment_method_id']],
+            Arr::except($data, ['user_id'])
+        );
         return PaymentMethodMapper::toDomain($pm);
     }
 
