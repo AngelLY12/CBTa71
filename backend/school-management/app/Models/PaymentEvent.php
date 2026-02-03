@@ -46,7 +46,7 @@ class PaymentEvent extends Model
         return $this->belongsTo(Payment::class);
     }
 
-    public function markAsProcessed(string $status = null): self
+    public function markAsProcessed(?string $status = null): self
     {
         $this->update([
             'processed' => true,

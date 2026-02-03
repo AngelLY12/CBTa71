@@ -181,7 +181,7 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
         return $payment ? PaymentMapper::toDomain($payment) : null;
     }
 
-    public function getPaymentsByConceptName(?string $search=null,int $perPage, int $page): LengthAwarePaginator
+    public function getPaymentsByConceptName(int $perPage, int $page, ?string $search=null): LengthAwarePaginator
     {
         $query = EloquentPayment::query()
             ->when($search, function ($q) use ($search) {

@@ -23,5 +23,5 @@ interface PaymentQueryRepInterface{
     public function getReconciliablePaymentsCursor(): Generator;
     public function getAllWithSearchEager(?string $search, int $perPage,int $page): LengthAwarePaginator;
     public function getLastPaymentForConcept(int $userId, int $conceptId, array $allowedStatuses = []): ?Payment;
-    public function getPaymentsByConceptName(?string $search=null, int $perPage, int $page): LengthAwarePaginator;
+    public function getPaymentsByConceptName(int $perPage, int $page, ?string $search=null): LengthAwarePaginator;
 }

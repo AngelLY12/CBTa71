@@ -15,7 +15,7 @@ class ShowAllPaymentsByConceptNameUseCase
 
     public function execute(?string $search, int $perPage, int $page): PaginatedResponse
     {
-        $payments=$this->paymentQueryRep->getPaymentsByConceptName($search, $perPage, $page);
+        $payments=$this->paymentQueryRep->getPaymentsByConceptName($perPage, $page, $search);
         return GeneralMapper::toPaginatedResponse($payments->items(), $payments);
     }
 
