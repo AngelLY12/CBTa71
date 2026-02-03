@@ -3,7 +3,6 @@
 namespace App\Core\Application\UseCases\Admin\RolePermissionManagement;
 
 use App\Core\Application\DTO\Response\General\PermissionsUpdatedToUserResponse;
-use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Domain\Repositories\Command\Auth\RolesAndPermissionsRepInterface;
 use App\Exceptions\Validation\ValidationException;
 
