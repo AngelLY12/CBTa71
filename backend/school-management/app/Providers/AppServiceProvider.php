@@ -26,6 +26,7 @@ use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\ParentStudentQueryRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Repositories\Stripe\StripeGatewayInterface;
+use App\Core\Domain\Repositories\Stripe\StripeGatewayQueryInterface;
 use App\Core\Infraestructure\Cache\CacheService;
 use App\Core\Infraestructure\Repositories\Command\Auth\EloquentAccessTokenRepository;
 use App\Core\Infraestructure\Repositories\Command\Auth\EloquentRefreshTokenRepository;
@@ -106,7 +107,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(PaymentReconciledEvent::class, CreateReconciliationEvent::class);
         Event::listen(PaymentReconciledBatchEvent::class, CreateReconciliationBatchEvent::class);
         $this->app->bind(StripeGatewayInterface::class, StripeGateway::class);
-        $this->app->bind(StripeGatewayInterface::class, StripeGatewayQuery::class);
+        $this->app->bind(StripeGatewayQueryInterface::class, StripeGatewayQuery::class);
         $this->app->bind(PaymentMethodRepInterface::class, EloquentPaymentMethodRepository::class);
         $this->app->bind(PaymentMethodQueryRepInterface::class, EloquentPaymentMethodQueryRepository::class);
         $this->app->bind(PaymentRepInterface::class, EloquentPaymentRepository::class);
@@ -140,32 +141,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         bcscale(8);
-        try {
-            Storage::extend('google', function($app, $config) {
-                $options = [];
-
-                if (!empty($config['teamDriveId'] ?? null)) {
-                    $options['teamDriveId'] = $config['teamDriveId'];
-                }
-
-                if (!empty($config['sharedFolderId'] ?? null)) {
-                    $options['sharedFolderId'] = $config['sharedFolderId'];
-                }
-
-                $client = new \Google\Client();
-                $client->setClientId($config['clientId']);
-                $client->setClientSecret($config['clientSecret']);
-                $client->refreshToken($config['refreshToken']);
-
-                $service = new \Google\Service\Drive($client);
-                $adapter = new \Masbug\Flysystem\GoogleDriveAdapter($service, '/', $options);
-                $driver = new \League\Flysystem\Filesystem($adapter);
-
-                return new \Illuminate\Filesystem\FilesystemAdapter($driver, $adapter);
-            });
-        } catch(\Exception $e) {
-            info("Google Drive init failed: " . $e->getMessage());
-        }
 
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
