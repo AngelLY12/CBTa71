@@ -54,6 +54,7 @@ class ParentsController extends Controller
     {
         /** @var User $user */
         $user=Auth::user();
+        $user->load('roles');
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $childrenData=$this->parentsFacade->getParentChildren(UserMapper::toDomain($user), $forceRefresh);
         return Response::success([
@@ -65,6 +66,7 @@ class ParentsController extends Controller
     {
         /**@var User $user*/
         $user=Auth::user();
+        $user->load('roles');
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $studentParentsData=$this->parentsFacade->getStudentParents(UserMapper::toDomain($user), $forceRefresh);
         return Response::success(['parents' => $studentParentsData], 'Datos obtenidos', 200);
