@@ -7910,120 +7910,6 @@
                         "bearerAuth": []
                     }
                 ]
-            },
-            "delete": {
-                "tags": [
-                    "Payment Concepts"
-                ],
-                "summary": "Eliminar concepto de pago (físicamente)",
-                "operationId": "d61e99309acac6cad9ec93aff3ae5fb9",
-                "parameters": [
-                    {
-                        "name": "X-User-Role",
-                        "in": "header",
-                        "description": "Rol requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "financial-staff"
-                        }
-                    },
-                    {
-                        "name": "X-User-Permission",
-                        "in": "header",
-                        "description": "Permiso requerido para este endpoint",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "eliminate.concepts"
-                        }
-                    },
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Concepto de pago eliminado correctamente",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/SuccessResponse"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "No encontrado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "409": {
-                        "description": "Conflicto",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "No autenticado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "No autorizado",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Demasiadas solicitudes",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
             }
         },
         "/api/v1/concepts/relations/{id}": {
@@ -8691,13 +8577,129 @@
                 ]
             }
         },
-        "/api/v1/concepts/{concept}/logical": {
+        "/api/v1/concepts/{id}/eliminate": {
+            "delete": {
+                "tags": [
+                    "Payment Concepts"
+                ],
+                "summary": "Eliminar concepto de pago (físicamente)",
+                "operationId": "013703b0643a9babfe8032e3048d7e44",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "eliminate.concepts"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Concepto de pago eliminado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/concepts/{concept}/eliminateLogical": {
             "post": {
                 "tags": [
                     "Payment Concepts"
                 ],
                 "summary": "Eliminar concepto de pago (lógicamente)",
-                "operationId": "dba7725c8d74600c5868d51808f9bc37",
+                "operationId": "42235e2314e9c602e3a5ee1b4fc7db72",
                 "parameters": [
                     {
                         "name": "X-User-Role",

@@ -589,7 +589,7 @@ public function activateConcept(){}
 
 /**
  * @OA\Delete(
- *     path="/api/v1/concepts/{id}",
+ *     path="/api/v1/concepts/{id}/eliminate",
  *     summary="Eliminar concepto de pago (físicamente)",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
@@ -632,7 +632,7 @@ public function deleteConcept(){}
 
  /**
  * @OA\Post(
- *     path="/api/v1/concepts/{concept}/logical",
+  *     path="/api/v1/concepts/{concept}/eliminateLogical",
  *     summary="Eliminar concepto de pago (lógicamente)",
  *     tags={"Payment Concepts"},
  *     security={{"bearerAuth":{}}},
