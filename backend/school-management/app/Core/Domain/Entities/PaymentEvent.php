@@ -29,7 +29,7 @@ class PaymentEvent
         ?int $paymentId,
         string $stripeEventId,
         ?string $paymentIntentId,
-        string $sessionId,
+        ?string $sessionId,
         ?string $amount,
         PaymentEventType $eventType,
         array $metadata,
