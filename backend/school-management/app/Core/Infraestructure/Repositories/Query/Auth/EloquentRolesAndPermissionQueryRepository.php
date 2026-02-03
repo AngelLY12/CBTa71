@@ -59,8 +59,7 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
         if (empty($curps)) {
             return null;
         }
-        $cleanedCurps = array_slice(array_unique(array_map('trim', $curps)),0,100);
-        $validCurps = array_filter($cleanedCurps, fn($curp) => strlen($curp) === 18);
+        $validCurps = array_slice(array_unique(array_map('trim', $curps)),0,100);
 
         if (empty($validCurps)) {
             return null;
@@ -113,12 +112,22 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
 
     public function findPermissionsApplicablesToUser(int $userId, array $roles): ?array
     {
+        $userRoles = Role::whereHas('users', function($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })
+            ->pluck('name')
+            ->toArray();
+
+        if (empty($userRoles)) {
+            return null;
+        }
+
         $rolesToCheck = empty($roles)
-            ? User::with('roles:name')->find($userId)?->roles->pluck('name')->toArray() ?? []
-            : $roles;
+            ? $userRoles
+            : array_intersect($roles, $userRoles);
 
         if (empty($rolesToCheck)) {
-            return [];
+            return null;
         }
 
         return collect($rolesToCheck)
