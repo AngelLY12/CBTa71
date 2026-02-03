@@ -16,7 +16,7 @@ class DeletePaymentMethoUseCase
     {
     }
 
-    public function execute(string $paymentMethodId): bool
+    public function execute(int $paymentMethodId): bool
     {
         $paymentMethod=$this->pmqRepo->findById($paymentMethodId);
         $this->stripe->deletePaymentMethod($paymentMethod->stripe_payment_method_id);

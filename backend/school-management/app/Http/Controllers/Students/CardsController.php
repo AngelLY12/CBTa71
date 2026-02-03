@@ -61,7 +61,7 @@ class CardsController extends Controller
     }
 
 
-    public function destroy(string $paymentMethodId)
+    public function destroy(int $paymentMethodId)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();

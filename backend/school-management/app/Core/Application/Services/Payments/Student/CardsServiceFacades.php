@@ -34,7 +34,7 @@ class CardsServiceFacades
         $this->service->flushTags(array_merge(self::TAG_CARDS, ["userId:{$user->id}"]));
         return $setup;
     }
-    public function deletePaymentMethod(User $user, string $paymentMethodId): bool
+    public function deletePaymentMethod(User $user, int $paymentMethodId): bool
     {
         $delete=$this->delete->execute($paymentMethodId);
         $this->service->flushTags(array_merge(self::TAG_CARDS, ["userId:{$user->id}"]));
