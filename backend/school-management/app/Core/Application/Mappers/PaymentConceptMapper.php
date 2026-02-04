@@ -106,11 +106,11 @@ class PaymentConceptMapper{
             description: $data['description'] ?? null,
             start_date: isset($data['start_date']) ? new Carbon($data['start_date']) : null,
             end_date: isset($data['end_date']) ? new Carbon($data['end_date']) : null,
-            semesters: $data['semestres'],
-            careers: $data['careers'],
-            students: $data['students'],
-            exceptionStudents: $data['exceptionStudents'],
-            applicantTags: $data['applicantTags'],
+            semesters: $data['semestres'] ?? [],
+            careers: $data['careers'] ?? [],
+            students: $data['students'] ?? [],
+            exceptionStudents: $data['exceptionStudents'] ?? [],
+            applicantTags: $data['applicantTags'] ?? [],
         );
     }
 
@@ -151,14 +151,14 @@ class PaymentConceptMapper{
         }
         return new UpdatePaymentConceptRelationsDTO(
             id: (int) $data['id'],
-            semesters: $data['semesters'],
-            careers: $data['careers'],
-            students: $data['students'],
+            semesters: $data['semestres'] ?? null,
+            careers: $data['careers'] ?? null,
+            students: $data['students'] ?? null,
             appliesTo: $appliesToEnum,
-            replaceRelations: $data['replaceRelations'],
-            exceptionStudents: $data['exceptionStudents'],
-            replaceExceptions: $data['replaceExceptions'],
-            removeAllExceptions: $data['removeAllExceptions'],
+            replaceRelations: $data['replaceRelations'] ?? false,
+            exceptionStudents: $data['exceptionStudents'] ?? null,
+            replaceExceptions: $data['replaceExceptions'] ?? false,
+            removeAllExceptions: $data['removeAllExceptions'] ?? false,
             applicantTags:$applicantTagsEnum,
         );
     }

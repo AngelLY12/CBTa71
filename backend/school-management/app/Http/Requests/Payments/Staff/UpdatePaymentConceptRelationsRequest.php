@@ -5,6 +5,7 @@ namespace App\Http\Requests\Payments\Staff;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * @OA\Schema(
@@ -88,61 +89,107 @@ class UpdatePaymentConceptRelationsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'applies_to'       => ['sometimes', 'required','string','in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptAppliesTo::cases()))],
-            'semestres'      => 'nullable|array',
-            'semestres.*'    => 'integer',
-            'careers'        => 'nullable|array',
-            'careers.*'      => 'integer',
-            'students'       => 'nullable|array',
-            'students.*'     => 'string',
-            'exceptionStudents'    => 'nullable|array',
-            'exceptionStudents.*'  => 'string',
-            'replaceRelations' => 'sometimes|required|boolean',
-            'replaceExceptions' => 'sometimes|required|boolean',
-            'removeAllExceptions' => 'sometimes|required|boolean',
-            'applicantTags' => 'nullable|array',
-            'applicantTags.*' => 'string|in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptApplicantType::cases())),
+            'applies_to'       => ['sometimes', Rule::enum(PaymentConceptAppliesTo::class)],
+            'careers'        => [
+                'array',
+                'required_if:applies_to,carrera,carrera_semestre',
+                'prohibited_unless:applies_to,carrera,carrera_semestre'
+            ],
+            'careers.*'      => ['integer'],
+            'semestres'      => [
+                'array',
+                'required_if:applies_to,semestre,carrera_semestre',
+                'prohibited_unless:applies_to,semestre,carrera_semestre',
+            ],
+            'semestres.*'    => ['integer'],
+
+            'students'       => [
+                'array',
+                'required_if:applies_to,estudiantes',
+                'prohibited_unless:applies_to,estudiantes',
+            ],
+            'students.*'     => ['string'],
+            'exceptionStudents'    => ['sometimes','array'],
+            'exceptionStudents.*'  => ['string'],
+            'applicantTags' => [
+                'array',
+                'required_if:applies_to,tag',
+                'prohibited_unless:applies_to,tag',
+            ],
+            'applicantTags.*' => Rule::enum(PaymentConceptApplicantType::class),
+            'replaceRelations' => ['sometimes', 'boolean'],
+            'replaceExceptions' => ['sometimes', 'boolean'],
+            'removeAllExceptions' => ['sometimes', 'boolean'],
+
         ];
     }
 
     public function prepareForValidation()
     {
 
-        if ($this->has('replaceRelations')) {
-            $this->merge([
-                'replaceRelations' => filter_var($this->replaceRelations, FILTER_VALIDATE_BOOLEAN),
-            ]);
-        }
-
-        if ($this->has('replaceExceptions')) {
-            $this->merge([
-                'replaceExceptions' => filter_var($this->replaceExceptions, FILTER_VALIDATE_BOOLEAN),
-            ]);
-        }
-        if ($this->has('removeAllExceptions')) {
-            $this->merge([
-                'removeAllExceptions' => filter_var($this->removeAllExceptions, FILTER_VALIDATE_BOOLEAN),
-            ]);
-        }
-
         if ($this->has('applies_to')) {
             $this->merge([
                 'applies_to' => strtolower($this->applies_to),
             ]);
         }
+
+        foreach ([
+                     'replaceRelations',
+                     'replaceExceptions',
+                     'removeAllExceptions',
+                 ] as $flag) {
+            if ($this->has($flag)) {
+                $this->merge([
+                    $flag => filter_var($this->$flag, FILTER_VALIDATE_BOOLEAN),
+                ]);
+            }
+        }
+
+        foreach ([
+                     'careers',
+                     'semestres',
+                     'students',
+                     'exceptionStudents',
+                     'applicantTags',
+                 ] as $field) {
+            if ($this->has($field) && is_array($this->input($field))) {
+                $this->merge([
+                    $field => array_values($this->input($field)),
+                ]);
+            }
+        }
+
         if ($this->has('applicantTags')) {
             $this->merge([
                 'applicantTags' => array_map('strtolower', $this->applicantTags),
             ]);
         }
-        foreach (['students', 'exceptionStudents'] as $field) {
-            if ($this->has($field) && is_array($this->$field)) {
-                $this->merge([
-                    $field => array_map(fn($value) => strip_tags($value), $this->$field),
-                ]);
-            }
-        }
 
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if (
+                $this->hasAny(['careers', 'semestres', 'students', 'applicantTags']) &&
+                ! $this->has('applies_to')
+            ) {
+                $validator->errors()->add(
+                    'applies_to',
+                    'applies_to es obligatorio cuando se envían relaciones.'
+                );
+            }
+
+            if (
+                $this->applies_to === PaymentConceptAppliesTo::TODOS->value &&
+                $this->hasAny(['careers', 'semestres', 'students', 'applicantTags'])
+            ) {
+                $validator->errors()->add(
+                    'applies_to',
+                    'No se permiten relaciones cuando applies_to es TODOS.'
+                );
+            }
+        });
     }
 
     public function messages(): array
@@ -161,7 +208,6 @@ class UpdatePaymentConceptRelationsRequest extends FormRequest
             'replaceExceptions.boolean' => 'replaceExceptions debe ser booleano.',
             'removeAllExceptions.boolean' => 'removeAllExceptions debe ser booleano.',
             'applicantTags.array' => 'ApplicantTags debe ser un arreglo.',
-            'applicantTags.*.string' => 'Cada applicantTag debe ser una cadena válida.',
             'applicantTags.*.in' => 'Cada applicantTag debe ser uno de los valores permitidos: ' . implode(', ', array_map(fn($case) => $case->value, PaymentConceptApplicantType::cases())),
         ];
     }

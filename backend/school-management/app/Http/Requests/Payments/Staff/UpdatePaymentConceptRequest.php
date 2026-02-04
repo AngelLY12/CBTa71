@@ -71,11 +71,10 @@ class UpdatePaymentConceptRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'concept_name'     => 'sometimes|required|string|max:50',
-            'description'      => 'sometimes|required|string|max:100',
-//            'status'           => ['sometimes','required','string','in:' . implode(',', array_map(fn($case) => $case->value, PaymentConceptStatus::cases()))],
-            'start_date'       => 'sometimes|required|date|date_format:Y-m-d',
-            'end_date'         => 'sometimes|required|date|date_format:Y-m-d',
+            'concept_name'     => 'sometimes|required|string|max:150',
+            'description'      => 'sometimes|required|string|max:255',
+            'start_date'       => 'sometimes|required|date_format:Y-m-d',
+            'end_date'         => 'sometimes|required|date_format:Y-m-d',
             'amount'           => ['sometimes','required','numeric',
                                     'min:' . config('concepts.amount.min'),
                                     'max:' . config('concepts.amount.max')],
@@ -90,10 +89,7 @@ class UpdatePaymentConceptRequest extends FormRequest
             'concept_name.required' => 'El nombre del concepto es obligatorio.',
             'concept_name.max'      => 'El nombre del concepto no puede exceder 50 caracteres.',
             'description.max'       => 'La descripción no puede exceder 100 caracteres.',
-//            'status.in'             => 'El estado proporcionado no es válido.',
-            'start_date.date'       => 'La fecha de inicio debe ser una fecha válida.',
             'start_date.date_format'=> 'La fecha de inicio debe tener el formato YYYY-MM-DD.',
-            'end_date.date'         => 'La fecha de fin debe ser una fecha válida.',
             'end_date.date_format'  => 'La fecha de fin debe tener el formato YYYY-MM-DD.',
             'amount.numeric'        => 'El monto debe ser numérico.',
         ];
@@ -113,14 +109,6 @@ class UpdatePaymentConceptRequest extends FormRequest
                 'description' => strip_tags($this->description),
             ]);
         }
-
-
-/*        if ($this->has('status')) {
-            $this->merge([
-                'status' => strtolower($this->status),
-            ]);
-        }
-*/
 
     }
 }
