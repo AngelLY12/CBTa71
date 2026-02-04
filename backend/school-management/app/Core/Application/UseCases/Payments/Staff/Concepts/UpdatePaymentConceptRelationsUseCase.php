@@ -79,7 +79,7 @@ class UpdatePaymentConceptRelationsUseCase
             $newPaymentConcept->id,
             $oldPaymentConcept->toArray(),
             $dto->toArrayEntire(),
-            $newPaymentConcept->appliesTo->value,
+            $newPaymentConcept->applies_to->value,
             $oldRecipientIds,
         ));
 

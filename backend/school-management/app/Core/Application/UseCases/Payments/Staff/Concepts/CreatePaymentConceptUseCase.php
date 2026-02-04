@@ -55,7 +55,7 @@ class CreatePaymentConceptUseCase
             return $paymentConcept;
         });
         $affectedCount = count($this->uqRepo->getRecipientsIds($paymentConcept, $dto->appliesTo->value));
-        event(new PaymentConceptCreated($paymentConcept->id, $paymentConcept->appliesTo->value));
+        event(new PaymentConceptCreated($paymentConcept->id, $paymentConcept->applies_to->value));
         if(bccomp($paymentConcept->amount, config('concepts.amount.notifications.threshold')) === 1)
         {
             event(new AdministrationEvent(
