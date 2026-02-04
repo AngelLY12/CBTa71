@@ -213,7 +213,7 @@ class PaymentConceptMapper{
             appliesTo: $paymentConcept->applies_to->value,
             amount: $paymentConcept->amount,
             startDate: $paymentConcept->start_date->format('Y-m-d'),
-            endDate: $paymentConcept->end_date->format('Y-m-d'),
+            endDate: $paymentConcept->end_date?->format('Y-m-d'),
             affectedStudentsCount: $affectedCount,
             message: sprintf(
                 'Concepto creado exitosamente. Afecta a %d estudiante(s)',
@@ -239,7 +239,7 @@ class PaymentConceptMapper{
             description: $newPaymentConcept->description ?? null,
             amount: $newPaymentConcept->amount,
             startDate: $newPaymentConcept->start_date->format('Y-m-d'),
-            endDate: $newPaymentConcept->end_date->format('Y-m-d'),
+            endDate: $newPaymentConcept->end_date?->format('Y-m-d'),
             message: $data['message'] ?? null,
             updatedAt: now()->format('Y-m-d H:i:s'),
             changes: $data['changes'] ?? [],
