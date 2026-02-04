@@ -8,25 +8,35 @@ namespace App\Core\Application\DTO\Response\General;
  *     title="Permission To Display",
  *     description="Permission data formatted for UI display purposes",
  *     @OA\Property(
+ *          property="id",
+ *          type="integer",
  *          example=1,
  *          description="Unique permission ID"
  *      ),
  *      @OA\Property(
+ *          property="name",
+ *          type="string",
  *          example="users.create",
  *          description="Internal permission name"
  *      ),
  *      @OA\Property(
+ *          property="type",
+ *          type="string",
  *          example="model",
  *          description="Permission type"
  *      ),
  *      @OA\Property(
+ *          property="label",
+ *          type="string",
  *          example="Crear usuarios",
  *          description="Label para lectura"
  *      ),
  *      @OA\Property(
- *      example="Usuarios",
- *      description="UI grupo o categoria del permiso"
- *  )
+ *          property="group",
+ *          type="string",
+ *          example="Usuarios",
+ *          description="UI grupo o categoria del permiso"
+ *      )
  *
  * )
  *
