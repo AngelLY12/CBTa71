@@ -205,7 +205,7 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
             ->whereHas('contexts', fn($q) => $q->where('target_role', $roleName))
             ->select('id', 'name', 'type')
             ->get()
-            ->map(fn($permission) => RolesAndPermissionMapper::toPermissionDomain($permission))
+            ->map(fn($permission) => GeneralMapper::toPermissionToDisplay($permission))
             ->toArray();
     }
 

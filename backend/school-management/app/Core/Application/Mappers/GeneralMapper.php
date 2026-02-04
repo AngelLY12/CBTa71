@@ -8,10 +8,12 @@ use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\PermissionsByRole;
 use App\Core\Application\DTO\Response\General\PermissionsByUsers;
 use App\Core\Application\DTO\Response\General\PermissionsUpdatedToUserResponse;
+use App\Core\Application\DTO\Response\General\PermissionToDisplay;
 use App\Core\Application\DTO\Response\General\RolesUpdatedToUserResponse;
 use App\Core\Application\DTO\Response\General\StripePaymentsResponse;
 use App\Core\Application\DTO\Response\General\StripePayoutResponse;
 use App\Core\Domain\Utils\Helpers\Money;
+use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Stripe\Checkout\Session;
@@ -103,6 +105,18 @@ class GeneralMapper{
             userId: $user->id,
             fullName: $user->name . ' ' . $user->last_name,
             permissions: $permissions
+        );
+    }
+
+    public static function toPermissionToDisplay(Permission $permission): PermissionToDisplay
+    {
+        $ui = config('permissions_ui.' . $permission->name);
+        return new PermissionToDisplay(
+            id: $permission->id,
+            name: $permission->name,
+            type: $permission->type,
+            label: $ui['label'] ?? $permission->name,
+            group: $ui['group'] ?? null,
         );
     }
 }
