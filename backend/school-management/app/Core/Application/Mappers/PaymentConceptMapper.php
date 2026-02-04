@@ -225,7 +225,7 @@ class PaymentConceptMapper{
                 'career_count' => count($paymentConcept->getCareerIds()),
                 'semester_count' => count($paymentConcept->getSemesters()),
             ],
-            description: $paymentConcept->description,
+            description: $paymentConcept->description ?? null,
         );
     }
 

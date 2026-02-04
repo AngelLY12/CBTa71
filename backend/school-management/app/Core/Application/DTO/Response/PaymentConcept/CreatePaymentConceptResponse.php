@@ -14,7 +14,7 @@ namespace App\Core\Application\DTO\Response\PaymentConcept;
  *     @OA\Property(property="description", type="string", nullable=true, example="Pago de matrícula del semestre"),
  *     @OA\Property(property="amount", type="number", format="float", example=1500.00),
  *     @OA\Property(property="startDate", type="string", format="date", example="2024-01-15"),
- *     @OA\Property(property="endDate", type="string", format="date", example="2024-02-15"),
+ *     @OA\Property(property="endDate", nullable=true, type="string", format="date", example="2024-02-15"),
  *     @OA\Property(property="affectedStudentsCount", type="integer", example=245),
  *     @OA\Property(
  *         property="metadata",
@@ -36,7 +36,7 @@ class CreatePaymentConceptResponse
         public readonly string $appliesTo,
         public readonly string $amount,
         public readonly string $startDate,
-        public readonly string $endDate,
+        public readonly ?string $endDate,
         public readonly int $affectedStudentsCount,
         public readonly string $message,
         public readonly string $createdAt,

@@ -43,8 +43,8 @@ class UpdatePaymentConceptResponse
         public readonly ?string $description,
         public readonly string $amount,
         public readonly string $startDate,
-        public readonly string $endDate,
-        public readonly string $message,
+        public readonly ?string $endDate,
+        public readonly ?string $message,
         public readonly string $updatedAt,
         public readonly array $changes = [],
     )
