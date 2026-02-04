@@ -54,7 +54,7 @@ return [
         'group' => 'Pagos',
     ],
     'delete.card' => [
-        'label' => 'Eliminar tarjeta de pago',
+        'label' => 'Eliminar método de pago',
         'group' => 'Pagos',
     ],
     'create.payment' => [
@@ -138,7 +138,7 @@ return [
         'group' => 'Finanzas',
     ],
     'create.payout' => [
-        'label' => 'Crear dispersión de pagos',
+        'label' => 'Crear liquidación de pagos',
         'group' => 'Finanzas',
     ],
 
@@ -148,7 +148,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'refresh.all.dashboard' => [
-        'label' => 'Actualizar tablero global',
+        'label' => 'Actualizar tablero de pagos',
         'group' => 'Global',
     ],
 
@@ -158,7 +158,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'attach.student' => [
-        'label' => 'Asignar estudiante',
+        'label' => 'Asignar detalles académicos',
         'group' => 'Administración',
     ],
     'import.users' => [
@@ -202,15 +202,15 @@ return [
         'group' => 'Administración',
     ],
     'view.student' => [
-        'label' => 'Ver estudiante',
+        'label' => 'Ver detalles académicos',
         'group' => 'Administración',
     ],
     'update.student' => [
-        'label' => 'Actualizar estudiante',
+        'label' => 'Actualizar detalles académicos',
         'group' => 'Administración',
     ],
     'promote.student' => [
-        'label' => 'Promover estudiante',
+        'label' => 'Incrementar semestres',
         'group' => 'Administración',
     ],
 ];

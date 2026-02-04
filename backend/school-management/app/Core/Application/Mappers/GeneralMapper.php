@@ -112,9 +112,6 @@ class GeneralMapper{
     public static function toPermissionToDisplay(Permission $permission): PermissionToDisplay
     {
         $allConfig = config('permissions_ui');
-        Log::debug('Permission name:', ['name' => $permission->name]);
-        Log::debug('Config keys:', array_keys($allConfig));
-
         $ui = $allConfig[$permission->name] ?? null;
         return new PermissionToDisplay(
             id: $permission->id,
