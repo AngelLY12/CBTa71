@@ -7,6 +7,8 @@ if [ "$APP_ROLE" = "app" ]; then
 
   echo "Limpiando cachés..."
   php artisan optimize:clear || true
+  php artisan config:clear || true
+  php artisan config:cache || true
 
   ATTEMPTS=0
   MAX_ATTEMPTS=10
