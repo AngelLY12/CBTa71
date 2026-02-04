@@ -16,6 +16,7 @@ use App\Core\Domain\Utils\Helpers\Money;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session;
 
 class GeneralMapper{
@@ -110,7 +111,11 @@ class GeneralMapper{
 
     public static function toPermissionToDisplay(Permission $permission): PermissionToDisplay
     {
-        $ui = config('permissions_ui.' . $permission->name);
+        $allConfig = config('permissions_ui');
+        Log::debug('Permission name:', ['name' => $permission->name]);
+        Log::debug('Config keys:', array_keys($allConfig));
+
+        $ui = $allConfig[$permission->name] ?? null;
         return new PermissionToDisplay(
             id: $permission->id,
             name: $permission->name,
