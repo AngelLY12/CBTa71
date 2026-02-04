@@ -198,10 +198,21 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (\Throwable $e, Request $request) {
-            logger()->error("[UNHANDLED] " . $e->getMessage(), [
-                'exception' => get_class($e),
-                'trace' => $e->getTraceAsString(),
-            ]);
+
+            if ($e instanceof \TypeError) {
+                logger()->error('[UNHANDLED][TYPE_ERROR]', [
+                    'message'   => $e->getMessage(),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                    'exception' => get_class($e),
+                ]);
+            } else {
+                logger()->error('[UNHANDLED]', [
+                    'message'   => $e->getMessage(),
+                    'exception' => get_class($e),
+                    'trace'     => $e->getTraceAsString(),
+                ]);
+            }
 
             return Response::error(
                 app()->isProduction()
