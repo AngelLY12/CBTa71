@@ -406,7 +406,7 @@ class AdminRolesPermissions
      *                                      @OA\Property(
      *                                          property="permissions",
      *                                          type="array",
-     *                                          @OA\Items(ref="#/components/schemas/Permission")
+     *                                          @OA\Items(ref="#/components/schemas/PermissionToDisplay")
      *                                      )
      *                                  )
      *                              }
@@ -503,7 +503,7 @@ class AdminRolesPermissions
      *                                      @OA\Property(
      *                                          property="permissions",
      *                                          type="array",
-     *                                          @OA\Items(ref="#/components/schemas/Permission")
+     *                                          @OA\Items(ref="#/components/schemas/PermissionToDisplay")
      *                                      )
      *                                  )
      *                              }
@@ -593,7 +593,7 @@ class AdminRolesPermissions
      *                                      @OA\Property(
      *                                          property="permissions",
      *                                          type="array",
-     *                                          @OA\Items(ref="#/components/schemas/Permission")
+     *                                          @OA\Items(ref="#/components/schemas/PermissionToDisplay")
      *                                      )
      *                                  )
      *                              }

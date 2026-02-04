@@ -600,7 +600,7 @@
                                                                         "permissions": {
                                                                             "type": "array",
                                                                             "items": {
-                                                                                "$ref": "#/components/schemas/Permission"
+                                                                                "$ref": "#/components/schemas/PermissionToDisplay"
                                                                             }
                                                                         }
                                                                     },
@@ -739,7 +739,7 @@
                                                                         "permissions": {
                                                                             "type": "array",
                                                                             "items": {
-                                                                                "$ref": "#/components/schemas/Permission"
+                                                                                "$ref": "#/components/schemas/PermissionToDisplay"
                                                                             }
                                                                         }
                                                                     },
@@ -867,7 +867,7 @@
                                                                         "permissions": {
                                                                             "type": "array",
                                                                             "items": {
-                                                                                "$ref": "#/components/schemas/Permission"
+                                                                                "$ref": "#/components/schemas/PermissionToDisplay"
                                                                             }
                                                                         }
                                                                     },
@@ -11219,6 +11219,38 @@
                         "type": "integer",
                         "example": null,
                         "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PermissionToDisplay": {
+                "title": "Permission To Display",
+                "description": "Permission data formatted for UI display purposes",
+                "properties": {
+                    "id": {
+                        "description": "Unique permission ID",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "description": "Internal permission name",
+                        "type": "string",
+                        "example": "users.create"
+                    },
+                    "type": {
+                        "description": "Permission type",
+                        "type": "string",
+                        "example": "model"
+                    },
+                    "label": {
+                        "description": "Label para lectura",
+                        "type": "string",
+                        "example": "Crear usuarios"
+                    },
+                    "group": {
+                        "description": "UI grupo o categoria del permiso",
+                        "type": "string",
+                        "example": "Usuarios"
                     }
                 },
                 "type": "object"
