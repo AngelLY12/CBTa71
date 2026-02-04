@@ -74,9 +74,9 @@ class ConceptChangeStatusResponse
 {
     public function __construct(
         public readonly array $conceptData,
+        public readonly string $updatedAt,
+        public readonly ?array $changes =[],
         public readonly ?string $message,
-        public readonly array $changes =[],
-        public readonly string $updatedAt
     ){}
 
 }

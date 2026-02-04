@@ -274,12 +274,12 @@ class PaymentConceptMapper{
                 'status' => $paymentConcept->status->value,
                 'amount' => $paymentConcept->amount,
                 'start_date' => $paymentConcept->start_date->format('Y-m-d'),
-                'end_date' => $paymentConcept->end_date->format('Y-m-d'),
+                'end_date' => $paymentConcept->end_date?->format('Y-m-d'),
                 'applies_to' => $paymentConcept->applies_to->value,
             ],
-            message: $data['message'] ?? null,
-            changes: $data['changes'] ?? [],
             updatedAt: now()->format('Y-m-d H:i:s'),
+            changes: $data['changes'] ?? [],
+            message: $data['message'] ?? null,
         );
     }
 }

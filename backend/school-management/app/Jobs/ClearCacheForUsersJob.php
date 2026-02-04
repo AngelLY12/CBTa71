@@ -20,7 +20,7 @@ class ClearCacheForUsersJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(array $userIds, bool $isConceptUpdated=false, PaymentConceptStatus $conceptStatus = null)
+    public function __construct(array $userIds, bool $isConceptUpdated=false, ?PaymentConceptStatus $conceptStatus = null)
     {
         $this->userIds = $userIds;
         $this->isConceptUpdated = $isConceptUpdated;
