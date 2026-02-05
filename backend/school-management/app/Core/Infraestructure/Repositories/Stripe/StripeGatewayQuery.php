@@ -181,7 +181,7 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
         foreach ($balance->available as $a) {
             $available[] = [
                 'amount' => Money::from((string) $a->amount)->divide('100')->finalize(),
-                'source_types' => $a->source_types
+                'source_types' => $a->source_types->toArray(),
             ];
         }
 
@@ -189,7 +189,7 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
         foreach ($balance->pending as $p) {
             $pending[] = [
                 'amount' => Money::from((string) $p->amount)->divide('100')->finalize(),
-                'source_types' => $p->source_types
+                'source_types' => $p->source_types->toArray(),
             ];
         }
         return [
