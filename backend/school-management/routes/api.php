@@ -173,7 +173,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         });
     });
 
-    Route::prefix('careers')->middleware(['role:admin|supervisor'])->group(function(){
+    Route::prefix('careers')->middleware(['role:admin|supervisor|financial-staff'])->group(function(){
         Route::get('/', [CareerController::class, 'index']);
         Route::get('/{id}', [CareerController::class, 'show']);
         Route::post('/', [CareerController::class, 'store']);
