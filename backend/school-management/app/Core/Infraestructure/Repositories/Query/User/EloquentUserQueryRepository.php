@@ -169,7 +169,6 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
     {
         $usersQuery = EloquentUser::query()
             ->where('status', UserStatus::ACTIVO)
-            ->role(UserRoles::STUDENT->value)
             ->select(DB::raw('1'));
 
         $this->matchRecipients($usersQuery, $concept, $appliesTo);

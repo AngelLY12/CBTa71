@@ -62,13 +62,19 @@ class UpdatePaymentConceptRelationsUseCase
                     $dto->replaceExceptions
                 );
             }
-            if($dto->appliesTo){
+
+            $shouldUpdateRelations = $dto->careers !== null
+                || $dto->semesters !== null
+                || $dto->students !== null
+                || $dto->applicantTags !== null;
+
+            if($dto->appliesTo || $shouldUpdateRelations){
+                $paymentConcept=$this->attachAppliesTo($dto,$paymentConcept);
                 $hasRecipients = $this->uqRepo->hasAnyRecipient($paymentConcept, $paymentConcept->applies_to->value);
 
                 if (!$hasRecipients) {
                     throw new RecipientsNotFoundException();
                 }
-                $paymentConcept=$this->attachAppliesTo($dto,$paymentConcept);
 
             }
 
@@ -224,7 +230,10 @@ class UpdatePaymentConceptRelationsUseCase
             'students' => $concept->applies_to === PaymentConceptAppliesTo::ESTUDIANTES
                 ? $concept->getUserIds()
                 : [],
-            'applicant_tags' => $concept->getApplicantTag(),
+            'applicant_tags' =>  array_map(
+                fn($tag) => is_string($tag) ? $tag : $tag->value,
+                $concept->getApplicantTag()
+            ),
             default => []
         };
     }
