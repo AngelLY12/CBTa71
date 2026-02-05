@@ -76,15 +76,18 @@ class HandleFailedOrExpiredPaymentUseCase
             ]);
             return true;
         }catch (\Exception $e) {
-            $this->paymentEventRep->update($event->id, [
-                'error_message' => $e->getMessage(),
-                'retry_count' => ($event->retryCount ?? 0) + 1,
-                'metadata' => array_merge($event->metadata ?? [], [
-                    'failed_at' => now()->toISOString(),
-                    'error_class' => get_class($e)
-                ])
-            ]);
+            if($event->id)
+            {
+                $this->paymentEventRep->update($event->id, [
+                    'error_message' => $e->getMessage(),
+                    'retry_count' => ($event->retryCount ?? 0) + 1,
+                    'metadata' => array_merge($event->metadata ?? [], [
+                        'failed_at' => now()->toISOString(),
+                        'error_class' => get_class($e)
+                    ])
+                ]);
 
+            }
             if (!($e instanceof DomainException) && !($e instanceof \Illuminate\Validation\ValidationException)) {
                 throw $e;
             }

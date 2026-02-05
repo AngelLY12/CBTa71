@@ -23,8 +23,6 @@ class ReconcilePaymentsForceUseCase extends BaseReconciliationUseCase
             return [$result, $payment, false];
         }
 
-
-
         $result->processed = 1;
 
         try {

@@ -137,7 +137,7 @@ class PaymentsMadeUseCase{
         string $totalPending, string $totalPayouts,
         string $totalFees): array
     {
-        if ($totalPayments === '0') {
+        if ($totalPayments === '0.00') {
             return ['0.00', '0.00', '0.00', '0.00'];
         }
 

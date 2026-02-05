@@ -2,7 +2,8 @@
 
 namespace App\Core\Application\UseCases\Payments\Staff\Dashboard;
 
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
 class GetAllStudentsUseCase{
     public function __construct(
