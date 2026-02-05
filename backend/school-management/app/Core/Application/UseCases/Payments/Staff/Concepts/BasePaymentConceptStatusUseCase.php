@@ -15,7 +15,7 @@ use App\Jobs\ClearCacheForUsersJob;
 abstract class BasePaymentConceptStatusUseCase
 {
     protected const CHUNK_SIZE = 500;
-    protected const CACHE_DELAY = 5;
+    protected const CACHE_DELAY = 2;
     public function __construct(
         protected PaymentConceptRepInterface $pcRepo,
         protected UserQueryRepInterface $uqRepo

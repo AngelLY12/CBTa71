@@ -62,7 +62,8 @@ class PaymentConcept extends Model
             'concept_exceptions',
             'payment_concept_id',
             'user_id'
-        )->withTimestamps();
+        )->withTimestamps()
+            ->withPivot('user_id');
     }
 
     public function applicantTypes()

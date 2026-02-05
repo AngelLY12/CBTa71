@@ -50,7 +50,7 @@ class NotifyUsersOfConceptStatusChange implements ShouldQueue
             return;
         }
 
-        foreach (array_chunk($userIds, 100) as $chunk) {
+        foreach (array_chunk($userIds, 500) as $chunk) {
             $users = \App\Models\User::whereIn('id', $chunk)->get(['id']);
 
             if ($users->isEmpty()) {

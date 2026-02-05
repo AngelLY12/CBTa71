@@ -33,7 +33,7 @@ class PaymentConceptMapper{
         }
         if($paymentConcept->relationLoaded('exceptions'))
         {
-            $domain->setExceptionUsersIds($paymentConcept->exceptions->pluck('user_id')->toArray());
+            $domain->setExceptionUsersIds($paymentConcept->exceptions->pluck('pivot.user_id')->toArray());
         }
         if($paymentConcept->relationLoaded('applicantTypes'))
         {
