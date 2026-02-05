@@ -216,7 +216,7 @@ class PaymentConceptValidator{
                 );
             }
 
-            if ($dto->replaceExceptions !== null) {
+            if ($dto->replaceExceptions) {
                 throw new RemoveExceptionsAndExceptionStudentsOverlapException(
                     'No se puede enviar removeAllExceptions y replaceExceptions simultáneamente'
                 );
