@@ -11959,7 +11959,8 @@
                     "endDate": {
                         "type": "string",
                         "format": "date",
-                        "example": "2024-02-15"
+                        "example": "2024-02-15",
+                        "nullable": true
                     },
                     "affectedStudentsCount": {
                         "type": "integer",
@@ -13157,15 +13158,11 @@
                         "example": "Juan Pérez",
                         "nullable": true
                     },
-                    "roles": {
-                        "description": "Lista de roles",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "example": [
-                            "student"
-                        ]
+                    "n_control": {
+                        "description": "Numero de control del alumno",
+                        "type": "string",
+                        "example": "2196023",
+                        "nullable": true
                     },
                     "semestre": {
                         "description": "Semestre del estudiante",
