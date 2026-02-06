@@ -99,7 +99,7 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
 
                 $sessions = Session::all($params);
 
-                $allSessions = array_merge($allSessions, $sessions->data);
+                $allSessions = [... $allSessions, ...$sessions->data];
 
                 $lastId = end($sessions->data)->id ?? null;
 
@@ -129,6 +129,9 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
 
             $paymentsWithDetails = [];
             foreach ($allSessions as $session) {
+                if ($session->payment_status !== 'paid' || !$session->payment_intent) {
+                    continue;
+                }
                 $amountReceived = 0;
                 $paymentStatus = $session->payment_status;
                 $receiptUrl = null;
