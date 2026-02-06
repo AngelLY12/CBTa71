@@ -105,7 +105,7 @@ public function history(){}
      *     path="/api/v1/history/payment/{id}",
      *     summary="Buscar pago por ID",
      *     description="Obtiene la información detallada de un pago específico mediante su identificador.",
-     *     tags={"FindEntity"},
+     *     tags={"Payment History"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *                          name="X-User-Role",

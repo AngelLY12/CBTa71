@@ -32,7 +32,7 @@ trait HasCache
     {
 
         if ($forceRefresh) {
-            $this->cacheService->forget($key);
+            $this->cacheService->flushTags($tags);
         }
 
         return $this->cacheService->remember($tags,$key, $ttl, $callback);
