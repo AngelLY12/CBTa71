@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Swagger\controllers;
+namespace App\Swagger\controllers\Misc;
 
 class Careers
 {
@@ -17,7 +17,7 @@ class Careers
  *            description="Rol requerido para este endpoint",
  *            @OA\Schema(
  *                type="string",
- *                example="admin|supervisor"
+ *                example="admin|supervisor|financial-staff"
  *            )
  *        ),
  *
@@ -75,7 +75,7 @@ public function getCareers(){}
  *             description="Rol requerido para este endpoint",
  *             @OA\Schema(
  *                 type="string",
- *                 example="admin|supervisor"
+ *                 example="admin|supervisor|financial-staff"
  *             )
  *         ),
  *     @OA\Parameter(

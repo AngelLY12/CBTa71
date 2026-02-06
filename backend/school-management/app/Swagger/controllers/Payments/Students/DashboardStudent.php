@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Swagger\controllers;
+namespace App\Swagger\controllers\Payments\Students;
 
 class DashboardStudent
 {
 /**
  * @OA\Post(
  *     path="/api/v1/dashboard/refresh/{studentId?}",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Student"},
  *     summary="Limpiar caché del dashboard",
  *     description="Limpia el caché de datos almacenados en el dashboard (estadísticas, pagos, etc.)",
  *     operationId="refreshDashboardCache",
@@ -56,7 +56,7 @@ public function refresh(){}
 /**
  * @OA\Get(
  *     path="/api/v1/dashboard/history/{studentId?}",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Student"},
  *     summary="Obtener historial de pagos del usuario autenticado",
  *     description="Devuelve una lista paginada con el historial de pagos realizados por el usuario autenticado. Permite forzar la actualización del caché.",
  *     operationId="getPaymentHistory",
@@ -78,7 +78,7 @@ public function refresh(){}
  *                  description="Permiso requerido para este endpoint",
  *                  @OA\Schema(
  *                       type="string",
- *                       example="view.payments.history"
+ *                       example="view.payments.summary"
  *                   )
  *              ),
  *
@@ -152,7 +152,7 @@ public function history(){}
 /**
  * @OA\Get(
  *     path="/api/v1/dashboard/overdue/{studentId?}",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Student"},
  *     summary="Obtener total de pagos vencidos del usuario",
  *     description="Devuelve el monto total de los pagos vencidos asociados al usuario autenticado.",
  *     operationId="getOverduePayments",
@@ -222,7 +222,7 @@ public function overdue(){}
 /**
  * @OA\Get(
  *     path="/api/v1/dashboard/paid/{studentId?}",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Student"},
  *     summary="Obtener total de pagos realizados por el usuario",
  *     description="Devuelve el monto total de pagos completados por el usuario autenticado.",
  *     operationId="getPaidAmount",
@@ -289,7 +289,7 @@ public function paid(){}
 /**
  * @OA\Get(
  *     path="/api/v1/dashboard/pending/{studentId?}",
- *     tags={"Dashboard"},
+ *     tags={"Dashboard Student"},
  *     summary="Obtener total de pagos pendientes del usuario",
  *     description="Devuelve la cantidad y monto total de los pagos pendientes del usuario autenticado.",
  *     operationId="getPendingPayments",

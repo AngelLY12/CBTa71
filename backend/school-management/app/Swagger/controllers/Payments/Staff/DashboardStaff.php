@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Swagger\controllers;
+namespace App\Swagger\controllers\Payments\Staff;
 
 class DashboardStaff
 {
@@ -80,7 +80,7 @@ public function refresh(){}
  *            description="Permiso requerido para este endpoint",
  *            @OA\Schema(
  *                 type="string",
- *                 example="view.concepts.history"
+ *                 example="view.concepts.summary"
  *             )
  *        ),
  *     @OA\Parameter(
@@ -354,7 +354,7 @@ public function pending(){}
  *     path="/api/v1/dashboard-staff/payout",
  *     summary="Crear un payout con todo el balance disponible",
  *     description="Crea un payout en Stripe transfiriendo TODO el balance disponible en MXN a la cuenta bancaria registrada. Requiere un mínimo de $100.00 MXN disponibles.",
- *     tags={"Dashboard Staff", "Payouts"},
+ *     tags={"Dashboard Staff"},
  *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *                name="X-User-Role",

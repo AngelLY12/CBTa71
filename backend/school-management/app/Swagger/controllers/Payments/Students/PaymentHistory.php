@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Swagger\controllers;
+namespace App\Swagger\controllers\Payments\Students;
 
 class PaymentHistory
 {
@@ -30,7 +30,7 @@ class PaymentHistory
  *                          description="Permiso requerido para este endpoint",
  *                          @OA\Schema(
  *                               type="string",
- *                               example="view.payment.history"
+ *                               example="view.payments.history"
  *                           )
  *                      ),
  *
@@ -124,7 +124,7 @@ public function history(){}
      *                          description="Permiso requerido para este endpoint",
      *                          @OA\Schema(
      *                               type="string",
-     *                               example="view.payment"
+     *                               example="view.payments.history"
      *                           )
      *                      ),
      *     @OA\Parameter(

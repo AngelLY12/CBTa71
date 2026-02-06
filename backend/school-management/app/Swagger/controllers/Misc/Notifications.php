@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Swagger\controllers;
+namespace App\Swagger\controllers\Misc;
 
 class Notifications
 {
