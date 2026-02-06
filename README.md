@@ -24,8 +24,9 @@ Configura tu conexión a la base de datos (DB_HOST, DB_DATABASE, DB_USERNAME, DB
 Configura cualquier otra variable que uses, como Stripe, correo, etc.
 
 ## Generar la clave de aplicacion
->php artisan key:generate
-
+```
+php artisan key:generate
+```
 ## Levantar el proyecto con Docker
 >Desde la raiz del proyecto ejecuta
 ```
