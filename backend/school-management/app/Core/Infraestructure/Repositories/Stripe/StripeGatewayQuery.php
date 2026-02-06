@@ -179,33 +179,17 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
         $balance = Balance::retrieve();
         $available = [];
         foreach ($balance->available as $a) {
-            $sourceTypes = [];
-
-            foreach ($a->source_types as $type => $amount) {
-                $sourceTypes[$type] = Money::from((string) $amount)
-                    ->divide('100')
-                    ->finalize();
-            }
-
             $available[] = [
                 'amount' => Money::from((string) $a->amount)->divide('100')->finalize(),
-                'source_types' => $sourceTypes,
+                'source_types' => $a->source_types->toArray(),
             ];
         }
 
         $pending = [];
         foreach ($balance->pending as $p) {
-            $sourceTypes = [];
-
-            foreach ($p->source_types as $type => $amount) {
-                $sourceTypes[$type] = Money::from((string) $amount)
-                    ->divide('100')
-                    ->finalize();
-            }
-
             $pending[] = [
                 'amount' => Money::from((string) $p->amount)->divide('100')->finalize(),
-                'source_types' => $sourceTypes,
+                'source_types' => $p->source_types->toArray(),
             ];
         }
         return [

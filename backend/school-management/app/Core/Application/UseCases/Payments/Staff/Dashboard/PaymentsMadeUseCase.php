@@ -73,7 +73,7 @@ class PaymentsMadeUseCase{
         foreach ($sourceTypes as $type => $amount) {
             $money = Money::from($target[$type] ?? '0')
                 ->add(Money::from($amount));
-            $target[$type] = $money->finalize();
+            $target[$type] = $money->divide('100')->finalize();
         }
     }
 
