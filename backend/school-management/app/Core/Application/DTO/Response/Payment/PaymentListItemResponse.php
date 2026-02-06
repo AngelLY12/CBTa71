@@ -13,6 +13,7 @@ namespace App\Core\Application\DTO\Response\Payment;
  *     @OA\Property(property="amount", type="string", nullable=true, description="Monto del pago", example="1500.00"),
  *     @OA\Property(property="amount_received", type="string", nullable=true, description="Monto del pago recibido", example="1500.00"),
  *     @OA\Property(property="method", type="string", nullable=true, description="Método de pago usado", example="Tarjeta de crédito"),
+ *     @OA\Property(property="userId", type="integer", nullable=true, description="ID del usuario que realizó el pago", example=50)
  *     @OA\Property(property="fullName", type="string", nullable=true, description="Nombre completo del usuario que realizó el pago", example="Juan Pérez")
  * )
  */
@@ -25,6 +26,7 @@ class PaymentListItemResponse{
         public readonly ?string $amount,
         public readonly ?string $amount_received,
         public readonly ?string $method,
+        public readonly ?int $userId,
         public readonly ?string $fullName
 
     ) {}

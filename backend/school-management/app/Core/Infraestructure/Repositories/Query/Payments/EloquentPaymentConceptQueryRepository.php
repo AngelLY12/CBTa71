@@ -323,9 +323,11 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
         $rows = DB::query()
             ->fromSub($this->basePendingQuery($userIds), 'pending_concepts')
             ->join('users', 'users.id', '=', 'pending_concepts.target_user_id')
+            ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
             ->select(
                 'users.id as user_id',
                 DB::raw("CONCAT(users.name, ' ', users.last_name) as user_name"),
+                'student_details.n_control as n_control',
                 'pending_concepts.concept_name',
                 'pending_concepts.pending_amount',
                 'pending_concepts.created_at'
@@ -334,7 +336,9 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
             ->get();
 
         return $rows->map(fn($r) => MappersPaymentConceptMapper::toConceptNameAndAmoutResonse([
+            'user_id' => $r->user_id,
             'user_name'    => $r->user_name,
+            'n_control'    => $r->n_control,
             'concept_name' => $r->concept_name,
             'amount'       => $r->pending_amount,
         ]))->toArray();

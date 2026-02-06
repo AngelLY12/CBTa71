@@ -119,7 +119,8 @@ class PaymentMapper{
             amount: $payment->amount ?? null,
             amount_received: $payment->amount_received ?? null,
             method: $type ?? null,
-            fullName: $payment->user->name . ' ' . $payment->user->last_name ?? null,
+            userId: $payment->user->id ?? null,
+            fullName: $payment->user ? $payment->user->name . ' ' . $payment->user->last_name : null,
         );
     }
 

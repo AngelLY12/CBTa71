@@ -198,7 +198,9 @@ class PaymentConceptMapper{
     public static function toConceptNameAndAmoutResonse(array $data): ConceptNameAndAmountResponse
     {
         return new ConceptNameAndAmountResponse(
+            userId: (int) $data['user_id'],
             user_name: $data['user_name'] ?? null,
+            n_control: $data['n_control'] ?? null,
             concept_name: $data['concept_name'] ?? null,
             amount:$data['amount'] ?? null
         );
