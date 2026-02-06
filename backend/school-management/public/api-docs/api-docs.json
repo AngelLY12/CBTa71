@@ -11724,10 +11724,22 @@
             },
             "ConceptNameAndAmountResponse": {
                 "properties": {
+                    "userId": {
+                        "description": "ID del usuario asociado al pago",
+                        "type": "string",
+                        "example": 34,
+                        "nullable": true
+                    },
                     "user_name": {
                         "description": "Nombre del usuario asociado al pago",
                         "type": "string",
                         "example": "Juan Pérez",
+                        "nullable": true
+                    },
+                    "n_control": {
+                        "description": "Número de control del usuario asociado al pago",
+                        "type": "string",
+                        "example": "97763726",
                         "nullable": true
                     },
                     "concept_name": {
@@ -12629,6 +12641,12 @@
                         "description": "Método de pago usado",
                         "type": "string",
                         "example": "Tarjeta de crédito",
+                        "nullable": true
+                    },
+                    "userId": {
+                        "description": "ID del usuario que realizó el pago",
+                        "type": "integer",
+                        "example": 50,
                         "nullable": true
                     },
                     "fullName": {
