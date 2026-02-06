@@ -273,11 +273,6 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         $rows = $this->basePendingLeftJoinQuery($userIds)
             ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
             ->leftJoin('careers', 'careers.id', '=', 'student_details.career_id')
-            ->leftJoin('model_has_roles', function ($q) {
-                $q->on('model_has_roles.model_id', '=', 'users.id')
-                    ->where('model_has_roles.model_type', User::class);
-            })
-            ->leftJoin('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->leftJoinSub(
                 $paidTotals,
                 'paid_totals',
@@ -288,7 +283,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
             ->selectRaw("
                 users.id AS user_id,
                 CONCAT(users.name, ' ', users.last_name) AS full_name,
-                GROUP_CONCAT(DISTINCT roles.name) AS roles,
+                student_details.n_control as n_control,
                 student_details.semestre AS semestre,
                 careers.career_name AS career,
                 COUNT(pending_concepts.id) AS total_count,
@@ -314,6 +309,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                 'users.id',
                 'users.name',
                 'users.last_name',
+                'student_details.n_control',
                 'student_details.semestre',
                 'careers.career_name',
                 'paid_totals.total_paid',
@@ -325,7 +321,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return $rows->map(fn($r) => MappersUserMapper::toUserWithPendingSummaryResponse([
             'user_id'      => (int)$r->user_id,
             'name'         => $r->full_name,
-            'roles' => $r->roles ? explode(',', $r->roles) : [],
+            'n_control' => $r->n_control,
             'semestre'     => $r->semestre,
             'career'       => $r->career ?? null,
             'total_count'  => (int)$r->total_count,
