@@ -86,16 +86,20 @@ trait HasCache
         return $this->cacheService->makeKey($prefix, $fullSuffix);
     }
 
-    protected function idempotent(?string $key, callable $callback, ?int $ttl = 10)
+    protected function idempotent(string $key, callable $callback, ?int $ttl = 10)
     {
-        $key = $key ?? 'idempotent:' . Str::uuid();
+        $cacheKey = "idempotent:{$key}";
 
-        $added = $this->cacheService->add($key, true, $ttl);
-        if (! $added) {
+        if (! $this->cacheService->add($cacheKey, 1, $ttl)) {
             throw new IdempotencyExistsException($key);
         }
 
-        return $callback();
+        try {
+            return $callback();
+        } catch (\Throwable $e) {
+            $this->cacheService->forget($cacheKey);
+            throw $e;
+        }
     }
 
 }

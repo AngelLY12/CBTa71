@@ -65,10 +65,9 @@ class AdminStudentController extends Controller
 
     public function importStudents(ImportRequest $request)
     {
-        $file= $request->file('file');
-        $filePath = $file->store('imports', 'local');
-        $import= new StudentDetailsImport($this->service, Auth::user(), $filePath);
-        Excel::queueImport($import,$file, 'local')->onQueue('imports');
+        $file= $request->file('file')->store('imports','gcs');
+        $import= new StudentDetailsImport($this->service, Auth::user());
+        Excel::queueImport($import,$file,'gcs')->onQueue('imports');
         return Response::success(null, 'Usuarios procesandose, se te notificara cuando termine.');
     }
 }
