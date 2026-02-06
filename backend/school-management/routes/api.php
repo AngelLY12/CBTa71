@@ -72,7 +72,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware('permission:view.own.pending.concepts.summary')->get('/pending/{studentId?}',[DashboardController::class,'pending']);
         Route::middleware('permission:view.own.paid.concepts.summary')->get('/paid/{studentId?}',[DashboardController::class,'paid']);
         Route::middleware('permission:view.own.overdue.concepts.summary')->get('/overdue/{studentId?}',[DashboardController::class,'overdue']);
-        Route::middleware('permission:view.payments.history')->get('/history/{studentId?}',[DashboardController::class,'history']);
+        Route::middleware('permission:view.payments.summary')->get('/history/{studentId?}',[DashboardController::class,'history']);
         Route::middleware('permission:refresh.all.dashboard')->post('/refresh/{studentId?}',[DashboardController::class,'refreshDashboard']);
     });
     Route::prefix('cards')->middleware(['role:student|parent'])->group(function(){
@@ -82,8 +82,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:delete.card', 'throttle:10,1'])->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
     Route::prefix('history')->middleware(['role:student|parent','throttle:global'])->group(function(){
-        Route::middleware('permission:view.payment.history')->get('/{studentId?}',[PaymentHistoryController::class,'index']);
-        Route::middleware('permission:view.payment')->get('/payment/{id}',[PaymentHistoryController::class,'findPayment']);
+        Route::middleware('permission:view.payments.history')->get('/{studentId?}',[PaymentHistoryController::class,'index']);
+        Route::middleware('permission:view.payments.history')->get('/payment/{id}',[PaymentHistoryController::class,'findPayment']);
 
     });
     Route::prefix('pending-payment')->middleware(['role:student|parent'])->group(function(){
@@ -97,7 +97,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:view.all.pending.concepts.summary', 'throttle:global'])->get('/pending',[StaffDashboardController::class,'pendingPayments']);
         Route::middleware(['permission:view.all.students.summary', 'throttle:global'])->get('/students',[StaffDashboardController::class,'allStudents']);
         Route::middleware(['permission:view.all.paid.concepts.summary', 'throttle:global'])->get('/payments',[StaffDashboardController::class,'paymentsMade']);
-        Route::middleware(['permission:view.concepts.history', 'throttle:global'])->get('/concepts',[StaffDashboardController::class,'allConcepts']);
+        Route::middleware(['permission:view.concepts.summary', 'throttle:global'])->get('/concepts',[StaffDashboardController::class,'allConcepts']);
         Route::middleware(['permission:create.payout', 'throttle:5,1'])->post('/payout',[StaffDashboardController::class,'payout']);
         Route::middleware(['permission:refresh.all.dashboard', 'throttle:5,1'])->post('/refresh',[StaffDashboardController::class,'refreshDashboard']);
     });
@@ -125,10 +125,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('payments')->middleware(['role:financial-staff', 'throttle:global'])->group(function(){
         Route::middleware('permission:view.payments')->get('/', [PaymentsController::class, 'index']);
         Route::middleware('permission:view.payments')->get('/by-concept',[PaymentsController::class,'showByName']);
-    });
+        Route::middleware('permission:view.payments.student.summary')->get('/students', [StudentsController::class, 'index']);
 
-     Route::prefix('students')->middleware(['role:financial-staff','throttle:global' ])->group(function(){
-        Route::middleware('permission:view.students')->get('/', [StudentsController::class, 'index']);
     });
 
     Route::prefix('admin-actions')->middleware(['role:admin|supervisor', 'throttle:global'])->group(function(){
@@ -173,12 +171,17 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         });
     });
 
-    Route::prefix('careers')->middleware(['role:admin|supervisor|financial-staff'])->group(function(){
-        Route::get('/', [CareerController::class, 'index']);
-        Route::get('/{id}', [CareerController::class, 'show']);
-        Route::post('/', [CareerController::class, 'store']);
-        Route::patch('/{id}', [CareerController::class, 'update']);
-        Route::delete('/{id}', [CareerController::class, 'destroy']);
+    Route::prefix('careers')->group(function(){
+        Route::middleware(['role:admin|supervisor|financial-staff'])->group(function () {
+            Route::get('/', [CareerController::class, 'index']);
+            Route::get('/{id}', [CareerController::class, 'show']);
+        });
+
+        Route::middleware(['role:admin|supervisor'])->group(function () {
+            Route::post('/', [CareerController::class, 'store']);
+            Route::patch('/{id}', [CareerController::class, 'update']);
+            Route::delete('/{id}', [CareerController::class, 'destroy']);
+        });
     });
 
     Route::prefix('users')->middleware(['throttle:10,1'])->group(function () {

@@ -19,20 +19,16 @@ return [
         'label' => 'Ver resumen de conceptos vencidos propios',
         'group' => 'Pagos',
     ],
-    'view.payments.history' => [
-        'label' => 'Ver historial de pagos',
+    'view.payments.summary' => [
+        'label' => 'Ver resumen de pagos',
         'group' => 'Pagos',
     ],
     'view.cards' => [
         'label' => 'Ver tarjetas registradas',
         'group' => 'Pagos',
     ],
-    'view.payment' => [
-        'label' => 'Ver detalle de pago',
-        'group' => 'Pagos',
-    ],
-    'view.payment.history' => [
-        'label' => 'Ver historial detallado de pagos',
+    'view.payments.history' => [
+        'label' => 'Ver historial de pagos',
         'group' => 'Pagos',
     ],
     'view.pending.concepts' => [
@@ -79,8 +75,8 @@ return [
         'label' => 'Ver resumen de conceptos pagados',
         'group' => 'Finanzas',
     ],
-    'view.concepts.history' => [
-        'label' => 'Ver historial de conceptos',
+    'view.concepts.summary' => [
+        'label' => 'Ver resumen de conceptos',
         'group' => 'Finanzas',
     ],
     'view.concepts' => [
@@ -129,8 +125,8 @@ return [
         'label' => 'Validar deuda',
         'group' => 'Finanzas',
     ],
-    'view.students' => [
-        'label' => 'Ver estudiantes',
+    'view.payments.student.summary' => [
+        'label' => 'Ver el resumen financiero de los estudiantes',
         'group' => 'Finanzas',
     ],
     'view.stripe.payments' => [
