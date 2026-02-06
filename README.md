@@ -25,7 +25,7 @@ Configura cualquier otra variable que uses, como Stripe, correo, etc.
 
 ## Generar la clave de aplicacion
 ```
-php artisan key:generate
+php artisan key:generate --show
 ```
 ## Levantar el proyecto con Docker
 >Desde la raiz del proyecto ejecuta
