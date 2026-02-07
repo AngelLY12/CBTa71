@@ -46,6 +46,8 @@ return new class extends Migration
             $table->index(['career_id']);
             $table->index('semestre');
             $table->index('group');
+            $table->index(['user_id', 'career_id']);
+            $table->index(['career_id', 'semestre', 'group']);
             $table->index(['semestre', 'career_id']);
             $table->index(['semestre', 'user_id']);
             $table->index(['career_id', 'semestre', 'user_id']);

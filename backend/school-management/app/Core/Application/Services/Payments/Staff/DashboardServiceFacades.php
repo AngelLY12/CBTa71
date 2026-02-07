@@ -6,6 +6,7 @@ use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\General\StripePayoutResponse;
 use App\Core\Application\DTO\Response\Payment\FinancialSummaryResponse;
 use App\Core\Application\DTO\Response\PaymentConcept\PendingSummaryResponse;
+use App\Core\Application\DTO\Response\User\UsersFinancialSummary;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Payments\Staff\Dashboard\CreatePayoutUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Dashboard\GetAllConceptsUseCase;
@@ -51,7 +52,7 @@ class DashboardServiceFacades{
     }
 
 
-    public function getAllStudents(bool $onlyThisYear, bool $forceRefresh): int
+    public function getAllStudents(bool $onlyThisYear, bool $forceRefresh): UsersFinancialSummary
     {
         $key = $this->generateCacheKey(
             CachePrefix::STAFF->value,

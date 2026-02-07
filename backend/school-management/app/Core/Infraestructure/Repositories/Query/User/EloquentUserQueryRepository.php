@@ -5,6 +5,8 @@ namespace App\Core\Infraestructure\Repositories\Query\User;
 use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
+use App\Core\Application\DTO\Response\User\UsersAdminSummary;
+use App\Core\Application\DTO\Response\User\UsersFinancialSummary;
 use App\Core\Application\Mappers\UserMapper as MappersUserMapper;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
@@ -75,16 +77,53 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return MappersUserMapper::toUserIdListDTO($ids);
     }
 
-    public function countStudents(bool $onlyThisYear): int
+    public function getUsersPopulationSummary(bool $onlyThisYear): UsersFinancialSummary
     {
-        $students = EloquentUser::role(UserRoles::STUDENT->value)->where('status', UserStatus::ACTIVO);
-        if($onlyThisYear){
-            $students->whereYear('created_at',now()->year);
-        }
-        return $students->count();
+        $roles = DB::table('roles')
+            ->whereIn('name', [
+                UserRoles::STUDENT->value,
+                UserRoles::APPLICANT->value
+            ])
+            ->pluck('id', 'name');
 
+        $counts = DB::table('users')
+            ->join('model_has_roles', function ($join) {
+                $join->on('users.id', '=', 'model_has_roles.model_id')
+                    ->where('model_has_roles.model_type', EloquentUser::class);
+            })
+            ->where('users.status', UserStatus::ACTIVO)
+            ->when($onlyThisYear, function ($q) {
+                $start = now()->startOfYear();
+                $end = now()->endOfYear();
+                $q->whereBetween('users.created_at', [$start, $end]);
+            })
+            ->whereIn('model_has_roles.role_id', $roles->values())
+            ->selectRaw('model_has_roles.role_id, COUNT(DISTINCT users.id) as total')
+            ->groupBy('model_has_roles.role_id')
+            ->pluck('total', 'model_has_roles.role_id');
+
+        return MappersUserMapper::toUsersFinancialSummary(
+            totalStudents: $counts[$roles[UserRoles::STUDENT->value]] ?? 0,
+            totalApplicants: $counts[$roles[UserRoles::APPLICANT->value]] ?? 0
+        );
     }
 
+    public function getUsersAdminSummary(bool $onlyThisYear): UsersAdminSummary
+    {
+        [$populationSummary, $recentActivity] = EloquentAdminUserDashboardQuery::getGlobalUserStats($onlyThisYear);
+
+        $usersByRoleSummary = EloquentAdminUserDashboardQuery::getUsersByRoleSummary();
+
+        [$academicSummary, $systemAlerts] = EloquentAdminUserDashboardQuery::getStudentAcademicAndAlerts($onlyThisYear);
+
+        return new UsersAdminSummary(
+            populationSummary: $populationSummary,
+            usersByRoleSummary: $usersByRoleSummary,
+            academicSummary: $academicSummary,
+            systemAlerts: $systemAlerts,
+            recentActivity: $recentActivity
+        );
+    }
     public function findBySearch(string $search): ?User
     {
         $user = EloquentUser::with('studentDetail')

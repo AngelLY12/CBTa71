@@ -14,6 +14,8 @@ use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\DTO\Response\User\UserListItemResponse;
 use App\Core\Application\DTO\Response\User\UserRecipientDTO;
+use App\Core\Application\DTO\Response\User\UsersAdminSummary;
+use App\Core\Application\DTO\Response\User\UsersFinancialSummary;
 use App\Core\Application\DTO\Response\User\UserWithPaymentResponse;
 use App\Core\Application\DTO\Response\User\UserWithPendingSumamaryResponse;
 use App\Core\Application\DTO\Response\User\UserWithStudentDetailResponse;
@@ -263,6 +265,14 @@ class UserMapper{
             roles_count: (int) $user->roles_count,
             createdAtHuman: $user->created_at->diffForHumans(),
             deletedAtHuman: $user->mark_as_deleted_at ? $user->mark_as_deleted_at->diffForHumans() : null,
+        );
+    }
+
+    public static function toUsersFinancialSummary(int $totalStudents, int $totalApplicants): UsersFinancialSummary
+    {
+        return new UsersFinancialSummary(
+            totalStudents: $totalStudents,
+            totalApplicants: $totalApplicants,
         );
     }
 

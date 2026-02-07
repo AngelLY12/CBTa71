@@ -5,6 +5,8 @@ namespace App\Core\Domain\Repositories\Query\User;
 use App\Core\Application\DTO\Response\User\UserAuthResponse;
 use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
+use App\Core\Application\DTO\Response\User\UsersAdminSummary;
+use App\Core\Application\DTO\Response\User\UsersFinancialSummary;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\User\UserStatus;
@@ -18,7 +20,8 @@ interface UserQueryRepInterface{
     public function getUserWithStudentDetail(int $userId):User;
     public function getUserByStripeCustomer(string $customerId): User;
     public function getUserIdsByControlNumbers(array $controlNumbers): UserIdListDTO;
-    public function countStudents(bool $onlyThisYear): int;
+    public function getUsersPopulationSummary(bool $onlyThisYear): UsersFinancialSummary;
+    public function getUsersAdminSummary(bool $onlyThisYear): UsersAdminSummary;
     public function findActiveStudents(?string $search, int $perPage, int $page): LengthAwarePaginator;
     public function findBySearch(string $search): ?User;
     public function getRecipients(PaymentConcept $concept, string $appliesTo): array;

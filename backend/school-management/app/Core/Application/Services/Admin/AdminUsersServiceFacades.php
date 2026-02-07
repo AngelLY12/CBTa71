@@ -7,6 +7,7 @@ use App\Core\Application\DTO\Response\General\ImportResponse;
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\User\UserChangedStatusResponse;
 use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
+use App\Core\Application\DTO\Response\User\UsersAdminSummary;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Admin\UserManagement\ActivateUserUseCase;
 use App\Core\Application\UseCases\Admin\UserManagement\BulkImportUsersUseCase;
@@ -15,6 +16,7 @@ use App\Core\Application\UseCases\Admin\UserManagement\DisableUserUseCase;
 use App\Core\Application\UseCases\Admin\UserManagement\GetExtraUserDataUseCase;
 use App\Core\Application\UseCases\Admin\UserManagement\ShowAllUsersUseCase;
 use App\Core\Application\UseCases\Admin\UserManagement\TemporaryDisableUserUseCase;
+use App\Core\Application\UseCases\Admin\UserManagement\UsersAdminSummaryUseCase;
 use App\Core\Application\UseCases\User\RegisterUseCase;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Cache\AdminCacheSufix;
@@ -37,6 +39,7 @@ class AdminUsersServiceFacades
         private DeleteLogicalUserUseCase         $delete,
         private DisableUserUseCase               $disable,
         private TemporaryDisableUserUseCase      $temporaryDisable,
+        private UsersAdminSummaryUseCase $usersSummary,
         private CacheService                     $service
     )
     {
@@ -55,6 +58,16 @@ class AdminUsersServiceFacades
         $import=$this->import->execute($rows);
         $this->service->flushTags(self::TAG_USERS_ALL);
         return $import;
+    }
+
+    public function showUsersSummary(bool $onlyThisYear, bool $forceRefresh): UsersAdminSummary
+    {
+        $key = $this->generateCacheKey(
+            CachePrefix::ADMIN->value,
+            AdminCacheSufix::USERS->value . ":summary",
+            ['onlyThisYear' => $onlyThisYear]
+        );
+        return $this->longCache($key, fn() => $this->usersSummary->execute($onlyThisYear), self::TAG_USERS_ALL, $forceRefresh);
     }
 
     public function showAllUsers(int $perPage, int $page, bool $forceRefresh, ?UserStatus $status = null): PaginatedResponse

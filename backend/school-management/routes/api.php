@@ -140,6 +140,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         });
         Route::controller(AdminUsersController::class)->group(function(){
             Route::middleware('permission:import.users')->post('/import-users', 'import');
+            Route::middleware('permission:view.users')->get('/users-summary','getSummary');
             Route::middleware('permission:view.users')->get('/show-users','index');
             Route::middleware('permission:view.users')->get('/show-users/{id}','getExtraUserData');
             Route::middleware('permission:disable.users')->post('/disable-users', 'disableUsers');

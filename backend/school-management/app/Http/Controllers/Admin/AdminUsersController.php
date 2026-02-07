@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\RegisterUserRequest;
 use App\Http\Requests\Admin\ShowUsersPaginationRequest;
 use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\General\ImportRequest;
+use App\Http\Requests\Payments\Staff\DashboardRequest;
 use App\Imports\UsersImport;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
@@ -79,6 +80,14 @@ class AdminUsersController extends Controller
         $users=$this->service->showAllUsers($perPage, $page,$forceRefresh, $status);
         return Response::success(['users' => $users], 'Usuarios encontrados.');
 
+    }
+
+    public function getSummary(DashboardRequest $request)
+    {
+        $onlyThisYear = $request->validated()['only_this_year'] ?? false;
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $summary = $this->service->showUsersSummary($onlyThisYear, $forceRefresh);
+        return Response::success(['summary' => $summary], 'Resumen de usuarios obtenido.');
     }
 
     public function getExtraUserData(ForceRefreshRequest $request, int $id)
