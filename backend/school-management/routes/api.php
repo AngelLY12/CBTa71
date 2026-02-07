@@ -77,19 +77,19 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
     Route::prefix('cards')->middleware(['role:student|parent'])->group(function(){
         Route::middleware(['permission:view.cards','throttle:global'])->get('/',[CardsController::class,'index']);
-        Route::middleware(['permission:view.cards','throttle:global'])->get('/{studentId}',[CardsController::class,'index']);
+        Route::middleware(['permission:view.cards','throttle:global'])->get('/{studentId?}',[CardsController::class,'index']);
         Route::middleware(['permission:create.setup', 'throttle:10,1440'])->post('/',[CardsController::class,'store']);
         Route::middleware(['permission:delete.card', 'throttle:10,1'])->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
     Route::prefix('history')->middleware(['role:student|parent','throttle:global'])->group(function(){
-        Route::middleware('permission:view.payments.history')->get('/{studentId?}',[PaymentHistoryController::class,'index']);
         Route::middleware('permission:view.payments.history')->get('/payment/{id}',[PaymentHistoryController::class,'findPayment']);
+        Route::middleware('permission:view.payments.history')->get('/{studentId?}',[PaymentHistoryController::class,'index']);
 
     });
-    Route::prefix('pending-payment')->middleware(['role:student|parent'])->group(function(){
-        Route::middleware(['permission:view.pending.concepts','throttle:global'])->get('/{studentId?}',[PendingPaymentController::class,'index']);
-        Route::middleware(['permission:create.payment','throttle:10,1440'])->post('/',[PendingPaymentController::class,'store']);
+    Route::prefix('pending-payments')->middleware(['role:student|parent'])->group(function(){
         Route::middleware(['permission:view.overdue.concepts','throttle:global'])->get('/overdue/{studentId?}',[PendingPaymentController::class,'overdue']);
+        Route::middleware(['permission:create.payment','throttle:10,1440'])->post('/',[PendingPaymentController::class,'store']);
+        Route::middleware(['permission:view.pending.concepts','throttle:global'])->get('/{studentId?}',[PendingPaymentController::class,'index']);
 
     });
 
@@ -102,18 +102,19 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:refresh.all.dashboard', 'throttle:5,1'])->post('/refresh',[StaffDashboardController::class,'refreshDashboard']);
     });
     Route::prefix('concepts')->middleware(['role:financial-staff'])->group(function(){
-        Route::middleware(['permission:view.concepts', 'throttle:global'])->get('/', [ConceptsController::class, 'index']);
-        Route::middleware(['permission:view.concepts', 'throttle:10,1'])->get('/{id}',[ConceptsController::class,'findConcept']);
         Route::middleware(['permission:view.concepts','throttle:10,1'])->get('/relations/{id}',[ConceptsController::class,'findRelations']);
-        Route::middleware(['permission:create.concepts', 'throttle:10,1'])->post('/', [ConceptsController::class, 'store']);
-        Route::middleware(['permission:update.concepts', 'throttle:10,1'])->put('/{id}', [ConceptsController::class, 'update']);
-        Route::middleware(['permission:update.concepts', 'throttle:10,1'])->patch('/{id}', [ConceptsController::class, 'update']);
         Route::middleware(['permission:update.concepts', 'throttle:10,1'])->patch('/update-relations/{id}', [ConceptsController::class, 'updateRelations']);
         Route::middleware(['permission:finalize.concepts', 'throttle:10,1'])->post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
         Route::middleware(['permission:disable.concepts', 'throttle:10,1'])->post('/{concept}/disable', [ConceptsController::class, 'disable']);
         Route::middleware(['permission:eliminate.concepts', 'throttle:10,1'])->delete('/{id}/eliminate', [ConceptsController::class, 'eliminate']);
         Route::middleware(['permission:eliminate.concepts', 'throttle:10,1'])->post('/{concept}/eliminateLogical',[ConceptsController::class,'eliminateLogical']);
         Route::middleware(['permission:activate.concepts', 'throttle:10,1'])->post('/{concept}/activate',[ConceptsController::class,'activate']);
+        Route::middleware(['permission:view.concepts', 'throttle:global'])->get('/', [ConceptsController::class, 'index']);
+        Route::middleware(['permission:create.concepts', 'throttle:10,1'])->post('/', [ConceptsController::class, 'store']);
+        Route::middleware(['permission:view.concepts', 'throttle:10,1'])->get('/{id}',[ConceptsController::class,'findConcept']);
+        Route::middleware(['permission:update.concepts', 'throttle:10,1'])->put('/{id}', [ConceptsController::class, 'update']);
+        Route::middleware(['permission:update.concepts', 'throttle:10,1'])->patch('/{id}', [ConceptsController::class, 'update']);
+
     });
 
     Route::prefix('debts')->middleware(['role:financial-staff'])->group(function(){
@@ -135,8 +136,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
             Route::middleware('permission:attach.student')->post('/attach-student','attachStudent');
             Route::middleware('permission:import.users')->post('/import-students','importStudents');
             Route::middleware('permission:view.student')->get('/get-student/{id}','findStudentDetail');
-            Route::middleware('permission:update.student')->patch('/update-student/{id}','updateStudentDetail');
             Route::middleware('permission:promote.student')->patch('/promote','promotionStudents');
+            Route::middleware('permission:update.student')->patch('/update-student/{id}','updateStudentDetail');
         });
         Route::controller(AdminUsersController::class)->group(function(){
             Route::middleware('permission:import.users')->post('/import-users', 'import');
@@ -159,9 +160,9 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
                 Route::post('/updated-roles/{userId}','updateRolesToUser');
             });
             Route::middleware('permission:view.permissions')->group(function () {
+                Route::post('/permissions/by-user/{userId}','findPermissionsToUser');
                 Route::post('/permissions/by-curps','findAllPermissionsByCurps');
                 Route::post('/permissions/by-role', 'findAllPermissionsByRole');
-                Route::post('/permissions/by-user/{userId}','findPermissionsToUser');
                 Route::get('/permissions/{id}', 'findPermissionById');
             });
             Route::middleware('permission:view.roles')->group(function () {
