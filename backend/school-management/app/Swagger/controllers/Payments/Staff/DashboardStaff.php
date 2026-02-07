@@ -259,16 +259,15 @@ public function payments(){}
  *              allOf={
  *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
  *                  @OA\Schema(
- *                      @OA\Property(
- *                          property="data",
- *                          type="object",
- *                          @OA\Property(
- *                              property="total_students",
- *                              type="integer",
- *                              example=1500
- *                          )
- *                      )
- *                  )
+ *                       @OA\Property(
+ *                           property="data",
+ *                           type="object",
+ *                           @OA\Property(
+ *                               property="payments_data",
+ *                               ref="#/components/schemas/UsersFinancialSummary"
+ *                           )
+ *                       )
+ *                   )
  *              }
  *          )
  *      ),

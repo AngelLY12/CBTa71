@@ -376,6 +376,90 @@ class AdminUsers
      */
     public function showUser(){}
 
+    /**
+     * @OA\Get(
+     *     path="/api/v1/admin-actions/users-summary",
+     *     summary="Mostrar resuúmen de usuarios",
+     *     description="Permite al administrador ver un resumen de los usuarios del sistema.",
+     *     operationId="showUsersSummary",
+     *     tags={"Admin"},
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *                name="X-User-Role",
+     *                in="header",
+     *                required=false,
+     *                description="Rol requerido para este endpoint",
+     *                @OA\Schema(
+     *                    type="string",
+     *                    example="admin|supervisor"
+     *                )
+     *            ),
+     *       @OA\Parameter(
+     *                name="X-User-Permission",
+     *                in="header",
+     *                required=false,
+     *                description="Permiso requerido para este endpoint",
+     *                @OA\Schema(
+     *                     type="string",
+     *                     example="view.users"
+     *                 )
+     *            ),
+     *
+     *     @OA\Parameter(
+     *         name="forceRefresh",
+     *         in="query",
+     *         description="Forzar actualización del caché (true o false).",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=false)
+     *     ),
+     *     @OA\Parameter(
+     *          name="only_this_year",
+     *          in="query",
+     *          description="Mostrar datos de este año (true o false).",
+     *          required=false,
+     *          @OA\Schema(type="boolean", example=false)
+     *      ),
+     *
+     *
+     *     @OA\Response(
+     *          response=200,
+     *          description="Usuarios obtenidos correctamente.",
+     *          @OA\JsonContent(
+     *              allOf={
+     *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+     *                  @OA\Schema(
+     *                      @OA\Property(
+     *                          property="data",
+     *                          type="object",
+     *                          @OA\Property(
+     *                              property="summary",
+     *                              ref="#/components/schemas/UsersAdminSummary"
+     *
+     *                          )
+     *                      ),
+     *                      @OA\Property(
+     *                          property="message",
+     *                          type="string",
+     *                          example="Resumen de usuarios obtenido."
+     *                      )
+     *                  )
+     *              }
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="No autorizado",
+     *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *      ),
+     *      @OA\Response(
+     *          response=500,
+     *          description="Error interno del servidor",
+     *          @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *      )
+     * )
+     */
+    public function usersSummary(){}
+
 
     /**
      * @OA\Post(
