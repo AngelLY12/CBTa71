@@ -24,7 +24,7 @@ class DateHelper
     public static function expiredText(Carbon $date): string
     {
         $now = Carbon::now();
-        $days = $date->diffInDays($now);
+        $days = $date->diffInDays($now, false);
 
         if ($days == 0) return 'Expirado hoy';
         if ($days == 1) return 'Expirado ayer';
@@ -42,7 +42,7 @@ class DateHelper
     public static function remainingText(Carbon $date): string
     {
         $now = Carbon::now();
-        $days = $now->diffInDays($date);
+        $days = $now->diffInDays($date, false);
 
         if ($days == 0) return 'Vence hoy';
         if ($days == 1) return 'Vence mañana';
