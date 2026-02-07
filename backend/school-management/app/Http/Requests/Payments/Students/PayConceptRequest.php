@@ -35,7 +35,7 @@ class PayConceptRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'concept_id' => 'required|integer|exists:concepts,id',
+            'concept_id' => 'required|integer',
         ];
     }
 
