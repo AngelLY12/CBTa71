@@ -19,6 +19,7 @@ use App\Core\Domain\Entities\PaymentConcept as EntitiesPaymentConcept;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
+use App\Core\Domain\Utils\Helpers\DateHelper;
 use App\Core\Domain\Utils\Helpers\Money;
 use App\Models\PaymentConcept;
 use App\Models\PaymentConceptApplicantTag;
@@ -43,14 +44,19 @@ class PaymentConceptMapper{
 
     public static function toDisplay(PaymentConcept $concept): ConceptToDisplay
     {
+        $endDate = $concept->end_date;
         return new ConceptToDisplay(
             id: $concept->id,
             concept_name: $concept->concept_name,
             status: $concept->status->value,
             start_date: $concept->start_date->toDateString(),
             amount: $concept->amount,
+            created_at_human: $concept->created_at->diffForHumans(),
+            updated_at_human: $concept->updated_at->diffForHumans(),
+            expiration_human: DateHelper::expirationToHuman($endDate),
+            expiration_info: DateHelper::expirationInfo($endDate),
             description: $concept->description ?? null,
-            end_date: $concept->end_date?->toDateString(),
+            end_date: $endDate?->toDateString(),
         );
     }
 
@@ -165,17 +171,22 @@ class PaymentConceptMapper{
 
 
     public static function toPendingPaymentConceptResponse(array $pc): PendingPaymentConceptsResponse {
+        $startDate = isset($pc['start_date']) ? Carbon::parse($pc['start_date']) : null;
+        $endDate = isset($pc['end_date']) ? Carbon::parse($pc['end_date']) : null;
         return new PendingPaymentConceptsResponse(
             id: $pc['id'] ?? null,
             concept_name: $pc['concept_name'] ?? null,
             description: $pc['description'] ?? null,
             amount: $pc['amount'] ?? null,
-            start_date: date('Y-m-d H:i:s', strtotime($pc['start_date'])) ?? null,
-            end_date: $pc['end_date'] ? date('Y-m-d H:i:s', strtotime($pc['end_date'])) : null
+            start_date: $startDate?->format('Y-m-d H:i:s'),
+            end_date: $endDate?->format('Y-m-d H:i:s'),
+            expiration_human: DateHelper::expirationToHuman($endDate),
+            expiration_info: DateHelper::expirationInfo($endDate),
         );
     }
 
     public static function toConceptsToDashboardResponse(PaymentConcept $pc): ConceptsToDashboardResponse {
+        $endDate = $pc->end_date;
         return new ConceptsToDashboardResponse(
             id: $pc->id ?? null,
             concept_name: $pc->concept_name ?? null,
@@ -183,7 +194,8 @@ class PaymentConceptMapper{
             amount: $pc->amount ?? null,
             applies_to:$pc->applies_to->value ?? null,
             start_date: $pc->start_date ? $pc->start_date->format('Y-m-d H:i:s') : null,
-            end_date: $pc->end_date ? $pc->end_date->format('Y-m-d H:i:s') : null
+            end_date: $endDate?->format('Y-m-d H:i:s'),
+            expiration_human: DateHelper::expirationToHuman($endDate),
         );
 
     }

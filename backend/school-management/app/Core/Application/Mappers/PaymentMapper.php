@@ -5,11 +5,11 @@ namespace App\Core\Application\Mappers;
 
 use App\Core\Application\DTO\Response\Payment\FinancialSummaryResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentDataResponse;
-use App\Core\Application\DTO\Response\Payment\PaymentDetailResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentHistoryResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentListItemResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentsMadeByConceptName;
 use App\Core\Application\DTO\Response\Payment\PaymentsSummaryResponse;
+use App\Core\Application\DTO\Response\Payment\PaymentToDisplay;
 use App\Core\Application\DTO\Response\Payment\PaymentValidateResponse;
 use App\Core\Application\DTO\Response\User\UserDataResponse;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -49,11 +49,11 @@ class PaymentMapper{
             amount: $payment->amount ?? null,
             amount_received: $payment->amount_received ?? null,
             status: $payment->status->value ?? null,
-            date: $payment->created_at ? date('Y-m-d H:i:s', strtotime($payment->created_at)): null
+            date: $payment->created_at->diffForHumans(),
+            date_iso: $payment->created_at->format('Y-m-d H:i:s')
         );
     }
-
-    public static function toDetailResponse(Payment $payment): PaymentDetailResponse
+    public static function toPaymentToDisplay(Payment $payment): PaymentToDisplay
     {
         $domainPayment= $payment->toDomain();
         $balance = null;
@@ -62,17 +62,18 @@ class PaymentMapper{
         } elseif ($domainPayment->isUnderPaid()) {
             $balance = '-' . $domainPayment->getPendingAmount();
         }
-        return new PaymentDetailResponse(
-            id: $payment->id ?? null,
-            concept: $payment->concept_name ?? null,
-            amount: $payment->amount ?? null,
+        return new PaymentToDisplay(
+            id: $payment->id,
+            concept_name: $payment->concept_name,
+            amount: $payment->amount,
+            status: $payment->status->value,
+            created_at_human: $payment->created_at->diffForHumans(),
+            has_pending_amount: $payment->amount_received < $payment->amount,
+            balance: $balance ?? 'N/A',
+            payment_method_details: $payment->payment_method_details ? : null,
             amount_received: $payment->amount_received ?? null,
-            balance: $balance,
-            date: $payment->created_at ? $payment->created_at->format('Y-m-d H:i:s'): null,
-            status: $payment->status->value ?? null,
             reference: $payment->payment_intent_id ?? null,
             url: $payment->url ?? null,
-            payment_method_details: $payment->payment_method_details ? : null,
         );
     }
 

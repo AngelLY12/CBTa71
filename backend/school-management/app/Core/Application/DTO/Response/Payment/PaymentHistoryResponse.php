@@ -11,7 +11,7 @@ namespace App\Core\Application\DTO\Response\Payment;
  *     @OA\Property(property="amount", type="string", nullable=true, description="Monto del pago", example="1500.00"),
  *     @OA\Property(property="amount_received", type="string", nullable=true, description="Monto del pago recibido", example="1500.00"),
  *     @OA\Property(property="status", type="string", nullable=true, description="Status del concepto del pago", example="paid"),
- *     @OA\Property(property="date", type="string", nullable=true, description="Fecha del pago", example="2025-11-04")
+ *     @OA\Property(property="date", type="string", nullable=true, description="Fecha del pago", example="hace 2 dias")
  * )
  */
 class PaymentHistoryResponse{
@@ -21,6 +21,7 @@ class PaymentHistoryResponse{
         public readonly ?string $amount,
         public readonly ?string $amount_received,
         public readonly  ?String $status,
-        public readonly ?string $date
+        public readonly ?string $date,
+        public readonly ?string $date_iso
     ) {}
 }

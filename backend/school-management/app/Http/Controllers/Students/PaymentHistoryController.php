@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Students;
 use App\Core\Application\Services\Payments\Student\PaymentHistoryService;
 use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\General\PaginationRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
@@ -44,9 +45,10 @@ class PaymentHistoryController extends Controller
 
     }
 
-    public function findPayment(int $id)
+    public function findPayment(ForceRefreshRequest $request, int $id)
     {
-        $payment=$this->paymentHistoryService->findPayment($id);
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $payment=$this->paymentHistoryService->findPayment($id, $forceRefresh);
         return Response::success(['payment' => $payment], 'Pago encontrado.');
 
     }

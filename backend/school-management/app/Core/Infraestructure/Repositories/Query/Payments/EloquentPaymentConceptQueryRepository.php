@@ -15,10 +15,12 @@ use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
+use App\Core\Domain\Utils\Helpers\DateHelper;
 use App\Core\Domain\Utils\Helpers\Money;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper;
 use App\Core\Infraestructure\Traits\HasPendingQuery;
 use App\Models\PaymentConcept as EloquentPaymentConcept;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -42,7 +44,9 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'amount',
                 'status',
                 'start_date',
-                'end_date'
+                'end_date',
+                'created_at',
+                'updated_at',
             ])->find($id);
         if (! $concept) {
             return null;
@@ -137,14 +141,29 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     public function findAllConcepts(string $status, int $perPage, int $page): LengthAwarePaginator
     {
         $query = EloquentPaymentConcept::query()
-            ->select(['id','concept_name','description','status','start_date','end_date','amount','applies_to'])
+            ->select(['id','concept_name','status','end_date','amount'])
             ->latest('created_at');
 
         if ($status !== 'todos') {
             $query->where('status', $status);
         }
 
-        return $query->paginate($perPage, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+
+        $paginator->getCollection()->transform(function ($concept) {
+            return [
+                'id' => $concept->id,
+                'concept_name' => $concept->concept_name,
+                'amount' => number_format($concept->amount, 2),
+                'status' => $concept->status->value,
+                'expiration_human' => $concept->end_date
+                    ? DateHelper::expirationToHuman($concept->end_date)
+                    : null,
+                'has_expiration' => !is_null($concept->end_date),
+            ];
+        });
+
+        return $paginator;
     }
 
     public function getAllPendingPaymentAmount(bool $onlyThisYear): PendingSummaryResponse

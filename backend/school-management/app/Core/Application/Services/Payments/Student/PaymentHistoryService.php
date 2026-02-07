@@ -2,6 +2,7 @@
 namespace App\Core\Application\Services\Payments\Student;
 
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
+use App\Core\Application\DTO\Response\Payment\PaymentToDisplay;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Payments\Student\PaymentHistory\FindPaymentByIdUseCase;
 use App\Core\Application\UseCases\Payments\Student\PaymentHistory\GetPaymentHistoryUseCase;
@@ -36,9 +37,17 @@ class PaymentHistoryService {
         return $this->mediumCache($key,fn() => $this->history->execute($user->id, $perPage, $page),$tags,$forceRefresh);
     }
 
-    public function findPayment(int $id): Payment
+    public function findPayment(int $id, bool $forceRefresh): PaymentToDisplay
     {
-        return $this->payment->execute($id);
+        $key = $this->generateCacheKey(
+            CachePrefix::STUDENT->value,
+            StudentCacheSufix::HISTORY->value,
+            [
+                'paymentId' => $id,
+            ]
+        );
+        $tags = array_merge(self::TAG_PAYMENTS_HISTORY, ["paymentId:$id"]);
+        return $this->mediumCache($key, fn() => $this->payment->execute($id),$tags,$forceRefresh);
     }
 
 }

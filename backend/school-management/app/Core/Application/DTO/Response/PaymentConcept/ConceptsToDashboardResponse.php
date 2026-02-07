@@ -13,7 +13,14 @@ namespace App\Core\Application\DTO\Response\PaymentConcept;
  *     @OA\Property(property="amount", type="string", nullable=true, description="Monto del concepto", example="1500.00"),
  *     @OA\Property(property="applies_to", type="string", nullable=true, description="A quién aplica el concepto", example="todos"),
  *     @OA\Property(property="start_date", type="string", format="date", nullable=true, description="Fecha de inicio de validez", example="2025-11-01"),
- *     @OA\Property(property="end_date", type="string", format="date", nullable=true, description="Fecha de fin de validez", example="2025-12-01")
+ *     @OA\Property(property="end_date", type="string", format="date", nullable=true, description="Fecha de fin de validez", example="2025-12-01"),
+ *     @OA\Property(
+ *           property="expiration_human",
+ *           type="string",
+ *           nullable=true,
+ *           description="Texto humano que indica el estado de expiración",
+ *           example="Vence en 3 días"
+ *       ),
  * )
  */
 class ConceptsToDashboardResponse{
@@ -25,7 +32,8 @@ class ConceptsToDashboardResponse{
         public readonly ?string $amount,
         public readonly ?string $applies_to,
         public readonly ?string $start_date,
-        public readonly ?string $end_date
+        public readonly ?string $end_date,
+        public readonly ?string $expiration_human
     ) {}
 
 }

@@ -2,6 +2,7 @@
 
 namespace App\Core\Domain\Repositories\Query\Payments;
 
+use App\Core\Application\DTO\Response\Payment\PaymentToDisplay;
 use App\Core\Domain\Entities\Payment;
 use Generator;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -10,6 +11,7 @@ use Illuminate\Support\Collection;
 interface PaymentQueryRepInterface{
     public function findBySessionId(string $sessionId): ?Payment;
     public function findById(int $id): ?Payment;
+    public function findByIdToDisplay(int $id): ?PaymentToDisplay;
     public function findByIds(array $ids): Collection;
     public function findByIntentId(string $intentId): ?Payment;
     public function sumPaymentsByUserYear(int $userId, bool $onlyThisYear): array;

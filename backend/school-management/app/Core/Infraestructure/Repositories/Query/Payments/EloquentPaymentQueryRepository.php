@@ -2,6 +2,7 @@
 
 namespace App\Core\Infraestructure\Repositories\Query\Payments;
 
+use App\Core\Application\DTO\Response\Payment\PaymentToDisplay;
 use App\Core\Domain\Repositories\Query\Payments\PaymentQueryRepInterface;
 use App\Core\Application\Mappers\PaymentMapper as MappersPaymentMapper;
 use App\Core\Domain\Entities\Payment;
@@ -30,6 +31,13 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
             ->lazy(200)
             ->map(fn($pc) => PaymentMapper::toDomain($pc))
             ->collect();
+    }
+
+    public function findByIdToDisplay(int $id): ?PaymentToDisplay
+    {
+        $payment = EloquentPayment::find($id);
+        if(empty($payment)) return null;
+        return MappersPaymentMapper::toPaymentToDisplay($payment);
     }
 
     public function findBySessionId(string $sessionId): ?Payment
@@ -116,10 +124,10 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
     public function getPaymentHistoryWithDetails(int $userId, int $perPage, int $page): LengthAwarePaginator
     {
         return EloquentPayment::where('user_id', $userId)
-            ->select('id', 'concept_name', 'amount', 'amount_received','status','payment_intent_id','url','payment_method_details', 'created_at')
+            ->select('id', 'concept_name', 'amount', 'amount_received','status','created_at')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page)
-            ->through(fn($p) => MappersPaymentMapper::toDetailResponse($p));
+            ->through(fn($p) => MappersPaymentMapper::toHistoryResponse($p));
     }
 
     public function findByIntentOrSession(int $userId, string $paymentIntentId): ?Payment
