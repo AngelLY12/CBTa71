@@ -25,12 +25,16 @@ class LoginUseCase
    {
 
         $user=$this->uqRepo->findUserByEmail($request->email);
+        if(!$user)
+        {
+            throw new InvalidCredentialsException("Verifica que el correo electrónico proporcionado sea correcto.");
+        }
         UserValidator::ensureUserIsActive($user);
 
         $passwordValid = $user ? Hash::check($request->password, $user->password) : false;
 
-        if (!$user || !$passwordValid) {
-           throw new InvalidCredentialsException();
+        if (!$passwordValid) {
+           throw new InvalidCredentialsException("Verifica que la contraseña proporcionada sea correcta");
         }
        $hasUnreadNotifications = $this->uqRepo->userHasUnreadNotifications($user->id);
        $userData=$this->formatUserData($user, $hasUnreadNotifications);

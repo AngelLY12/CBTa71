@@ -9,6 +9,7 @@ use App\Core\Domain\Repositories\Command\User\UserRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\TokenValidator;
 use App\Core\Domain\Utils\Validators\UserValidator;
+use App\Exceptions\NotFound\UserNotFoundException;
 use App\Exceptions\Unauthorized\InvalidRefreshTokenException;
 use App\Exceptions\Unauthorized\RefreshTokenRevokedException;
 
@@ -25,11 +26,12 @@ class RefreshTokenUseCase
     public function execute(string $refreshTokenValue)
     {
         $refreshToken= $this->refresh->findByToken($refreshTokenValue);
+        if(!$refreshToken) throw new InvalidRefreshTokenException();
         TokenValidator::ensureIsTokenValid($refreshToken);
         $user = $this->uqRepo->findById($refreshToken->user_id);
+        if(!$user) throw new UserNotFoundException();
         UserValidator::ensureUserIsActive($user);
         $revoked = $this->refresh->revokeRefreshToken($refreshTokenValue);
-
         if (! $revoked) {
             throw new InvalidRefreshTokenException('Ya se usó este refresh token');
         }

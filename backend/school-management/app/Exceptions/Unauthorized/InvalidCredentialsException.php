@@ -7,8 +7,8 @@ use App\Exceptions\DomainException;
 
 class InvalidCredentialsException extends DomainException
 {
-    public function __construct()
+    public function __construct(string $message)
     {
-        parent::__construct(401, 'Las credenciales son incorrectas.', ErrorCode::INVALID_CREDENTIALS);
+        parent::__construct(401, "Las credenciales son incorrectas. {$message}", ErrorCode::INVALID_CREDENTIALS);
     }
 }
