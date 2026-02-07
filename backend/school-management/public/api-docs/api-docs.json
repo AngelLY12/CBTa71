@@ -6842,7 +6842,7 @@
                                                                         "items": {
                                                                             "type": "array",
                                                                             "items": {
-                                                                                "$ref": "#/components/schemas/DomainPaymentConcept"
+                                                                                "$ref": "#/components/schemas/ConceptsListItem"
                                                                             }
                                                                         }
                                                                     },
@@ -9934,7 +9934,7 @@
                                                                         "items": {
                                                                             "type": "array",
                                                                             "items": {
-                                                                                "$ref": "#/components/schemas/PaymentDetailResponse"
+                                                                                "$ref": "#/components/schemas/PaymentHistoryResponse"
                                                                             }
                                                                         }
                                                                     },
@@ -10076,7 +10076,7 @@
                                                 "data": {
                                                     "properties": {
                                                         "payment": {
-                                                            "$ref": "#/components/schemas/DomainPayment"
+                                                            "$ref": "#/components/schemas/PaymentToDisplay"
                                                         }
                                                     },
                                                     "type": "object"
@@ -11965,6 +11965,64 @@
                         "format": "date",
                         "example": "2025-12-31",
                         "nullable": true
+                    },
+                    "created_at_human": {
+                        "type": "string",
+                        "example": "hace 2 dias",
+                        "nullable": true
+                    },
+                    "updated_at_human": {
+                        "type": "string",
+                        "example": "hace 2 dias",
+                        "nullable": true
+                    },
+                    "expiration_human": {
+                        "description": "Texto humano que indica el estado de expiración",
+                        "type": "string",
+                        "example": "Vence en 3 días",
+                        "nullable": true
+                    },
+                    "expiration_info": {
+                        "description": "Información detallada sobre la expiración",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "example": "Vence en 3 días",
+                                "nullable": true
+                            },
+                            "days": {
+                                "description": "Días restantes (negativo si ya expiró)",
+                                "type": "integer",
+                                "example": 3,
+                                "nullable": true
+                            },
+                            "is_expired": {
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "is_today": {
+                                "description": "Si vence hoy",
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "urgency": {
+                                "description": "Nivel de urgencia: expirado, critico, alto, medio, bajo",
+                                "type": "string",
+                                "example": "medio"
+                            },
+                            "date_formatted": {
+                                "description": "Fecha formateada en español",
+                                "type": "string",
+                                "example": "1 de diciembre de 2025"
+                            },
+                            "date_short": {
+                                "description": "Fecha en formato corto",
+                                "type": "string",
+                                "example": "01/12/2025"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -12013,6 +12071,12 @@
                         "type": "string",
                         "format": "date",
                         "example": "2025-12-01",
+                        "nullable": true
+                    },
+                    "expiration_human": {
+                        "description": "Texto humano que indica el estado de expiración",
+                        "type": "string",
+                        "example": "Vence en 3 días",
                         "nullable": true
                     }
                 },
@@ -12153,6 +12217,54 @@
                         "type": "string",
                         "format": "date",
                         "example": "2025-12-01",
+                        "nullable": true
+                    },
+                    "expiration_human": {
+                        "description": "Texto humano que indica el estado de expiración",
+                        "type": "string",
+                        "example": "Vence en 3 días",
+                        "nullable": true
+                    },
+                    "expiration_info": {
+                        "description": "Información detallada sobre la expiración",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "example": "Vence en 3 días",
+                                "nullable": true
+                            },
+                            "days": {
+                                "description": "Días restantes (negativo si ya expiró)",
+                                "type": "integer",
+                                "example": 3,
+                                "nullable": true
+                            },
+                            "is_expired": {
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "is_today": {
+                                "description": "Si vence hoy",
+                                "type": "boolean",
+                                "example": false
+                            },
+                            "urgency": {
+                                "description": "Nivel de urgencia: expirado, critico, alto, medio, bajo",
+                                "type": "string",
+                                "example": "medio"
+                            },
+                            "date_formatted": {
+                                "description": "Fecha formateada en español",
+                                "type": "string",
+                                "example": "1 de diciembre de 2025"
+                            },
+                            "date_short": {
+                                "description": "Fecha en formato corto",
+                                "type": "string",
+                                "example": "01/12/2025"
+                            }
+                        },
+                        "type": "object",
                         "nullable": true
                     }
                 },
@@ -12606,73 +12718,6 @@
                 },
                 "type": "object"
             },
-            "PaymentDetailResponse": {
-                "properties": {
-                    "id": {
-                        "description": "ID interno del pago",
-                        "type": "integer",
-                        "example": 123,
-                        "nullable": true
-                    },
-                    "concept": {
-                        "description": "Concepto del pago",
-                        "type": "string",
-                        "example": "Pago de inscripción",
-                        "nullable": true
-                    },
-                    "amount": {
-                        "description": "Monto del pago",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "amount_received": {
-                        "description": "Monto del pago recibido",
-                        "type": "string",
-                        "example": "1500.00",
-                        "nullable": true
-                    },
-                    "balance": {
-                        "description": "Saldo a favor",
-                        "type": "string",
-                        "example": "150.00",
-                        "nullable": true
-                    },
-                    "date": {
-                        "description": "Fecha del pago",
-                        "type": "string",
-                        "example": "2025-11-04",
-                        "nullable": true
-                    },
-                    "status": {
-                        "description": "Estado del pago",
-                        "type": "string",
-                        "example": "completed",
-                        "nullable": true
-                    },
-                    "reference": {
-                        "description": "Referencia del pago",
-                        "type": "string",
-                        "example": "REF123456",
-                        "nullable": true
-                    },
-                    "url": {
-                        "description": "URL del recibo de pago",
-                        "type": "string",
-                        "example": "https://example.com/receipt/123",
-                        "nullable": true
-                    },
-                    "payment_method_details": {
-                        "description": "Detalles del método de pago utilizado",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "nullable": true
-                    }
-                },
-                "type": "object"
-            },
             "PaymentHistoryResponse": {
                 "properties": {
                     "id": {
@@ -12708,7 +12753,7 @@
                     "date": {
                         "description": "Fecha del pago",
                         "type": "string",
-                        "example": "2025-11-04",
+                        "example": "hace 2 dias",
                         "nullable": true
                     }
                 },
@@ -12761,6 +12806,84 @@
                         "description": "Nombre completo del usuario que realizó el pago",
                         "type": "string",
                         "example": "Juan Pérez",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PaymentToDisplay": {
+                "properties": {
+                    "id": {
+                        "description": "ID interno del pago",
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "concept_name": {
+                        "description": "Concepto del pago",
+                        "type": "string",
+                        "example": "Pago de inscripción"
+                    },
+                    "amount": {
+                        "description": "Monto total del concepto",
+                        "type": "string",
+                        "example": "1500.00"
+                    },
+                    "status": {
+                        "description": "Estado del pago",
+                        "type": "string",
+                        "example": "completed"
+                    },
+                    "created_at_human": {
+                        "description": "Fecha de creación en formato humano relativo (generado con diffForHumans)",
+                        "type": "string",
+                        "example": "hace 2 días"
+                    },
+                    "has_pending_amount": {
+                        "description": "Indica si hay monto pendiente de pago",
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "balance": {
+                        "description": "Saldo pendiente o sobrante. Positivo = saldo a favor, Negativo = pendiente por pagar, 'N/A' = pagado completo",
+                        "type": "string",
+                        "example": "N/A",
+                        "nullable": true
+                    },
+                    "payment_method_details": {
+                        "description": "Detalles del método de pago utilizado (objeto JSON)",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "example": "card"
+                            },
+                            "brand": {
+                                "type": "string",
+                                "example": "visa"
+                            },
+                            "last4": {
+                                "type": "string",
+                                "example": "4242"
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "amount_received": {
+                        "description": "Monto efectivamente recibido",
+                        "type": "string",
+                        "example": "1500.00",
+                        "nullable": true
+                    },
+                    "reference": {
+                        "description": "ID de referencia del pago (ej: payment_intent_id de Stripe)",
+                        "type": "string",
+                        "example": "pi_123456789",
+                        "nullable": true
+                    },
+                    "url": {
+                        "description": "URL del recibo o comprobante de pago",
+                        "type": "string",
+                        "example": "https://example.com/receipt/123",
                         "nullable": true
                     }
                 },
@@ -15462,6 +15585,39 @@
                     },
                     "blood_type": {
                         "$ref": "#/components/schemas/UserBloodType"
+                    }
+                },
+                "type": "object"
+            },
+            "ConceptsListItem": {
+                "description": "Item de concepto para listado",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "concept_name": {
+                        "type": "string",
+                        "example": "Pago de inscripción"
+                    },
+                    "amount": {
+                        "type": "string",
+                        "example": "1,500.00"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "active"
+                    },
+                    "expiration_human": {
+                        "description": "Texto humano que indica estado de expiración",
+                        "type": "string",
+                        "example": "Vence en 3 días",
+                        "nullable": true
+                    },
+                    "has_expiration": {
+                        "description": "Indica si el concepto tiene fecha de expiración",
+                        "type": "boolean",
+                        "example": true
                     }
                 },
                 "type": "object"

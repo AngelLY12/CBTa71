@@ -75,7 +75,7 @@ class PaymentConcepts
  *                                      @OA\Property(
  *                                          property="items",
  *                                          type="array",
- *                                          @OA\Items(ref="#/components/schemas/DomainPaymentConcept")
+ *                                          @OA\Items(ref="#/components/schemas/ConceptsListItem")
  *                                      )
  *                                  )
  *                              }

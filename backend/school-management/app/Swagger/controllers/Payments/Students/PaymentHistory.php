@@ -80,7 +80,7 @@ class PaymentHistory
  *                                      @OA\Property(
  *                                          property="items",
  *                                          type="array",
- *                                          @OA\Items(ref="#/components/schemas/PaymentDetailResponse")
+ *                                          @OA\Items(ref="#/components/schemas/PaymentHistoryResponse")
  *                                      )
  *                                  )
  *                              }
@@ -146,7 +146,7 @@ public function history(){}
      *                          type="object",
      *                          @OA\Property(
      *                              property="payment",
-     *                              ref="#/components/schemas/DomainPayment"
+     *                              ref="#/components/schemas/PaymentToDisplay"
      *                          )
      *                      )
      *                  )
