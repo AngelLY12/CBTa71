@@ -36,7 +36,7 @@ class UserMapper{
             blood_type: $user->blood_type,
             stripe_customer_id: $user->stripe_customer_id
         );
-        if ($user->relationLoaded('studentDetail')) {
+        if ($user->relationLoaded('studentDetail') && $user->studentDetail !== null) {
             $domainUser->setStudentDetail(StudentDetailMapper::toDomain($user->studentDetail));
         }
         if($user->relationLoaded('roles'))

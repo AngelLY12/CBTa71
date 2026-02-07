@@ -13,11 +13,15 @@ trait ResolvesTargetUser
             $child = $this->children()
                         ->where('student_id', $id)
                         ->with(['student' => function ($query) {
-                            $query->with(['studentDetail', 'roles']);
+                            $query->with(['roles']);
                         }])
                         ->first();
-            if (!$child) {
+            if (!$child ||  !$child->student) {
                 return null;
+            }
+
+            if ($child->student->studentDetail()->exists()) {
+                $child->student->load('studentDetail');
             }
 
             return $child->student;
@@ -25,7 +29,7 @@ trait ResolvesTargetUser
 
         $this->loadMissing(['roles']);
 
-        if($this->hasRole(UserRoles::STUDENT->value)){
+        if($this->hasRole(UserRoles::STUDENT->value) && $this->studentDetail()->exists()){
             $this->loadMissing(['studentDetail']);
         }
 

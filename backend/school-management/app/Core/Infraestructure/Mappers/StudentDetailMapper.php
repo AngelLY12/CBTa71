@@ -8,8 +8,12 @@ use App\Models\StudentDetail;
 
 class StudentDetailMapper{
 
-    public static function toDomain(StudentDetail $studentDetail): DomainStudentDetail
+    public static function toDomain(?StudentDetail $studentDetail): ?DomainStudentDetail
     {
+        if(!$studentDetail)
+        {
+            return null;
+        }
         return new DomainStudentDetail(
             user_id: $studentDetail->user_id,
             id: $studentDetail->id,
