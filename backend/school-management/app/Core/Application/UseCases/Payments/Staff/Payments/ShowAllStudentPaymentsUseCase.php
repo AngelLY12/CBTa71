@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Core\Application\UseCases\Payments\Staff\Students;
+namespace App\Core\Application\UseCases\Payments\Staff\Payments;
 
 use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
-class ShowAllStudentsUseCase
+class ShowAllStudentPaymentsUseCase
 {
 
     public function __construct(

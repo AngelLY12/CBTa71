@@ -81,7 +81,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
         Route::middleware(['permission:create.setup', 'throttle:10,1440'])->post('/',[CardsController::class,'store']);
         Route::middleware(['permission:delete.card', 'throttle:10,1'])->delete('/{paymentMethodId}',[CardsController::class,'destroy']);
     });
-    Route::prefix('history')->middleware(['role:student|parent','throttle:global'])->group(function(){
+    Route::prefix('payments/history')->middleware(['role:student|parent','throttle:global'])->group(function(){
         Route::middleware('permission:view.payments.history')->get('/payment/{id}',[PaymentHistoryController::class,'findPayment']);
         Route::middleware('permission:view.payments.history')->get('/{studentId?}',[PaymentHistoryController::class,'index']);
 
@@ -126,7 +126,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('payments')->middleware(['role:financial-staff', 'throttle:global'])->group(function(){
         Route::middleware('permission:view.payments')->get('/', [PaymentsController::class, 'index']);
         Route::middleware('permission:view.payments')->get('/by-concept',[PaymentsController::class,'showByName']);
-        Route::middleware('permission:view.payments.student.summary')->get('/students', [StudentsController::class, 'index']);
+        Route::middleware('permission:view.payments.student.summary')->get('/students', [PaymentsController::class, 'showByStudents']);
 
     });
 

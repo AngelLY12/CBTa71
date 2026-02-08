@@ -86,7 +86,6 @@ class CacheService
         $this->flushTags([CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value]);
         $this->flushTags([CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value]);
         $this->flushTags([CachePrefix::STAFF->value, StaffCacheSufix::PAYMENTS->value]);
-        $this->flushTags([CachePrefix::STAFF->value, StaffCacheSufix::STUDENTS->value]);
 
     }
 
