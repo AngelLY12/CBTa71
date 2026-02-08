@@ -9840,7 +9840,7 @@
                 ]
             }
         },
-        "/api/v1/history/{studentId?}": {
+        "/api/v1/payments/history/{studentId?}": {
             "get": {
                 "tags": [
                     "Payment History"
@@ -10021,14 +10021,14 @@
                 ]
             }
         },
-        "/api/v1/history/payment/{id}": {
+        "/api/v1/payments/history/payment/{id}": {
             "get": {
                 "tags": [
                     "Payment History"
                 ],
                 "summary": "Buscar pago por ID",
                 "description": "Obtiene la información detallada de un pago específico mediante su identificador.",
-                "operationId": "51a8a808beb4df7ec2f176070daaca77",
+                "operationId": "bfdc5a23532922021c759986f140662f",
                 "parameters": [
                     {
                         "name": "X-User-Role",

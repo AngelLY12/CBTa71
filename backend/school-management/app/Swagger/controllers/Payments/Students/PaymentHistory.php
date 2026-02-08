@@ -7,7 +7,7 @@ class PaymentHistory
 
 /**
  * @OA\Get(
- *     path="/api/v1/history/{studentId?}",
+ *     path="/api/v1/payments/history/{studentId?}",
  *     tags={"Payment History"},
  *     summary="Obtener historial de pagos del usuario autenticado",
  *     description="Devuelve el historial de pagos del usuario logueado, con soporte para paginación y cacheo.",
@@ -102,7 +102,7 @@ public function history(){}
 
     /**
      * @OA\Get(
-     *     path="/api/v1/history/payment/{id}",
+     *     path="/api/v1/payments/history/payment/{id}",
      *     summary="Buscar pago por ID",
      *     description="Obtiene la información detallada de un pago específico mediante su identificador.",
      *     tags={"Payment History"},
