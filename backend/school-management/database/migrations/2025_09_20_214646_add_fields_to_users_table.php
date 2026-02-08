@@ -18,13 +18,13 @@ return new class extends Migration
             $table->string('last_name')->after('name')->index();
             $table->string('phone_number',15)->after('last_name')->unique();
             $table->date('birthdate')->nullable()->after('phone_number');
-            $table->string('gender',10)->nullable()->after('birthdate');
+            $table->string('gender',50)->nullable()->after('birthdate');
             $table->char('curp',18)->after('gender')->unique();
             $table->json('address')->nullable()->after('curp');
-            $table->string('stripe_customer_id',50)->nullable()->unique();
+            $table->string('stripe_customer_id',100)->nullable()->unique();
             $table->char('blood_type',4)->nullable();
             $table->date('registration_date');
-            $table->string('status',20)->default(UserStatus::ACTIVO->value)->index();
+            $table->string('status',50)->default(UserStatus::ACTIVO->value)->index();
             $table->timestamp('mark_as_deleted_at')->nullable()->index();
             $table->index('created_at');
             $table->index(['status','created_at']);

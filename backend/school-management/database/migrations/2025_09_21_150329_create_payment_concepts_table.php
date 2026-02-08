@@ -17,11 +17,11 @@ return new class extends Migration
             $table->id();
             $table->string('concept_name')->index();
             $table->text('description')->nullable();
-            $table->string('status',20)->default(PaymentConceptStatus::ACTIVO->value);
+            $table->string('status',50)->default(PaymentConceptStatus::ACTIVO->value);
             $table->date('start_date');
             $table->date('end_date')->nullable();
             $table->decimal('amount', 7,2)->index()->check('amount >= 10');
-            $table->string('applies_to',25)->default(PaymentConceptAppliesTo::TODOS->value);
+            $table->string('applies_to',50)->default(PaymentConceptAppliesTo::TODOS->value);
             $table->timestamp('mark_as_deleted_at')->nullable()->index();
             $table->timestamps();
             $table->index(['created_at']);

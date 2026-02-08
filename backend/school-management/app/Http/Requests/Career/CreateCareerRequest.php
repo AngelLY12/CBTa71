@@ -12,7 +12,7 @@ use Illuminate\Foundation\Http\FormRequest;
  *     @OA\Property(
  *         property="career_name",
  *         type="string",
- *         maxLength=50,
+ *         maxLength=150,
  *         description="Nombre de la carrera",
  *         example="Ofimatica"
  *     )
@@ -36,7 +36,7 @@ class CreateCareerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'career_name' => 'required|string|max:50',
+            'career_name' => 'required|string|max:150',
         ];
     }
 
