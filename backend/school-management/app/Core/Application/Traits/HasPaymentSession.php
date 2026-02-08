@@ -70,7 +70,7 @@ trait HasPaymentSession
 
         try {
             if ($status === PaymentStatus::PAID) {
-                $received = Money::from($session->amount_received)->divide('100');
+                $received = Money::from($session->amount_total)->divide('100');
                 $amountReceived = $payment->amount_received
                     ? Money::from($payment->amount_received)->add($received)
                     : $received;
@@ -177,8 +177,8 @@ trait HasPaymentSession
         }
 
         $amount = '0.00';
-        if(isset($session->amount_received) && $session->amount_received > 0) {
-            $amount = Money::from($session->amount_received)->divide('100')->finalize();
+        if(isset($session->amount_total) && $session->amount_total > 0) {
+            $amount = Money::from($session->amount_total)->divide('100')->finalize();
         }
 
         $event = PaymentEvent::createWebhookEvent(

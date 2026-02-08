@@ -16,7 +16,7 @@ class EloquentPaymentMethodRepository implements PaymentMethodRepInterface
         $data = PaymentMethodMapper::toPersistence($paymentMethod);
         $pm = EloquentPaymentMethod::updateOrCreate(
             ['stripe_payment_method_id' => $data['stripe_payment_method_id']],
-            Arr::except($data, ['user_id'])
+            $data
         );
         return PaymentMethodMapper::toDomain($pm);
     }
