@@ -22,6 +22,7 @@ use App\Core\Application\DTO\Response\User\UserWithStudentDetailResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedPermissionsResponse;
 use App\Core\Application\DTO\Response\User\UserWithUpdatedRoleResponse;
 use App\Core\Domain\Entities\StudentDetail;
+use App\Core\Domain\Utils\Helpers\DateHelper;
 use App\Models\User;
 use App\Models\User as EloquentUser;
 use App\Core\Domain\Entities\User as DomainUser;
@@ -264,7 +265,7 @@ class UserMapper{
             status: $user->status->value,
             roles_count: (int) $user->roles_count,
             createdAtHuman: $user->created_at->diffForHumans(),
-            deletedAtHuman: $user->mark_as_deleted_at ? $user->mark_as_deleted_at->diffForHumans() : null,
+            deletedAtHuman: $user->mark_as_deleted_at ? DateHelper::daysUntilDeletion($user->mark_as_deleted_at) : null,
         );
     }
 

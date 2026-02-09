@@ -45,14 +45,18 @@ class PaymentConceptMapper{
     public static function toDisplay(PaymentConcept $concept): ConceptToDisplay
     {
         $endDate = $concept->end_date;
+        $deletedAt= $concept->mark_as_deleted_at;
         return new ConceptToDisplay(
             id: $concept->id,
             concept_name: $concept->concept_name,
             status: $concept->status->value,
             start_date: $concept->start_date->toDateString(),
             amount: $concept->amount,
+            deleted_at: $deletedAt->toDateString(),
             created_at_human: $concept->created_at->diffForHumans(),
             updated_at_human: $concept->updated_at->diffForHumans(),
+            deleted_at_human: $deletedAt?->diffForHumans(),
+            days_until_deletion: DateHelper::daysUntilDeletion($deletedAt),
             expiration_human: DateHelper::expirationToHuman($endDate),
             expiration_info: DateHelper::expirationInfo($endDate),
             description: $concept->description ?? null,

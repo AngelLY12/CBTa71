@@ -55,9 +55,9 @@ namespace App\Core\Application\DTO\Response\User;
  *     ),
  *     @OA\Property(
  *          property="deletedAtHuman",
- *          type="string",
- *          description="Fecha de creación en formato humano relativo",
- *          example="hace 2 horas"
+ *          type="integer",
+ *          description="Dias que faltan para ser eliminado",
+ *          example=2
  *      )
  * )
  */
@@ -71,7 +71,7 @@ class UserListItemResponse
         public readonly string $status,
         public readonly int $roles_count,
         public readonly string $createdAtHuman,
-        public readonly ?string $deletedAtHuman,
+        public readonly ?int $deletedAtHuman,
     ){}
 
 }

@@ -24,7 +24,7 @@ class DateHelper
     public static function expiredText(Carbon $date): string
     {
         $now = Carbon::now();
-        $days = $date->diffInDays($now, false);
+        $days = $date->diffInDays($now);
 
         if ($days == 0) return 'Expirado hoy';
         if ($days == 1) return 'Expirado ayer';
@@ -42,7 +42,7 @@ class DateHelper
     public static function remainingText(Carbon $date): string
     {
         $now = Carbon::now();
-        $days = $now->diffInDays($date, false);
+        $days = $now->diffInDays($date);
 
         if ($days == 0) return 'Vence hoy';
         if ($days == 1) return 'Vence mañana';
@@ -100,6 +100,21 @@ class DateHelper
         if ($days <= 3) return 'urgencia_alta';
         if ($days <= 7) return 'urgencia_media';
         return 'urgencia_baja';
+    }
+
+    public static function daysUntilDeletion(Carbon $deletedDate): int
+    {
+        $now = Carbon::now();
+        if ($now->diffInDays($deletedDate) >= 30) {
+            return 0;
+        }
+
+        $daysPassed = $deletedDate->diffInDays($now);
+
+        $daysRemaining = 30 - $daysPassed;
+
+        return max(0, (int) $daysRemaining);
+
     }
 
 }

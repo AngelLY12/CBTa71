@@ -47,6 +47,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'end_date',
                 'created_at',
                 'updated_at',
+                'mark_as_deleted_at'
             ])->find($id);
         if (! $concept) {
             return null;
@@ -141,7 +142,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     public function findAllConcepts(string $status, int $perPage, int $page): LengthAwarePaginator
     {
         $query = EloquentPaymentConcept::query()
-            ->select(['id','concept_name','status','end_date','amount'])
+            ->select(['id','concept_name','status','end_date','amount', 'mark_as_deleted_at'])
             ->latest('created_at');
 
         if ($status !== 'todos') {
@@ -154,12 +155,14 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
             return [
                 'id' => $concept->id,
                 'concept_name' => $concept->concept_name,
-                'amount' => number_format($concept->amount, 2),
+                'amount' => $concept->amount,
                 'status' => $concept->status->value,
                 'expiration_human' => $concept->end_date
                     ? DateHelper::expirationToHuman($concept->end_date)
                     : null,
+                'days_until_deletion' => $concept->mark_as_deleted_at ? DateHelper::daysUntilDeletion($concept->deleted_at) : null,
                 'has_expiration' => !is_null($concept->end_date),
+                'is_deleted' => !is_null($concept->mark_as_deleted_at),
             ];
         });
 
