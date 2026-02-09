@@ -6,15 +6,25 @@ use Carbon\Carbon;
 
 class DateHelper
 {
+    private static function now(): Carbon
+    {
+        return now();
+    }
+
+    private static function today(): Carbon
+    {
+        return self::now()->copy()->startOfDay();
+    }
+
     public static function expirationToHuman(?Carbon $date): ?string
     {
         if (!$date) {
             return null;
         }
 
-        $now = Carbon::now();
+        $now = self::now();
 
-        if ($now->gt($date)) {
+        if ($now->gte($date->copy()->endOfDay())) {
             return self::expiredText($date);
         }
 
@@ -23,8 +33,21 @@ class DateHelper
 
     public static function expiredText(Carbon $date): string
     {
-        $now = Carbon::now();
-        $days = $date->diffInDays($now);
+        $now = self::now();
+        $seconds = $date->copy()->endOfDay()->diffInSeconds($now);
+
+        if ($seconds < 3600) {
+            $minutes = max(1, floor($seconds / 60));
+            return "Expirado hace {$minutes} minuto" . ($minutes > 1 ? 's' : '');
+        }
+
+        if ($seconds < 86400) {
+            $hours = floor($seconds / 3600);
+            return "Expirado hace {$hours} hora" . ($hours > 1 ? 's' : '');
+        }
+
+        $days = self::today()->diffInDays($date->copy()->startOfDay(), false);
+        $days = abs($days);
 
         if ($days == 0) return 'Expirado hoy';
         if ($days == 1) return 'Expirado ayer';
@@ -41,8 +64,21 @@ class DateHelper
 
     public static function remainingText(Carbon $date): string
     {
-        $now = Carbon::now();
-        $days = $now->diffInDays($date);
+        $now = self::now();
+
+        $seconds = $now->diffInSeconds($date->copy()->endOfDay());
+
+        if ($seconds < 3600) {
+            $minutes = max(1, ceil($seconds / 60));
+            return "Vence en {$minutes} minuto" . ($minutes > 1 ? 's' : '');
+        }
+
+        if ($seconds < 86400) {
+            $hours = ceil($seconds / 3600);
+            return "Vence en {$hours} hora" . ($hours > 1 ? 's' : '');
+        }
+
+        $days = self::today()->diffInDays($date->copy()->startOfDay(), false);
 
         if ($days == 0) return 'Vence hoy';
         if ($days == 1) return 'Vence mañana';
@@ -64,6 +100,8 @@ class DateHelper
         if ($remainingDays > 0) {
             $text .= " y {$remainingDays} día" . ($remainingDays > 1 ? 's' : '');
         }
+
+
         return $text;
     }
 
@@ -79,13 +117,12 @@ class DateHelper
             ];
         }
 
-        $now = Carbon::now();
-        $days = $now->diffInDays($date, false);
+        $days = self::today()->diffInDays($date->copy()->startOfDay(), false);
 
         return [
             'text' => self::expirationToHuman($date),
             'days' => $days,
-            'is_expired' => $days < 0,
+            'is_expired' => $date->copy()->endOfDay()->lt(self::now()),
             'is_today' => $days == 0,
             'urgency' => self::urgencyLevel($days),
             'date_formatted' => $date->isoFormat('D [de] MMMM [de] YYYY'),
@@ -107,16 +144,11 @@ class DateHelper
         if (!$deletedDate) {
             return null;
         }
-        $now = Carbon::now();
-        if ($now->diffInDays($deletedDate) >= 30) {
-            return 0;
-        }
+        $forceDeleteDate = $deletedDate->copy()->addDays(30)->endOfDay();
 
-        $daysPassed = $deletedDate->diffInDays($now);
+        $days = self::today()->diffInDays($forceDeleteDate, false);
 
-        $daysRemaining = 30 - $daysPassed;
-
-        return max(0, (int) $daysRemaining);
+        return max(0, $days);
 
     }
 
