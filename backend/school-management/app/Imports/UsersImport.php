@@ -14,7 +14,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkReading
+class UsersImport implements ToCollection, WithEvents, WithChunkReading
 {
     protected AdminUsersServiceFacades $adminService;
     protected User $user;
@@ -58,5 +58,9 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
     public function chunkSize(): int
     {
         return 1000;
+    }
+
+    public function getResult(): array{
+        return $this->importResult;
     }
 }
