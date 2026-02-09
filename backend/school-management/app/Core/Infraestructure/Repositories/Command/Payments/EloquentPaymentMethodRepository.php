@@ -21,10 +21,22 @@ class EloquentPaymentMethodRepository implements PaymentMethodRepInterface
         return PaymentMethodMapper::toDomain($pm);
     }
 
+    public function updateByStripeId(string $stripeId, array $fields): int
+    {
+        return EloquentPaymentMethod::where('stripe_payment_method_id', $stripeId)
+                ->update($fields);
+    }
+
     public function delete(int $paymentMethodId):void
     {
         EloquentPaymentMethod::findOrFail($paymentMethodId)->delete();
 
+    }
+
+    public function deleteByStripeId(string $stripeId): bool
+    {
+        $affected= EloquentPaymentMethod::where('stripe_payment_method_id', $stripeId)->delete();
+        return $affected > 0;
     }
 
 }

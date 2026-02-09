@@ -66,6 +66,22 @@ class WebhookController extends Controller
                     }
                     return Response::success(null, 'Se creó el método de pago');
                     break;
+                case 'payment_method.detached':
+                    $result = $this->webhookService->detachPaymentMethod($obj, $eventType ,$eventId);
+                    if(!$result)
+                    {
+                        return Response::success(null, 'Hubo un error al eliminar el metodo de pago');
+                    }
+                    return Response::success(null, 'Se creó elimino método de pago');
+                    break;
+                case 'payment_method.automatically_updated':
+                    $result = $this->webhookService->updatePaymentMethodAutomatically($obj, $eventType ,$eventId);
+                    if(!$result)
+                    {
+                        return Response::success(null, 'Hubo un error al actualizar el metodo de pago');
+                    }
+                    return Response::success(null, 'Se actualizo el método de pago');
+                    break;
                 case 'checkout.session.async_payment_succeeded':
                     $result = $this->webhookService->sessionAsync($obj, $eventId);
                     if($result)
