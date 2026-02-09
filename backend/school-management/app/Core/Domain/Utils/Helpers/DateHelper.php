@@ -102,8 +102,11 @@ class DateHelper
         return 'urgencia_baja';
     }
 
-    public static function daysUntilDeletion(Carbon $deletedDate): int
+    public static function daysUntilDeletion(?Carbon $deletedDate): ?int
     {
+        if (!$deletedDate) {
+            return null;
+        }
         $now = Carbon::now();
         if ($now->diffInDays($deletedDate) >= 30) {
             return 0;

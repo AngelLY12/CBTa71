@@ -160,7 +160,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'expiration_human' => $concept->end_date
                     ? DateHelper::expirationToHuman($concept->end_date)
                     : null,
-                'days_until_deletion' => $concept->mark_as_deleted_at ? DateHelper::daysUntilDeletion($concept->deleted_at) : null,
+                'days_until_deletion' => $concept->mark_as_deleted_at ? DateHelper::daysUntilDeletion($concept->mark_as_deleted_at) : null,
                 'has_expiration' => !is_null($concept->end_date),
                 'is_deleted' => !is_null($concept->mark_as_deleted_at),
             ];
