@@ -11966,6 +11966,12 @@
                         "example": "2025-12-31",
                         "nullable": true
                     },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-31",
+                        "nullable": true
+                    },
                     "created_at_human": {
                         "type": "string",
                         "example": "hace 2 dias",
@@ -11974,6 +11980,16 @@
                     "updated_at_human": {
                         "type": "string",
                         "example": "hace 2 dias",
+                        "nullable": true
+                    },
+                    "deleted_at_human": {
+                        "type": "string",
+                        "example": "hace 2 dias",
+                        "nullable": true
+                    },
+                    "days_until_deletion": {
+                        "type": "integer",
+                        "example": 2,
                         "nullable": true
                     },
                     "expiration_human": {
@@ -13334,9 +13350,9 @@
                         "example": "hace 2 horas"
                     },
                     "deletedAtHuman": {
-                        "description": "Fecha de creación en formato humano relativo",
-                        "type": "string",
-                        "example": "hace 2 horas"
+                        "description": "Dias que faltan para ser eliminado",
+                        "type": "integer",
+                        "example": 2
                     }
                 },
                 "type": "object"
@@ -15614,8 +15630,19 @@
                         "example": "Vence en 3 días",
                         "nullable": true
                     },
+                    "days_until_deletion": {
+                        "description": "Dias que faltan para ser eliminado",
+                        "type": "integer",
+                        "example": 2,
+                        "nullable": true
+                    },
                     "has_expiration": {
                         "description": "Indica si el concepto tiene fecha de expiración",
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "is_deleted": {
+                        "description": "Indica si el concepto fue marcado como eliminado",
                         "type": "boolean",
                         "example": true
                     }

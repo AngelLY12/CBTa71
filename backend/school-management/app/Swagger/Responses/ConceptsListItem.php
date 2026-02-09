@@ -19,11 +19,24 @@ namespace App\Swagger\Responses;
  *         example="Vence en 3 días"
  *     ),
  *     @OA\Property(
+ *          property="days_until_deletion",
+ *          type="integer",
+ *          nullable=true,
+ *          description="Dias que faltan para ser eliminado",
+ *          example=2
+ *      ),
+ *     @OA\Property(
  *         property="has_expiration",
  *         type="boolean",
  *         description="Indica si el concepto tiene fecha de expiración",
  *         example=true
- *     )
+ *     ),
+ *     @OA\Property(
+ *          property="is_deleted",
+ *          type="boolean",
+ *          description="Indica si el concepto fue marcado como eliminado",
+ *          example=true
+ *      )
  * )
  */
 class ConceptsListItem
