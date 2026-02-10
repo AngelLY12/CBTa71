@@ -34,7 +34,7 @@ use Illuminate\Validation\Rule;
  *         property="students",
  *         type="array",
  *         @OA\Items(type="string"),
- *         description="Array de IDs de estudiantes a los que aplica (opcional)",
+ *         description="Array de numeros de control de estudiantes a los que aplica (opcional)",
  *         example={"21","22","23"}
  *     ),
  *     @OA\Property(
@@ -46,7 +46,7 @@ use Illuminate\Validation\Rule;
  *      @OA\Property(
  *         property="exceptionStudents",
  *         type="array",
- *         description="Array de CURPs de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
+ *         description="Array de numeros de control de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
  *         @OA\Items(type="string"),
  *         example={"11","60","90"}
  *     ),

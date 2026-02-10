@@ -218,6 +218,72 @@ public function getConcept(){}
  */
 public function getConceptRelations(){}
 
+/**
+ * @OA\Get(
+ *     path="/api/v1/concepts/search/controls",
+ *     summary="Buscar números de control de estudiantes",
+ *     description="Realiza una búsqueda de números de control de estudiantes activos. Los resultados se cachean por defecto.",
+ *     tags={"Payment Concepts"},
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(
+ *                          name="X-User-Role",
+ *                          in="header",
+ *                          required=false,
+ *                          description="Rol requerido para este endpoint",
+ *                          @OA\Schema(
+ *                              type="string",
+ *                              example="financial-staff"
+ *                          )
+ *                      ),
+ *     @OA\Parameter(
+ *         name="search",
+ *         in="query",
+ *         required=true,
+ *         description="Texto para buscar en números de control (búsqueda por prefijo)",
+ *         @OA\Schema(type="string", minLength=1, maxLength=50, example="2023")
+ *     ),
+ *     @OA\Parameter(
+ *         name="limit",
+ *         in="query",
+ *         required=false,
+ *         description="Límite de resultados (1-50), por defecto 15",
+ *         @OA\Schema(type="integer", minimum=1, maximum=50, default=15)
+ *     ),
+ *     @OA\Parameter(
+ *         name="forceRefresh",
+ *         in="query",
+ *         required=false,
+ *         description="Forzar refresco del cache",
+ *         @OA\Schema(type="boolean", default=false)
+ *     ),
+ *      @OA\Response(
+ *           response=200,
+ *           description="Búsqueda exitosa",
+ *           @OA\JsonContent(
+ *               allOf={
+ *                   @OA\Schema(ref="#/components/schemas/SuccessResponse"),
+ *                   @OA\Schema(
+ *                       @OA\Property(
+ *                           property="data",
+ *                           type="object",
+ *                           @OA\Property(
+ *                               property="concept",
+ *                               ref="#/components/schemas/StudentControlNumber"
+ *                           )
+ *                       )
+ *                   )
+ *               }
+ *           )
+ *       ),
+ *       @OA\Response(response=404, description="No encontrado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *       @OA\Response(response=401, description="No autenticado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *       @OA\Response(response=403, description="No autorizado", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *       @OA\Response(response=429, description="Demasiadas solicitudes", @OA\JsonContent(ref="#/components/schemas/ErrorResponse")),
+ *       @OA\Response(response=500, description="Error interno", @OA\JsonContent(ref="#/components/schemas/ErrorResponse"))
+ * )
+ */
+public function getControls(){}
+
 
 /**
  * @OA\Post(

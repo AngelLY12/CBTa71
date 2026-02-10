@@ -7469,6 +7469,146 @@
                 ]
             }
         },
+        "/api/v1/concepts/search/controls": {
+            "get": {
+                "tags": [
+                    "Payment Concepts"
+                ],
+                "summary": "Buscar números de control de estudiantes",
+                "description": "Realiza una búsqueda de números de control de estudiantes activos. Los resultados se cachean por defecto.",
+                "operationId": "c7b4ce808d11ae1874131962fc18b09e",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "financial-staff"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Texto para buscar en números de control (búsqueda por prefijo)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "maxLength": 50,
+                            "minLength": 1,
+                            "example": "2023"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Límite de resultados (1-50), por defecto 15",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 50,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "forceRefresh",
+                        "in": "query",
+                        "description": "Forzar refresco del cache",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Búsqueda exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/SuccessResponse"
+                                        },
+                                        {
+                                            "properties": {
+                                                "data": {
+                                                    "properties": {
+                                                        "concept": {
+                                                            "$ref": "#/components/schemas/StudentControlNumber"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No encontrado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Demasiadas solicitudes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/concepts/update-relations/{id}": {
             "patch": {
                 "tags": [
@@ -14401,6 +14541,7 @@
                     "INTERNAL_SERVER_ERROR",
                     "STRIPE_GATEWAY_ERROR",
                     "IDEMPOTENCY_EXISTS_EXCEPTION",
+                    "IDEMPOTENCY_TIMEOUT_EXCEPTION",
                     "CONCEPT_ALREADY_ACTIVE",
                     "CONCEPT_ALREADY_DELETED",
                     "CONCEPT_ALREADY_DISABLED",
@@ -15367,7 +15508,7 @@
                         ]
                     },
                     "students": {
-                        "description": "Array de CURPs de estudiantes a los que aplica (opcional)",
+                        "description": "Array de numeros de control de estudiantes a los que aplica (opcional)",
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -15379,7 +15520,7 @@
                         ]
                     },
                     "exceptionStudents": {
-                        "description": "Array de CURPs de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
+                        "description": "Array de numeros de control de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -15432,7 +15573,7 @@
                         ]
                     },
                     "students": {
-                        "description": "Array de IDs de estudiantes a los que aplica (opcional)",
+                        "description": "Array de numeros de control de estudiantes a los que aplica (opcional)",
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -15449,7 +15590,7 @@
                         "example": true
                     },
                     "exceptionStudents": {
-                        "description": "Array de CURPs de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
+                        "description": "Array de numeros de control de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
                         "type": "array",
                         "items": {
                             "type": "string"
@@ -15688,6 +15829,32 @@
                                 "type": "string"
                             }
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "StudentControlNumber": {
+                "description": "Resultado de búsqueda de número de control",
+                "properties": {
+                    "id": {
+                        "description": "ID del usuario",
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "n_control": {
+                        "description": "Número de control del estudiante",
+                        "type": "string",
+                        "example": "20230001"
+                    },
+                    "name": {
+                        "description": "Nombre completo del estudiante",
+                        "type": "string",
+                        "example": "Juan Pérez López"
+                    },
+                    "text": {
+                        "description": "Texto formateado para display",
+                        "type": "string",
+                        "example": "20230001 - Juan Pérez López"
                     }
                 },
                 "type": "object"

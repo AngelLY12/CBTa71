@@ -84,14 +84,14 @@ use Illuminate\Validation\Rule;
  *     @OA\Property(
  *         property="students",
  *         type="array",
- *         description="Array de CURPs de estudiantes a los que aplica (opcional)",
+ *         description="Array de numeros de control de estudiantes a los que aplica (opcional)",
  *         @OA\Items(type="string"),
  *         example={"12","55","89"}
  *     ),
  *      @OA\Property(
  *         property="exceptionStudents",
  *         type="array",
- *         description="Array de CURPs de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
+ *         description="Array de numeros de control de estudiantes a los que no aplica el concepto por alguna razón(opcional)",
  *         @OA\Items(type="string"),
  *         example={"11","60","90"}
  *     ),
