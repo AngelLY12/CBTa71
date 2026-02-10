@@ -32,15 +32,31 @@ class CareerServiceFacades
 
     public function createCareer(Career $career): Career
     {
-        $career = $this->create->execute($career);
-        $this->service->flushTags(self::TAG_CAREERS_ALL);
-        return $career;
+        return $this->idempotent(
+            'career_create',
+            [
+                'career_id' => $career->id,
+                'career_name' => $career->career_name
+            ],
+            function () use ($career) {
+                $career = $this->create->execute($career);
+                $this->service->flushTags(self::TAG_CAREERS_ALL);
+                return $career;
+            }
+        );
     }
 
     public function deleteCareer(int $careerId): void
     {
-        $this->delete->execute($careerId);
-        $this->service->flushTags(self::TAG_CAREERS_ALL);
+        $this->idempotent(
+            'career.delete',
+            ['career_id' => $careerId],
+            function () use ($careerId) {
+                $this->delete->execute($careerId);
+                $this->service->flushTags(self::TAG_CAREERS_ALL);
+                return true;
+            }
+        );
     }
 
     public function findAllCareers(bool $forceRefresh): array
@@ -56,8 +72,14 @@ class CareerServiceFacades
 
     public function updateCareer(int $careerId, array $fields): Career
     {
-        $career = $this->update->execute($careerId, $fields);
-        $this->service->flushTags(self::TAG_CAREERS_ALL);
-        return $career;
+        return $this->idempotent(
+            'career_update',
+            ['career_id' => $careerId, 'fields' => $fields],
+            function () use ($careerId, $fields) {
+                $career = $this->update->execute($careerId, $fields);
+                $this->service->flushTags(self::TAG_CAREERS_ALL);
+                return $career;
+            }
+        );
     }
 }

@@ -38,4 +38,13 @@ class UpdateUserRoleDTO{
     )
     {
     }
+
+    public function toArray(): array
+    {
+        return [
+            'curps' => $this->curps,
+            'rolesToAdd' => $this->rolesToAdd,
+            'rolesToRemove' => $this->rolesToRemove,
+        ];
+    }
 }

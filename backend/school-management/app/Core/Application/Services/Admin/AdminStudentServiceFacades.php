@@ -34,10 +34,23 @@ class AdminStudentServiceFacades
 
     public function attachStudentDetail(CreateStudentDetailDTO $create): User
     {
-        $student=$this->attach->execute($create);
-        $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$student->id"]));
-        $this->service->flushTags(array_merge(self::TAG_STUDENT_DETAILS,["userId:$student->id"]));
-        return $student;
+        return $this->idempotent(
+            'attach_student_detail',
+            [
+                'user_id' => $create->user_id,
+                'n_control' => $create->n_control,
+                'career_id' => $create->career_id,
+            ],
+            function () use ($create) {
+
+                $student = $this->attach->execute($create);
+
+                $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$student->id"]));
+                $this->service->flushTags(array_merge(self::TAG_STUDENT_DETAILS, ["userId:$student->id"]));
+
+                return $student;
+            }
+        );
     }
 
     public function findStudentDetail(int $user_id): StudentDetail
@@ -47,17 +60,42 @@ class AdminStudentServiceFacades
 
     public function updateStudentDetail(int $user_id, array $fields): User
     {
-        $sd= $this->update_student->execute($user_id,$fields);
-        $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$user_id"]));
-        $this->service->flushTags(array_merge(self::TAG_STUDENT_DETAILS,["userId:$user_id"]));
-        return $sd;
+        return $this->idempotent(
+            'update_student_detail',
+            [
+                'user_id' => $user_id,
+                'fields' => $fields,
+            ],
+            function () use ($user_id, $fields) {
+
+                $sd = $this->update_student->execute($user_id, $fields);
+
+                $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$user_id"]));
+                $this->service->flushTags(array_merge(self::TAG_STUDENT_DETAILS, ["userId:$user_id"]));
+
+                return $sd;
+            }
+        );
     }
 
     public function importStudents(array $rows): ImportResponse
     {
-        $import=$this->importStudentDetail->execute($rows);
-        $this->service->flushTags(self::TAG_USERS_ID);
-        return $import;
+        return $this->idempotent(
+            'import_students',
+            [
+                'rows_hash' => sha1(json_encode($rows)),
+                'count' => count($rows),
+            ],
+            function () use ($rows) {
+
+                $import = $this->importStudentDetail->execute($rows);
+
+                $this->service->flushTags(self::TAG_USERS_ID);
+
+                return $import;
+            },
+            300
+        );
     }
 
 }

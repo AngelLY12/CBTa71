@@ -36,12 +36,30 @@ class ParentsServiceFacades
 
     public function sendInvitation(int $studentId, string $parentEmail, int $createdBy): ParentInvite
     {
-        return $this->send->execute($studentId,$parentEmail,$createdBy);
+        return $this->idempotent(
+            'parent_invite_send',
+            [
+                'student_id' => $studentId,
+                'parent_email' => $parentEmail,
+                'created_by' => $createdBy,
+            ],
+            function () use ($studentId, $parentEmail, $createdBy) {
+                return $this->send->execute($studentId,$parentEmail,$createdBy);
+            }
+        );
     }
 
     public function acceptInvitation(string $token, ?string $relationship=null): void
     {
-        $this->accept->execute($token, $relationship);
+        $this->idempotent(
+            'parent_invite_accept',
+            ['token' => $token],
+            function () use ($token, $relationship) {
+                $this->accept->execute($token, $relationship);
+                return true;
+            },
+            600
+        );
     }
 
     public function getParentChildren(User $parent, bool $forceRefresh): ParentChildrenResponse
@@ -70,10 +88,19 @@ class ParentsServiceFacades
 
     public function deleteParentStudentRelation(int $parentId, int $studentId): bool
     {
-        $result=$this->deleteRelation->execute($parentId, $studentId);
-        $this->service->flushTags(array_merge(self::TAG_PARENT_CHILDREN, ["parent:{$parentId}"]));
-        $this->service->flushTags(array_merge(self::TAG_STUDENT_PARENTS, ["student:{$studentId}"]));
-        return $result;
+        return $this->idempotent(
+            'parent_student_delete',
+            [
+                'parent_id' => $parentId,
+                'student_id' => $studentId
+            ],
+            function () use ($parentId, $studentId) {
+                $result=$this->deleteRelation->execute($parentId, $studentId);
+                $this->service->flushTags(array_merge(self::TAG_PARENT_CHILDREN, ["parent:{$parentId}"]));
+                $this->service->flushTags(array_merge(self::TAG_STUDENT_PARENTS, ["student:{$studentId}"]));
+                return $result;
+            }
+        );
     }
 
 }

@@ -73,51 +73,100 @@ class ConceptsServiceFacades{
     }
 
     public function createPaymentConcept(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {
-        $concept = $this->create->execute($dto);
-        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
-         return $concept;
+        return $this->idempotent(
+            'payment_concept_create',
+                $dto->toArray(),
+            function () use ($dto) {
+                $concept = $this->create->execute($dto);
+                $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+                return $concept;
+            }
+        );
     }
 
     public function updatePaymentConcept(UpdatePaymentConceptDTO $dto): UpdatePaymentConceptResponse {
-        $concept = $this->update->execute($dto);
-        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
-        return $concept;
+        return $this->idempotent(
+            'payment_concept_update',
+            $dto->toArray(),
+            function () use ($dto) {
+                $concept = $this->update->execute($dto);
+                $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+                return $concept;
+            }
+        );
     }
 
     public function updatePaymentConceptRelations(UpdatePaymentConceptRelationsDTO $dto): UpdatePaymentConceptRelationsResponse
     {
-        $concept= $this->updateRelations->execute($dto);
-        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
-        return $concept;
+        return $this->idempotent(
+            'payment_concept_relations_update',
+            $dto->toArrayEntire(),
+            function () use ($dto) {
+                $concept= $this->updateRelations->execute($dto);
+                $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+                return $concept;
+            }
+        );
     }
 
     public function finalizePaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse {
-        $result = $this->finalize->execute($concept);
-        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
-        return $result;
+        return $this->idempotent(
+            'payment_concept_finalize',
+            ['concept_id' => $concept->id],
+            function () use ($concept) {
+                $result = $this->finalize->execute($concept);
+                $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+                return $result;
+            }
+        );
     }
 
     public function disablePaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse {
-        $result = $this->disable->execute($concept);
-        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
-        return $result;
+        return $this->idempotent(
+            'payment_concept_disable',
+            ['concept_id' => $concept->id],
+            function () use ($concept) {
+                $result = $this->disable->execute($concept);
+                $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+                return $result;
+            }
+        );
     }
 
     public function eliminatePaymentConcept(int $conceptId): void {
-        $this->eliminate->execute($conceptId);
-        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+        $this->idempotent(
+            'payment_concept_delete',
+            ['concept_id' => $conceptId],
+            function () use ($conceptId) {
+                $this->eliminate->execute($conceptId);
+                $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+                return true;
+            }
+        );
     }
 
     public function activatePaymentConcept(PaymentConcept $concept):ConceptChangeStatusResponse
     {
-        $result = $this->activate->execute($concept);
-        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
-        return $result;
+        return $this->idempotent(
+            'payment_concept_activate',
+            ['concept_id' => $concept->id],
+            function () use ($concept) {
+                $result = $this->activate->execute($concept);
+                $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+                return $result;
+            }
+        );
     }
 
     public function eliminateLogicalPaymentConcept(PaymentConcept $concept): ConceptChangeStatusResponse{
-        $result = $this->eliminateLogical->execute($concept);
-        $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
-        return $result;
+        return $this->idempotent(
+            'payment_concept_soft_delete',
+            ['concept_id' => $concept->id],
+            function () use ($concept) {
+                $result = $this->eliminateLogical->execute($concept);
+                $this->service->flushTags(self::TAGS_CONCEPTS_LIST);
+                return $result;
+            }
+        );
     }
 }

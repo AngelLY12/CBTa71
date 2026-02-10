@@ -56,32 +56,74 @@ class AdminRolePermissionsServiceFacades
 
     public function updateRolesToUser(int $userId, array $rolesToAdd, array $rolesToRemove): RolesUpdatedToUserResponse
     {
-        $roles = $this->updateRolesToSingleUserUseCase->execute($userId, $rolesToAdd, $rolesToRemove);
-        $this->service->flushTags(array_merge(self::TAG_USERS_ID,["userId:{$userId}"]));
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        return $roles;
+        return $this->idempotent(
+            'update_roles_to_user',
+            [
+                'user_id' => $userId,
+                'add' => $rolesToAdd,
+                'remove' => $rolesToRemove,
+            ],
+            function () use ($userId, $rolesToAdd, $rolesToRemove) {
+
+                $roles = $this->updateRolesToSingleUserUseCase
+                    ->execute($userId, $rolesToAdd, $rolesToRemove);
+
+                $this->service->flushTags(array_merge(self::TAG_USERS_ID,["userId:{$userId}"]));
+                $this->service->flushTags(self::TAG_USERS_ALL);
+
+                return $roles;
+            }
+        );
     }
 
     public function updatePermissionsToUser(int $userId, array $permissionsToAdd, array $permissionsToRemove): PermissionsUpdatedToUserResponse
     {
-        $permissions = $this->updatePermissionsToSingleUserUseCase->execute($userId, $permissionsToAdd, $permissionsToRemove);
-        $this->service->flushTags(array_merge(self::TAG_USERS_ID,["userId:{$userId}"]));
-        $this->service->flushTags(array_merge(self::TAG_PERMISSIONS_BY_ROLE,["userId:{$userId}"]));
-        return $permissions;
+        return $this->idempotent(
+            'update_permissions_to_user',
+            [
+                'user_id' => $userId,
+                'add' => $permissionsToAdd,
+                'remove' => $permissionsToRemove,
+            ],
+            function () use ($userId, $permissionsToAdd, $permissionsToRemove) {
+
+                $permissions = $this->updatePermissionsToSingleUserUseCase
+                    ->execute($userId, $permissionsToAdd, $permissionsToRemove);
+
+                $this->service->flushTags(array_merge(self::TAG_USERS_ID,["userId:{$userId}"]));
+                $this->service->flushTags(array_merge(self::TAG_PERMISSIONS_BY_ROLE,["userId:{$userId}"]));
+
+                return $permissions;
+            }
+        );
+
     }
     public function syncPermissions(UpdateUserPermissionsDTO $dto): UserWithUpdatedPermissionsResponse
     {
-        $permissions=$this->sync->execute($dto);
-        $this->service->flushTags(self::TAG_USERS_ID);
-        return $permissions;
+        return $this->idempotent(
+            'sync_permissions',
+            $dto->toArray(),
+            function () use ($dto) {
+                $permissions=$this->sync->execute($dto);
+                $this->service->flushTags(self::TAG_USERS_ID);
+                return $permissions;
+            }
+        );
     }
 
     public function syncRoles(UpdateUserRoleDTO $dto):UserWithUpdatedRoleResponse
     {
-        $roles=$this->syncRoles->execute($dto);
-        $this->service->flushTags(self::TAG_USERS_ID);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        return $roles;
+        return $this->idempotent(
+            'sync_roles',
+            $dto->toArray(),
+            function () use ($dto) {
+                $roles = $this->syncRoles->execute($dto);
+                $this->service->flushTags(self::TAG_USERS_ID);
+                $this->service->flushTags(self::TAG_USERS_ALL);
+                return $roles;
+            }
+        );
+
     }
 
     public function findPermissionsToSingleUser(int $userId, array $roles, bool $forceRefresh): array

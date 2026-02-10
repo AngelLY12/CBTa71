@@ -77,4 +77,23 @@ class CreatePaymentConceptDTO {
         public array|string|null $exceptionStudents = null,
         public array|string|null $applicantTags = null,
     ) {}
+
+    public function toArray(): array
+    {
+        return [
+            "concept_name" => $this->concept_name,
+            "amount" => $this->amount,
+            "status" => $this->status->value,
+            "applies_to" => $this->appliesTo->value,
+            "description" => $this->description ?? null,
+            "start_date" => $this->start_date ?? Carbon::now(),
+            "end_date" => $this->end_date ?? null,
+            "semesters" => $this->semesters ?? null,
+            "careers" => $this->careers ?? null,
+            "students" => $this->students ?? null,
+            "exception_students" => $this->exceptionStudents ?? null,
+            "applicant_tags" => $this->applicantTags ?? null,
+        ];
+    }
+
 }

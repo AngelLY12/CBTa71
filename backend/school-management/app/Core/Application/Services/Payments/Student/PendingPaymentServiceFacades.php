@@ -49,9 +49,21 @@ class PendingPaymentServiceFacades{
     }
 
     public function payConcept(User $user, int $conceptId): string {
-        $pay=$this->pay->execute($user,$conceptId);
-        $this->service->flushTags(array_merge(self::TAG_PENDING_CONCEPTS, ["userId:{$user->id}"]));
-        return $pay;
+        return $this->idempotent(
+            'stripe_pay_concept',
+            [
+                'user_id' => $user->id,
+                'concept_id' => $conceptId,
+            ],
+            function () use ($user, $conceptId) {
+
+                $pay = $this->pay->execute($user, $conceptId);
+                $this->service->flushTags(array_merge(self::TAG_PENDING_CONCEPTS, ["userId:{$user->id}"]));
+
+                return $pay;
+            },
+            900
+        );
     }
 
 }

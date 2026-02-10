@@ -48,16 +48,39 @@ class AdminUsersServiceFacades
 
     public function registerUser(CreateUserDTO $user, string $password):User
     {
-        $user=$this->register->execute($user, $password);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        return $user;
+        return $this->idempotent(
+            'users_register',
+            [
+                'curp' => $user->curp,
+                'email' => $user->email,
+            ],
+            function () use ($user, $password) {
+
+                $createdUser = $this->register->execute($user, $password);
+                $this->service->flushTags(self::TAG_USERS_ALL);
+
+                return $createdUser;
+            }
+        );
     }
 
     public function importUsers(array $rows): ImportResponse
     {
-        $import=$this->import->execute($rows);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        return $import;
+        return $this->idempotent(
+            'users_import',
+            [
+                'rows_hash' => hash('sha256', json_encode($rows)),
+                'count' => count($rows),
+            ],
+            function () use ($rows) {
+
+                $import = $this->import->execute($rows);
+                $this->service->flushTags(self::TAG_USERS_ALL);
+
+                return $import;
+            },
+            600
+        );
     }
 
     public function showUsersSummary(bool $onlyThisYear, bool $forceRefresh): UsersAdminSummary
@@ -90,28 +113,60 @@ class AdminUsersServiceFacades
 
     public function activateUsers(array $ids): UserChangedStatusResponse
     {
-        $users=$this->activate->execute($ids);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        return$users;
+        return $this->idempotent(
+            'users_activate',
+            ['ids' => $ids],
+            function () use ($ids) {
+
+                $users = $this->activate->execute($ids);
+                $this->service->flushTags(self::TAG_USERS_ALL);
+
+                return $users;
+            }
+        );
     }
      public function deleteUsers(array $ids): UserChangedStatusResponse
     {
-        $users=$this->delete->execute($ids);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        return $users;
+        return $this->idempotent(
+            'users_delete',
+            ['ids' => $ids],
+            function () use ($ids) {
+
+                $users = $this->delete->execute($ids);
+                $this->service->flushTags(self::TAG_USERS_ALL);
+
+                return $users;
+            }
+        );
     }
      public function disableUsers(array $ids): UserChangedStatusResponse
     {
-        $users=$this->disable->execute($ids);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        return $users;
+        return $this->idempotent(
+            'users_disable',
+            ['ids' => $ids],
+            function () use ($ids) {
+
+                $users = $this->disable->execute($ids);
+                $this->service->flushTags(self::TAG_USERS_ALL);
+
+                return $users;
+            }
+        );
     }
 
     public function temporaryDisableUsers(array $ids): UserChangedStatusResponse
     {
-        $users=$this->temporaryDisable->execute($ids);
-        $this->service->flushTags(self::TAG_USERS_ALL);
-        return $users;
+        return $this->idempotent(
+            'users_temp_disable',
+            ['ids' => $ids],
+            function () use ($ids) {
+
+                $users = $this->temporaryDisable->execute($ids);
+                $this->service->flushTags(self::TAG_USERS_ALL);
+
+                return $users;
+            }
+        );
     }
 
 }

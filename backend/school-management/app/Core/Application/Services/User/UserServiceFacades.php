@@ -55,24 +55,54 @@ class UserServiceFacades
 
     public function updateUser(int $userId, array $fields): User
     {
-        $user = $this->userRepo->findById($userId);
-        UserValidator::ensureUserIsValidToUpdate($user);
-        $updatedUser = $this->update->execute($userId, $fields);
-        $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$userId"]));
-        $this->service->flushTags(array_merge(self::TAG_USER, ["userId:$userId"]));
-        return $updatedUser;
+        return $this->idempotent(
+            'user_update',
+            [
+                'user_id' => $userId,
+                'fields' => $fields,
+            ],
+            function () use ($userId, $fields) {
+
+                $user = $this->userRepo->findById($userId);
+                UserValidator::ensureUserIsValidToUpdate($user);
+
+                $updatedUser = $this->update->execute($userId, $fields);
+
+                $this->service->flushTags(array_merge(self::TAG_USERS_ID, ["userId:$userId"]));
+                $this->service->flushTags(array_merge(self::TAG_USER, ["userId:$userId"]));
+
+                return $updatedUser;
+            },
+            30
+        );
     }
 
     public function updatePassword(int $userId, string $currentPassword, string $newPassword): User
     {
-        $user = $this->userRepo->findById($userId);
-        UserValidator::ensureUserIsValidToUpdate($user);
-        if (!Hash::check($currentPassword, $user->password)) {
-            throw new InvalidCurrentPasswordException();
-        }
-        $hashed = Hash::make($newPassword);
-        $updatedUser = $this->update->execute($userId, ['password' => $hashed]);
-        $this->service->flushTags(array_merge(self::TAG_USER, ["userId:$userId"]));
-        return $updatedUser;
+        return $this->idempotent(
+            'user_update_password',
+            [
+                'user_id' => $userId,
+                'current_password' => $currentPassword,
+                'new_password' => $newPassword,
+            ],
+            function () use ($userId, $currentPassword, $newPassword) {
+
+                $user = $this->userRepo->findById($userId);
+                UserValidator::ensureUserIsValidToUpdate($user);
+
+                if (!Hash::check($currentPassword, $user->password)) {
+                    throw new InvalidCurrentPasswordException();
+                }
+
+                $hashed = Hash::make($newPassword);
+                $updatedUser = $this->update->execute($userId, ['password' => $hashed]);
+
+                $this->service->flushTags(array_merge(self::TAG_USER, ["userId:$userId"]));
+
+                return $updatedUser;
+            },
+            60
+        );
     }
 }
