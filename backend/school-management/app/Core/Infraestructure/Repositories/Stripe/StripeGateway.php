@@ -64,6 +64,7 @@ class StripeGateway implements StripeGatewayInterface
         try{
             return Session::create([
                 'mode' => 'setup',
+                'expires_at' => time() + 3600,
                 'payment_method_types' => ['card'],
                 'customer' => $customerId,
                 'success_url' => config('app.frontend_url') . '/Estudiante/Tarjetas?result=added',
@@ -86,6 +87,7 @@ class StripeGateway implements StripeGatewayInterface
             'mode' => 'payment',
             'customer' => $customerId,
             'customer_update' => ['address' => 'auto'],
+            'expires_at' => time() + 3600,
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'mxn',
@@ -101,10 +103,16 @@ class StripeGateway implements StripeGatewayInterface
                 'user_id' => $userId,
             ],
             'payment_method_options' => [
-                'card' => ['setup_future_usage' => 'off_session'],
+                'card' => [
+                    'request_three_d_secure' => 'automatic',
+                    'setup_future_usage' => 'off_session'
+                ],
                 'customer_balance' => [
                     'funding_type' => 'bank_transfer',
                     'bank_transfer' => ['type' => 'mx_bank_transfer'],
+                ],
+                'oxxo' => [
+                    'expires_after_days' => 2
                 ],
             ],
             'saved_payment_method_options' => ['payment_method_save' => 'enabled'],
