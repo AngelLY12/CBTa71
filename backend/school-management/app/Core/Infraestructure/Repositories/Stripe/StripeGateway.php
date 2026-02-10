@@ -66,8 +66,8 @@ class StripeGateway implements StripeGatewayInterface
                 'mode' => 'setup',
                 'payment_method_types' => ['card'],
                 'customer' => $customerId,
-                'success_url' => config('app.frontend_url') . '/setup-success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => config('app.frontend_url') . '/setup-cancel',
+                'success_url' => config('app.frontend_url') . '/Estudiante/Tarjetas?result=added',
+                'cancel_url' => config('app.frontend_url') . '/Estudiante/Tarjetas?result=canceled',
             ]);
         }catch(ApiErrorException $e){
             logger()->error("Stripe error setupSession: " . $e->getMessage());
@@ -108,8 +108,8 @@ class StripeGateway implements StripeGatewayInterface
                 ],
             ],
             'saved_payment_method_options' => ['payment_method_save' => 'enabled'],
-            'success_url' => config('app.frontend_url') . '/payment-success?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => config('app.frontend_url') . '/payment-cancel',
+            'success_url' => config('app.frontend_url') . '/Estudiante/Historial?result=paid',
+            'cancel_url' => config('app.frontend_url') . '/Estudiante/Adeudos?result=canceled',
         ];
 
         return Session::create($sessionData);
