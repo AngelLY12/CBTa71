@@ -103,6 +103,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
     Route::prefix('concepts')->middleware(['role:financial-staff'])->group(function(){
         Route::middleware(['permission:view.concepts','throttle:10,1'])->get('/relations/{id}',[ConceptsController::class,'findRelations']);
+        Route::get('/search/controls',[ConceptsController::class,'findNumberControlsBySearch']);
         Route::middleware(['permission:update.concepts', 'throttle:10,1'])->patch('/update-relations/{id}', [ConceptsController::class, 'updateRelations']);
         Route::middleware(['permission:finalize.concepts', 'throttle:10,1'])->post('/{concept}/finalize', [ConceptsController::class, 'finalize']);
         Route::middleware(['permission:disable.concepts', 'throttle:10,1'])->post('/{concept}/disable', [ConceptsController::class, 'disable']);

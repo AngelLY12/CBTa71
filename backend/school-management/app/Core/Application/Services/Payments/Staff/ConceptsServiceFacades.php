@@ -15,6 +15,7 @@ use App\Core\Application\DTO\Response\PaymentConcept\UpdatePaymentConceptRespons
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\FindConceptByIdUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\FindConceptRelationsToDisplay;
+use App\Core\Application\UseCases\Payments\Staff\Concepts\FindControlNumbersBySearchUseCase;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\UpdatePaymentConceptRelationsUseCase;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Application\UseCases\Payments\Staff\Concepts\ActivatePaymentConceptUseCase;
@@ -33,6 +34,10 @@ class ConceptsServiceFacades{
     use HasCache;
 
     private const TAGS_CONCEPTS_LIST = [CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value,"list"];
+    private const TAG_CONCEPT_BY_ID = [CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value, "concept"];
+    private const TAG_CONCEPT_RELATIONS = [CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value, "relation"];
+    private const TAG_CONCEPT_N_CONTROL_SEARCH = [CachePrefix::STAFF->value, StaffCacheSufix::CONCEPTS->value, "search"];
+
     public function __construct(
         private ShowConceptsUseCase                   $show,
         private CreatePaymentConceptUseCase           $create,
@@ -45,7 +50,7 @@ class ConceptsServiceFacades{
         private ActivatePaymentConceptUseCase         $activate,
         private FindConceptByIdUseCase $concept,
         private FindConceptRelationsToDisplay $relations,
-
+        private FindControlNumbersBySearchUseCase $findControlNumbers,
         private CacheService                          $service
     )
     {
@@ -62,14 +67,34 @@ class ConceptsServiceFacades{
         return $this->mediumCache($key,fn() => $this->show->execute($status, $perPage, $page),self::TAGS_CONCEPTS_LIST ,$forceRefresh);
     }
 
-    public function findConcept(int $id): ConceptToDisplay
+    public function findConcept(int $id, bool $forceRefresh): ConceptToDisplay
     {
-        return $this->concept->execute($id);
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::CONCEPTS->value . ":concept",
+            ['id' => $id]
+        );
+        return $this->shortCache($key, fn() => $this->concept->execute($id), self::TAG_CONCEPT_BY_ID ,$forceRefresh);
     }
 
-    public function findRelations(int $id): ConceptRelationsToDisplay
+    public function findRelations(int $id, bool $forceRefresh): ConceptRelationsToDisplay
     {
-        return $this->relations->execute($id);
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::CONCEPTS->value . ":relation",
+            ['id' => $id]
+        );
+        return $this->shortCache($key, fn() => $this->relations->execute($id), self::TAG_CONCEPT_RELATIONS, $forceRefresh);
+    }
+
+    public function findNumberControlsBySearch(string $search, int $limit, bool $forceRefresh): array
+    {
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::CONCEPTS->value . ":search",
+            ['search' => $search, 'limit' => $limit]
+        );
+        return $this->mediumCache($key, fn() => $this->findControlNumbers->execute($search, $limit), self::TAG_CONCEPT_N_CONTROL_SEARCH, $forceRefresh);
     }
 
     public function createPaymentConcept(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {

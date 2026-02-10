@@ -77,6 +77,32 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
         return MappersUserMapper::toUserIdListDTO($ids);
     }
 
+    public function getControlNumbersBySearch(string $search, int $limit = 15): array
+    {
+        return EloquentUser::query()
+            ->select(['id', 'name', 'last_name'])
+            ->with(['studentDetail:id,user_id,n_control'])
+            ->where('status', UserStatus::ACTIVO)
+            ->whereHas('studentDetail', function ($q) use ($search) {
+                $q->where('n_control', 'like', $search . '%');
+            })
+            ->orderBy('name')
+            ->limit($limit)
+            ->get()
+            ->map(function ($user) {
+                $nControl = $user->studentDetail?->n_control;
+                $fullName = trim($user->name . ' ' . $user->last_name);
+
+                return [
+                    'id' => $user->id,
+                    'n_control' => $nControl,
+                    'name' => $fullName,
+                    'text' => "{$nControl} - {$fullName}"
+                ];
+            })
+            ->toArray();
+    }
+
     public function getUsersPopulationSummary(bool $onlyThisYear): UsersFinancialSummary
     {
         $roles = DB::table('roles')

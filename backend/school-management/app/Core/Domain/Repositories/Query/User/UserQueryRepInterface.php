@@ -20,6 +20,7 @@ interface UserQueryRepInterface{
     public function getUserWithStudentDetail(int $userId):User;
     public function getUserByStripeCustomer(string $customerId): User;
     public function getUserIdsByControlNumbers(array $controlNumbers): UserIdListDTO;
+    public function getControlNumbersBySearch(string $search, int $limit = 15): array;
     public function getUsersPopulationSummary(bool $onlyThisYear): UsersFinancialSummary;
     public function getUsersAdminSummary(bool $onlyThisYear): UsersAdminSummary;
     public function findActiveStudents(?string $search, int $perPage, int $page): LengthAwarePaginator;
