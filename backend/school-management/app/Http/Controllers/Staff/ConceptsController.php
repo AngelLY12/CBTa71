@@ -55,7 +55,7 @@ class ConceptsController extends Controller
 
     }
 
-    public function findRelations(int $id): ConceptRelationsToDisplay
+    public function findRelations(int $id)
     {
         $concept=$this->conceptsService->findRelations($id);
         return Response::success(['relations' => $concept], 'Relaciones del concepto encontradas.');

@@ -43,7 +43,7 @@ trait HasPendingQuery
                 fn($q) =>
                 $q->where(function ($q) use ($now) {
                     $q->whereNull('payment_concepts.end_date')
-                        ->orWhereDate('payment_concepts.end_date', '>', $now);
+                        ->orWhereDate('payment_concepts.end_date', '>=', $now);
                 })
 
             );

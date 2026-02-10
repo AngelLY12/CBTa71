@@ -2,6 +2,7 @@
 
 namespace App\Core\Domain\Utils\Helpers;
 
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use Carbon\Carbon;
 
 class DateHelper
@@ -16,15 +17,15 @@ class DateHelper
         return self::now()->copy()->startOfDay();
     }
 
-    public static function expirationToHuman(?Carbon $date): ?string
+    public static function expirationToHuman(?Carbon $date, ?string $status=null): ?string
     {
         if (!$date) {
             return null;
         }
 
         $now = self::now();
-
-        if ($now->gte($date->copy()->endOfDay())) {
+        $isFinalized = $status === PaymentConceptStatus::FINALIZADO->value;
+        if ($now->gte($date->copy()->endOfDay()) || $isFinalized) {
             return self::expiredText($date);
         }
 
@@ -105,7 +106,7 @@ class DateHelper
         return $text;
     }
 
-    public static function expirationInfo(?Carbon $date): array
+    public static function expirationInfo(?Carbon $date, ?string $status=null): array
     {
         if (!$date) {
             return [
@@ -116,23 +117,25 @@ class DateHelper
                 'urgency' => 'none',
             ];
         }
-
+        $now = self::now();
         $days = self::today()->diffInDays($date->copy()->startOfDay(), false);
+        $isFinalized = $status === PaymentConceptStatus::FINALIZADO->value;
+        $isExpired = $isFinalized || $date->copy()->endOfDay()->lt($now);
 
         return [
-            'text' => self::expirationToHuman($date),
+            'text' => self::expirationToHuman($date, $status),
             'days' => $days,
-            'is_expired' => $date->copy()->endOfDay()->lt(self::now()),
+            'is_expired' => $isExpired,
             'is_today' => $days == 0,
-            'urgency' => self::urgencyLevel($days),
+            'urgency' =>  self::urgencyLevel($days, $isExpired),
             'date_formatted' => $date->isoFormat('D [de] MMMM [de] YYYY'),
             'date_short' => $date->format('d/m/Y'),
         ];
     }
 
-    public static function urgencyLevel(int $days): string
+    public static function urgencyLevel(int $days, bool $isExpired): string
     {
-        if ($days < 0) return 'vencido';
+        if ($days < 0 || $isExpired) return 'vencido';
         if ($days == 0) return 'vencimiento_hoy';
         if ($days <= 3) return 'urgencia_alta';
         if ($days <= 7) return 'urgencia_media';

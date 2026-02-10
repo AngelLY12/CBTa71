@@ -54,8 +54,8 @@ class PaymentConceptMapper{
             amount: $concept->amount,
             created_at_human: $concept->created_at->diffForHumans(),
             updated_at_human: $concept->updated_at->diffForHumans(),
-            expiration_info: DateHelper::expirationInfo($endDate),
-            expiration_human: DateHelper::expirationToHuman($endDate),
+            expiration_info: DateHelper::expirationInfo($endDate, $concept->status->value),
+            expiration_human: DateHelper::expirationToHuman($endDate, $concept->status->value),
             deleted_at: $deletedAt?->toDateString(),
             deleted_at_human: $deletedAt?->diffForHumans(),
             days_until_deletion: DateHelper::daysUntilDeletion($deletedAt),
@@ -177,6 +177,10 @@ class PaymentConceptMapper{
     public static function toPendingPaymentConceptResponse(array $pc): PendingPaymentConceptsResponse {
         $startDate = isset($pc['start_date']) ? Carbon::parse($pc['start_date']) : null;
         $endDate = isset($pc['end_date']) ? Carbon::parse($pc['end_date']) : null;
+        $status = $pc['status'] ?? null;
+        if ($status instanceof PaymentConceptStatus) {
+            $status = $status->value;
+        }
         return new PendingPaymentConceptsResponse(
             id: $pc['id'] ?? null,
             concept_name: $pc['concept_name'] ?? null,
@@ -184,8 +188,8 @@ class PaymentConceptMapper{
             amount: $pc['amount'] ?? null,
             start_date: $startDate?->format('Y-m-d H:i:s'),
             end_date: $endDate?->format('Y-m-d H:i:s'),
-            expiration_human: DateHelper::expirationToHuman($endDate),
-            expiration_info: DateHelper::expirationInfo($endDate),
+            expiration_human: DateHelper::expirationToHuman($endDate, $status),
+            expiration_info: DateHelper::expirationInfo($endDate, $status),
         );
     }
 
@@ -199,7 +203,7 @@ class PaymentConceptMapper{
             applies_to:$pc->applies_to->value ?? null,
             start_date: $pc->start_date ? $pc->start_date->format('Y-m-d H:i:s') : null,
             end_date: $endDate?->format('Y-m-d H:i:s'),
-            expiration_human: DateHelper::expirationToHuman($endDate),
+            expiration_human: DateHelper::expirationToHuman($endDate, $pc->status->value ?? null),
         );
 
     }

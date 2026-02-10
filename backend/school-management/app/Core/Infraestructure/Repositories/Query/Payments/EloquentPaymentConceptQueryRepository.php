@@ -92,6 +92,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                     'payment_concepts.description',
                     'payment_concepts.start_date',
                     'payment_concepts.end_date',
+                    'payment_concepts.status',
                     DB::raw('COALESCE(payment_concepts.amount - COALESCE(p.amount_received,0), payment_concepts.amount) as amount')
 
                 ])
@@ -126,6 +127,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                     'payment_concepts.description',
                     'payment_concepts.start_date',
                     'payment_concepts.end_date',
+                    'payment_concepts.status',
                      DB::raw('
                         COALESCE(
                             payment_concepts.amount - COALESCE(p.amount_received, 0),
@@ -158,7 +160,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'amount' => $concept->amount,
                 'status' => $concept->status->value,
                 'expiration_human' => $concept->end_date
-                    ? DateHelper::expirationToHuman($concept->end_date)
+                    ? DateHelper::expirationToHuman($concept->end_date, $concept->status->value ?? null)
                     : null,
                 'days_until_deletion' => $concept->mark_as_deleted_at ? DateHelper::daysUntilDeletion($concept->mark_as_deleted_at) : null,
                 'has_expiration' => !is_null($concept->end_date),
@@ -373,7 +375,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
         if ($onlyActive) {
             $now = now();
             $query->whereDate('payment_concepts.start_date', '<=', $now)
-                ->where(fn($q) => $q->whereNull('payment_concepts.end_date')->orWhereDate('payment_concepts.end_date', '>', $now));
+                ->where(fn($q) => $q->whereNull('payment_concepts.end_date')->orWhereDate('payment_concepts.end_date', '>=', $now));
         }
 
         if ($status) {
