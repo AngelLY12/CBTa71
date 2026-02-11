@@ -43,11 +43,23 @@ class DateHelper
 
         $weeks = floor($days / 7);
         if ($weeks < 4) {
-            return "Expirado hace {$weeks} semana" . ($weeks > 1 ? 's' : '');
+            $remainingDays = $days % 7;
+            $text = "Expirado hace {$weeks} semana" . ($weeks > 1 ? 's' : '');
+            if($remainingDays > 0)
+            {
+                $text .= " y {$remainingDays} día" . ($remainingDays > 1 ? 's':'');
+            }
+            return $text;
         }
 
         $months = floor($days / 30);
-        return "Expirado hace {$months} mes" . ($months > 1 ? 'es' : '');
+        $remainingDays = $days % 30;
+        $text = "Expirado hace {$months} mes" . ($months > 1 ? 'es' : '');
+        if($remainingDays > 0)
+        {
+            $text .= " y {$remainingDays} día" . ($remainingDays > 1 ? 's' : '');
+        }
+        return $text;
     }
 
     public static function remainingText(Carbon $date): string
@@ -88,8 +100,6 @@ class DateHelper
         if ($remainingDays > 0) {
             $text .= " y {$remainingDays} día" . ($remainingDays > 1 ? 's' : '');
         }
-
-
         return $text;
     }
 
