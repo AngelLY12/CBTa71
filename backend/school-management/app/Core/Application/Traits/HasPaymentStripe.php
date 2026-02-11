@@ -59,17 +59,23 @@ trait HasPaymentStripe
             ];
         }
 
-        if ($type === 'customer_balance' && isset($details->customer_balance)) {
-            $bank = $details->customer_balance->bank_transfer ?? null;
+        if ($type === 'customer_balance') {
+            if(isset($details->customer_balance))
+            {
+                $bank = $details->customer_balance->bank_transfer ?? null;
 
-            if ($bank && ($bank->type ?? null) === 'mx_bank_transfer') {
-                return [
-                    'type' => 'spei',
-                    'bank_name' => $bank->bank_name ?? null,
-                    'clabe' => $bank->clabe ?? null,
-                    'reference' => $bank->reference ?? null,
-                ];
+                if ($bank && ($bank->type ?? null) === 'mx_bank_transfer') {
+                    return [
+                        'type' => 'spei',
+                        'bank_name' => $bank->bank_name ?? null,
+                        'clabe' => $bank->clabe ?? null,
+                        'reference' => $bank->reference ?? null,
+                    ];
+                }
             }
+            return [
+                'type' => 'spei',
+            ];
         }
 
         return [

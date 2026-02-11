@@ -40,7 +40,7 @@ class RequiresActionMail extends Mailable
             ->divide('100')
             ->finalize();
 
-        if (isset($this->data->payment_method_options['oxxo'])) {
+        if ($this->data->next_action['type'] === 'oxxo') {
             return new Content(
                 view: 'emails.payments.requires-action',
                 with: [
@@ -49,9 +49,9 @@ class RequiresActionMail extends Mailable
                     'messageIntro'   => 'Para completar tu pago, acude a cualquier tienda OXXO y presenta el código de referencia en el voucher:',
                     'amount'         => $amount,
                     'paymentMethod'  => 'oxxo',
-                    'reference'      => $this->data->next_action['oxxo_display_details']['number'],
-                    'url'            => $this->data->next_action['oxxo_display_details']['hosted_voucher_url'],
-                    'expirationDays' => $this->data->payment_method_options['oxxo']['expires_after_days'],
+                    'reference'      => $this->data->next_action['reference'],
+                    'url'            => $this->data->next_action['url'],
+                    'expirationDays' => $this->data->payment_method_options['expires_after_days'] ?? null,
                 ]
             );
         }
@@ -64,8 +64,8 @@ class RequiresActionMail extends Mailable
                 'messageIntro'  => 'Para completar tu pago, realiza una transferencia bancaria utilizando los siguientes datos:',
                 'amount'        => $amount,
                 'paymentMethod' => 'bank_transfer',
-                'reference'     => $this->data->next_action['display_bank_transfer_instructions']['reference'],
-                'url'           => $this->data->next_action['display_bank_transfer_instructions']['hosted_instructions_url'],
+                'reference'     => $this->data->next_action['reference'],
+                'url'           => $this->data->next_action['url'],
                 'expirationDays' => null,
             ]
         );

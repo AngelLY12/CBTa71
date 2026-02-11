@@ -81,15 +81,34 @@ class RequiresActionUseCase
 
     private function prepareDataForEmail(User $user, $obj, $nextAction): array
     {
-        return
-            [
-                'recipientName' => $user->fullName(),
-                'recipientEmail' => $user->email,
-                'amount' => $obj->amount,
-                'next_action' => $nextAction,
-                'payment_method_options' => $obj->payment_method_options,
-            ];
+        $data = [
+            'recipientName' => $user->fullName(),
+            'recipientEmail' => $user->email,
+            'amount' => $obj->amount,
 
+        ];
+        if (isset($nextAction->oxxo_display_details)) {
+            $data['next_action'] = [
+                'type' => 'oxxo',
+                'reference' => $nextAction->oxxo_display_details->number,
+                'url' => $nextAction->oxxo_display_details->hosted_voucher_url,
+            ];
+            $data['payment_method_options'] = [
+                'expires_after_days' => $obj->payment_method_options->oxxo->expires_after_days ?? null
+            ];
+        }
+
+        if (isset($nextAction->display_bank_transfer_instructions)) {
+            $data['next_action'] = [
+                'type' => 'spei',
+                'reference' => $nextAction->display_bank_transfer_instructions->reference,
+                'url' => $nextAction->display_bank_transfer_instructions->hosted_instructions_url,
+            ];
+            $data['payment_method_options'] = [
+                'expires_after_days' => null
+            ];
+        }
+        return $data;
     }
 
     private function sendRequiresActionMail(array $data, User $user, string $eventId): void

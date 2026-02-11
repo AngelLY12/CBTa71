@@ -10,6 +10,7 @@ use App\Core\Application\DTO\Request\Mail\PaymentValidatedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\RequiresActionEmailDTO;
 use App\Core\Application\DTO\Request\Mail\SendParentInviteEmailDTO;
 use App\Core\Domain\Entities\Payment;
+use App\Core\Domain\Utils\Helpers\Money;
 use Carbon\Carbon;
 
 class MailMapper
@@ -66,8 +67,8 @@ class MailMapper
 
     public static function toRequiresActionEmailDTO(array $data): RequiresActionEmailDTO
     {
-        $nextAction = json_decode(json_encode($data['next_action']), true);
-        $methodOptions = json_decode(json_encode($data['payment_method_options']), true);
+        $nextAction = $data['next_action'];
+        $methodOptions = $data['payment_method_options'];
         return new RequiresActionEmailDTO(
             recipientName: $data['recipientName'],
             recipientEmail: $data['recipientEmail'],
