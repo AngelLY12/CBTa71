@@ -67,8 +67,9 @@ class PendingPaymentController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
+        $targetUser = $user->resolveTargetUser();
         $payment= $this->pendingPaymentService->payConcept(
-            UserMapper::toDomain($user),
+            UserMapper::toDomain($targetUser),
             $request->validated()['concept_id']
         );
         return Response::success(
