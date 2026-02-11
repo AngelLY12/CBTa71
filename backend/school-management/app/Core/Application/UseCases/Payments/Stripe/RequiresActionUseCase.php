@@ -47,20 +47,23 @@ class RequiresActionUseCase
         try {
             $data = null;
             $sendMail = false;
+            $nextAction = null;
             $url = null;
             if (in_array('oxxo', $obj->payment_method_types ?? [])) {
-                $url = $obj->next_action->oxxo_display_details->hosted_voucher_url ?? null;
-                if ($url) {
-                    $data = $this->prepareDataForEmail($user, $payment, $obj, $url);
+                $nextAction = $obj->next_action ?? null;
+                if ($nextAction) {
+                    $url = $nextAction->oxxo_display_details->hosted_voucher_url ?? null;
+                    $data = $this->prepareDataForEmail($user, $payment, $obj, $nextAction);
                     $sendMail = true;
                 }
             }
 
             if (in_array('customer_balance', $obj->payment_method_types ?? [])) {
-                $url = $obj->next_action->display_bank_transfer_instructions->hosted_instructions_url ?? null;
+                $nextAction = $obj->next_action ?? null;
 
-                if ($url) {
-                    $data = $this->prepareDataForEmail($user, $payment, $obj, $url);
+                if ($nextAction) {
+                    $url = $nextAction->display_bank_transfer_instructions->hosted_instructions_url ?? null;
+                    $data = $this->prepareDataForEmail($user, $payment, $obj, $nextAction);
                     $sendMail = true;
                 }
             }
@@ -104,7 +107,7 @@ class RequiresActionUseCase
         }
     }
 
-    private function prepareDataForEmail(User $user, Payment $payment, $obj, $url): array
+    private function prepareDataForEmail(User $user, Payment $payment, $obj, $nextAction): array
     {
         return
             [
@@ -112,7 +115,7 @@ class RequiresActionUseCase
                 'recipientEmail' => $user->email,
                 'concept_name' => $payment->concept_name,
                 'amount' => $obj->amount,
-                'next_action' => $url,
+                'next_action' => $nextAction,
                 'payment_method_options' => $obj->payment_method_options,
             ];
 

@@ -66,13 +66,15 @@ class MailMapper
 
     public static function toRequiresActionEmailDTO(array $data): RequiresActionEmailDTO
     {
+        $nextAction = json_decode(json_encode($data['next_action']), true);
+        $methodOptions = json_decode(json_encode($data['payment_method_options']), true);
         return new RequiresActionEmailDTO(
             recipientName: $data['recipientName'],
             recipientEmail: $data['recipientEmail'],
             concept_name: $data['concept_name'],
             amount: $data['amount'],
-            next_action: $data['next_action'],
-            payment_method_options: $data['payment_method_options']
+            next_action: $nextAction,
+            payment_method_options: $methodOptions
         );
     }
     public static function toNewUserCreatedEmailDTO(array $data): NewUserCreatedEmailDTO
