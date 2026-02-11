@@ -158,7 +158,7 @@ class StorePaymentConceptRequest extends FormRequest
                 'required_if:applies_to,tag',
                 'prohibited_unless:applies_to,tag',
             ],
-            'applicantTags.*' => Rule::enum(PaymentConceptApplicantTag::class),
+            'applicantTags.*' => Rule::enum(PaymentConceptApplicantType::class),
         ];
     }
 

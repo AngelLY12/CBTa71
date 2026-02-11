@@ -7,7 +7,6 @@ class RequiresActionEmailDTO
     public function __construct(
         public readonly string $recipientName,
         public readonly string $recipientEmail,
-        public readonly string $concept_name,
         public readonly string $amount,
         public readonly array $next_action,
         public readonly array $payment_method_options

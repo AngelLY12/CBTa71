@@ -71,7 +71,6 @@ class MailMapper
         return new RequiresActionEmailDTO(
             recipientName: $data['recipientName'],
             recipientEmail: $data['recipientEmail'],
-            concept_name: $data['concept_name'],
             amount: $data['amount'],
             next_action: $nextAction,
             payment_method_options: $methodOptions

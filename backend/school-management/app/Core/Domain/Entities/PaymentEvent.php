@@ -79,7 +79,7 @@ class PaymentEvent
     }
 
     public static function createEmailEvent(
-        int $paymentId,
+        ?int $paymentId,
         string $eventId,
         ?string $paymentIntentId,
         ?string $sessionId,
