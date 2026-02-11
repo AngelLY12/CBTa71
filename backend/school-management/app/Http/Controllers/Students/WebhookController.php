@@ -26,8 +26,16 @@ class WebhookController extends Controller
         $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
         $endpointSecret = config('services.stripe.webhook');
-        logger()->info("Payload: ".$payload);
-        logger()->info("Signature: ".$sigHeader);
+        logger()->info("Webhook Secret being used: " . substr($endpointSecret, 0, 10) . '...');
+        if (empty($payload)) {
+            logger()->error('Webhook received empty payload');
+            return Response::error('Empty payload', 400);
+        }
+
+        if (empty($sigHeader)) {
+            logger()->error('Webhook received no signature header');
+            return Response::error('No signature header', 400);
+        }
         try {
             $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
             $obj = $event->data->object;
@@ -105,6 +113,14 @@ class WebhookController extends Controller
 
         }
         catch (SignatureVerificationException $e) {
+            logger()->error('Firma inválida - Detalles:', [
+                'secret_prefix' => substr($endpointSecret, 0, 10),
+                'signature_prefix' => substr($sigHeader, 0, 20),
+                'payload_length' => strlen($payload),
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'headers' => $request->headers->all(),
+            ]);
             return Response::error('Firma inválida', 400);
 
         }catch (\Exception $e) {
