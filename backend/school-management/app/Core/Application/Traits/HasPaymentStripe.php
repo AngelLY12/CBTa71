@@ -36,7 +36,13 @@ trait HasPaymentStripe
     }
     public function formatPaymentMethodDetails($details): array
     {
-        if ($details->type === 'card' && isset($details->card)) {
+        if (!$details) {
+            return [];
+        }
+
+        $type = $details->type ?? null;
+
+        if ($type === 'card' && isset($details->card)) {
             return [
                 'type' => $details->type,
                 'brand' => $details->card->brand,
@@ -45,7 +51,30 @@ trait HasPaymentStripe
             ];
         }
 
-        return (array) $details;
+        if ($type === 'oxxo' && isset($details->oxxo)) {
+            return [
+                'type' => 'oxxo',
+                'reference' => $details->oxxo->number ?? null,
+                'expires_after' => $details->oxxo->expires_after ?? null,
+            ];
+        }
+
+        if ($type === 'customer_balance' && isset($details->customer_balance)) {
+            $bank = $details->customer_balance->bank_transfer ?? null;
+
+            if ($bank && ($bank->type ?? null) === 'mx_bank_transfer') {
+                return [
+                    'type' => 'spei',
+                    'bank_name' => $bank->bank_name ?? null,
+                    'clabe' => $bank->clabe ?? null,
+                    'reference' => $bank->reference ?? null,
+                ];
+            }
+        }
+
+        return [
+            'type' => $type,
+        ];
     }
 
     public function verifyStatus($pi, Money $received, Money $expected): PaymentStatus
