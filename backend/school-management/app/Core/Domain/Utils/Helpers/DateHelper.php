@@ -34,19 +34,6 @@ class DateHelper
 
     public static function expiredText(Carbon $date): string
     {
-        $now = self::now();
-        $seconds = $date->copy()->endOfDay()->diffInSeconds($now);
-
-        if ($seconds < 3600) {
-            $minutes = max(1, floor($seconds / 60));
-            return "Expirado hace {$minutes} minuto" . ($minutes > 1 ? 's' : '');
-        }
-
-        if ($seconds < 86400) {
-            $hours = floor($seconds / 3600);
-            return "Expirado hace {$hours} hora" . ($hours > 1 ? 's' : '');
-        }
-
         $days = self::today()->diffInDays($date->copy()->startOfDay(), false);
         $days = abs($days);
 
