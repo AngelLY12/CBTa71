@@ -33,10 +33,11 @@
     </p>
 
     <p>
-        Si no solicitaste restablecer la contraseña, puedes ignorar este mensaje.
     </p>
 @endsection
 
 @section('message_footer')
+    Si no solicitaste restablecer la contraseña, puedes ignorar este mensaje.
+    <br>
     Este enlace expirará en 60 minutos.
 @endsection

@@ -83,42 +83,135 @@
         <div style="margin:0 auto 18px auto; text-align:center;">
 
             <div style="
-                width:90px;
-                height:90px;
+                width:100px;
+                height:100px;
                 border-radius:50%;
                 margin:0 auto 12px auto;
-                background: radial-gradient(circle at 30% 30%, #6fd1a0, #0a3d3a 70%);
-                border:5px solid #d7e6df;
-                box-shadow:0 4px 12px rgba(0,0,0,.25);
+                background: radial-gradient(circle at 30% 30%, #1f5e4c, #0a2e2a 90%);
+                border:5px solid #bfd8d1;
+                box-shadow:0 6px 14px rgba(0,0,0,0.4);
                 display:flex;
                 align-items:center;
                 justify-content:center;
-                font-family:Arial, Helvetica, sans-serif;
+                position:relative;
                 color:white;
-                font-weight:bold;
-                font-size:20px;
-                letter-spacing:1px;
+                font-size:38px;
             ">
-                CBTA
+                <div style="position:absolute; width:90px; height:90px; border-radius:50%; border:2px dashed rgba(255,255,255,0.6); top:0; left:0; right:0; bottom:0; margin:auto;"></div>
+
+                <div style="position:absolute; width:76px; height:76px; border-radius:50%; border:2px solid rgba(215,230,223,0.9); top:0; left:0; right:0; bottom:0; margin:auto;"></div>
+
+                <div style="position:absolute; width:62px; height:62px; border-radius:50%; background:rgba(15,55,50,0.8); border:2px solid #aac9bf; top:0; left:0; right:0; bottom:0; margin:auto;"></div>
+
+                <div style="
+                    position:absolute;
+                    width:26px;
+                    height:34px;
+                    bottom:30px;
+                    left:0;
+                    right:0;
+                    margin:auto;
+                ">
+
+                    <div style="
+                        position:absolute;
+                        left:-8px;
+                        bottom:8px;
+                        width:12px;
+                        height:18px;
+                        background:linear-gradient(180deg,#49a98d,#2d7f6b);
+                        border:2px solid #cfe6df;
+                        border-right:none;
+                        border-radius:10px 10px 6px 10px;
+                    "></div>
+
+                    <div style="
+                        position:absolute;
+                        right:-8px;
+                        bottom:10px;
+                        width:12px;
+                        height:20px;
+                        background:linear-gradient(180deg,#49a98d,#2d7f6b);
+                        border:2px solid #cfe6df;
+                        border-left:none;
+                        border-radius:10px 10px 10px 6px;
+                    "></div>
+
+                    <div style="
+                        position:absolute;
+                        bottom:0;
+                        left:0;
+                        right:0;
+                        margin:auto;
+                        width:18px;
+                        height:34px;
+                        background:linear-gradient(180deg,#5ec2a3,#2d7f6b);
+                        border:2px solid #e2f1ec;
+                        border-radius:12px 12px 8px 8px;
+                        box-shadow:
+                            inset 0 0 6px rgba(0,0,0,0.25),
+                            0 2px 3px rgba(0,0,0,0.35);
+                    "></div>
+
+                    <div style="
+                        position:absolute;
+                        bottom:3px;
+                        left:0;
+                        right:0;
+                        margin:auto;
+                        width:2px;
+                        height:28px;
+                        background:rgba(255,255,255,0.35);
+                        border-radius:2px;
+                        box-shadow:
+                            -5px 0 0 rgba(255,255,255,0.18),
+                             5px 0 0 rgba(255,255,255,0.18);
+                    "></div>
+
+                </div>
+
+                <div style="
+                    position: absolute;
+                    top: 35px;
+                    right: 32px;
+                    width: 6px;
+                    height: 6px;
+                    background: #ffb347;
+                    border-radius: 50%;
+                    box-shadow: 0 0 0 2px rgba(255, 180, 70, 0.3);
+                "></div>
             </div>
 
+
+            <div style="
+                font-family: Arial, Helvetica, sans-serif;
+                font-size:16px;
+                font-weight:800;
+                letter-spacing:2px;
+                color:#e3fff5;
+                text-transform:uppercase;
+                text-shadow: 1px 1px 0 #0a2e2a;
+                margin-top:6px;
+            ">
+                CBTA No. 71 TLALNEPANTLA
+            </div>
+
+            <!-- Localidad: Morelos, con estilo más destacado -->
             <div style="
                 font-family: Arial, Helvetica, sans-serif;
                 font-size:14px;
-                font-weight:700;
-                letter-spacing:1.5px;
-                color:#e8fff5;
+                font-weight:600;
+                color:#d4f0e6;
+                margin-top:4px;
+                letter-spacing:2.5px;
+                text-transform:uppercase;
+                border-top:1px solid #6f9e92;
+                display:inline-block;
+                padding-top:5px;
+                padding-left:12px;
+                padding-right:12px;
             ">
-                No. 71 TLALNEPANTLA
-            </div>
-
-            <div style="
-                font-family: Arial, Helvetica, sans-serif;
-                font-size:12px;
-                color:#c7efe0;
-                margin-top:2px;
-            ">
-                Morelos
+                MORELOS
             </div>
 
         </div>

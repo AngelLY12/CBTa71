@@ -25,16 +25,29 @@
     </p>
 
     <p>
-        <a href="{{ $acceptUrl }}" target="_blank">
+        <a href="{{ $acceptUrl }}" target="_blank"
+           style="
+            background-color:#2e7d5b;
+            color:#ffffff;
+            padding:14px 26px;
+            text-decoration:none;
+            font-weight:bold;
+            border-radius:6px;
+            display:inline-block;
+            font-family:Arial, Helvetica, sans-serif;
+            font-size:16px;
+            "
+        >
             Aceptar invitación
         </a>
     </p>
 
     <p>
-        Si no reconoces esta invitación, puedes ignorar este mensaje.
     </p>
 @endsection
 
 @section('message_footer')
+    Si no reconoces esta invitación, puedes ignorar este mensaje.
+    <br>
     Este enlace expirará en 48 horas por seguridad.
 @endsection
