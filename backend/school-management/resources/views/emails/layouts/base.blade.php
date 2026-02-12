@@ -80,6 +80,49 @@
 <body>
 <div class="container">
     <div class="header" style="background: linear-gradient(90deg, #4CA771, #013237); text-align: center; padding: 30px 20px; color: #fff;">
+        <div style="margin:0 auto 18px auto; text-align:center;">
+
+            <div style="
+                width:90px;
+                height:90px;
+                border-radius:50%;
+                margin:0 auto 12px auto;
+                background: radial-gradient(circle at 30% 30%, #6fd1a0, #0a3d3a 70%);
+                border:5px solid #d7e6df;
+                box-shadow:0 4px 12px rgba(0,0,0,.25);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                font-family:Arial, Helvetica, sans-serif;
+                color:white;
+                font-weight:bold;
+                font-size:20px;
+                letter-spacing:1px;
+            ">
+                CBTA
+            </div>
+
+            <div style="
+                font-family: Arial, Helvetica, sans-serif;
+                font-size:14px;
+                font-weight:700;
+                letter-spacing:1.5px;
+                color:#e8fff5;
+            ">
+                No. 71 TLALNEPANTLA
+            </div>
+
+            <div style="
+                font-family: Arial, Helvetica, sans-serif;
+                font-size:12px;
+                color:#c7efe0;
+                margin-top:2px;
+            ">
+                Morelos
+            </div>
+
+        </div>
+
         <h1 style="margin: 0; font-size: 26px; font-weight: 700; line-height: 1.2;">
             @yield('header_title')
         </h1>

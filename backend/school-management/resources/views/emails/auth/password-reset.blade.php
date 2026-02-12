@@ -7,7 +7,7 @@
 @endsection
 
 @section('greeting')
-    Hola {{ $user->name . $user->last_name }}
+    Hola {{ $user->name . ' ' .$user->last_name }}
 @endsection
 
 @section('message_intro')
@@ -16,13 +16,24 @@
 
 @section('message_details')
     <p>
-        <a href="{{ $resetUrl }}" target="_blank">
-            Restablecer contraseña
+        <a href="{{ $resetUrl }}" target="_blank"
+           style="
+            background-color:#2e7d5b;
+            color:#ffffff;
+            padding:14px 26px;
+            text-decoration:none;
+            font-weight:bold;
+            border-radius:6px;
+            display:inline-block;
+            font-family:Arial, Helvetica, sans-serif;
+            font-size:16px;
+           ">
+            Restablecer mi contraseña
         </a>
     </p>
 
     <p>
-        Si no solicitaste restablecer la contraseña, ignora este mensaje.
+        Si no solicitaste restablecer la contraseña, puedes ignorar este mensaje.
     </p>
 @endsection
 
