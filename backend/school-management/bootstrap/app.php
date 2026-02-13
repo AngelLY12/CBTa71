@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->use([
+            \App\Http\Middleware\HandleStaticRequests::class,
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 

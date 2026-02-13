@@ -82,12 +82,6 @@
     <div class="header" style="background: linear-gradient(90deg, #4CA771, #013237); text-align: center; padding: 30px 20px; color: #fff;">
         <div style="margin:0 auto 18px auto; text-align:center;">
 
-           <img src="{{url('logo_minimal.png')}}"
-                width="96"
-                alt="CBTA 71"
-                style="display:block; margin:0 auto 14px auto;">
-
-
             <div style="
                 font-family: Arial, Helvetica, sans-serif;
                 font-size:16px;
