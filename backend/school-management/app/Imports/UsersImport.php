@@ -14,7 +14,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class UsersImport implements ToCollection, WithEvents, WithChunkReading
+class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkReading
 {
     protected AdminUsersServiceFacades $adminService;
     protected User $user;

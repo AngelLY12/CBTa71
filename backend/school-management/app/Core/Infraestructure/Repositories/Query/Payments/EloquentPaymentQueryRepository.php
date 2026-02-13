@@ -14,6 +14,7 @@ use Generator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
@@ -35,7 +36,8 @@ class EloquentPaymentQueryRepository implements PaymentQueryRepInterface
 
     public function findByIdToDisplay(int $id): ?PaymentToDisplay
     {
-        $payment = EloquentPayment::find($id);
+        $userId = Auth::id();
+        $payment = EloquentPayment::where('id',$id)->where('user_id',$userId)->first();
         if(empty($payment)) return null;
         return MappersPaymentMapper::toPaymentToDisplay($payment);
     }

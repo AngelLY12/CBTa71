@@ -42,6 +42,11 @@ class Payment extends Model
         return $this->hasMany(PaymentEvent::class);
     }
 
+    public function receipt()
+    {
+        return $this->hasOne(Receipt::class);
+    }
+
 
     public function toDomain(): \App\Core\Domain\Entities\Payment
     {

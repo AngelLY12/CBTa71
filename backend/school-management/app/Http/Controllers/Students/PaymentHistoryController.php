@@ -7,8 +7,10 @@ use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\General\PaginationRequest;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @OA\Tag(
@@ -50,6 +52,21 @@ class PaymentHistoryController extends Controller
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $payment=$this->paymentHistoryService->findPayment($id, $forceRefresh);
         return Response::success(['payment' => $payment], 'Pago encontrado.');
+
+    }
+
+    public function receiptPDF(int $paymentId)
+    {
+        $file = $this->paymentHistoryService->receiptFromPayment($paymentId);
+        return Storage::disk('gcs')->download(
+            $file['path'],
+            $file['filename'],
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$file['filename'].'"',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]
+        );
 
     }
 }

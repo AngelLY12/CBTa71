@@ -16,7 +16,7 @@ use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 
-class StudentDetailsImport implements ToCollection, WithEvents, WithChunkReading
+class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, WithChunkReading
 {
     protected AdminStudentServiceFacades $adminService;
     protected User $user;

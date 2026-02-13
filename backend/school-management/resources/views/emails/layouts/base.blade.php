@@ -95,7 +95,6 @@
                 CBTA No. 71 TLALNEPANTLA
             </div>
 
-            <!-- Localidad: Morelos, con estilo más destacado -->
             <div style="
                 font-family: Arial, Helvetica, sans-serif;
                 font-size:14px;

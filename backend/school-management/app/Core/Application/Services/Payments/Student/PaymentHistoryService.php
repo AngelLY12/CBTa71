@@ -5,6 +5,7 @@ use App\Core\Application\DTO\Response\General\PaginatedResponse;
 use App\Core\Application\DTO\Response\Payment\PaymentToDisplay;
 use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Payments\Student\PaymentHistory\FindPaymentByIdUseCase;
+use App\Core\Application\UseCases\Payments\Student\PaymentHistory\GenerateReceiptFromPaymentUseCase;
 use App\Core\Application\UseCases\Payments\Student\PaymentHistory\GetPaymentHistoryUseCase;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Entities\User;
@@ -18,6 +19,7 @@ class PaymentHistoryService {
     public function __construct(
         private GetPaymentHistoryUseCase $history,
         private FindPaymentByIdUseCase $payment,
+        private GenerateReceiptFromPaymentUseCase $generateReceipt,
         private CacheService $service
     ) {
         $this->setCacheService($service);
@@ -48,6 +50,20 @@ class PaymentHistoryService {
         );
         $tags = array_merge(self::TAG_PAYMENTS_HISTORY, ["paymentId:$id"]);
         return $this->mediumCache($key, fn() => $this->payment->execute($id),$tags,$forceRefresh);
+    }
+
+    public function receiptFromPayment(int $paymentId): array
+    {
+        return $this->idempotent(
+            'create_or_get_receipt',
+            [
+                'paymentId' => $paymentId,
+            ],
+            function () use ($paymentId) {
+                return $this->generateReceipt->execute($paymentId);
+            }
+        );
+
     }
 
 }

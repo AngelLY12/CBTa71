@@ -49,14 +49,18 @@ class AdminUsersController extends Controller
 
     public function import(ImportRequest $request)
     {
-        $file= $request->file('file');
+        try {
+            $file= $request->file('file')->store('imports','gcs');
+        }catch (\Exception $e){
+            return Response::error('No se pudo subir el archivo: ' . $e->getMessage());
+        }
         $import = new UsersImport(
             $this->service,
             Auth::user(),
         );
 
-        Excel::import($import,$file);
-        return Response::success(["result" => $import->getResult()], 'Usuarios procesandose, se te notificara cuando termine.');
+        Excel::queueImport($import,$file,'gcs')->onQueue('imports');
+        return Response::success(null, 'Usuarios procesandose, se te notificara cuando termine.');
 
     }
 

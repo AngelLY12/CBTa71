@@ -42,7 +42,14 @@ enum PaymentStatus: string
             self::OVERPAID->value,
             self::FAILED->value,
         ];
+    }
 
+    public static function receivedStatuses(): array
+    {
+        return [
+            self::SUCCEEDED->value,
+            self::OVERPAID->value,
+        ];
     }
 
     public static function nonTerminalStatuses(): array
