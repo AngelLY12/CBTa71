@@ -12095,6 +12095,10 @@
                         "type": "string",
                         "example": "1500.00"
                     },
+                    "applies_to": {
+                        "type": "string",
+                        "example": "todos"
+                    },
                     "description": {
                         "type": "string",
                         "example": "Pago correspondiente al semestre 2025A",
@@ -15764,6 +15768,10 @@
                     "status": {
                         "type": "string",
                         "example": "active"
+                    },
+                    "applies_to": {
+                        "type": "string",
+                        "example": "todos"
                     },
                     "expiration_human": {
                         "description": "Texto humano que indica estado de expiración",

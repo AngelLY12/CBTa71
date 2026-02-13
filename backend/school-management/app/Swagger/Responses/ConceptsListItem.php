@@ -11,6 +11,7 @@ namespace App\Swagger\Responses;
  *     @OA\Property(property="concept_name", type="string", example="Pago de inscripción"),
  *     @OA\Property(property="amount", type="string", example="1,500.00"),
  *     @OA\Property(property="status", type="string", example="active"),
+ *     @OA\Property(property="applies_to", type="string", example="todos"),
  *     @OA\Property(
  *         property="expiration_human",
  *         type="string",
