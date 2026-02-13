@@ -42,6 +42,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'concept_name',
                 'description',
                 'amount',
+                'applies_to',
                 'status',
                 'start_date',
                 'end_date',
@@ -84,7 +85,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
 
     public function getPendingPaymentConceptsWithDetails(User $user): array
     {
-        $rows= $this->basePendingPaymentConcept($user)
+        $rows = $this->basePendingPaymentConcept($user)
             ->select(
                 [
                     'payment_concepts.id',
@@ -144,7 +145,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     public function findAllConcepts(string $status, int $perPage, int $page): LengthAwarePaginator
     {
         $query = EloquentPaymentConcept::query()
-            ->select(['id','concept_name','status','end_date','amount', 'mark_as_deleted_at'])
+            ->select(['id','concept_name','status', 'applies_to','end_date','amount', 'mark_as_deleted_at'])
             ->latest('created_at');
 
         if ($status !== 'todos') {
@@ -159,6 +160,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'concept_name' => $concept->concept_name,
                 'amount' => $concept->amount,
                 'status' => $concept->status->value,
+                'applies_to' => $concept->applies_to->value,
                 'expiration_human' => $concept->end_date
                     ? DateHelper::expirationToHuman($concept->end_date, $concept->status->value ?? null)
                     : null,

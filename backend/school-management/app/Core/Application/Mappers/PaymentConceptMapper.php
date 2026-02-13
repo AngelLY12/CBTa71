@@ -52,6 +52,7 @@ class PaymentConceptMapper{
             status: $concept->status->value,
             start_date: $concept->start_date->toDateString(),
             amount: $concept->amount,
+            applies_to: $concept->applies_to->value,
             created_at_human: $concept->created_at->diffForHumans(),
             updated_at_human: $concept->updated_at->diffForHumans(),
             expiration_info: DateHelper::expirationInfo($endDate, $concept->status->value),
