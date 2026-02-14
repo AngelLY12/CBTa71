@@ -274,3 +274,39 @@ Route::delete('/gcs/clean', function () {
         ], 500);
     }
 });
+
+Route::get('/gcs-diagnostico', function () {
+    $result = [
+        'config' => [
+            'bucket' => config('filesystems.disks.gcs.bucket'),
+            'project_id' => config('filesystems.disks.gcs.project_id'),
+            'client_email' => config('filesystems.disks.gcs.key_file.client_email'),
+            'has_private_key' => !empty(config('filesystems.disks.gcs.key_file.private_key')),
+        ],
+        'tests' => []
+    ];
+
+    // Test 1: Listar buckets (requiere permisos adicionales)
+    try {
+        $storage = new \Google\Cloud\Storage\StorageClient([
+            'projectId' => config('filesystems.disks.gcs.project_id'),
+            'keyFile' => config('filesystems.disks.gcs.key_file')
+        ]);
+
+        $buckets = $storage->buckets();
+        $result['tests']['list_buckets'] = '✅ Conexión exitosa';
+    } catch (\Exception $e) {
+        $result['tests']['list_buckets'] = '❌ Error: ' . $e->getMessage();
+    }
+
+    // Test 2: Verificar bucket específico
+    try {
+        $disk = Storage::disk('gcs');
+        $files = $disk->files('/');
+        $result['tests']['list_files'] = '✅ Bucket accesible, archivos: ' . count($files);
+    } catch (\Exception $e) {
+        $result['tests']['list_files'] = '❌ Error: ' . $e->getMessage();
+    }
+
+    return response()->json($result);
+});
