@@ -10,7 +10,8 @@ class ReceiptPdfService
 {
     public function generate(Receipt $receipt): string
     {
-        if ($receipt->file_path) {
+        $disk = Storage::disk('gcs');
+        if ($receipt->file_path && $disk->exists($receipt->file_path)) {
             return $receipt->file_path;
         }
 
@@ -20,11 +21,15 @@ class ReceiptPdfService
 
         $path = "receipts/". $receipt->issued_at->format('Y/m')."/{$receipt->folio}.pdf";
 
-        Storage::disk('gcs')->put($path, $pdf->output());
+        $result=$disk->put($path, $pdf->output());
 
-        $receipt->update([
-            'file_path' => $path
-        ]);
+        if (!$result || !$disk->exists($path)) {
+            throw new \Exception("No se pudo guardar el archivo ");
+        }
+
+        if ($receipt->file_path !== $path) {
+            $receipt->update(['file_path' => $path]);
+        }
 
         return $path;
     }
