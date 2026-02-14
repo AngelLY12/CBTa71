@@ -9,6 +9,7 @@ use App\Http\Requests\General\ForceRefreshRequest;
 use App\Http\Requests\General\PaginationRequest;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 
@@ -58,6 +59,32 @@ class PaymentHistoryController extends Controller
     public function receiptPDF(int $paymentId)
     {
         $file = $this->paymentHistoryService->receiptFromPayment($paymentId);
+
+        Log::info('DEBUG - receiptPDF', [
+            'paymentId' => $paymentId,
+            'path_del_service' => $file['path'],
+            'filename' => $file['filename'],
+            'path_completa' => $file['path'],
+            'existe? (check manual)' => Storage::disk('gcs')->exists($file['path'])
+        ]);
+
+        if (!Storage::disk('gcs')->exists($file['path'])) {
+            $directory = dirname($file['path']);
+            $files = Storage::disk('gcs')->files($directory);
+
+            Log::error('ARCHIVO NO ENCONTRADO', [
+                'path_buscado' => $file['path'],
+                'directorio' => $directory,
+                'archivos_disponibles' => $files
+            ]);
+
+            return response()->json([
+                'error' => 'Archivo no encontrado',
+                'path_buscado' => $file['path'],
+                'archivos_en_directorio' => $files
+            ], 404);
+        }
+
         return Storage::disk('gcs')->download(
             $file['path'],
             $file['filename'],
@@ -67,6 +94,5 @@ class PaymentHistoryController extends Controller
                 'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             ]
         );
-
     }
 }

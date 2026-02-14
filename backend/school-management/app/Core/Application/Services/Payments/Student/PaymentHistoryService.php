@@ -63,7 +63,6 @@ class PaymentHistoryService {
                 return $this->generateReceipt->execute($paymentId);
             }
         );
-
     }
 
 }

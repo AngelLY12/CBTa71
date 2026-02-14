@@ -11,8 +11,6 @@ use App\Http\Controllers\Staff\ConceptsController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\DebtsController;
 use App\Http\Controllers\Staff\PaymentsController;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Students\DashboardController;
 use App\Http\Controllers\Students\CardsController;
 use App\Http\Controllers\Students\PaymentHistoryController;
@@ -23,12 +21,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Response;
 use App\Core\Domain\Enum\Exceptions\ErrorCode;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
-//Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-//    return $request->user();
-//});
+
 Route::get('/health', function () {
     return Response::success(null, 'Endpoint health success');
 
@@ -202,164 +196,4 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
 
 Route::fallback(function () {
     return Response::error('Método no existente', 400, null, ErrorCode::BAD_REQUEST->value);
-});
-
-
-Route::post('/gcs', function (Request $request) {
-    try {
-        $disk = Storage::disk('gcs');
-
-        // Verificar que el bucket existe y es accesible
-        try {
-            $files = $disk->files(); // Intenta listar archivos
-            Log::info('Bucket files listing successful', ['count' => count($files)]);
-        } catch (\Exception $e) {
-            Log::error('Error listing bucket files', ['error' => $e->getMessage()]);
-            throw $e;
-        }
-
-        // 1. Probar escritura con más detalles
-        $testFileName = 'test-' . time() . '.txt';
-        $content = 'Prueba de conexión GCS - ' . now();
-
-        Log::info('Attempting to write file', [
-            'filename' => $testFileName,
-            'content_length' => strlen($content),
-            'disk' => 'gcs'
-        ]);
-
-        $result = $disk->put($testFileName, $content);
-
-        Log::info('Put operation result', ['result' => $result]);
-
-        // 2. Verificar que existe
-        $exists = $disk->exists($testFileName);
-        Log::info('File exists check', ['exists' => $exists]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Conexión a GCS exitosa',
-            'data' => [
-                'file_created' => $testFileName,
-                'exists' => $exists,
-                'write_result' => $result,
-                // ... resto de datos
-            ]
-        ]);
-
-    } catch (\Exception $e) {
-       Log::error('GCS Error Details', [
-            'message' => $e->getMessage(),
-            'code' => $e->getCode(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'trace' => $e->getTraceAsString()
-        ]);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al conectar con GCS',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
-
-Route::delete('/gcs/clean', function () {
-    try {
-        $disk = Storage::disk('gcs');
-        $files = $disk->files('/');
-
-        // Eliminar solo archivos de prueba (los que empiezan con 'test-')
-        $deleted = [];
-        foreach ($files as $file) {
-            if (str_starts_with($file, 'test-')) {
-                $disk->delete($file);
-                $deleted[] = $file;
-            }
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Archivos de prueba eliminados',
-            'deleted_files' => $deleted
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
-
-Route::get('/gcs-diagnostico', function () {
-    $result = [
-        'config' => [
-            'bucket' => config('filesystems.disks.gcs.bucket'),
-            'project_id' => config('filesystems.disks.gcs.project_id'),
-            'client_email' => config('filesystems.disks.gcs.key_file.client_email'),
-            'has_private_key' => !empty(config('filesystems.disks.gcs.key_file.private_key')),
-        ],
-        'tests' => []
-    ];
-
-    // Test 1: Listar buckets (requiere permisos adicionales)
-    try {
-        $storage = new \Google\Cloud\Storage\StorageClient([
-            'projectId' => config('filesystems.disks.gcs.project_id'),
-            'keyFile' => config('filesystems.disks.gcs.key_file')
-        ]);
-
-        $buckets = $storage->buckets();
-        $result['tests']['list_buckets'] = '✅ Conexión exitosa';
-    } catch (\Exception $e) {
-        $result['tests']['list_buckets'] = '❌ Error: ' . $e->getMessage();
-    }
-
-    // Test 2: Verificar bucket específico
-    try {
-        $disk = Storage::disk('gcs');
-        $files = $disk->files('/');
-        $result['tests']['list_files'] = '✅ Bucket accesible, archivos: ' . count($files);
-    } catch (\Exception $e) {
-        $result['tests']['list_files'] = '❌ Error: ' . $e->getMessage();
-    }
-
-    return response()->json($result);
-});
-
-
-Route::post('/gcs-direct', function (Request $request) {
-    try {
-        // Usar el cliente directamente para mejor debugging
-        $storage = new \Google\Cloud\Storage\StorageClient([
-            'projectId' => config('filesystems.disks.gcs.project_id'),
-            'keyFilePath' => config('filesystems.disks.gcs.key_file')
-        ]);
-
-        $bucket = $storage->bucket(config('filesystems.disks.gcs.bucket'));
-
-        // Intentar escribir directamente
-        $testFileName = 'test-direct-' . time() . '.txt';
-        $object = $bucket->upload('Prueba directa - ' . now(), [
-            'name' => $testFileName
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Escritura directa exitosa',
-            'data' => [
-                'file' => $testFileName,
-                'exists' => $object->exists(),
-                'info' => $object->info()
-            ]
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'code' => $e->getCode()
-        ], 500);
-    }
 });
