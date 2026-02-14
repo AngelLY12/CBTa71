@@ -13,6 +13,7 @@ use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentEventRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentMethodRepInterface;
 use App\Core\Domain\Repositories\Command\Payments\PaymentRepInterface;
+use App\Core\Domain\Repositories\Command\Payments\ReceiptRepInterface;
 use App\Core\Domain\Repositories\Command\User\ParentStudentRepInterface;
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
@@ -39,6 +40,7 @@ use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentConcep
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentEventRepository;
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentMethodRepository;
 use App\Core\Infraestructure\Repositories\Command\Payments\EloquentPaymentRepository;
+use App\Core\Infraestructure\Repositories\Command\Payments\EloquentReceiptRepository;
 use App\Core\Infraestructure\Repositories\Command\User\EloquentParentStudentRepository;
 use App\Core\Infraestructure\Repositories\Command\User\EloquentStudentDetailRepository;
 use App\Core\Infraestructure\Repositories\Command\User\EloquentUserRepository;
@@ -132,6 +134,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SemesterPromotionsRepInterface::class, EloquentSemesterPromotionsRepository::class);
         $this->app->bind(PaymentEventRepInterface::class, EloquentPaymentEventRepository::class);
         $this->app->bind(PaymentEventQueryRepInterface::class, EloquentPaymentEventQueryRepository::class);
+        $this->app->bind(ReceiptRepInterface::class, EloquentReceiptRepository::class);
 
     }
 
