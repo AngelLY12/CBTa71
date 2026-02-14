@@ -5,7 +5,6 @@ namespace App\Core\Application\UseCases\Payments\Student\PaymentHistory;
 use App\Core\Application\Services\Payments\Student\ReceiptPdfService;
 use App\Core\Domain\Repositories\Command\Payments\ReceiptRepInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Facades\Storage;
 
 class GenerateReceiptFromPaymentUseCase
 {

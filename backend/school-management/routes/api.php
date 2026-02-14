@@ -83,8 +83,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     });
     Route::prefix('payments/history')->middleware(['role:student|parent','throttle:global'])->group(function(){
         Route::middleware('permission:view.payments.history')->get('/payment/{id}',[PaymentHistoryController::class,'findPayment']);
-        Route::middleware('permission:view.payments.history')->get('/{studentId?}',[PaymentHistoryController::class,'index']);
         Route::middleware('permission:view.receipt')->get('/receipt/{paymentId}',[PaymentHistoryController::class,'receiptPDF']);
+        Route::middleware('permission:view.payments.history')->get('/{studentId?}',[PaymentHistoryController::class,'index']);
 
     });
     Route::prefix('pending-payments')->middleware(['role:student|parent'])->group(function(){
