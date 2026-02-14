@@ -59,7 +59,13 @@ class PaymentHistoryController extends Controller
     public function receiptPDF(int $paymentId)
     {
         $path = $this->paymentHistoryService->receiptFromPayment($paymentId);
-        $url = Storage::disk('gcs')->url($path);
+        $url = Storage::disk('gcs')->temporaryUrl(
+            $path,
+            now()->addMinutes(5),
+            [
+                'response-content-disposition' => 'inline',
+            ]
+        );
         return response()->redirectTo($url, 302, [
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
             'Pragma' => 'no-cache',
