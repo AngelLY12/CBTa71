@@ -27,6 +27,7 @@ class PermissionsSeeder extends Seeder
             'view.payments.history' => ['payment' => UserRoles::paymentContext()],
             'view.pending.concepts' => ['payment' => UserRoles::paymentContext()],
             'view.overdue.concepts' => ['payment' => UserRoles::paymentContext()],
+            'view.receipt' => ['payment' => UserRoles::paymentContext()],
 
             // Permisos de acción (model) para pagos
             'create.setup' => ['payment' => UserRoles::paymentContext()],
@@ -88,6 +89,7 @@ class PermissionsSeeder extends Seeder
             'view.payments.history' => 'role',
             'view.pending.concepts' => 'role',
             'view.overdue.concepts' => 'role',
+            'view.receipt' => 'role',
             'create.setup' => 'model',
             'delete.card' => 'model',
             'create.payment' => 'model',

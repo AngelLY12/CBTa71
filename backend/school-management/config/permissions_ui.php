@@ -39,6 +39,10 @@ return [
         'label' => 'Ver conceptos vencidos',
         'group' => 'Pagos',
     ],
+    'view.receipt' => [
+        'label' => 'Ver recibo del pago',
+        'group' => 'Pagos',
+    ],
 
     /*
     |--------------------------------------------------------------------------

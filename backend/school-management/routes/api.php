@@ -84,6 +84,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function (){
     Route::prefix('payments/history')->middleware(['role:student|parent','throttle:global'])->group(function(){
         Route::middleware('permission:view.payments.history')->get('/payment/{id}',[PaymentHistoryController::class,'findPayment']);
         Route::middleware('permission:view.payments.history')->get('/{studentId?}',[PaymentHistoryController::class,'index']);
+        Route::middleware('permission:view.receipt')->get('/receipt/{paymentId}',[PaymentHistoryController::class,'receiptPDF']);
 
     });
     Route::prefix('pending-payments')->middleware(['role:student|parent'])->group(function(){
@@ -201,3 +202,75 @@ Route::fallback(function () {
     return Response::error('Método no existente', 400, null, ErrorCode::BAD_REQUEST->value);
 });
 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
+
+Route::post('/gcs', function (Request $request) {
+    try {
+        $disk = Storage::disk('gcs');
+
+        // 1. Probar escritura
+        $testFileName = 'test-' . time() . '.txt';
+        $disk->put($testFileName, 'Prueba de conexión GCS - ' . now());
+
+        // 2. Verificar que existe
+        $exists = $disk->exists($testFileName);
+
+        // 3. Leer el contenido
+        $content = $disk->get($testFileName);
+
+        // 4. Obtener URL (si es público)
+        $url = $disk->url($testFileName);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Conexión a GCS exitosa',
+            'data' => [
+                'file_created' => $testFileName,
+                'exists' => $exists,
+                'content' => $content,
+                'url' => $url,
+                'disk_name' => 'gcs',
+                'bucket' => config('filesystems.disks.gcs.bucket'),
+                'project_id' => config('filesystems.disks.gcs.project_id'),
+            ]
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al conectar con GCS',
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
+    }
+});
+
+Route::delete('/gcs/clean', function () {
+    try {
+        $disk = Storage::disk('gcs');
+        $files = $disk->files('/');
+
+        // Eliminar solo archivos de prueba (los que empiezan con 'test-')
+        $deleted = [];
+        foreach ($files as $file) {
+            if (str_starts_with($file, 'test-')) {
+                $disk->delete($file);
+                $deleted[] = $file;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Archivos de prueba eliminados',
+            'deleted_files' => $deleted
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
