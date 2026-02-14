@@ -11,7 +11,6 @@
     <div class="student-card">
         <div class="student-header">
             <span class="student-label">ALUMNO</span>
-            <span class="payment-method-badge">{{ strtoupper($receipt->payment_method) }}</span>
         </div>
         <h2 class="student-name">{{ $receipt->payer_name }}</h2>
         <p class="student-email">
