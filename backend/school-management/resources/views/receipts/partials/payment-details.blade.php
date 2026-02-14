@@ -1,5 +1,5 @@
-@if(isset($details) && !empty($details))
-    @php $details = $receipt->metadata['payment_method_details'] ?? []; @endphp
+@if(isset($receipt->metadata['payment_method_details']) && !empty($receipt->metadata['payment_method_details']))
+    @php $details = $receipt->metadata['payment_method_details']; @endphp
     <div class="payment-details-card">
         <div class="payment-details-title">DETALLES DEL PAGO</div>
         <div class="payment-details-grid">
@@ -21,6 +21,13 @@
                 <div class="payment-detail-item">
                     <span class="label">Terminación</span>
                     <span class="value">•••• {{ $details['last4'] }}</span>
+                </div>
+            @endif
+
+            @if(isset($details['funding']))
+                <div class="payment-detail-item">
+                    <span class="label">Tipo</span>
+                    <span class="value">{{ ucfirst($details['funding']) }}</span>
                 </div>
             @endif
 
@@ -50,6 +57,13 @@
                     <div class="payment-detail-item">
                         <span class="label">CLABE</span>
                         <span class="value">{{ $details['clabe'] }}</span>
+                    </div>
+                @endif
+
+                @if(isset($details['reference']))
+                    <div class="payment-detail-item">
+                        <span class="label">Referencia SPEI</span>
+                        <span class="value">{{ $details['reference'] }}</span>
                     </div>
                 @endif
             @endif

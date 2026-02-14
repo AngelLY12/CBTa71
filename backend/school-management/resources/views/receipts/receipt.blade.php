@@ -11,6 +11,7 @@
     <div class="student-card">
         <div class="student-header">
             <span class="student-label">ALUMNO</span>
+            <span class="payment-method-badge">{{ strtoupper($receipt->payment_method) }}</span>
         </div>
         <h2 class="student-name">{{ $receipt->payer_name }}</h2>
         <p class="student-email">
@@ -41,7 +42,7 @@
 
         <div class="detail-item">
             <div class="detail-label">MONTO</div>
-            <div class="detail-value strong">${{ $receipt->amount_received }} MXN</div>
+            <div class="detail-value strong">${{ $receipt->amount }} MXN</div>
         </div>
 
         <div class="detail-item">
@@ -64,5 +65,5 @@
         </div>
     @endif
 
-    @include('receipts.partials.payment-details', ['details' => $receipt->metadata['payment_method_details'] ?? []])
+    @include('receipts.partials.payment-details')
 @endsection
