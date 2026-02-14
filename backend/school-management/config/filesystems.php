@@ -72,7 +72,7 @@ return [
             'key_file' => [
                 'type' => env('GOOGLE_CLOUD_ACCOUNT_TYPE'),
                 'private_key_id' => env('GOOGLE_CLOUD_PRIVATE_KEY_ID'),
-                'private_key' => env('GOOGLE_CLOUD_PRIVATE_KEY'),
+                'private_key' => str_replace('\\n', "\n", env('GOOGLE_CLOUD_PRIVATE_KEY')),
                 'client_email' => env('GOOGLE_CLOUD_CLIENT_EMAIL'),
                 'client_id' => env('GOOGLE_CLOUD_CLIENT_ID'),
                 'auth_uri' => env('GOOGLE_CLOUD_AUTH_URI'),
