@@ -209,18 +209,32 @@ Route::post('/gcs', function (Request $request) {
     try {
         $disk = Storage::disk('gcs');
 
-        // 1. Probar escritura
+        // Verificar que el bucket existe y es accesible
+        try {
+            $files = $disk->files(); // Intenta listar archivos
+            \Log::info('Bucket files listing successful', ['count' => count($files)]);
+        } catch (\Exception $e) {
+            \Log::error('Error listing bucket files', ['error' => $e->getMessage()]);
+            throw $e;
+        }
+
+        // 1. Probar escritura con más detalles
         $testFileName = 'test-' . time() . '.txt';
-        $disk->put($testFileName, 'Prueba de conexión GCS - ' . now());
+        $content = 'Prueba de conexión GCS - ' . now();
+
+        \Log::info('Attempting to write file', [
+            'filename' => $testFileName,
+            'content_length' => strlen($content),
+            'disk' => 'gcs'
+        ]);
+
+        $result = $disk->put($testFileName, $content);
+
+        \Log::info('Put operation result', ['result' => $result]);
 
         // 2. Verificar que existe
         $exists = $disk->exists($testFileName);
-
-        // 3. Leer el contenido
-        $content = $disk->get($testFileName);
-
-        // 4. Obtener URL (si es público)
-        $url = $disk->url($testFileName);
+        \Log::info('File exists check', ['exists' => $exists]);
 
         return response()->json([
             'success' => true,
@@ -228,21 +242,24 @@ Route::post('/gcs', function (Request $request) {
             'data' => [
                 'file_created' => $testFileName,
                 'exists' => $exists,
-                'content' => $content,
-                'url' => $url,
-                'disk_name' => 'gcs',
-                'bucket' => config('filesystems.disks.gcs.bucket'),
-                'project_id' => config('filesystems.disks.gcs.project_id'),
+                'write_result' => $result,
+                // ... resto de datos
             ]
         ]);
 
     } catch (\Exception $e) {
+        \Log::error('GCS Error Details', [
+            'message' => $e->getMessage(),
+            'code' => $e->getCode(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
         return response()->json([
             'success' => false,
             'message' => 'Error al conectar con GCS',
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
+            'error' => $e->getMessage()
         ], 500);
     }
 });
@@ -309,4 +326,40 @@ Route::get('/gcs-diagnostico', function () {
     }
 
     return response()->json($result);
+});
+
+
+Route::post('/gcs-direct', function (Request $request) {
+    try {
+        // Usar el cliente directamente para mejor debugging
+        $storage = new \Google\Cloud\Storage\StorageClient([
+            'projectId' => config('filesystems.disks.gcs.project_id'),
+            'keyFilePath' => config('filesystems.disks.gcs.key_file')
+        ]);
+
+        $bucket = $storage->bucket(config('filesystems.disks.gcs.bucket'));
+
+        // Intentar escribir directamente
+        $testFileName = 'test-direct-' . time() . '.txt';
+        $object = $bucket->upload('Prueba directa - ' . now(), [
+            'name' => $testFileName
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Escritura directa exitosa',
+            'data' => [
+                'file' => $testFileName,
+                'exists' => $object->exists(),
+                'info' => $object->info()
+            ]
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'code' => $e->getCode()
+        ], 500);
+    }
 });
