@@ -14,7 +14,7 @@ class GenerateReceiptFromPaymentUseCase
         private ReceiptPdfService $receiptPdfService
     ){}
 
-    public function execute(int $paymentId): array
+    public function execute(int $paymentId): string
     {
         $receipt = $this->receiptRep->getOrCreateReceipt($paymentId);
         if(!$receipt)
@@ -22,10 +22,7 @@ class GenerateReceiptFromPaymentUseCase
             throw new ModelNotFoundException('No se encontro el recibo solicitado');
         }
         $path =$this->receiptPdfService->generate($receipt);
-        return [
-            'path' => $path,
-            'filename' => "{$receipt->folio}.pdf"
-        ];
+        return $path;
     }
 
 }

@@ -52,7 +52,7 @@ class PaymentHistoryService {
         return $this->mediumCache($key, fn() => $this->payment->execute($id),$tags,$forceRefresh);
     }
 
-    public function receiptFromPayment(int $paymentId): array
+    public function receiptFromPayment(int $paymentId): string
     {
         return $this->idempotent(
             'create_or_get_receipt',

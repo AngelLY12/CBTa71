@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Recibo de Pago - CBTA No. 71')</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
         body {
             font-family: 'Poppins', Arial, sans-serif;
@@ -298,11 +298,68 @@
             pointer-events: none;
             z-index: 0;
         }
-
         @media print {
-            body { background: white; padding: 0; }
-            .receipt-container { box-shadow: none; }
+
+            @page {
+                size: A4;
+                margin: 12mm;
+            }
+
+            body {
+                background: white !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            button {
+                display: none !important;
+            }
+
+            .receipt-container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                overflow: visible !important;
+            }
+
+            .receipt-header,
+            .student-card,
+            .details-grid,
+            .amount-box,
+            .payment-details-card,
+            .reference-box,
+            .footer-note,
+            .folio-section {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .details-grid,
+            .payment-details-grid {
+                display: block !important;
+            }
+
+            .detail-item,
+            .payment-detail-item {
+                margin-bottom: 10px;
+            }
+
+            .watermark::after {
+                opacity: 0.06 !important;
+            }
+
+            .amount-value {
+                font-size: 32px !important;
+            }
+
+            .footer-note {
+                page-break-before: avoid !important;
+            }
         }
+
     </style>
     @stack('styles')
 </head>
@@ -316,6 +373,21 @@
         @include('receipts.partials.footer')
     </div>
 </div>
+
+<button onclick="window.print()" style="
+        position:fixed;
+        top:20px;
+        right:20px;
+        padding:10px 14px;
+        background:#013237;
+        color:white;
+        border:none;
+        border-radius:8px;
+        cursor:pointer;
+        z-index:9999;
+        ">
+    Descargar / Imprimir
+</button>
 
 @stack('scripts')
 </body>

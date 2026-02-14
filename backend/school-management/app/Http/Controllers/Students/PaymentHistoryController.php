@@ -58,41 +58,11 @@ class PaymentHistoryController extends Controller
 
     public function receiptPDF(int $paymentId)
     {
-        $file = $this->paymentHistoryService->receiptFromPayment($paymentId);
-
-        Log::info('DEBUG - receiptPDF', [
-            'paymentId' => $paymentId,
-            'path_del_service' => $file['path'],
-            'filename' => $file['filename'],
-            'path_completa' => $file['path'],
-            'existe? (check manual)' => Storage::disk('gcs')->exists($file['path'])
+        $path = $this->paymentHistoryService->receiptFromPayment($paymentId);
+        $url = Storage::disk('gcs')->url($path);
+        return response()->redirectTo($url, 302, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
         ]);
-
-        if (!Storage::disk('gcs')->exists($file['path'])) {
-            $directory = dirname($file['path']);
-            $files = Storage::disk('gcs')->files($directory);
-
-            Log::error('ARCHIVO NO ENCONTRADO', [
-                'path_buscado' => $file['path'],
-                'directorio' => $directory,
-                'archivos_disponibles' => $files
-            ]);
-
-            return response()->json([
-                'error' => 'Archivo no encontrado',
-                'path_buscado' => $file['path'],
-                'archivos_en_directorio' => $files
-            ], 404);
-        }
-
-        return Storage::disk('gcs')->download(
-            $file['path'],
-            $file['filename'],
-            [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="'.$file['filename'].'"',
-                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            ]
-        );
     }
 }
