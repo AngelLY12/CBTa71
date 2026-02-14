@@ -11,7 +11,8 @@ use App\Http\Controllers\Staff\ConceptsController;
 use App\Http\Controllers\Staff\DashboardController as StaffDashboardController;
 use App\Http\Controllers\Staff\DebtsController;
 use App\Http\Controllers\Staff\PaymentsController;
-use App\Http\Controllers\Staff\StudentsController;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Students\DashboardController;
 use App\Http\Controllers\Students\CardsController;
 use App\Http\Controllers\Students\PaymentHistoryController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Response;
 use App\Core\Domain\Enum\Exceptions\ErrorCode;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 //Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 //    return $request->user();
@@ -202,8 +204,6 @@ Route::fallback(function () {
     return Response::error('Método no existente', 400, null, ErrorCode::BAD_REQUEST->value);
 });
 
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
 
 Route::post('/gcs', function (Request $request) {
     try {
@@ -212,9 +212,9 @@ Route::post('/gcs', function (Request $request) {
         // Verificar que el bucket existe y es accesible
         try {
             $files = $disk->files(); // Intenta listar archivos
-            \Log::info('Bucket files listing successful', ['count' => count($files)]);
+            Log::info('Bucket files listing successful', ['count' => count($files)]);
         } catch (\Exception $e) {
-            \Log::error('Error listing bucket files', ['error' => $e->getMessage()]);
+            Log::error('Error listing bucket files', ['error' => $e->getMessage()]);
             throw $e;
         }
 
@@ -222,7 +222,7 @@ Route::post('/gcs', function (Request $request) {
         $testFileName = 'test-' . time() . '.txt';
         $content = 'Prueba de conexión GCS - ' . now();
 
-        \Log::info('Attempting to write file', [
+        Log::info('Attempting to write file', [
             'filename' => $testFileName,
             'content_length' => strlen($content),
             'disk' => 'gcs'
@@ -230,11 +230,11 @@ Route::post('/gcs', function (Request $request) {
 
         $result = $disk->put($testFileName, $content);
 
-        \Log::info('Put operation result', ['result' => $result]);
+        Log::info('Put operation result', ['result' => $result]);
 
         // 2. Verificar que existe
         $exists = $disk->exists($testFileName);
-        \Log::info('File exists check', ['exists' => $exists]);
+        Log::info('File exists check', ['exists' => $exists]);
 
         return response()->json([
             'success' => true,
@@ -248,7 +248,7 @@ Route::post('/gcs', function (Request $request) {
         ]);
 
     } catch (\Exception $e) {
-        \Log::error('GCS Error Details', [
+       Log::error('GCS Error Details', [
             'message' => $e->getMessage(),
             'code' => $e->getCode(),
             'file' => $e->getFile(),
