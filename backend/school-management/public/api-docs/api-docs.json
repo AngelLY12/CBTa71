@@ -10287,6 +10287,186 @@
                 ]
             }
         },
+        "/api/v1/payments/history/receipt/{paymentId}": {
+            "get": {
+                "tags": [
+                    "Receipts"
+                ],
+                "summary": "Descargar recibo de pago en PDF",
+                "description": "Genera y descarga el recibo de un pago específico en formato PDF.",
+                "operationId": "d66b748e6d1786566dbf7d929ad1dfe7",
+                "parameters": [
+                    {
+                        "name": "X-User-Role",
+                        "in": "header",
+                        "description": "Rol requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "student|parent"
+                        }
+                    },
+                    {
+                        "name": "X-User-Permission",
+                        "in": "header",
+                        "description": "Permiso requerido para este endpoint",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "view.receipt"
+                        }
+                    },
+                    {
+                        "name": "paymentId",
+                        "in": "path",
+                        "description": "ID del pago para generar el recibo",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 123
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF del recibo descargado correctamente",
+                        "headers": {
+                            "Content-Disposition": {
+                                "description": "Indica que el archivo se descarga como attachment",
+                                "schema": {
+                                    "type": "string",
+                                    "example": "attachment; filename=recibo-123.pdf"
+                                }
+                            },
+                            "Content-Type": {
+                                "description": "Tipo de contenido del archivo",
+                                "schema": {
+                                    "type": "string",
+                                    "example": "application/pdf"
+                                }
+                            },
+                            "Cache-Control": {
+                                "description": "Control de caché",
+                                "schema": {
+                                    "type": "string",
+                                    "example": "no-store, no-cache, must-revalidate, max-age=0"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "description": "Archivo PDF del recibo",
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pago no encontrado o recibo no disponible",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Recibo no encontrado"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autenticado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "No autorizado - Permiso 'view.receipt' requerido",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized - Missing permission: view.receipt"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno al generar o descargar el recibo",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error al generar el recibo"
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/v1/pending-payments/{studentId?}": {
             "get": {
                 "tags": [
@@ -14575,6 +14755,7 @@
                     "PROMOTION_NOT_ALLOWED",
                     "USER_INVALID_ROLE",
                     "USER_NOT_ALLOWED",
+                    "NOT_ALLOWED",
                     "CAREERS_NOT_FOUND",
                     "CONCEPT_NOT_FOUND",
                     "EXCEPTION_STUDENTS_NOT_FOUND",
@@ -14616,6 +14797,7 @@
                     "SEMESTERS_NOT_FOUND",
                     "PAYOUT_VALIDATION",
                     "REQUIRED_FOR_APPLIES_TO",
+                    "PAYMENT_IS_NOT_PAID",
                     "METHOD_NOT_ALLOWED",
                     "PAYLOAD_TOO_LARGE",
                     "SERVICE_UNAVAILABLE"
@@ -15965,6 +16147,10 @@
         {
             "name": "Payment History",
             "description": "Payment History"
+        },
+        {
+            "name": "Receipts",
+            "description": "Receipts"
         },
         {
             "name": "Pending Payment",
