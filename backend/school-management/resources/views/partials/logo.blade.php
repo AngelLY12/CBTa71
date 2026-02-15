@@ -25,9 +25,6 @@
 
 <style>
     :root {
-        --color-primary: #013237;
-        --color-secondary: #4CA771;
-        --color-accent: #1a4d44;
         --color-gold: #ffb347;
         --logo-size: 100px;
         --logo-size-mobile: 70px;
@@ -184,7 +181,6 @@
         margin: 0;
     }
 
-    /* Breakpoints específicos */
     @media (max-width: 480px) {
         .logo-container {
             width: var(--logo-size-mobile);

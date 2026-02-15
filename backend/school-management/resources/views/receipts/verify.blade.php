@@ -10,11 +10,6 @@
         :root {
             --color-primary: #013237;
             --color-secondary: #4CA771;
-            --color-accent: #1a4d44;
-            --color-gold: #ffb347;
-            --logo-size: 100px;
-            --logo-size-mobile: 70px;
-            --logo-size-small: 60px;
         }
 
         * {
@@ -45,20 +40,95 @@
         }
 
         .header {
-            text-align: center;
             background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
             padding: clamp(20px, 5vw, 30px) clamp(16px, 4vw, 30px) clamp(16px, 3vw, 20px);
             color: white;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(10px, 2vw, 15px);
+        }
+
+        .header-logo-container {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .header-title-container {
+            text-align: left;
+            border-top: 2px solid rgba(255,255,255,0.2);
+            padding-top: clamp(10px, 2vw, 15px);
         }
 
         .header h1 {
-            font-size: clamp(20px, 5vw, 32px);
+            font-size: clamp(20px, 5vw, 28px);
             font-weight: 700;
-            margin: 0;
+            margin: 0 0 4px 0;
             color: white;
             text-transform: uppercase;
-            letter-spacing: clamp(1px, 0.3vw, 2px);
+            letter-spacing: clamp(0.5px, 0.2vw, 1px);
             line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .header p {
+            font-size: clamp(12px, 2.5vw, 14px);
+            margin: 0;
+            opacity: 0.9;
+            color: #d4f0e6;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        @media (min-width: 640px) {
+            .header {
+                flex-direction: row;
+                align-items: center;
+                gap: 20px;
+            }
+
+            .header-logo-container {
+                flex-shrink: 0;
+                width: auto;
+            }
+
+            .header-title-container {
+                flex: 1;
+                border-top: none;
+                border-left: 2px solid rgba(255,255,255,0.2);
+                padding-top: 0;
+                padding-left: clamp(10px, 2vw, 20px);
+                margin-top: 0;
+                text-align: left;
+            }
+
+            .header h1 {
+                font-size: clamp(22px, 4vw, 32px);
+                margin: 0 0 4px 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 16px;
+            }
+
+            .header-title-container {
+                text-align: center;
+            }
+
+            .header-logo-container {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .header p {
+                font-size: 11px;
+            }
         }
 
         .content {
@@ -112,7 +182,6 @@
             gap: 4px;
         }
 
-        /* En móvil, apilamos los datos */
         .data-row:last-child {
             border-bottom: none;
         }
@@ -197,8 +266,13 @@
 <body>
 <div class="verification-card">
     <div class="header">
-        @include('partials.logo')
-        <h1>Verificación de Recibo</h1>
+        <div class="header-logo-container">
+            @include('partials.logo')
+        </div>
+        <div class="header-title-container">
+            <h1>Verificación de Recibo</h1>
+            <p>Comprobante oficial de pago</p>
+        </div>
     </div>
 
     <div class="content">

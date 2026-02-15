@@ -48,71 +48,45 @@
 
         .receipt-header {
             background: linear-gradient(135deg, var(--secondary), var(--primary));
-            padding: 20px 16px;
+            padding: clamp(20px, 5vw, 30px) clamp(16px, 4vw, 30px) clamp(16px, 3vw, 20px);
             color: white;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .logo-section > div:first-child {
-            width: 70px !important;
-            height: 70px !important;
-            flex-shrink: 0;
-        }
-
-        .school-info {
-            flex: 1;
-            min-width: 180px;
-        }
-
-        .school-name {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #e3fff5;
-            text-shadow: 1px 1px 0 #0a2e2a;
-            margin: 0 0 2px;
-            line-height: 1.3;
-        }
-
-        .school-campus {
-            font-size: 14px;
-            font-weight: 600;
-            color: #d4f0e6;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            border-top: 1px solid #6f9e92;
-            display: inline-block;
-            padding-top: 4px;
-            margin: 0;
         }
 
         .receipt-title {
             text-align: left;
             border-top: 2px solid rgba(255,255,255,0.2);
-            padding-top: 12px;
-            margin-top: 12px;
+            padding-top: clamp(10px, 2vw, 15px);
+            margin-top: clamp(8px, 1.5vw, 10px);
+        }
+
+        @media (min-width: 480px) {
+            .receipt-title {
+                text-align: right;
+            }
         }
 
         .receipt-title h1 {
-            font-size: 24px;
+            font-size: clamp(20px, 5vw, 32px);
             font-weight: 700;
             margin: 0;
             color: white;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: clamp(1px, 0.3vw, 2px);
+            line-height: 1.2;
         }
 
         .receipt-title p {
-            font-size: 12px;
-            margin: 2px 0 0;
+            font-size: clamp(11px, 2.5vw, 14px);
+            margin: clamp(3px, 0.8vw, 5px) 0 0;
             opacity: 0.9;
             color: #d4f0e6;
+        }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+
+            .receipt-title h1 {
+                font-size: 28px;
+            }
         }
 
         .receipt-body {
@@ -162,7 +136,6 @@
             word-break: break-all;
         }
 
-        /* Tarjeta de estudiante */
         .student-card {
             background: linear-gradient(to right, #f8fcfc, #f0f7f4);
             border-left: 6px solid var(--secondary);
@@ -203,7 +176,6 @@
             word-break: break-all;
         }
 
-        /* Grid responsivo */
         .details-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -247,7 +219,6 @@
             font-size: 16px;
         }
 
-        /* Caja de monto */
         .amount-box {
             background: linear-gradient(135deg, var(--primary), var(--accent));
             border-radius: 16px;
@@ -291,7 +262,6 @@
             opacity: 0.9;
         }
 
-        /* Referencia */
         .reference-box {
             background: #f0f7f4;
             border-radius: 8px;
@@ -315,7 +285,6 @@
             word-break: break-all;
         }
 
-        /* Detalles de pago */
         .payment-details-card {
             background: #f9fcfb;
             border-radius: 12px;
@@ -401,7 +370,6 @@
             line-height: 1.4;
         }
 
-        /* QR Section */
         .qr-section {
             margin-top: 24px;
             text-align: center;
@@ -423,7 +391,6 @@
             font-size: 12px;
         }
 
-        /* Botón de impresión */
         .print-button {
             position: fixed;
             bottom: 20px;
@@ -446,7 +413,6 @@
             transform: translateY(-2px);
         }
 
-        /* Watermark ajustado */
         .watermark::after {
             content: "CBTA 71";
             position: absolute;
@@ -467,14 +433,9 @@
             }
         }
 
-        /* Media queries específicas */
         @media (max-width: 360px) {
             body {
                 padding: 8px;
-            }
-
-            .school-name {
-                font-size: 16px;
             }
 
             .student-name {
