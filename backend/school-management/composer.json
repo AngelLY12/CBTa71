@@ -15,6 +15,7 @@
         "laravel/telescope": "*",
         "maatwebsite/excel": "^3.1",
         "mailersend/laravel-driver": "^2.11",
+        "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-backup": "^9.3",
         "spatie/laravel-google-cloud-storage": "*",

@@ -7,4 +7,7 @@ Route::get('/', function () {
 });
 
 
+Route::get('/verificar/{folio}', [\App\Http\Controllers\ReceiptController::class, 'verify'])
+    ->name('receipts.verify')->middleware('throttle:60,1');
+
 require __DIR__.'/auth.php';

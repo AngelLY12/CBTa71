@@ -1,5 +1,9 @@
 @extends('receipts.layouts.base')
 
+@section('receipt_id', $receipt->id)
+@section('folio', $receipt->folio)
+@section('amount', $receipt->amount)
+
 @section('title', 'Recibo de Pago - ' . $receipt->folio)
 
 @section('content')

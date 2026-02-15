@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Recibo de Pago - CBTA No. 71')</title>
+    <meta name="receipt-id" content="@yield('receipt_id', '')">
+    <meta name="receipt-folio" content="@yield('folio', '')">
+    <meta name="receipt-amount" content="@yield('amount', '')">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
 
@@ -371,24 +375,12 @@
         @yield('content')
 
         @include('receipts.partials.footer')
+        @include('receipts.partials.qr')
     </div>
 </div>
 
-<button onclick="window.print()" style="
-        position:fixed;
-        top:20px;
-        right:20px;
-        padding:10px 14px;
-        background:#013237;
-        color:white;
-        border:none;
-        border-radius:8px;
-        cursor:pointer;
-        z-index:9999;
-        ">
-    Descargar / Imprimir
-</button>
-
+@include('receipts.partials.print.button')
+@include('receipts.partials.script.protection')
 @stack('scripts')
 </body>
 </html>

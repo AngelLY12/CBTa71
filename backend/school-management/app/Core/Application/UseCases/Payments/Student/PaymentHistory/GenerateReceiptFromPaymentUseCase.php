@@ -2,7 +2,7 @@
 
 namespace App\Core\Application\UseCases\Payments\Student\PaymentHistory;
 
-use App\Core\Application\Services\Payments\Student\ReceiptPdfService;
+use App\Core\Application\Services\Payments\Student\ReceiptService;
 use App\Core\Domain\Repositories\Command\Payments\ReceiptRepInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -11,7 +11,7 @@ class GenerateReceiptFromPaymentUseCase
 
     public function __construct(
         private ReceiptRepInterface $receiptRep,
-        private ReceiptPdfService $receiptPdfService
+        private ReceiptService $receiptPdfService
     ){}
 
     public function execute(int $paymentId): string
