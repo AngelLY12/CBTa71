@@ -21,6 +21,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class BulkImportUsersUseCase
@@ -85,6 +86,7 @@ class BulkImportUsersUseCase
         $this->processNotifications($allUsersToNotify);
 
         $this->dispatchCacheClear();
+        Log::info('ImportResponse final:', $this->importResponse->toArray());
 
         return $this->importResponse;
     }

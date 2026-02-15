@@ -8,6 +8,7 @@ use App\Notifications\ImportFailedNotification;
 use App\Notifications\ImportFinishedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -31,11 +32,14 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
         $rows = $collection->skip(1)->toArray();
         $importResponse = $this->adminService->importUsers($rows);
         $this->importResult = $importResponse->toArray();
+        Log::info('Respuesta en UsersImport:', $importResponse->toArray());
+
     }
     public function registerEvents(): array
     {
         return [
             AfterImport::class => function() {
+                Log::info('Resultado final:', $this->importResult);
                 $result = $this->importResult ?: [
                     'summary' => [],
                     'errors' => [],
