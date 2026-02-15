@@ -379,7 +379,7 @@
     </div>
 </div>
 
-@include('receipts.partials.print.button')
+@include('receipts.partials.print-button')
 @include('receipts.partials.script.protection')
 @stack('scripts')
 </body>
