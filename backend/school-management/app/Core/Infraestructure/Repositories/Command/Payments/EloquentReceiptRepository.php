@@ -54,6 +54,7 @@ class EloquentReceiptRepository implements ReceiptRepInterface
                     'payment_method_details' => $payment->payment_method_details,
                     'stripe_receipt' => $payment->url ?? null
                 ],
+                'issued_at' => now()
             ]);
             $receipt->folio = Folio::generateReceiptFolio($payment->concept_name, $receipt->id);
             $receipt->save();
