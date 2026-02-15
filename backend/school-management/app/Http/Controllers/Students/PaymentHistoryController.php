@@ -66,9 +66,6 @@ class PaymentHistoryController extends Controller
                 'response-content-disposition' => 'inline',
             ]
         );
-        return response()->redirectTo($url, 302, [
-            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            'Pragma' => 'no-cache',
-        ]);
+        return Response::success(['url' => $url], 'URL del comprobante');
     }
 }
