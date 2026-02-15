@@ -10292,8 +10292,8 @@
                 "tags": [
                     "Receipts"
                 ],
-                "summary": "Descargar recibo de pago en PDF",
-                "description": "Genera y descarga el recibo de un pago específico en formato PDF.",
+                "summary": "Obtener URL del recibo de pago",
+                "description": "Genera y devuelve una URL temporal firmada para visualizar o descargar el recibo de un pago específico en formato HTML.",
                 "operationId": "d66b748e6d1786566dbf7d929ad1dfe7",
                 "parameters": [
                     {
@@ -10329,36 +10329,42 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "PDF del recibo descargado correctamente",
-                        "headers": {
-                            "Content-Disposition": {
-                                "description": "Indica que el archivo se descarga como attachment",
-                                "schema": {
-                                    "type": "string",
-                                    "example": "attachment; filename=recibo-123.pdf"
-                                }
-                            },
-                            "Content-Type": {
-                                "description": "Tipo de contenido del archivo",
-                                "schema": {
-                                    "type": "string",
-                                    "example": "application/pdf"
-                                }
-                            },
-                            "Cache-Control": {
-                                "description": "Control de caché",
-                                "schema": {
-                                    "type": "string",
-                                    "example": "no-store, no-cache, must-revalidate, max-age=0"
-                                }
-                            }
-                        },
+                        "description": "URL del recibo generada correctamente",
                         "content": {
-                            "application/pdf": {
+                            "application/json": {
                                 "schema": {
-                                    "description": "Archivo PDF del recibo",
-                                    "type": "string",
-                                    "format": "binary"
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "url": {
+                                                    "description": "URL temporal firmada con validez de 5 minutos para visualizar o descargar el recibo",
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "example": "https://storage.googleapis.com/bucket-name/receipts/2024/02/REC-123.html?X-Goog-Algorithm=...&X-Goog-Expires=300"
+                                                },
+                                                "expires_in": {
+                                                    "description": "Tiempo de expiración en segundos",
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "content_type": {
+                                                    "description": "Tipo de contenido del archivo",
+                                                    "type": "string",
+                                                    "example": "text/html"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Recibo generado correctamente"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -10436,7 +10442,7 @@
                         }
                     },
                     "500": {
-                        "description": "Error interno al generar o descargar el recibo",
+                        "description": "Error interno al generar el recibo",
                         "content": {
                             "application/json": {
                                 "schema": {

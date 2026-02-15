@@ -166,8 +166,8 @@ public function history(){}
     /**
      * @OA\Get(
      *     path="/api/v1/payments/history/receipt/{paymentId}",
-     *     summary="Descargar recibo de pago en PDF",
-     *     description="Genera y descarga el recibo de un pago específico en formato PDF.",
+     *     summary="Obtener URL del recibo de pago",
+     *     description="Genera y devuelve una URL temporal firmada para visualizar o descargar el recibo de un pago específico en formato HTML.",
      *     tags={"Receipts"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
@@ -199,29 +199,34 @@ public function history(){}
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="PDF del recibo descargado correctamente",
-     *         @OA\MediaType(
-     *             mediaType="application/pdf",
-     *             @OA\Schema(
-     *                 type="string",
-     *                 format="binary",
-     *                 description="Archivo PDF del recibo"
-     *             )
-     *         ),
-     *         @OA\Header(
-     *             header="Content-Disposition",
-     *             description="Indica que el archivo se descarga como attachment",
-     *             @OA\Schema(type="string", example="attachment; filename=recibo-123.pdf")
-     *         ),
-     *         @OA\Header(
-     *             header="Content-Type",
-     *             description="Tipo de contenido del archivo",
-     *             @OA\Schema(type="string", example="application/pdf")
-     *         ),
-     *         @OA\Header(
-     *             header="Cache-Control",
-     *             description="Control de caché",
-     *             @OA\Schema(type="string", example="no-store, no-cache, must-revalidate, max-age=0")
+     *         description="URL del recibo generada correctamente",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="url",
+     *                     type="string",
+     *                     format="uri",
+     *                     example="https://storage.googleapis.com/bucket-name/receipts/2024/02/REC-123.html?X-Goog-Algorithm=...&X-Goog-Expires=300",
+     *                     description="URL temporal firmada con validez de 5 minutos para visualizar o descargar el recibo"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="expires_in",
+     *                     type="integer",
+     *                     example=300,
+     *                     description="Tiempo de expiración en segundos"
+     *                 ),
+     *
+     *                 @OA\Property(
+     *                     property="content_type",
+     *                     type="string",
+     *                     example="text/html",
+     *                     description="Tipo de contenido del archivo"
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Recibo generado correctamente")
      *         )
      *     ),
      *     @OA\Response(
@@ -253,7 +258,7 @@ public function history(){}
      *     ),
      *     @OA\Response(
      *         response=500,
-     *         description="Error interno al generar o descargar el recibo",
+     *         description="Error interno al generar el recibo",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Error al generar el recibo"),
