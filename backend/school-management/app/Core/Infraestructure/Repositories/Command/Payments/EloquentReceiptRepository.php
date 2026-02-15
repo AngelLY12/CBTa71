@@ -11,6 +11,7 @@ use App\Models\Payment;
 use App\Models\Receipt;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class EloquentReceiptRepository implements ReceiptRepInterface
 {
@@ -39,10 +40,9 @@ class EloquentReceiptRepository implements ReceiptRepInterface
                 return $receipt;
             }
 
-            $folio = Folio::generateReceiptFolio($payment);
             $receipt = Receipt::create([
                'payment_id' => $payment->id,
-               'folio' => $folio,
+               'folio' => 'PENDING_' . uniqid(),
                'payer_name' => "{$payment->user->name} {$payment->user->last_name}",
                'payer_email' => $payment->user->email,
                'concept_name' => $payment->concept_name,
@@ -55,7 +55,8 @@ class EloquentReceiptRepository implements ReceiptRepInterface
                     'stripe_receipt' => $payment->url ?? null
                 ],
             ]);
-
+            $receipt->folio = Folio::generateReceiptFolio($payment->concept_name, $receipt->id);
+            $receipt->save();
             return $receipt;
         });
     }
