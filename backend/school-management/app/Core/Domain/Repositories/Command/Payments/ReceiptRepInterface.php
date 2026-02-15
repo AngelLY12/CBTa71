@@ -7,5 +7,6 @@ use App\Models\Receipt;
 interface ReceiptRepInterface
 {
     public function getOrCreateReceipt(int $paymentId): ?Receipt;
+    public function findByFolio(string $folio): Receipt;
 
 }

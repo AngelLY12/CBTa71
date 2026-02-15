@@ -66,6 +66,10 @@ class PaymentHistoryController extends Controller
                 'response-content-disposition' => 'inline',
             ]
         );
-        return Response::success(['url' => $url], 'URL del comprobante');
+        return Response::success([
+            'url' => $url,
+            'expires_in' => 300,
+            'content_type' => 'text/html'
+        ], 'URL del comprobante');
     }
 }

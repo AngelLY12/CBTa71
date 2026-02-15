@@ -7,11 +7,13 @@ use App\Core\Application\Traits\HasCache;
 use App\Core\Application\UseCases\Payments\Student\PaymentHistory\FindPaymentByIdUseCase;
 use App\Core\Application\UseCases\Payments\Student\PaymentHistory\GenerateReceiptFromPaymentUseCase;
 use App\Core\Application\UseCases\Payments\Student\PaymentHistory\GetPaymentHistoryUseCase;
+use App\Core\Application\UseCases\Payments\Student\PaymentHistory\GetValidatedReceiptUseCase;
 use App\Core\Domain\Entities\Payment;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Domain\Enum\Cache\StudentCacheSufix;
 use App\Core\Infraestructure\Cache\CacheService;
+use App\Models\Receipt;
 
 class PaymentHistoryService {
     use HasCache;
@@ -20,6 +22,7 @@ class PaymentHistoryService {
         private GetPaymentHistoryUseCase $history,
         private FindPaymentByIdUseCase $payment,
         private GenerateReceiptFromPaymentUseCase $generateReceipt,
+        private GetValidatedReceiptUseCase $validated,
         private CacheService $service
     ) {
         $this->setCacheService($service);
@@ -63,6 +66,19 @@ class PaymentHistoryService {
                 return $this->generateReceipt->execute($paymentId);
             }
         );
+    }
+
+    public function validateReceipt(string $folio): Receipt
+    {
+        $key = $this->generateCacheKey(
+            CachePrefix::STUDENT->value,
+            StudentCacheSufix::HISTORY->value,
+            [
+                'folio' => $folio,
+            ]
+        );
+        $tags = array_merge(self::TAG_PAYMENTS_HISTORY, ["folio:$folio"]);
+        return $this->shortCache($key, fn() => $this->validated->execute($folio), $tags, false);
     }
 
 }

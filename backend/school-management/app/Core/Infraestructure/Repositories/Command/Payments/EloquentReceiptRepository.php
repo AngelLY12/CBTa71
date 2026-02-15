@@ -62,4 +62,9 @@ class EloquentReceiptRepository implements ReceiptRepInterface
         });
     }
 
+    public function findByFolio(string $folio): Receipt
+    {
+        return Receipt::where('folio', $folio)->firstOrFail();
+    }
+
 }

@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Receipt;
-use Illuminate\Http\Request;
+use App\Core\Application\Services\Payments\Student\PaymentHistoryService;
+
 
 class ReceiptController extends Controller
 {
+    protected PaymentHistoryService $paymentHistoryService;
+    public function __construct(PaymentHistoryService $paymentHistoryService){
+        $this->paymentHistoryService = $paymentHistoryService;
+    }
     public function verify($token)
     {
         try {
@@ -19,11 +23,15 @@ class ReceiptController extends Controller
                 abort(403, 'QR inválido o modificado');
             }
 
-            $receipt = Receipt::where('folio', $payload['folio'])->firstOrFail();
-
+            $receipt = $this->paymentHistoryService->validateReceipt($payload['folio']);
             return view('receipts.verify', ['receipt' => $receipt]);
 
-        } catch (\Exception $e) {
+        }catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            abort(404, 'Recibo no encontrado en la base de datos');
+        } catch (\InvalidArgumentException $e) {
+            abort(400, 'Token mal formado');
+        }
+        catch (\Exception $e) {
             abort(403, 'QR inválido');
         }
     }
