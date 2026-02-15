@@ -68,14 +68,14 @@ class ImportFinishedNotification extends Notification
 
     private function buildImportMessage(): string
     {
-        if (empty($this->result['summary'])) {
-            return $this->result['message']
+        if (empty($this->importResult['summary'])) {
+            return $this->importResult['message']
                 ?? 'El import finalizó, pero no se pudo generar el resumen.';
         }
 
-        $summary = $this->result['summary'];
-        $errors  = $this->result['errors'] ?? [];
-        $warnings = $this->result['warnings'] ?? [];
+        $summary = $this->importResult['summary'];
+        $errors  = $this->importResult['errors'] ?? [];
+        $warnings = $this->importResult['warnings'] ?? [];
 
         $lines = [];
 
@@ -94,7 +94,7 @@ class ImportFinishedNotification extends Notification
             $lines[] = "Errores: {$errors['total_errors']}";
         }
 
-        $lines[] = "Fecha: " . ($this->result['timestamp'] ?? now()->toDateTimeString());
+        $lines[] = "Fecha: " . ($this->importResult['timestamp'] ?? now()->toDateTimeString());
 
         return implode("\n", $lines);
 
