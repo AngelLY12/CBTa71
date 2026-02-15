@@ -271,7 +271,7 @@
         </div>
         <div class="header-title-container">
             <h1>Verificación de Recibo</h1>
-            <p>Comprobante oficial de pago</p>
+            <p>Valida la autenticidad de tu recibo</p>
         </div>
     </div>
 
