@@ -6,6 +6,17 @@
     <title>Verificar Recibo - CBTA No. 71</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+
+        :root {
+            --color-primary: #013237;
+            --color-secondary: #4CA771;
+            --color-accent: #1a4d44;
+            --color-gold: #ffb347;
+            --logo-size: 100px;
+            --logo-size-mobile: 70px;
+            --logo-size-small: 60px;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -34,23 +45,20 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #013237 0%, #1a4d44 100%);
-            color: white;
-            padding: 20px 16px;
             text-align: center;
+            background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+            padding: clamp(20px, 5vw, 30px) clamp(16px, 4vw, 30px) clamp(16px, 3vw, 20px);
+            color: white;
         }
 
         .header h1 {
+            font-size: clamp(20px, 5vw, 32px);
+            font-weight: 700;
             margin: 0;
-            font-size: 24px;
-            font-weight: 600;
-            line-height: 1.3;
-        }
-
-        .header p {
-            margin: 6px 0 0;
-            opacity: 0.9;
-            font-size: 14px;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: clamp(1px, 0.3vw, 2px);
+            line-height: 1.2;
         }
 
         .content {
