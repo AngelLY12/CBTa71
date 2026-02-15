@@ -190,8 +190,7 @@
 <div class="verification-card">
     <div class="header">
         @include('partials.logo')
-        <h1>CBTA No. 71</h1>
-        <p>Verificación de Recibo</p>
+        <h1>Verificación de Recibo</h1>
     </div>
 
     <div class="content">
