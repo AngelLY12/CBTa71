@@ -11,139 +11,234 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
 
+        /* Reset y variables */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #013237;
+            --secondary: #4CA771;
+            --accent: #1a4d44;
+            --light-bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-primary: #013237;
+            --text-secondary: #4a6b63;
+            --border-color: #d0e6de;
+        }
+
         body {
             font-family: 'Poppins', Arial, sans-serif;
-            background-color: #f0f2f5;
+            background-color: var(--light-bg);
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 12px;
+            color: var(--text-primary);
+            min-height: 100vh;
         }
 
         .receipt-container {
             max-width: 700px;
             margin: 0 auto;
-            background-color: #fff;
-            border-radius: 16px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(1, 50, 55, 0.15);
         }
 
+        /* Header responsivo */
+        .receipt-header {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            padding: 20px 16px;
+            color: white;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .logo-section > div:first-child {
+            width: 70px !important;
+            height: 70px !important;
+            flex-shrink: 0;
+        }
+
+        .school-info {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .school-name {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #e3fff5;
+            text-shadow: 1px 1px 0 #0a2e2a;
+            margin: 0 0 2px;
+            line-height: 1.3;
+        }
+
+        .school-campus {
+            font-size: 14px;
+            font-weight: 600;
+            color: #d4f0e6;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-top: 1px solid #6f9e92;
+            display: inline-block;
+            padding-top: 4px;
+            margin: 0;
+        }
+
+        .receipt-title {
+            text-align: left;
+            border-top: 2px solid rgba(255,255,255,0.2);
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .receipt-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .receipt-title p {
+            font-size: 12px;
+            margin: 2px 0 0;
+            opacity: 0.9;
+            color: #d4f0e6;
+        }
+
         .receipt-body {
-            padding: 35px 30px;
+            padding: 20px 16px;
             position: relative;
             overflow: hidden;
         }
 
+        /* Folio responsivo */
         .folio-section {
             background: linear-gradient(135deg, #f0f9f5, #e6f0ec);
             border-radius: 12px;
-            padding: 15px 20px;
-            margin-bottom: 25px;
-            border: 1px solid #4CA771;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--secondary);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        @media (min-width: 480px) {
+            .folio-section {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
         }
 
         .folio-label {
-            font-size: 14px;
-            color: #013237;
+            font-size: 13px;
+            color: var(--primary);
             font-weight: 600;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
         .folio-value {
-            font-size: 20px;
-            color: #013237;
+            font-size: 16px;
+            color: var(--primary);
             font-weight: 700;
             background: white;
-            padding: 8px 20px;
+            padding: 6px 16px;
             border-radius: 30px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             font-family: monospace;
             letter-spacing: 1px;
+            word-break: break-all;
         }
 
+        /* Tarjeta de estudiante */
         .student-card {
             background: linear-gradient(to right, #f8fcfc, #f0f7f4);
-            border-left: 6px solid #4CA771;
+            border-left: 6px solid var(--secondary);
             border-radius: 12px;
-            padding: 20px 25px;
-            margin-bottom: 30px;
+            padding: 16px;
+            margin-bottom: 20px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.02);
         }
 
         .student-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .student-label {
-            font-size: 14px;
-            color: #4CA771;
+            font-size: 13px;
+            color: var(--secondary);
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0;
-        }
-
-        .payment-method-badge {
-            background: #e8f4f0;
-            border-radius: 30px;
-            padding: 8px 16px;
-            display: inline-block;
-            border: 1px solid #4CA771;
-            font-weight: 600;
-            color: #013237;
-            font-size: 14px;
+            letter-spacing: 0.5px;
         }
 
         .student-name {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
-            color: #013237;
-            margin: 0 0 5px;
+            color: var(--primary);
+            margin: 0 0 4px;
+            line-height: 1.3;
+            word-break: break-word;
         }
 
         .student-email {
-            color: #4CA771;
-            font-size: 14px;
+            color: var(--secondary);
+            font-size: 13px;
             margin: 0;
             display: flex;
             align-items: center;
             gap: 5px;
+            word-break: break-all;
         }
 
+        /* Grid responsivo */
         .details-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 25px;
-            margin-bottom: 30px;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
             background: #f9fcfb;
-            padding: 20px;
+            padding: 16px;
             border-radius: 12px;
         }
 
+        @media (min-width: 480px) {
+            .details-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         .detail-item {
-            border-bottom: 1px solid #d0e6de;
-            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
         }
 
         .detail-label {
-            font-size: 12px;
-            color: #4CA771;
+            font-size: 11px;
+            color: var(--secondary);
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 0 0 6px;
+            letter-spacing: 0.3px;
+            margin: 0 0 4px;
         }
 
         .detail-value {
-            font-size: 16px;
-            color: #013237;
+            font-size: 15px;
+            color: var(--primary);
             font-weight: 500;
             margin: 0;
             word-break: break-word;
@@ -151,23 +246,32 @@
 
         .detail-value.strong {
             font-weight: 700;
-            font-size: 18px;
+            font-size: 16px;
         }
 
+        /* Caja de monto */
         .amount-box {
-            background: linear-gradient(135deg, #013237, #1a4d44);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
             border-radius: 16px;
-            padding: 25px;
-            margin: 20px 0 25px;
+            padding: 20px 16px;
+            margin: 16px 0 20px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 8px;
             box-shadow: 0 8px 20px rgba(1, 50, 55, 0.3);
+        }
+
+        @media (min-width: 480px) {
+            .amount-box {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
         }
 
         .amount-label {
             color: #d4f0e6;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -176,132 +280,218 @@
 
         .amount-value {
             color: white;
-            font-size: 42px;
+            font-size: 28px;
             font-weight: 700;
             margin: 0;
             text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+            line-height: 1.2;
         }
 
         .amount-value span {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 500;
             opacity: 0.9;
         }
 
+        /* Referencia */
         .reference-box {
             background: #f0f7f4;
             border-radius: 8px;
-            padding: 12px 15px;
-            margin-top: 15px;
-            border: 1px dashed #4CA771;
+            padding: 12px;
+            margin-top: 12px;
+            border: 1px dashed var(--secondary);
         }
 
         .reference-label {
-            font-size: 11px;
-            color: #4CA771;
+            font-size: 10px;
+            color: var(--secondary);
             font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .reference-value {
-            font-size: 13px;
-            color: #013237;
+            font-size: 12px;
+            color: var(--primary);
             font-family: monospace;
             word-break: break-all;
         }
 
+        /* Detalles de pago */
         .payment-details-card {
             background: #f9fcfb;
             border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid #d0e6de;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1px solid var(--border-color);
         }
 
         .payment-details-title {
-            font-size: 14px;
-            color: #4CA771;
+            font-size: 13px;
+            color: var(--secondary);
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #d0e6de;
-            padding-bottom: 8px;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
         }
 
         .payment-details-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 480px) {
+            .payment-details-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .payment-detail-item {
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .payment-detail-item .label {
-            color: #4CA771;
+            color: var(--secondary);
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 10px;
             display: block;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .payment-detail-item .value {
-            color: #013237;
+            color: var(--primary);
             font-weight: 500;
             word-break: break-word;
+            font-size: 13px;
         }
 
         .stripe-link {
             display: inline-block;
-            margin-top: 15px;
-            color: #4CA771;
+            margin-top: 12px;
+            color: var(--secondary);
             text-decoration: none;
             font-weight: 600;
-            font-size: 13px;
-            padding: 8px 15px;
+            font-size: 12px;
+            padding: 8px 16px;
             background: #e8f4f0;
             border-radius: 30px;
-            border: 1px solid #4CA771;
+            border: 1px solid var(--secondary);
+            width: 100%;
+            text-align: center;
         }
 
         .stripe-link:hover {
             background: #d0e6de;
         }
 
+        /* Footer */
         .footer-note {
             border-top: 2px solid #e9f0ed;
-            padding: 25px 0 0;
-            margin-top: 30px;
+            padding: 16px 0 0;
+            margin-top: 20px;
             text-align: center;
         }
 
         .footer-note p {
-            color: #4a6b63;
-            font-size: 13px;
-            margin: 5px 0;
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin: 4px 0;
+            line-height: 1.4;
         }
 
-        .watermark {
-            position: relative;
-            overflow: hidden;
+        /* QR Section */
+        .qr-section {
+            margin-top: 24px;
+            text-align: center;
+            border-top: 2px dashed var(--secondary);
+            padding-top: 16px;
         }
 
+        .qr-code {
+            background: white;
+            padding: 8px;
+            display: inline-block;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .qr-text {
+            margin: 8px 0 0;
+            color: var(--primary);
+            font-size: 12px;
+        }
+
+        /* Botón de impresión */
+        .print-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 9999;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(1, 50, 55, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .print-button:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* Watermark ajustado */
         .watermark::after {
             content: "CBTA 71";
             position: absolute;
-            bottom: 50px;
-            right: 30px;
-            font-size: 60px;
+            bottom: 30px;
+            right: 15px;
+            font-size: 40px;
             font-weight: 800;
             color: rgba(76, 167, 113, 0.03);
             transform: rotate(-15deg);
             pointer-events: none;
             z-index: 0;
         }
+
+        @media (min-width: 768px) {
+            .watermark::after {
+                font-size: 60px;
+                right: 30px;
+            }
+        }
+
+        /* Media queries específicas */
+        @media (max-width: 360px) {
+            body {
+                padding: 8px;
+            }
+
+            .school-name {
+                font-size: 16px;
+            }
+
+            .student-name {
+                font-size: 18px;
+            }
+
+            .amount-value {
+                font-size: 24px;
+            }
+
+            .amount-value span {
+                font-size: 16px;
+            }
+        }
+
         @media print {
 
             @page {
@@ -373,9 +563,8 @@
 
     <div class="receipt-body watermark">
         @yield('content')
-
-        @include('receipts.partials.footer')
         @include('receipts.partials.qr')
+        @include('receipts.partials.footer')
     </div>
 </div>
 

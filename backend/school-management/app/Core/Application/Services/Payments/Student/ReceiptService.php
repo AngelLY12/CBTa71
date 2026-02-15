@@ -42,10 +42,19 @@ class ReceiptService
 
     public function generateQR(Receipt $receipt)
     {
+        $payload = json_encode([
+            'folio' => $receipt->folio,
+            'hash' => hash_hmac('sha256', $receipt->folio, config('app.key'))
+        ]);
+
+        $token = base64_encode($payload);
+        $token = urlencode($token);
+
+        $url = route('receipts.verify', ['token' => $token]);
         return QrCode::size(120)
             ->color(1, 50, 55)
             ->margin(1)
-            ->generate(route('receipts.verify', $receipt->folio));
+            ->generate($url);
     }
 
 }
