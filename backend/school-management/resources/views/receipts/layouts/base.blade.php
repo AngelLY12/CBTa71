@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
 
-        /* Reset y variables */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -47,7 +46,6 @@
             box-shadow: 0 10px 30px rgba(1, 50, 55, 0.15);
         }
 
-        /* Header responsivo */
         .receipt-header {
             background: linear-gradient(135deg, var(--secondary), var(--primary));
             padding: 20px 16px;

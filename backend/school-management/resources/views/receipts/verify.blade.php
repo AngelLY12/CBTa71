@@ -151,7 +151,6 @@
             font-size: 12px;
         }
 
-        /* Estilos específicos para pantallas muy pequeñas */
         @media (max-width: 360px) {
             body {
                 padding: 8px;
@@ -190,6 +189,7 @@
 <body>
 <div class="verification-card">
     <div class="header">
+        @include('partials.logo')
         <h1>CBTA No. 71</h1>
         <p>Verificación de Recibo</p>
     </div>
