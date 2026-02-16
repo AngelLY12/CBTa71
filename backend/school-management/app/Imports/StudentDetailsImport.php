@@ -49,7 +49,6 @@ class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, Wit
         return [
             AfterImport::class => function() {
                 $result = Cache::get($this->cacheKey, []);
-                Log::info('AfterImport - Recuperado de cache:', $result);
                 $this->user->notify(new ImportFinishedNotification(
                     $result ?: [
                         'summary' => [],

@@ -42,7 +42,6 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
         return [
             AfterImport::class => function() {
                 $result = Cache::get($this->cacheKey, []);
-                Log::info('AfterImport - Recuperado de cache:', $result);
 
                 $this->user->notify(new ImportFinishedNotification(
                     $result ?: [

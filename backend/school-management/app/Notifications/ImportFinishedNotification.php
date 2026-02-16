@@ -79,22 +79,35 @@ class ImportFinishedNotification extends Notification
 
         $lines = [];
 
-        $lines[] = 'Resumen extendido de la operación:';
-        $lines[] = "• Filas recibidas: {$summary['total_rows_received']}";
-        $lines[] = "• Filas procesadas: {$summary['rows_processed']}";
-        $lines[] = "• Filas insertadas: {$summary['rows_inserted']}";
-        $lines[] = "• Filas fallidas: {$summary['rows_failed']}";
-        $lines[] = "• Tasa de éxito: {$summary['success_rate']}%";
+        $lines[] = 'RESUMEN DE IMPORTACIÓN';
+        $lines[] = str_repeat('-', 40);
+        $lines[] = "Filas recibidas: {$summary['total_rows_received']}";
+        $lines[] = "Filas procesadas: {$summary['rows_processed']}";
+        $lines[] = "Insertadas: {$summary['rows_inserted']}";
+        $lines[] = "Fallidas: {$summary['rows_failed']}";
+        $lines[] = "Tasa de éxito: {$summary['success_rate']}%";
 
         if (($warnings['total_warnings'] ?? 0) > 0) {
             $lines[] = "Advertencias: {$warnings['total_warnings']}";
+            $warningList = array_slice($warnings['list'] ?? [], 0, 3);
+            foreach ($warningList as $index => $warning) {
+                $lines[] = "   {$index}. {$warning['message']}";
+            }
         }
 
         if (($errors['total_errors'] ?? 0) > 0) {
             $lines[] = "Errores: {$errors['total_errors']}";
+            $errorList = array_slice($errors['row_errors'] ?? [], 0, 5);
+            foreach ($errorList as $index => $error) {
+                $lines[] = "   {$index}. Fila {$error['row_number']}: {$error['message']}";
+            }
+            if (count($errors['row_errors'] ?? []) > 5) {
+                $lines[] = "   ... y " . (count($errors['row_errors']) - 5) . " errores más";
+            }
         }
 
-        $lines[] = "Fecha: " . ($this->importResult['timestamp'] ?? now()->toDateTimeString());
+        $lines[] = str_repeat('-', 40);
+        $lines[] = "🕒 " . ($this->importResult['timestamp'] ?? now()->format('d/m/Y H:i:s'));
 
         return implode("\n", $lines);
 
