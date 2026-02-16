@@ -37,7 +37,7 @@ class ImportFinishedNotification extends Notification
         return [
             'title' => 'Import finalizado',
             'message' => "Import de datos finalizado, a continuación veras un resúmen.",
-            'details' => $this->buildImportMessage(),
+            'details' => '<pre>' . $this->buildImportMessage() . '</pre>',
             'type' => 'import_finished'
         ];
     }
@@ -107,7 +107,7 @@ class ImportFinishedNotification extends Notification
         }
 
         $lines[] = str_repeat('-', 40);
-        $lines[] = "🕒 " . ($this->importResult['timestamp'] ?? now()->format('d/m/Y H:i:s'));
+        $lines[] = ($this->importResult['timestamp'] ?? now()->format('d/m/Y H:i:s'));
 
         return implode("\n", $lines);
 
