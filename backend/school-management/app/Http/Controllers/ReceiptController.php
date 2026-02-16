@@ -27,7 +27,7 @@ class ReceiptController extends Controller
             return view('receipts.verify', ['receipt' => $receipt]);
 
         }catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            abort(404, 'Recibo no encontrado en la base de datos');
+            return view('receipts.verify', ['receipt' => null]);
         } catch (\InvalidArgumentException $e) {
             abort(400, 'Token mal formado');
         }
