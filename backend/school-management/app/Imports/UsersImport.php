@@ -32,7 +32,14 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
 
     public function collection(Collection $collection)
     {
-        $rows = $collection->skip(1)->toArray();
+        $rows = $collection->skip(1)
+            ->reject(function($row) {
+                return collect($row)->every(function($value) {
+                    return is_null($value) || trim($value) === '';
+                });
+            })
+            ->values()
+            ->toArray();
         $importResponse = $this->adminService->importUsers($rows);
         $this->importResult = $importResponse->toArray();
         Cache::put($this->cacheKey, $this->importResult, now()->addMinutes(10));

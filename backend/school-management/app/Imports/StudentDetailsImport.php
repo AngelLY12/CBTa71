@@ -38,7 +38,14 @@ class StudentDetailsImport implements ToCollection, ShouldQueue, WithEvents, Wit
 
     public function collection(Collection $collection)
     {
-        $rows = $collection->skip(1)->toArray();
+        $rows = $collection->skip(1)
+            ->reject(function($row) {
+                return collect($row)->every(function($value) {
+                    return is_null($value) || trim($value) === '';
+                });
+            })
+            ->values()
+            ->toArray();
         $importResponse = $this->adminService->importStudents($rows);
         $this->importResult = $importResponse->toArray();
         Cache::put($this->cacheKey, $this->importResult, now()->addMinutes(10));
