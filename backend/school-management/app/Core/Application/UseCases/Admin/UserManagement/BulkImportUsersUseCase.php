@@ -86,7 +86,6 @@ class BulkImportUsersUseCase
         $this->processNotifications($allUsersToNotify);
 
         $this->dispatchCacheClear();
-        Log::info('ImportResponse final:', $this->importResponse->toArray());
 
         return $this->importResponse;
     }

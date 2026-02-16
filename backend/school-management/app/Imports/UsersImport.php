@@ -8,6 +8,7 @@ use App\Notifications\ImportFailedNotification;
 use App\Notifications\ImportFinishedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
@@ -20,11 +21,13 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
     protected AdminUsersServiceFacades $adminService;
     protected User $user;
     private array $importResult = [];
+    private string $cacheKey;
 
     public function __construct(AdminUsersServiceFacades $adminService, User $user)
     {
         $this->adminService = $adminService;
         $this->user = $user;
+        $this->cacheKey = 'import_result_' . $user->id . '_' . time();
     }
 
     public function collection(Collection $collection)
@@ -32,29 +35,32 @@ class UsersImport implements ToCollection, ShouldQueue, WithEvents, WithChunkRea
         $rows = $collection->skip(1)->toArray();
         $importResponse = $this->adminService->importUsers($rows);
         $this->importResult = $importResponse->toArray();
-        Log::info('Respuesta en UsersImport:', $importResponse->toArray());
-
+        Cache::put($this->cacheKey, $this->importResult, now()->addMinutes(10));
     }
     public function registerEvents(): array
     {
         return [
             AfterImport::class => function() {
-                Log::info('Resultado final:', $this->importResult);
-                $result = $this->importResult ?: [
-                    'summary' => [],
-                    'errors' => [],
-                    'warnings' => [],
-                    'has_errors' => true,
-                    'message' => 'El import terminó pero no se pudo generar el resumen.'
-                ];
+                $result = Cache::get($this->cacheKey, []);
+                Log::info('AfterImport - Recuperado de cache:', $result);
+
                 $this->user->notify(new ImportFinishedNotification(
-                    $result
+                    $result ?: [
+                        'summary' => [],
+                        'errors' => [],
+                        'warnings' => [],
+                        'has_errors' => true,
+                        'message' => 'El import terminó pero no se pudo generar el resumen.'
+                    ]
                 ));
+                Cache::forget($this->cacheKey);
+
             },
             ImportFailed::class => function(ImportFailed $event) {
                 $this->user->notify(new ImportFailedNotification(
                     $event->getException()->getMessage()
                 ));
+                Cache::forget($this->cacheKey);
             }
         ];
     }
