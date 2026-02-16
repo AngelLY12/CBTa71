@@ -37,7 +37,7 @@ class ImportFinishedNotification extends Notification
         return [
             'title' => 'Import finalizado',
             'message' => "Import de datos finalizado, a continuación veras un resúmen.",
-            'details' => '<pre>' . $this->buildImportMessage() . '</pre>',
+            'details' => $this->buildImportMessage(),
             'type' => 'import_finished'
         ];
     }
