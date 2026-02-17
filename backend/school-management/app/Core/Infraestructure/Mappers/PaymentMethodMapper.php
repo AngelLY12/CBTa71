@@ -11,10 +11,10 @@ class PaymentMethodMapper{
         return new DomainPaymentMethod(
             user_id: $paymentMethod->user_id,
             stripe_payment_method_id: $paymentMethod->stripe_payment_method_id,
-            brand: $paymentMethod->brand ?? null,
-            last4: $paymentMethod->last4 ?? null,
-            exp_month: $paymentMethod->exp_month ?? null,
-            exp_year: $paymentMethod->exp_year ?? null,
+            brand: $paymentMethod->brand,
+            last4: $paymentMethod->last4,
+            exp_month: $paymentMethod->exp_month,
+            exp_year: $paymentMethod->exp_year,
             id: $paymentMethod->id
         );
     }

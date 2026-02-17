@@ -6,6 +6,7 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Infraestructure\Cache\CacheService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -20,7 +21,7 @@ class ClearCacheForUsersJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(array $userIds, bool $isConceptUpdated=false, PaymentConceptStatus $conceptStatus = null)
+    public function __construct(array $userIds, bool $isConceptUpdated=false, ?PaymentConceptStatus $conceptStatus = null)
     {
         $this->userIds = $userIds;
         $this->isConceptUpdated = $isConceptUpdated;
@@ -40,17 +41,17 @@ class ClearCacheForUsersJob implements ShouldQueue
             }
         }
     }
-    public static function forConceptStatus(array $userIds, PaymentConceptStatus $status): self
+    public static function forConceptStatus(array $userIds, PaymentConceptStatus $status): PendingDispatch
     {
-        return new self($userIds, true, $status);
+        return self::dispatch($userIds, true, $status);
     }
-    public static function forStudents(array $userIds): self
+    public static function forStudents(array $userIds): PendingDispatch
     {
-        return new self($userIds, false, null);
+        return self::dispatch($userIds, false, null);
     }
-    public static function forUsers(array $userIds, bool $isConceptUpdated = false, ?PaymentConceptStatus $status = null): self
+    public static function forUsers(array $userIds, bool $isConceptUpdated = false, ?PaymentConceptStatus $status = null): PendingDispatch
     {
-        return new self($userIds, $isConceptUpdated, $status);
+        return self::dispatch($userIds, $isConceptUpdated, $status);
     }
 
     public function failed(\Throwable $exception): void

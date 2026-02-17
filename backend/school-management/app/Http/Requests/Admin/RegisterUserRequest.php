@@ -101,8 +101,8 @@ class RegisterUserRequest extends FormRequest
         return [
             'name' => 'required|string',
             'last_name'  => 'required|string',
-            'email'  => 'required|email',
-            'phone_number'  => 'required|string',
+            'email'  => 'required|email:rfc,dns|unique:users,email',
+            'phone_number'  => 'required|string|regex:/^\+52\d{10}$/',
             'birthdate' => 'sometimes|required|date|date_format:Y-m-d',
             'gender'       => [
                 'sometimes',
@@ -110,7 +110,7 @@ class RegisterUserRequest extends FormRequest
                 'string',
                 'in:' . implode(',', array_map(fn($case) => $case->value, UserGender::cases())),
             ],
-            'curp' => 'required|string|max:18',
+            'curp' => 'required|string|size:18|alpha_num|uppercase|unique:users,curp',
             'address' => 'sometimes|required|array',
             'blood_type'   => [
                 'sometimes',
@@ -161,21 +161,47 @@ class RegisterUserRequest extends FormRequest
         return [
             'name.required' => 'El nombre es obligatorio.',
             'last_name.required' => 'El apellido es obligatorio.',
+
             'email.required' => 'El correo es obligatorio.',
             'email.email' => 'El correo no tiene un formato válido.',
+            'email.unique' => 'Este correo electrónico ya está registrado.',
+
             'phone_number.required' => 'El número de teléfono es obligatorio.',
+            'phone_number.string' => 'El número de teléfono debe ser texto.',
+            'phone_number.regex' => 'El teléfono debe ser un número mexicano válido: +521234567890',
+
             'birthdate.date' => 'La fecha de nacimiento debe ser una fecha válida.',
             'birthdate.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
+            'birthdate.required' => 'La fecha de nacimiento es obligatoria.',
+
             'gender.required' => 'El género es obligatorio.',
-            'gender.in'          => 'El género no es válido.',
+            'gender.in'          => 'El género no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserGender::cases())),
+            'gender.string' => 'El género debe ser texto.',
+
             'curp.required' => 'La CURP es obligatoria.',
+            'curp.string' => 'La CURP debe ser texto.',
+            'curp.size' => 'La CURP debe tener exactamente 18 caracteres.',
+            'curp.alpha_num' => 'La CURP debe contener solo letras y números.',
+            'curp.uppercase' => 'La CURP debe contener solo letras mayusculas.',
+            'curp.unique' => 'Esta CURP ya está registrada.',
+
             'address.array' => 'La dirección debe ser un arreglo válido.',
+            'address.required' => 'La dirección es obligatoria.',
+
             'blood_type.required' => 'El tipo de sangre es obligatorio.',
-            'blood_type.in'      => 'El tipo de sangre no es válido.',
+            'blood_type.in'      => 'El tipo de sangre no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserBloodType::cases())),
+            'blood_type.string' => 'El tipo de sangre debe ser texto.',
+
             'registration_date.date' => 'La fecha de registro debe ser una fecha válida.',
             'registration_date.date_format' => 'La fecha de registro debe tener el formato AAAA-MM-DD.',
+            'registration_date.required' => 'La fecha de registro es obligatoria.',
+
             'status.required' => 'El estatus es obligatorio.',
-            'status.in' => 'El estatus proporcionado no es válido.',
+            'status.in' => 'El estatus proporcionado no es válido. Debe ser: ' . implode(',', array_map(fn($case) => $case->value, UserStatus::cases())),
+            'status.string' => 'El estatus debe ser texto.',
+
+            'name.string' => 'El nombre debe ser una cadena de texto.',
+            'last_name.string' => 'El apellido debe ser una cadena de texto.',
         ];
     }
 }

@@ -26,8 +26,8 @@ class PaymentMethod{
         public string $stripe_payment_method_id,
         public ?string $brand = null,
         public ?string $last4 = null,
-        public ?string $exp_month = null,
-        public ?string $exp_year = null,
+        public ?int $exp_month = null,
+        public ?int $exp_year = null,
         public ?int $id = null,
     )
     {}

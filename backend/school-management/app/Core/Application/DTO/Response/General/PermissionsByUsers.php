@@ -6,9 +6,11 @@ namespace App\Core\Application\DTO\Response\General;
  * @OA\Schema(
  *     schema="PermissionsByUsers",
  *     type="object",
- *     @OA\Property(property="role", type="string", example="student"),
+ *     @OA\Property(property="roles", type="array", @OA\Items(type="object"),
+ *          nullable=false,
+ *          description="Lista de roles de los usuarios a los que aplican los permisos"),
  *     @OA\Property(property="users", type="array", @OA\Items(type="object"),
- *         nullable=true,
+ *         nullable=false,
  *         description="Lista de usuarios a los que aplican los permisos"),
  *     @OA\Property(property="permissions", type="array", @OA\Items(type="object"),
  *         nullable=true,
@@ -18,7 +20,7 @@ namespace App\Core\Application\DTO\Response\General;
 class PermissionsByUsers
 {
     public function __construct(
-        public readonly string $role,
+        public readonly array $roles,
         public readonly array $users,
         public readonly array $permissions
     )

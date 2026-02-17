@@ -24,7 +24,7 @@ class LoginController extends Controller
     {
         $this->loginService=$loginService;
     }
-    
+
     public function register(RegisterRequest $request)
     {
         $data = $request->validated();

@@ -20,7 +20,7 @@ class ShowConceptsUseCase
         $paginated = $this->pcqRepo->findAllConcepts($status, $perPage, $page);
 
         $items = $paginated->getCollection()
-            ->map(fn($pc) => PaymentConceptMapper::toDomain($pc))
+            ->values()
             ->toArray();
 
         return GeneralMapper::toPaginatedResponse($items, $paginated);

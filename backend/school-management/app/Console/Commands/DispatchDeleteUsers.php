@@ -26,7 +26,7 @@ class DispatchDeleteUsers extends Command
      */
     public function handle()
     {
-        CleanDeleteUsersJob::dispatch();
+        CleanDeleteUsersJob::dispatch()->onQueue('default');
         $this->info('CleanDeleteUsersJob despachado');
     }
 }

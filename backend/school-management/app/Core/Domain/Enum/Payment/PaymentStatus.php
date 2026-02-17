@@ -13,20 +13,42 @@ namespace App\Core\Domain\Enum\Payment;
  */
 enum PaymentStatus: string
 {
+    //terminal
     case SUCCEEDED = 'succeeded';
-    case REQUIRES_ACTION = 'requires_action';
+    case OVERPAID = 'overpaid';
+    case FAILED = 'failed';
+    //Paid but nonTerminal
     case PAID = 'paid';
+    //nonTerminal
+    case REQUIRES_ACTION = 'requires_action';
     case UNPAID = 'unpaid';
     case DEFAULT = 'pending';
-    case OVERPAID = 'overpaid';
     case UNDERPAID = 'underpaid';
+
+
+    public static function paidStatuses(): array
+    {
+        return [
+            self::SUCCEEDED->value,
+            self::OVERPAID->value,
+            self::PAID->value,
+        ];
+    }
 
     public static function terminalStatuses(): array
     {
         return [
             self::SUCCEEDED->value,
             self::OVERPAID->value,
-            self::PAID->value,
+            self::FAILED->value,
+        ];
+    }
+
+    public static function receivedStatuses(): array
+    {
+        return [
+            self::SUCCEEDED->value,
+            self::OVERPAID->value,
         ];
     }
 
@@ -43,19 +65,18 @@ enum PaymentStatus: string
     public static function nonPaidStatuses(): array
     {
         return [
-            self::DEFAULT->value,
-            self::UNPAID->value,
-            self::REQUIRES_ACTION->value,
+            self::DEFAULT,
+            self::UNPAID,
+            self::REQUIRES_ACTION,
         ];
     }
 
     public static function reconcilableStatuses(): array
     {
         return [
-            self::DEFAULT->value,
-            self::UNPAID->value,
-            self::REQUIRES_ACTION->value,
-            self::PAID->value,
+            self::DEFAULT,
+            self::PAID,
+            self::UNDERPAID
         ];
     }
 

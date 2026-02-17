@@ -26,7 +26,7 @@ class DispatchCleanExpiredInvitesJob extends Command
      */
     public function handle()
     {
-        CleanExpiredInvitesJob::dispatch();
+        CleanExpiredInvitesJob::dispatch()->onQueue('default');
         $this->info('CleanExpiredInvitesJob despachado');
     }
 }

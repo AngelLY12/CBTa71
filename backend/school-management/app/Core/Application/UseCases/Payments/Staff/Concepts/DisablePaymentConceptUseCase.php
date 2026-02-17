@@ -18,5 +18,9 @@ class DisablePaymentConceptUseCase extends BasePaymentConceptStatusUseCase
     {
         return 'disable';
     }
+    protected function getSuccessMessage(): string
+    {
+        return 'El concepto fue desactivado correctamente';
+    }
 
 }

@@ -24,7 +24,7 @@ class PaymentConcept extends Model
         'end_date',
         'amount',
         'applies_to',
-        'is_global'
+        'mark_as_deleted_at'
     ];
 
     protected function casts(): array
@@ -32,6 +32,7 @@ class PaymentConcept extends Model
         return [
             'start_date' => 'date',
             'end_date' =>  'date',
+            'mark_as_deleted_at' => 'datetime',
             'amount' => 'decimal:2',
             'status' => PaymentConceptStatus::class,
             'applies_to' => PaymentConceptAppliesTo::class
@@ -39,11 +40,11 @@ class PaymentConcept extends Model
     }
 
     public function careers(){
-        return $this->belongsToMany(Career::class);
+        return $this->belongsToMany(Career::class)->withTimestamps();
     }
 
     public function users(){
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(User::class)->withTimestamps();
     }
 
     public function payments(){
@@ -56,7 +57,13 @@ class PaymentConcept extends Model
 
     public function exceptions()
     {
-        return $this->hasMany(ConceptException::class, 'payment_concept_id');
+        return $this->belongsToMany(
+            User::class,
+            'concept_exceptions',
+            'payment_concept_id',
+            'user_id'
+        )->withTimestamps()
+            ->withPivot('user_id');
     }
 
     public function applicantTypes()

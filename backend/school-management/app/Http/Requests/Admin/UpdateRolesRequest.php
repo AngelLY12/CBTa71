@@ -66,10 +66,10 @@ class UpdateRolesRequest extends FormRequest
             'curps' => ['required', 'array'],
             'curps.*' => ['string', 'exists:users,curp'],
 
-            'rolesToAdd' => ['nullable', 'array'],
+            'rolesToAdd' => ['sometimes', 'required', 'array'],
             'rolesToAdd.*' => ['string', 'exists:roles,name'],
 
-            'rolesToRemove' => ['nullable', 'array'],
+            'rolesToRemove' => ['sometimes', 'required', 'array'],
             'rolesToRemove.*' => ['string', 'exists:roles,name'],
         ];
     }

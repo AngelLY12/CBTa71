@@ -19,6 +19,11 @@ class EloquentPaymentMethodQueryRepository implements PaymentMethodQueryRepInter
         return optional(EloquentPaymentMethod::where('stripe_payment_method_id', $stripeId)->first(), fn($pm) => PaymentMethodMapper::toDomain($pm));
     }
 
+    public function existsPaymentMethodByStripeId(string $stripeId): bool
+    {
+        return EloquentPaymentMethod::where('stripe_payment_method_id', $stripeId)->exists();
+    }
+
     public function findByStripeIds(array $stripeIds): array
     {
         if (empty($stripeIds)) {

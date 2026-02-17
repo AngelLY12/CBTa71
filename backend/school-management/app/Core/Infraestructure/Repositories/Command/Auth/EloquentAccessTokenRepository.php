@@ -9,14 +9,10 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class EloquentAccessTokenRepository implements AccessTokenRepInterface
 {
-    public function revokeToken(string $tokenId): bool
+    public function revokeToken(int $tokenId): bool
     {
-        $token = PersonalAccessToken::find($tokenId);
+        return PersonalAccessToken::whereKey($tokenId)->delete() === 1;
 
-        if (!$token) {
-            return 0;
-        }
-        return $token->delete();
     }
 
     public function deletionInvalidTokens(): int

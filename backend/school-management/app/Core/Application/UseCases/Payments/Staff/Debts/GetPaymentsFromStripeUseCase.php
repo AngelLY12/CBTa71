@@ -3,8 +3,8 @@
 namespace App\Core\Application\UseCases\Payments\Staff\Debts;
 
 use App\Core\Application\Mappers\GeneralMapper;
-use App\Core\Domain\Repositories\Query\Stripe\StripeGatewayQueryInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
+use App\Core\Domain\Repositories\Stripe\StripeGatewayQueryInterface;
 use App\Exceptions\NotFound\UserNotFoundException;
 use App\Exceptions\Validation\ValidationException;
 

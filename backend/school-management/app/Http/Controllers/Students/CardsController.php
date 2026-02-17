@@ -26,12 +26,12 @@ class CardsController extends Controller
     }
 
 
-    public function index(ForceRefreshRequest $request, ?int $id=null)
+    public function index(ForceRefreshRequest $request, ?int $studentId=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
+        $targetUser = $user->resolveTargetUser($studentId);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
@@ -47,6 +47,7 @@ class CardsController extends Controller
 
     public function store()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         $session= $this->cardsService->setupCard(UserMapper::toDomain($user));
@@ -59,9 +60,10 @@ class CardsController extends Controller
 
     }
 
-    
-    public function destroy(string $paymentMethodId)
+
+    public function destroy(int $paymentMethodId)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $this->cardsService->deletePaymentMethod(UserMapper::toDomain($user),$paymentMethodId);
 

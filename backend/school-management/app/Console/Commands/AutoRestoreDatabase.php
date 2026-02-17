@@ -26,7 +26,7 @@ class AutoRestoreDatabase extends Command
      */
     public function handle()
     {
-        AutoRestoreDatabaseJob::dispatch();
+        AutoRestoreDatabaseJob::dispatch()->onQueue('maintenance-heavy');
         $this->info('AutoRestoreDatabaseJob despachado');
     }
 }

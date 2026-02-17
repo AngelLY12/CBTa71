@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Core\Domain\Enum\User\RelationshipType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
 
 class ParentStudent extends Model
 {
+    use HasFactory;
     protected $table = 'parent_student';
 
     protected $fillable = [

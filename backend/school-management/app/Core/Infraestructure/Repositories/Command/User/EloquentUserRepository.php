@@ -18,13 +18,14 @@ use Illuminate\Support\Collection;
 class EloquentUserRepository implements UserRepInterface
 {
 
-    public function create(CreateUserDTO $user): User
+    public function create(CreateUserDTO $user): \App\Models\User
     {
          $eloquentUser = EloquentUser::create(
             UserMapper::toPersistence($user)
         );
         $eloquentUser->refresh();
-        return UserMapper::toDomain($eloquentUser);
+
+        return $eloquentUser;
     }
 
     public function update(int $userId, array $fields): User
@@ -44,9 +45,21 @@ class EloquentUserRepository implements UserRepInterface
     {
         $eloquentUser = $this->findOrFail($userId);
         $refreshToken = bin2hex(random_bytes(64));
+        $role = $eloquentUser->getRoleNames()
+            ->sortBy(fn ($role) => match ($role) {
+                UserRoles::ADMIN->value,
+                UserRoles::SUPERVISOR->value => 1,
+                UserRoles::FINANCIAL_STAFF->value => 2,
+                UserRoles::UNVERIFIED->value => 0,
+                default => 3,
+            })
+
+            ->first();
+        $expirationTime = config("refresh-token.expiration_time_by_role.$role") ??
+            config('refresh-token.default_refresh_ttl');
         $eloquentUser->refreshTokens()->create([
             'token' => hash('sha256', $refreshToken),
-            'expires_at' => now()->addDays(7),
+            'expires_at' => now()->addMinutes($expirationTime),
             'revoked' => false
         ]);
         return $refreshToken;
@@ -59,7 +72,7 @@ class EloquentUserRepository implements UserRepInterface
 
     public function assignRole(int $userId, string $role): bool
     {
-        $user = EloquentUser::find($userId);
+        $user = EloquentUser::with('roles')->find($userId);
 
         if (! $user) {
             return false;
@@ -78,7 +91,7 @@ class EloquentUserRepository implements UserRepInterface
         return EloquentUser::whereIn('email', $emails)->get();
     }
 
-    public function insertSingleUser(array $userData): User
+    public function insertSingleUser(array $userData): EloquentUser
     {
         try {
             return EloquentUser::create($userData);
@@ -91,10 +104,25 @@ class EloquentUserRepository implements UserRepInterface
     {
         $thresholdDate = Carbon::now()->subDays(30);
 
-        return DB::table('users')
-            ->where('status', '=', UserStatus::ELIMINADO)
-            ->where('updated_at', '<', $thresholdDate)
-            ->delete();
+        return DB::transaction(function () use ($thresholdDate) {
+            $userIds = DB::table('users')
+                ->where('status', '=', UserStatus::ELIMINADO)
+                ->whereNotNull('mark_as_deleted_at')
+                ->where('mark_as_deleted_at', '<', $thresholdDate)
+                ->pluck('id');
+
+            if ($userIds->isEmpty()) {
+                return 0;
+            }
+            DB::table('notifications')
+                ->where('notifiable_type', 'App\Models\User')
+                ->whereIn('notifiable_id', $userIds)
+                ->delete();
+
+            return DB::table('users')
+                ->whereIn('id', $userIds)
+                ->delete();
+        });
     }
     public function changeStatus(array $userIds, string $status): UserChangedStatusResponse
     {
@@ -104,7 +132,12 @@ class EloquentUserRepository implements UserRepInterface
 
         $affected = EloquentUser::whereIn('id', $userIds)
             ->where('status', '!=', $status)
-            ->update(['status' => $status, 'updated_at' => now()]);
+            ->update([
+                'status' => $status,
+                'updated_at' => now(),
+                'mark_as_deleted_at' => $status === UserStatus::ELIMINADO->value ? now() : null,
+            ]);
+
 
         if ($affected === 0) {
             return new UserChangedStatusResponse($status, 0);
@@ -116,6 +149,15 @@ class EloquentUserRepository implements UserRepInterface
         ]);
     }
 
-
+    public function revokeTokensByUserIds(array $userIds): int
+    {
+        $sanctumDeleted = DB::table('personal_access_tokens')
+            ->whereIn('tokenable_id', $userIds)
+            ->delete();
+        $refreshTokenDeleted = DB::table('refresh_tokens')
+            ->whereIn('user_id', $userIds)
+            ->delete();
+        return $sanctumDeleted + $refreshTokenDeleted;
+    }
 
 }

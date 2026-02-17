@@ -27,13 +27,15 @@ class SendParentInviteUseCase
     {
         $student=$this->userQRepo->findById($studentId);
         $parent=$this->userQRepo->findUserByEmail($parentEmail);
-        if($student->email === $parentEmail)
-            throw new ValidationException("No puedes invitarte a ti mismo");
-
         if(!$student || !$parent)
         {
             throw new UserNotFoundException();
         }
+
+        if($student->email === $parentEmail){
+            throw new ValidationException("No puedes invitarte a ti mismo");
+        }
+
         if ($this->relationQRepo->exists($parent->id, $studentId)) {
             throw new RelationAlreadyExistsException();
         }
@@ -62,7 +64,8 @@ class SendParentInviteUseCase
                 ),
                 $user->email,
                 'parent_invitation'
-            )->delay(now()->addSeconds(rand(1, 5)));
+            )
+                ->onQueue('emails');
 
     }
 }

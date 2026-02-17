@@ -14,4 +14,8 @@ class EliminateLogicalPaymentConceptUseCase extends BasePaymentConceptStatusUseC
     {
         return 'deleteLogical';
     }
+    protected function getSuccessMessage(): string
+    {
+        return 'El concepto fue eliminado correctamente';
+    }
 }

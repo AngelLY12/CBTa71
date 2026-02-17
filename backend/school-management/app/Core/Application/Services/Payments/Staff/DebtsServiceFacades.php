@@ -14,6 +14,8 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class DebtsServiceFacades{
     use HasCache;
+    private const TAG_DEBTS_PENDING = [CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value, "pending"];
+    private const TAG_DEBTS_STRIPE = [CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value, "stripe"];
     public function __construct(
         private ShowAllPendingPaymentsUseCase $pending,
         private ValidatePaymentUseCase $validate,
@@ -27,20 +29,54 @@ class DebtsServiceFacades{
     }
     public function showAllpendingPayments(?string $search, int $perPage, int $page, bool $forceRefresh): PaginatedResponse
     {
-        $key = $this->service->makeKey(CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value . ":pending:$search:$perPage:$page");
-        return $this->cache($key,$forceRefresh ,fn() =>$this->pending->execute($search, $perPage, $page));
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::DEBTS->value . ":pending",
+            [
+                'search' => $search,
+                'perPage' => $perPage,
+                'page' => $page
+            ]
+        );
+
+        return $this->shortCache(
+            $key,
+            fn() => $this->pending->execute($search, $perPage, $page),
+            self::TAG_DEBTS_PENDING,
+            $forceRefresh
+        );
     }
 
     public function validatePayment(string $search, string $payment_intent_id): PaymentValidateResponse
     {
-        $validate=$this->validate->execute($search,$payment_intent_id);
-        $this->service->clearKey(CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value . ":pending");
-        return $validate;
+        return $this->idempotent(
+            'stripe_validate_payment',
+            [
+                'payment_intent_id' => $payment_intent_id,
+            ],
+            function () use ($search, $payment_intent_id) {
+
+                $validate = $this->validate->execute($search, $payment_intent_id);
+
+                $this->service->flushTags(self::TAG_DEBTS_PENDING);
+
+                return $validate;
+            },
+            300
+        );
     }
 
     public function getPaymentsFromStripe(string $search, ?int $year, bool $forceRefresh):array
     {
-        return $this->payments->execute($search,$year);
+        $key = $this->generateCacheKey(
+            CachePrefix::STAFF->value,
+            StaffCacheSufix::DEBTS->value . ":stripe",
+            [
+                'search' => $search,
+                'year' => $year ?? now()->year,
+            ]
+        );
+        return $this->shortCache($key, fn() => $this->payments->execute($search,$year), self::TAG_DEBTS_STRIPE, $forceRefresh);
     }
 
 }

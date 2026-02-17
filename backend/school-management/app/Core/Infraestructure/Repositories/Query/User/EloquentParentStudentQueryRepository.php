@@ -3,6 +3,7 @@
 namespace App\Core\Infraestructure\Repositories\Query\User;
 
 use App\Core\Application\DTO\Response\Parents\ParentChildrenResponse;
+use App\Core\Application\DTO\Response\Parents\StudentParentsResponse;
 use App\Core\Application\Mappers\ParentStudentMapper as MappersParentStudentMapper;
 use App\Core\Domain\Repositories\Query\User\ParentStudentQueryRepInterface;
 use App\Core\Infraestructure\Mappers\ParentStudentMapper;
@@ -36,13 +37,29 @@ class EloquentParentStudentQueryRepository implements ParentStudentQueryRepInter
             'childrenData' => $childrenData,
         ]);
     }
-    public function getParentsOfStudent(int $studentId): array
+    public function getParentsOfStudent(int $studentId): ?StudentParentsResponse
     {
-        return EloquentParentStudent::with('users:id,name,last_name')
+        $relations= EloquentParentStudent::with
+        (
+            'student:id,name,last_name',
+            'parent:id,name,last_name',
+        )
         ->where('student_id', $studentId)
-        ->get()
-        ->map(fn($relation) => ParentStudentMapper::toDomain($relation))
-        ->toArray();
+        ->get();
+        if($relations->isEmpty())
+        {
+            return null;
+        }
+        $student = $relations->first()->student;
+        $parentData = $relations->map(fn($relation) => [
+            'id' => $relation->parent->id,
+            'fullName' => "{$relation->parent->name} {$relation->parent->last_name}"
+        ])->toArray();
+        return MappersParentStudentMapper::toStudentParentsResponse([
+            'studentId' => $student->id,
+            'studentName' => "{$student->name} {$student->last_name}",
+            'parentsData' => $parentData,
+        ]);
     }
     public function exists(int $parentId, int $studentId): bool
     {

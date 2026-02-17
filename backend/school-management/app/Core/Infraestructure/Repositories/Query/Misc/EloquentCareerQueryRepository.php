@@ -22,10 +22,21 @@ class EloquentCareerQueryRepository implements CareerQueryRepInterface
         ->toArray();
     }
 
+    public function findAllIds(): array
+    {
+        return EloquentCareer::query()->pluck('id')->toArray();
+
+    }
+
     public function findById(int $id): ?Career
     {
         return optional(EloquentCareer::find($id), fn($career) => CareerMapper::toDomain($career));
 
+    }
+
+    public function exists(int $id): bool
+    {
+        return EloquentCareer::where('id',$id)->exists();
     }
 
 }

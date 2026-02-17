@@ -27,12 +27,12 @@ class PendingPaymentController extends Controller
 
     }
 
-    public function index(ForceRefreshRequest $request, ?int $id=null)
+    public function index(ForceRefreshRequest $request, ?int $studentId=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
+        $targetUser = $user->resolveTargetUser($studentId);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
@@ -45,12 +45,12 @@ class PendingPaymentController extends Controller
 
     }
 
-    public function overdue(ForceRefreshRequest $request, ?int $id=null)
+    public function overdue(ForceRefreshRequest $request, ?int $studentId=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
+        $targetUser = $user->resolveTargetUser($studentId);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
@@ -67,8 +67,9 @@ class PendingPaymentController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
+        $targetUser = $user->resolveTargetUser();
         $payment= $this->pendingPaymentService->payConcept(
-            UserMapper::toDomain($user),
+            UserMapper::toDomain($targetUser),
             $request->validated()['concept_id']
         );
         return Response::success(

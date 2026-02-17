@@ -1,50 +1,86 @@
 <?php
 
 namespace App\Core\Application\DTO\Response\User;
-
 /**
  * @OA\Schema(
  *     schema="UserWithUpdatedPermissionsResponse",
  *     type="object",
- *     description="Respuesta con los permisos actualizados de un usuario o grupo de usuarios",
- *     @OA\Property(property="fullName", type="string", description="Nombre completo del usuario", example="Juan Pérez"),
- *     @OA\Property(property="curp", type="string", description="CURP del usuario", example="PEPJ800101HDFRRN09"),
- *     @OA\Property(property="role", type="string", description="Rol actual del usuario", example="student"),
+ *     description="Respuesta de una operación masiva de actualización de permisos sobre usuarios",
  *     @OA\Property(
- *         property="updatedPermissions",
- *         type="array",
- *         description="Lista de permisos actualizados (añadidos o removidos)",
- *         @OA\Items(type="string"),
- *         example={"find user", "create payment"}
+ *         property="summary",
+ *         type="object",
+ *         description="Resumen global de la operación",
+ *         @OA\Property(property="totalFound", type="integer", example=30, description="Total de usuarios encontrados"),
+ *         @OA\Property(property="totalUpdated", type="integer", example=20, description="Total de usuarios actualizados"),
+ *         @OA\Property(property="totalUnchanged", type="integer", example=5, description="Total de usuarios sin cambios"),
+ *         @OA\Property(property="totalFailed", type="integer", example=5, description="Total de usuarios que fallaron"),
+ *         @OA\Property(
+ *             property="operations",
+ *             type="object",
+ *             description="Operaciones realizadas",
+ *             @OA\Property(property="total_permissions_removed", type="integer", example=15, description="Total de permisos removidos"),
+ *             @OA\Property(property="total_permissions_added", type="integer", example=10, description="Total de permisos agregados"),
+ *             @OA\Property(property="total_roles_processed", type="integer", example=3, description="Total de roles procesados")
+ *         )
  *     ),
  *     @OA\Property(
- *           property="metadata",
- *           type="object",
- *           description="Datos extra sobre la operación",
- *           @OA\Property(property="totalFound", type="integer",  description="Número total de usuarios encontrados", example=30),
- *           @OA\Property(property="totalUpdated", type="integer",  description="Número total de usuarios afectados", example=20),
- *           @OA\Property(property="failed", type="integer", description="Número total de usuarios no afectados por fallo", example=10),
- *           @OA\Property(property="failedUsers", type="array", description="Lista de ID de usuarios fallidos", @OA\Items(type="string"),
- *              example={1,2,3,4}),
- *           @OA\Property(
- *              property="operations",
- *              type="object",
- *              description="Operaciones realizadas",
- *              @OA\Property(property="permissions_removed", type="array", @OA\Items(type="string"), example={"view"}),
- *              @OA\Property(property="permissions_added", type="array", @OA\Items(type="string"), example={"create"}),
- *              @OA\Property(property="roles_processed", type="integer", example=5)
+ *         property="users",
+ *         type="object",
+ *         description="Detalle de usuarios procesados",
+ *         @OA\Property(
+ *             property="processed_users_id",
+ *             type="array",
+ *             @OA\Items(type="integer"),
+ *             example={1, 2, 3},
+ *             description="IDs de primeros 10 usuarios procesados exitosamente"
+ *         ),
+ *      @OA\Property(
+ *              property="affected_users_id",
+ *              type="array",
+ *              @OA\Items(type="integer"),
+ *              example={1, 2, 3},
+ *              description="IDs de primeros 10 usuarios procesados exitosamente"
  *          ),
+ *         @OA\Property(
+ *             property="failed_users_id",
+ *             type="array",
+ *             @OA\Items(type="integer"),
+ *             example={4, 5},
+ *             description="IDs de usuarios que fallaron"
+ *         ),
+ *         @OA\Property(
+ *             property="unchanged_users_id",
+ *             type="array",
+ *             @OA\Items(type="integer"),
+ *             example={6, 7},
+ *             description="IDs de usuarios que no tuvieron cambios"
+ *         )
  *     ),
+ *     @OA\Property(
+ *         property="permissionsProcessed",
+ *         type="object",
+ *         description="Permisos procesados durante la operación",
+ *         @OA\Property(
+ *             property="processed_added",
+ *             type="array",
+ *             @OA\Items(type="string"),
+ *             example={"view.students", "edit.students"}
+ *         ),
+ *         @OA\Property(
+ *             property="processed_removed",
+ *             type="array",
+ *             @OA\Items(type="string"),
+ *             example={"create.student"}
+ *         )
+ *     )
  * )
  */
 class UserWithUpdatedPermissionsResponse
 {
     public function __construct(
-        public readonly ?string $fullName,
-        public readonly ?string $curp,
-        public readonly ?string $role=null,
-        public readonly array $updatedPermissions,
-        public readonly ?array $metadata
+        public readonly ?array $summary,
+        public readonly ?array $users,
+        public readonly ?array $permissionsProcessed,
     )
     {
     }

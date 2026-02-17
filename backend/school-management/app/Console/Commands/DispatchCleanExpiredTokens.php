@@ -26,7 +26,7 @@ class DispatchCleanExpiredTokens extends Command
      */
     public function handle()
     {
-        CleanExpiredTokensJob::dispatch();
+        CleanExpiredTokensJob::dispatch()->onQueue('default');
         $this->info('CleanExpiredTokensJob despachado');
 
     }

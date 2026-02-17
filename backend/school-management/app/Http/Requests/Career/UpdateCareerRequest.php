@@ -36,7 +36,7 @@ class UpdateCareerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'career_name' => 'sometimes|string|max:50',
+            'career_name' => 'sometimes|string|max:150',
         ];
     }
 

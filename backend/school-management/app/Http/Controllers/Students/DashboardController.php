@@ -28,13 +28,13 @@ class DashboardController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
-    public function pending(DashboardRequest $request, ?int $id=null)
+    public function pending(DashboardRequest $request, ?int $studentId=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $onlyThisYear = $request->validated()['only_this_year'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
+        $targetUser = $user->resolveTargetUser($studentId);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
@@ -47,13 +47,13 @@ class DashboardController extends Controller
 
 
 
-    public function paid(DashboardRequest $request, ?int $id=null)
+    public function paid(DashboardRequest $request, ?int $studentId=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $onlyThisYear = $request->validated()['only_this_year'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
+        $targetUser = $user->resolveTargetUser($studentId);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
@@ -66,13 +66,13 @@ class DashboardController extends Controller
     }
 
 
-    public function overdue(DashboardRequest $request, ?int $id)
+    public function overdue(DashboardRequest $request, ?int $studentId=null)
     {
        /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $onlyThisYear = $request->validated()['only_this_year'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
+        $targetUser = $user->resolveTargetUser($studentId);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
@@ -84,13 +84,13 @@ class DashboardController extends Controller
 
     }
 
-    public function history(PaginationRequest $request, ?int $id=null)
+    public function history(PaginationRequest $request, ?int $studentId=null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $forceRefresh = $request->validated()['forceRefresh'] ?? false;
         $onlyThisYear = $request->validated()['only_this_year'] ?? false;
-        $targetUser = $user->resolveTargetUser($id);
+        $targetUser = $user->resolveTargetUser($studentId);
 
         if (!$targetUser) {
             return Response::error('Acceso no permitido', 403);
@@ -106,9 +106,15 @@ class DashboardController extends Controller
     }
 
 
-    public function refreshDashboard()
+    public function refreshDashboard(?int $studentId=null)
     {
-        $this->dashboardService->refreshAll();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $targetUser = $user->resolveTargetUser($studentId);
+        if (!$targetUser) {
+            return Response::error('Acceso no permitido', 403);
+        }
+        $this->dashboardService->refreshAll($targetUser->id);
         return Response::success(null, 'Dashboard cache limpiado con éxito');
 
     }

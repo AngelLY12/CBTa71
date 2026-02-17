@@ -11,28 +11,35 @@ use Illuminate\Support\Facades\Hash;
 class UserMapper{
     public static function toDomain(EloquentUser $user): DomainUser
     {
-
+        $addressData = null;
+        if (!empty($user->address)) {
+            if (is_string($user->address)) {
+                $addressData = json_decode($user->address, true);
+            } elseif (is_array($user->address)) {
+                $addressData = $user->address;
+            }
+        }
         $domainUser = new DomainUser(
-            id: $user->id,
+            curp: $user->curp,
             name: $user->name,
             last_name: $user->last_name,
             email: $user->email,
             password: $user->password,
             phone_number: $user->phone_number,
-            birthdate: $user->birthdate ?? null,
-            gender: $user->gender,
-            curp: $user->curp,
-            address: $user->address ?? [],
-            stripe_customer_id: $user->stripe_customer_id ?? null,
-            blood_type: $user->blood_type ?? null,
-            registration_date: $user->registration_date ?? null,
             status: $user->status,
-            emailVerified: $user->hasVerifiedEmail()
+            registration_date: $user->registration_date,
+            emailVerified: $user->hasVerifiedEmail(),
+            id: $user->id,
+            birthdate: $user->birthdate,
+            gender: $user->gender,
+            address: $addressData,
+            blood_type: $user->blood_type,
+            stripe_customer_id: $user->stripe_customer_id
         );
-        if ($user->studentDetail) {
+        if ($user->relationLoaded('studentDetail') && $user->studentDetail !== null) {
             $domainUser->setStudentDetail(StudentDetailMapper::toDomain($user->studentDetail));
         }
-        if($user->roles)
+        if($user->relationLoaded('roles'))
         {
             foreach ($user->roles as $role){
                 $domainUser->addRole(RolesAndPermissionMapper::toRoleDomain($role));

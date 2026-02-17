@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -20,8 +21,8 @@ class SendBulkMailJob implements ShouldQueue
      */
     public int $tries = 5;
     public $backoff = [10, 30, 60];
-    private const EMAILS_PER_MINUTE = 60;
-    private const DELAY_BETWEEN_EMAILS = 100000;
+    private const EMAILS_PER_MINUTE = 1100;
+    private const DELAY_BETWEEN_EMAILS = 50000;
 
     protected array $mailables;
     protected array $recipientEmails;
@@ -124,6 +125,7 @@ class SendBulkMailJob implements ShouldQueue
         ]);
 
         SendMailJob::fromBulkRetry(clone $mailable, $recipientEmail)
+            ->onQueue('emails')
             ->delay(now()->addMinutes(1));
     }
 
@@ -131,7 +133,7 @@ class SendBulkMailJob implements ShouldQueue
         array $mailables,
         array $recipientEmails,
         ?string $jobType = null
-    ): self {
-        return new self($mailables, $recipientEmails, $jobType);
+    ): PendingDispatch {
+        return self::dispatch($mailables, $recipientEmails, $jobType);
     }
 }

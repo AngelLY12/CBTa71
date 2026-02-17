@@ -10,11 +10,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\ValidationException;
 
 class NewPasswordController extends Controller
 {
-    
+
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -44,6 +45,10 @@ class NewPasswordController extends Controller
             ]);
         }
 
-        return response()->json(['status' => __($status)]);
+        return Response::success(
+        null,
+        '¡Contraseña restablecida exitosamente! Ya puedes iniciar sesión con tu nueva contraseña.',
+        200
+    );
     }
 }

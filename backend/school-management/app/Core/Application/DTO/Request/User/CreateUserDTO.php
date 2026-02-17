@@ -35,13 +35,13 @@ class CreateUserDTO
         public readonly string $email,
         public readonly string $password,
         public readonly string $phone_number,
-        public readonly ?Carbon $birthdate,
-        public readonly ?UserGender $gender,
         public readonly string $curp,
-        public readonly ?array $address,
-        public readonly ?UserBloodType $blood_type,
-        public readonly ?Carbon $registration_date,
-        public readonly ?UserStatus $status,
+        public readonly ?Carbon $birthdate = null,
+        public readonly ?UserGender $gender = null,
+        public readonly ?array $address = null,
+        public readonly ?UserBloodType $blood_type = null,
+        public readonly ?Carbon $registration_date = null,
+        public readonly ?UserStatus $status = null,
     )
     {
 

@@ -2,16 +2,15 @@
 
 namespace App\Mail;
 
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use MailerSend\Helpers\Builder\Personalization;
-use MailerSend\LaravelDriver\MailerSendTrait;
 
 class SendVerifyEmail extends Mailable
 {
-    use Queueable, SerializesModels, MailerSendTrait;
+    use Queueable, SerializesModels;
 
     protected $notifiable;
     protected $verifyUrl;
@@ -22,30 +21,38 @@ class SendVerifyEmail extends Mailable
         $this->verifyUrl = $verifyUrl;
     }
 
-    public function build()
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
-
-        $messageDetails = "
-            <p>Para verificar tu correo, haz clic en el siguiente enlace:</p>
-            <p><a href=\"{$this->verifyUrl}\" target=\"_blank\">Verificar mi email</a></p>
-            <p>Si no creaste esta cuenta, ignora este mensaje.</p>
-        ";
-
-        $personalization = [
-            new Personalization($this->notifiable->email, [
-                'greeting' => "Hola {$this->notifiable->name}",
-                'header_title' => 'Verifica tu correo electrónico',
-                'message_intro' => 'Para completar el proceso de registro debes hacer la verificación de correo.',
-                'message_details' => $messageDetails,
-                'message_footer' => 'Este enlace expirará en 60 minutos.',
-            ])
-        ];
-
-        return $this->mailersend(
-            template_id: 'pq3enl6d8z7g2vwr',
-            personalization: $personalization
+        return new Envelope(
+            subject: 'Verifica tu correo electrónico',
         );
+    }
 
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.auth.verify-email',
+            with: [
+                'user' => $this->notifiable,
+                'verifyUrl' => $this->verifyUrl,
+            ]
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 
 

@@ -3,6 +3,7 @@
 namespace App\Core\Infraestructure\Repositories\Command\User;
 
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
+use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Entities\StudentDetail;
 use App\Core\Domain\Enum\User\UserRoles;
@@ -19,13 +20,25 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
 {
     public function findStudentDetails(int $userId): ?StudentDetail
     {
-        $eloquentStudentDetails = EloquentStudentDetail::where('user_id',$userId);
+        $eloquentStudentDetails = EloquentStudentDetail::where('user_id',$userId)->first();
         return $eloquentStudentDetails ? StudentDetailMapper::toDomain($eloquentStudentDetails): null;
+    }
+
+    public function findStudentDetailsToDisplay(int $userId): ?StudentDetailDTO
+    {
+        $eloquentStudentDetails = EloquentStudentDetail::with('career:id,career_name')
+            ->where('user_id', $userId)
+            ->first();
+
+        return $eloquentStudentDetails
+            ? \App\Core\Application\Mappers\StudentDetailMapper::toStudentDetailDTO($eloquentStudentDetails)
+            : null;
     }
 
     public function insertStudentDetails(array $studentDetails): int {
         if (!empty($studentDetails)) {
-            return DB::table('student_details')->insert($studentDetails);
+            $result = DB::table('student_details')->insert($studentDetails);
+            return $result ? count($studentDetails) : 0;
         }
         return 0;
     }
@@ -42,7 +55,7 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
 
     public function incrementSemesterForAll(): int
     {
-        return EloquentStudentDetail::where('semestre', '<=', 10)
+        return EloquentStudentDetail::where('semestre', '<', 11)
             ->whereHas('user', function ($query) {
                 $query->whereIn('status', [UserStatus::ACTIVO, UserStatus::BAJA_TEMPORAL]);
             })
@@ -64,6 +77,8 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
     {
         $model= $this->findModelByUserId($user_id);
         $model->update($fields);
+        unset($model->user->studentDetail);
+        $model->user->load('studentDetail');
         return UserMapper::toDomain($model->user);
     }
 
@@ -79,9 +94,7 @@ class EloquentStudentDetailRepository implements StudentDetailReInterface
 
     private function findModelByUserId(int $user_id): EloquentStudentDetail
     {
-        return EloquentStudentDetail::where('user_id', $user_id)->firstOr(
-            throw new ModelNotFoundException('No se encontraron detalles de estudiante para este usuario')
-        );
+        return EloquentStudentDetail::where('user_id', $user_id)->firstOrFail();
     }
 
 }

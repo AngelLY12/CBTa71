@@ -2,7 +2,9 @@
 
 namespace App\Core\Application\UseCases\Payments\Staff\Dashboard;
 
-use App\Core\Domain\Repositories\Query\UserQueryRepInterface;
+
+use App\Core\Application\DTO\Response\User\UsersFinancialSummary;
+use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 
 class GetAllStudentsUseCase{
     public function __construct(
@@ -11,8 +13,8 @@ class GetAllStudentsUseCase{
     {
     }
 
-    public function execute(bool $onlyThisYear):int
+    public function execute(bool $onlyThisYear):UsersFinancialSummary
     {
-        return $this->uqRepo->countStudents($onlyThisYear);
+        return $this->uqRepo->getUsersPopulationSummary($onlyThisYear);
     }
 }

@@ -20,9 +20,48 @@ enum UserRoles: string
     public static function students(): array
     {
         return [
+            self::STUDENT,
+            self::APPLICANT,
+        ];
+    }
+
+    public static function paymentContext(): array
+    {
+        return [
             self::STUDENT->value,
             self::APPLICANT->value,
+            self::PARENT->value,
         ];
+    }
+
+    public static function financialStaffContext(): array
+    {
+        return [
+            self::FINANCIAL_STAFF->value,
+        ];
+    }
+
+    public static function administrationContext(): array
+    {
+        return [
+            self::ADMIN->value,
+            self::SUPERVISOR->value,
+        ];
+    }
+
+    public static function globalPaymentContext(): array
+    {
+        return [
+            self::STUDENT->value,
+            self::APPLICANT->value,
+            self::PARENT->value,
+            self::FINANCIAL_STAFF->value,
+        ];
+    }
+
+    public static function administrationRoles(): array
+    {
+        return [self::ADMIN->value, self::SUPERVISOR->value];
     }
 
 }

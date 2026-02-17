@@ -13,6 +13,8 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class PendingPaymentServiceFacades{
     use HasCache;
+    private const TAG_PENDING_CONCEPTS =[CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value];
+
     public function __construct(
         private ShowPendingPaymentsUseCase $pending,
         private ShowOverduePaymentsUseCase $overdue,
@@ -23,20 +25,45 @@ class PendingPaymentServiceFacades{
     }
 
     public function showPendingPayments(User $user, bool $forceRefresh): array {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value . ":pending:$user->id");
-        return $this->cache($key,$forceRefresh ,fn() =>  $this->pending->execute($user->id));
+        $key = $this->generateCacheKey(
+            CachePrefix::STUDENT->value,
+            StudentCacheSufix::PENDING->value . ":pending",
+            [
+                'userId' => $user->id,
+            ]
+        );
+        $tags = array_merge(self::TAG_PENDING_CONCEPTS, ["userId:{$user->id}"]);
+        return $this->shortCache($key,fn() =>  $this->pending->execute($user),$tags,$forceRefresh );
     }
 
     public function showOverduePayments(User $user, bool $forceRefresh): array {
-        $key = $this->service->makeKey(CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value . ":overdue:$user->id");
-        return $this->cache($key,$forceRefresh ,fn() => $this->overdue->execute($user->id));
+        $key = $this->generateCacheKey(
+            CachePrefix::STUDENT->value,
+            StudentCacheSufix::PENDING->value . ":overdue",
+            [
+                'userId' => $user->id,
+            ]
+        );
+        $tags = array_merge(self::TAG_PENDING_CONCEPTS, ["overdue","userId:{$user->id}"]);
+        return $this->shortCache($key,fn() => $this->overdue->execute($user),$tags,$forceRefresh);
     }
 
     public function payConcept(User $user, int $conceptId): string {
-        $pay=$this->pay->execute($user,$conceptId);
-        $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value . ":pending:$user->id");
-        $this->service->clearKey(CachePrefix::STUDENT->value, StudentCacheSufix::HISTORY->value .":$user->id");
-        return $pay;
+        return $this->idempotent(
+            'stripe_pay_concept',
+            [
+                'user_id' => $user->id,
+                'concept_id' => $conceptId,
+            ],
+            function () use ($user, $conceptId) {
+
+                $pay = $this->pay->execute($user, $conceptId);
+                $this->service->flushTags(array_merge(self::TAG_PENDING_CONCEPTS, ["userId:{$user->id}"]));
+
+                return $pay;
+            },
+            900
+        );
     }
 
 }

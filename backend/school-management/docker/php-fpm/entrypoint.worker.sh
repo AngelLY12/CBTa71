@@ -1,18 +1,25 @@
 #!/bin/bash
 set -e
-echo "Iniciando configuración de Laravel..."
 
-echo "Limpiando cachés de Laravel..."
-php artisan config:clear || echo "No se pudo limpiar config"
-php artisan cache:clear || echo "No se pudo limpiar cache"
-php artisan route:clear || echo "No se pudo limpiar rutas"
+echo "Iniciando worker de Laravel..."
+
+echo "Limpiando cachés..."
 php artisan optimize:clear || echo "No se pudo limpiar"
 
-echo "Iniciando worker de colas..."
-php artisan queue:work redis --max-jobs=50 --sleep=3 --tries=3 --timeout=90 --backoff=5 --verbose &
+echo "Iniciando worker..."
+php artisan queue:work redis \
+    --queue=cache,high,emails,low,default,notifications,processing \
+    --sleep=3 \
+    --backoff=5 \
+    --tries=3 \
+    --timeout=120 \
+    --memory=256 \
+    --max-jobs=100 \
+    --max-time=3600 &
 
-echo "Mostrando tareas programadas..."
-php artisan schedule:list
+echo "Tareas programadas:"
+php artisan schedule:list || true
+
 
 echo "Iniciando scheduler..."
 LOG_FILE="/var/www/storage/logs/scheduler-$(date '+%Y-%m-%d').log"

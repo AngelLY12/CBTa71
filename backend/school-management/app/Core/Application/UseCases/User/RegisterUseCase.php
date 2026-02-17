@@ -7,10 +7,12 @@ use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
+use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Jobs\SendMailJob;
 use App\Mail\CreatedUserMail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RegisterUseCase
 {
@@ -28,17 +30,18 @@ class RegisterUseCase
             return $user;
         });
 
-        if($password)
-        {
+
+        if($password) {
             $this->notifyRecipients($user, $password);
+        } else {
+            event(new Registered($user));
         }
-        event(new Registered($user));
-        return $user;
+        return UserMapper::toDomain($user);
     }
 
-    private function notifyRecipients(User $user, $password): void {
+    private function notifyRecipients(\App\Models\User $user, $password): void {
             $dtoData = [
-                'recipientName'  => $user->fullName(),
+                'recipientName'  => $user->name . ' ' . $user->last_name,
                 'recipientEmail' => $user->email,
                 'password'       => $password
             ];
@@ -49,7 +52,8 @@ class RegisterUseCase
                 ),
                 $user->email,
                 'register_user'
-            )->delay(now()->addSeconds(rand(1, 5)));
+            )
+                ->onQueue('emails');
 
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('payment_methods', function (Blueprint $table) {
         $table->id();
         $table->foreignIdFor(User::class)->constrained('users')->onDelete('cascade');
-        $table->string('stripe_payment_method_id',50)->unique();
+        $table->string('stripe_payment_method_id',100)->unique();
         $table->string('brand',20)->nullable();
         $table->string('last4', 4)->nullable();
         $table->unsignedTinyInteger('exp_month')->nullable();

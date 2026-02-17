@@ -13,6 +13,8 @@ use App\Core\Infraestructure\Cache\CacheService;
 
 class LoginServiceFacades
 {
+    private const TAG_USERS_ALL = [CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value, "all"];
+
     public function __construct(
         private LoginUseCase $login,
         private RegisterUseCase $register,
@@ -29,7 +31,7 @@ class LoginServiceFacades
    public function register(CreateUserDTO $user): User
    {
         $user= $this->register->execute($user);
-        $this->service->clearKey(CachePrefix::ADMIN->value, AdminCacheSufix::USERS->value . ":all");
+        $this->service->flushTags(self::TAG_USERS_ALL);
         return $user;
    }
 }

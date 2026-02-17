@@ -26,7 +26,18 @@ namespace App\Core\Application\DTO\Response\General;
  *         nullable=true,
  *         description="Tipo de token, normalmente 'bearer'",
  *         example="bearer"
- *     )
+ *     ),
+ *     @OA\Property(
+ *              property="user_data",
+ *              type="array",
+ *              @OA\Items(
+ *                  type="object",
+ *                  @OA\Property(property="id", type="integer", example=1),
+ *                  @OA\Property(property="fullName", type="string", example="Carlos Antonio"),
+ *                  @OA\Property(property="roles", type="array", @OA\Items(type="string"), example={"student"}),
+ *                  @OA\Property(property="hasUnreadNotifications", type="boolean", example=true),
+ *              )
+ *          ),
  * )
  */
 class LoginResponse

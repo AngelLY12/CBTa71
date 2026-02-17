@@ -28,6 +28,6 @@ class ParentStudent
         /** @var Role */
         public readonly int $studentRoleId,
         /** @var RelationshipType */
-        public readonly ?RelationshipType $relationship,
+        public readonly ?RelationshipType $relationship = null,
     ) {}
 }

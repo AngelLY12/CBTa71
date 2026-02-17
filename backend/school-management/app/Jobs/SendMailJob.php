@@ -2,8 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Core\Domain\Repositories\Command\Payments\PaymentEventRepInterface;
+use App\Core\Domain\Repositories\Query\Payments\PaymentEventQueryRepInterface;
 use Illuminate\Contracts\Mail\Mailable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -20,28 +23,37 @@ class SendMailJob implements ShouldQueue
     protected Mailable $mailable;
     protected string $recipientEmail;
     protected ?string $jobType = null;
+    protected ?int $paymentEventId = null;
+
 
     /**
      * Create a new job instance.
      */
-    public function __construct(Mailable $mailable, string $recipientEmail,  ?string $jobType = null)
+    public function __construct(Mailable $mailable, string $recipientEmail,  ?string $jobType = null, ?int $paymentEventId = null)
     {
         $this->mailable = $mailable;
         $this->recipientEmail = $recipientEmail;
         $this->jobType = $jobType;
+        $this->paymentEventId = $paymentEventId;
     }
     public function retryUntil()
     {
-        return now()->addMinutes(5);
+        return now()->addHours(2);
     }
 
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(PaymentEventRepInterface $paymentEventRep, PaymentEventQueryRepInterface $paymentEventQueryRep): void
     {
+        if ($this->paymentEventId) {
+            $this->updateEmailStatus($paymentEventRep, $paymentEventQueryRep,'sending', null);
+        }
         try {
             Mail::to($this->recipientEmail)->send($this->mailable);
+            if ($this->paymentEventId) {
+                $this->updateEmailStatus($paymentEventRep, $paymentEventQueryRep,'delivered', null);
+            }
             $logContext = [
                 'email' => $this->recipientEmail,
                 'job_type' => $this->jobType,
@@ -50,8 +62,58 @@ class SendMailJob implements ShouldQueue
 
             Log::info("Correo enviado exitosamente", $logContext);
         } catch (\Throwable $e) {
+            if ($this->paymentEventId) {
+                $this->updateEmailStatus($paymentEventRep, $paymentEventQueryRep,'failed', $e->getMessage());
+            }
             $this->handleError($e);
         }
+    }
+
+    private function updateEmailStatus(
+        PaymentEventRepInterface $repo,
+        PaymentEventQueryRepInterface $queryRep,
+        string $status,
+        ?string $error = null
+    ): void {
+        $event = $queryRep->findById($this->paymentEventId);
+
+        if (!$event) {
+            Log::warning("PaymentEvent no encontrado para email", [
+                'event_id' => $this->paymentEventId,
+                'email' => $this->recipientEmail
+            ]);
+            return;
+        }
+
+        $updateData = [
+            'metadata' => array_merge($event->metadata ?? [], [
+                'email_status' => $status,
+                'last_updated_at' => now()->toISOString(),
+            ])
+        ];
+
+        switch ($status) {
+            case 'sending':
+                $updateData['metadata']['attempt_count'] =
+                    ($event->metadata['attempt_count'] ?? 0) + 1;
+                $updateData['metadata']['last_attempt_at'] = now()->toISOString();
+                break;
+
+            case 'delivered':
+                $updateData['processed'] = true;
+                $updateData['processed_at'] = now();
+                $updateData['metadata']['delivered_at'] = now()->toISOString();
+                $updateData['metadata']['recipient_email'] = $this->recipientEmail;
+                break;
+
+            case 'failed':
+                $updateData['error_message'] = $error;
+                $updateData['metadata']['last_error'] = $error;
+                $updateData['metadata']['failed_at'] = now()->toISOString();
+                break;
+        }
+
+        $repo->update($this->paymentEventId, $updateData);
     }
 
     private function handleError(\Throwable $e): void
@@ -76,7 +138,7 @@ class SendMailJob implements ShouldQueue
         Log::error("Error al enviar correo", $logContext);
 
         if ($this->isTransientError($message)) {
-            $this->release(30);
+            $this->release(60);
             return;
         }
 
@@ -100,7 +162,9 @@ class SendMailJob implements ShouldQueue
         return str_contains($message, 'Connection') ||
             str_contains($message, 'timeout') ||
             str_contains($message, 'temporarily') ||
-            str_contains($message, 'retry');
+            str_contains($message, 'retry') ||
+            str_contains($message, '550') ||
+            str_contains($message, '552');
     }
 
     private function isPermanentError(string $message): bool
@@ -112,13 +176,14 @@ class SendMailJob implements ShouldQueue
             str_contains($message, '554');
     }
 
-    public static function forUser(Mailable $mailable, string $recipientEmail, ?string $jobType = null): self
+    public static function forUser(Mailable $mailable, string $recipientEmail, ?string $jobType = null, ?int $paymentEventId=null): PendingDispatch
     {
-        return new self($mailable, $recipientEmail, $jobType);
+         return self::dispatch($mailable, $recipientEmail, $jobType, $paymentEventId);
     }
 
-    public static function fromBulkRetry(Mailable $mailable, string $recipientEmail): self
+    public static function fromBulkRetry(Mailable $mailable, string $recipientEmail): PendingDispatch
     {
-        return new self($mailable, $recipientEmail, 'bulk_retry');
+        return self::dispatch($mailable, $recipientEmail, 'bulk_retry');
+
     }
 }

@@ -37,6 +37,17 @@ class Payment extends Model
         return $this->belongsTo(PaymentMethod::class);
     }
 
+    public function paymentEvents()
+    {
+        return $this->hasMany(PaymentEvent::class);
+    }
+
+    public function receipt()
+    {
+        return $this->hasOne(Receipt::class);
+    }
+
+
     public function toDomain(): \App\Core\Domain\Entities\Payment
     {
         return PaymentMapper::toDomain($this);

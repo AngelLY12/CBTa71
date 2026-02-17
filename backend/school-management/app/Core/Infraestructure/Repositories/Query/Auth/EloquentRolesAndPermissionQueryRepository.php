@@ -2,6 +2,9 @@
 
 namespace App\Core\Infraestructure\Repositories\Query\Auth;
 
+use App\Core\Application\DTO\Response\General\PermissionsByRole;
+use App\Core\Application\DTO\Response\General\PermissionsByUsers;
+use App\Core\Application\Mappers\GeneralMapper;
 use App\Core\Domain\Entities\Permission as EntitiesPermission;
 use App\Core\Domain\Entities\Role as EntitiesRole;
 use App\Core\Domain\Enum\User\UserRoles;
@@ -15,7 +18,7 @@ use Spatie\Permission\Models\Role;
 
 class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQueryRepInterface
 {
-    public function findRoleById(int $id): EntitiesRole
+    public function findRoleById(int $id): ?EntitiesRole
     {
        return optional(Role::find($id),fn($role)=>RolesAndPermissionMapper::toRoleDomain($role));
     }
@@ -31,77 +34,113 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
         ->map(fn($role)=>RolesAndPermissionMapper::toRoleDomain($role))
         ->toArray();
     }
-    public function findPermissionById(int $id): EntitiesPermission
+    public function findPermissionById(int $id): ?EntitiesPermission
     {
         return optional(Permission::find($id),fn($permission)=>RolesAndPermissionMapper::toPermissionDomain($permission));
     }
 
-    public function findPermissionsApplicableByUsers(?string $role, ?array $curps): array
+    public function findPermissionsApplicableByRole(string $role): ?PermissionsByRole
     {
-        if (!empty($role)) {
-            $users = User::role($role)
-                ->with('roles')
-                ->get(['curp']);
+        $totalUsers = User::role($role)->count();
+        if ($totalUsers === 0) {
+            return null;
+        }
+        $permissions = $this->getPermissionsForRole($role);
+
+        return GeneralMapper::toPermissionsByRole(
+            role: $role,
+            usersCount: $totalUsers,
+            permissions: $permissions
+        );
+    }
+
+    public function findPermissionsApplicableByCurps(array $curps): ?PermissionsByUsers
+    {
+        if (empty($curps)) {
+            return null;
+        }
+        $validCurps = array_slice(array_unique(array_map('trim', $curps)),0,100);
+
+        if (empty($validCurps)) {
+            return null;
+        }
+        $users = User::with('roles:name')
+            ->whereIn('curp', $validCurps)
+            ->whereHas('roles')
+            ->get(['id', 'curp']);
+
+        if ($users->isEmpty()) {
+            return null;
         }
 
-        if (!empty($curps)) {
-            $users = User::with('roles')
-                ->whereIn('curp', $curps)
-                ->get(['curp']);
+        $userItems = $users->map(function($user) {
+            return [
+                'id' => $user->id,
+                'curp' => $user->curp,
+                'roles' => $user->roles->pluck('name')->toArray()
+            ];
+        })->toArray();
+
+        $allRoleNames = collect($userItems)
+            ->flatMap(fn($user) => $user['roles'])
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($allRoleNames)) {
+            $allRoleNames = Role::whereHas('users', function($q) use ($users) {
+                $q->whereIn('users.id', $users->pluck('id'));
+            })
+                ->pluck('name')
+                ->toArray();
         }
 
-        if ($users->isEmpty()) return [];
-
-        $usersGroupedByRole = $users->flatMap(function($user) {
-            return $user->roles->map(fn($role) => ['role' => $role->name, 'user' => $user]);
-        })->groupBy('role')
-        ->map(fn($items) => $items->pluck('user'));
-
-        $result = [];
-        foreach ($usersGroupedByRole as $roleName => $usersOfRole) {
-            $permissions = Permission::where('type', 'model')
-                ->where(function($q) use ($roleName) {
-                    $q->where('belongs_to', $roleName)
-                    ->orWhere('belongs_to', 'global-payment');
-                    if ($roleName === UserRoles::SUPERVISOR->value) {
-                        $q->orWhere('belongs_to', 'administration');
-                    }
-                    if($roleName === UserRoles::STUDENT->value){
-                        $q->orWhere('belongs_to', $roleName . '-payment');
-                    }
-                })
-                ->select('id','name','type')
-                ->get()
-                ->map(fn($permission) => RolesAndPermissionMapper::toPermissionDomain($permission));
-            $usersCount = $usersOfRole->count();
-            $result[] = [
+        $permissionsByRole = [];
+        foreach ($allRoleNames as $roleName) {
+            $permissionsByRole[] = [
                 'role' => $roleName,
-                'users' => [
-                    'count' => $usersCount,
-                    'curps' => $usersCount <= 15
-                        ? $usersOfRole->pluck('curp')->values()->toArray()
-                        : []
-                ],
-                'permissions' => $permissions->toArray()
+                'permissions' => $this->getPermissionsForRole($roleName)
             ];
         }
 
-        return $result;
+        return GeneralMapper::toPermissionsByUsers(
+            roles: $allRoleNames,
+            users: $userItems,
+            permissions: $permissionsByRole
+        );
+    }
+
+    public function findPermissionsApplicablesToUser(int $userId, array $roles): ?array
+    {
+        $userRoles = Role::whereHas('users', function($query) use ($userId) {
+            $query->where('users.id', $userId);
+        })
+            ->pluck('name')
+            ->toArray();
+
+        if (empty($userRoles)) {
+            return null;
+        }
+
+        $rolesToCheck = empty($roles)
+            ? $userRoles
+            : array_intersect($roles, $userRoles);
+
+        if (empty($rolesToCheck)) {
+            return null;
+        }
+
+        return collect($rolesToCheck)
+            ->flatMap(fn($role) => $this->getPermissionsForRole($role))
+            ->unique(fn($permission) => $permission->id)
+            ->values()
+            ->toArray();
     }
 
     public function findPermissionIds(array $names, string $role): array
     {
-        return Permission::whereIn('name', $names)
-            ->where(function($q) use ($role) {
-                $q->where('belongs_to', $role)
-                  ->orWhere('belongs_to', 'global-payment');
-                  if ($role === UserRoles::SUPERVISOR->value) {
-                        $q->orWhere('belongs_to', 'administration');
-                  }
-                if($role === UserRoles::STUDENT->value){
-                    $q->orWhere('belongs_to', $role . '-payment');
-                }
-            })
+        return \App\Models\Permission::whereIn('name', $names)
+            ->whereHas('contexts', fn($q) => $q->where('target_role', $role))
             ->pluck('id')
             ->toArray();
     }
@@ -143,7 +182,13 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
 
     public function hasAdminMissingError(int $adminRoleId, array $rolesToRemoveIds, array $rolesToAddIds): bool
     {
-        if (!in_array($adminRoleId, $rolesToRemoveIds) || !empty($rolesToAddIds)) return false;
+        if (!in_array($adminRoleId, $rolesToRemoveIds)) {
+            return false;
+        }
+        $hasReplacement = in_array($adminRoleId, $rolesToAddIds);
+        if ($hasReplacement) {
+            return false;
+        }
 
         $adminCount = DB::table('model_has_roles')
             ->where('role_id', $adminRoleId)
@@ -151,6 +196,17 @@ class EloquentRolesAndPermissionQueryRepository implements RolesAndPermissosQuer
             ->count();
 
         return $adminCount <= 1;
+    }
+
+    private function getPermissionsForRole(string $roleName): array
+    {
+
+        return \App\Models\Permission::where('type', 'model')
+            ->whereHas('contexts', fn($q) => $q->where('target_role', $roleName))
+            ->select('id', 'name', 'type')
+            ->get()
+            ->map(fn($permission) => GeneralMapper::toPermissionToDisplay($permission))
+            ->toArray();
     }
 
 }

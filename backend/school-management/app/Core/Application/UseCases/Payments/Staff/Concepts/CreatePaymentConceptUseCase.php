@@ -3,7 +3,7 @@
 namespace App\Core\Application\UseCases\Payments\Staff\Concepts;
 
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
-use App\Core\Application\Mappers\MailMapper;
+use App\Core\Application\DTO\Response\PaymentConcept\CreatePaymentConceptResponse;
 use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Application\Traits\HasPaymentConcept;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -11,6 +11,8 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Repositories\Command\Payments\PaymentConceptRepInterface;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Utils\Validators\PaymentConceptValidator;
+use App\Events\AdministrationEvent;
+use App\Events\PaymentConceptCreated;
 use App\Exceptions\NotFound\CareersNotFoundException;
 use App\Exceptions\NotFound\RecipientsNotFoundException;
 use App\Exceptions\NotFound\StudentsNotFoundException;
@@ -31,10 +33,9 @@ class CreatePaymentConceptUseCase
         $this->setRepository($uqRepo);
     }
 
-    public function execute(CreatePaymentConceptDTO $dto): PaymentConcept {
-        return DB::transaction(function() use ($dto) {
-            $dto->is_global = $dto->appliesTo === PaymentConceptAppliesTo::TODOS;
-            PaymentConceptValidator::ensureCreatePaymentDTOIsValid($dto);
+    public function execute(CreatePaymentConceptDTO $dto): CreatePaymentConceptResponse {
+        $this->preValidateRecipients($dto);
+        $paymentConcept= DB::transaction(function() use ($dto) {
             $pc = PaymentConceptMapper::toDomain($dto);
             PaymentConceptValidator::ensureConceptHasRequiredFields($pc);
 
@@ -46,14 +47,35 @@ class CreatePaymentConceptUseCase
 
             $paymentConcept=$this->attachAppliesTo($dto, $paymentConcept);
 
-            $recipients = $this->uqRepo->getRecipients($paymentConcept, $dto->appliesTo->value);
-            if(empty($recipients)){
+            $hasRecipients = $this->hasAnyRecipientFast($paymentConcept, $dto->appliesTo);
+            if (!$hasRecipients) {
                 throw new RecipientsNotFoundException();
             }
-            $this->notifyRecipients($paymentConcept,$recipients);
 
             return $paymentConcept;
         });
+        $affectedCount = count($this->uqRepo->getRecipientsIds($paymentConcept, $dto->appliesTo->value));
+        event(new PaymentConceptCreated($paymentConcept->id, $paymentConcept->applies_to->value));
+        if(bccomp($paymentConcept->amount, config('concepts.amount.notifications.threshold')) === 1)
+        {
+            event(new AdministrationEvent(
+                amount: $paymentConcept->amount,
+                id: $paymentConcept->id,
+                concept_name: $paymentConcept->concept_name,
+                action: "creó",
+            ));
+        }
+        return PaymentConceptMapper::toCreatePaymentConceptResponse($paymentConcept, $affectedCount);
+    }
+
+    private function preValidateRecipients(CreatePaymentConceptDTO $dto): void
+    {
+        PaymentConceptValidator::ensureCreatePaymentDTOIsValid($dto);
+    }
+
+    private function hasAnyRecipientFast(PaymentConcept $concept, PaymentConceptAppliesTo $appliesTo): bool
+    {
+        return $this->uqRepo->hasAnyRecipient($concept, $appliesTo->value);
     }
 
     private function attachAppliesTo(CreatePaymentConceptDTO $dto, PaymentConcept $paymentConcept): PaymentConcept
@@ -96,6 +118,7 @@ class CreatePaymentConceptUseCase
                 }else{
                     throw new ApplicantTagInvalidException();
                 }
+                break;
             case PaymentConceptAppliesTo::TODOS:
                 break;
             default:

@@ -1,9 +1,15 @@
 <?php
 
 namespace App\Core\Domain\Utils\Validators;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\User\UserRoles;
+use App\Exceptions\Conflict\RemoveExceptionsAndExceptionStudentsOverlapException;
 use App\Exceptions\Conflict\UserExplicitlyExcludedException;
+use App\Exceptions\Validation\RequiredForAppliesToException;
+use App\Exceptions\Validation\ValidationException;
 use Carbon\Carbon;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Domain\Entities\User;
@@ -65,9 +71,9 @@ class PaymentConceptValidator{
 
     private static function userIsAllowedForConcept(PaymentConcept $concept, User $user): bool
     {
-        $student = $user->studentDetail;
+        $student = $user->getStudentDetail();
 
-        if ($concept->is_global && $user->hasRole(UserRoles::STUDENT->value)) {
+        if ($concept->applies_to === PaymentConceptAppliesTo::TODOS  && $user->hasRole(UserRoles::STUDENT->value)) {
             return true;
         }
 
@@ -136,28 +142,147 @@ class PaymentConceptValidator{
         }
     }
 
+    public static function ensureConsistencyAppliesToToUpdate(UpdatePaymentConceptRelationsDTO $dto, PaymentConcept $concept){
+        if (!$concept->status->isUpdatable()) {
+            throw new ConceptCannotBeUpdatedException();
+        }
+        if ($dto->appliesTo === PaymentConceptAppliesTo::ESTUDIANTES
+            && !empty($dto->exceptionStudents)
+        ) {
+            throw new ValidationException(
+                'No se pueden agregar excepciones cuando el concepto aplica a estudiantes específicos'
+            );
+        }
+        if ($concept->applies_to === PaymentConceptAppliesTo::ESTUDIANTES
+            && !empty($dto->exceptionStudents)
+        ) {
+            throw new ValidationException(
+                'No se pueden agregar excepciones a un concepto que ya aplica a estudiantes específicos'
+            );
+        }
+    }
+
     public static function ensureCreatePaymentDTOIsValid(CreatePaymentConceptDTO $dto)
     {
-        if ($dto->is_global && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students))) {
+        self::appliesToConflictAndOverlap($dto);
+
+        if(!in_array($dto->status, PaymentConceptStatus::allowedStatusesToCreateConcept(), true))
+        {
+            throw new ValidationException("No puedes crear un concepto con estatus {$dto->status->value}, solo se permiten: " .
+            implode(', ', array_map(fn($s) => $s->value, PaymentConceptStatus::allowedStatusesToCreateConcept())));
+        }
+
+        if ($dto->appliesTo === PaymentConceptAppliesTo::ESTUDIANTES
+            && !empty($dto->exceptionStudents)
+        ) {
+            throw new ValidationException(
+                'No se pueden agregar excepciones cuando el concepto aplica a estudiantes específicos'
+            );
+        }
+        if ($dto->appliesTo) {
+            self::validateAppliesToConsistency($dto);
+        }
+    }
+
+    private static function appliesToConflictAndOverlap(CreatePaymentConceptDTO|UpdatePaymentConceptRelationsDTO $dto){
+        if (($dto->appliesTo === PaymentConceptAppliesTo::TODOS) && (!empty($dto->careers) || !empty($dto->semesters) || !empty($dto->students) || !empty($dto->applicantTags)) ||
+            ($dto->students) && (!empty($dto->semesters) || !empty($dto->applicantTags) || !empty($dto->careers)) ||
+            ($dto->applicantTags) && (!empty($dto->semesters) || !empty($dto->careers) || !empty($dto->students)) ||
+            ($dto->semesters) && (!empty($dto->applicantTags) || !empty($dto->students)) ||
+            ($dto->careers) && (!empty($dto->applicantTags) || !empty($dto->students))
+        ) {
             throw new ConceptAppliesToConflictException();
         }
-        $intersection = array_intersect(
-            (array)$dto->students,
-            (array)$dto->exceptionStudents
-        );
+        if(!empty($dto->students) && !empty($dto->exceptionStudents)){
+            $intersection = array_intersect(
+                (array)$dto->students,
+                (array)$dto->exceptionStudents
+            );
 
-        if (!empty($intersection)) {
-            throw new StudentsAndExceptionsOverlapException();
+            if (!empty($intersection)) {
+                throw new StudentsAndExceptionsOverlapException();
+            }
+        }
+    }
+
+    public static function ensureUpdatePaymentConceptDTOIsValid(UpdatePaymentConceptRelationsDTO $dto)
+    {
+        self::appliesToConflictAndOverlap($dto);
+
+        if ($dto->removeAllExceptions) {
+            if (!empty($dto->exceptionStudents)) {
+                throw new RemoveExceptionsAndExceptionStudentsOverlapException(
+                    'No se puede enviar removeAllExceptions y exceptionStudents simultáneamente'
+                );
+            }
+
+            if ($dto->replaceExceptions) {
+                throw new RemoveExceptionsAndExceptionStudentsOverlapException(
+                    'No se puede enviar removeAllExceptions y replaceExceptions simultáneamente'
+                );
+            }
+
+        }
+        if($dto->appliesTo === PaymentConceptAppliesTo::ESTUDIANTES && !empty($dto->exceptionStudents))
+        {
+            throw new ValidationException(
+                'No se pueden agregar excepciones cuando el concepto aplica a estudiantes específicos'
+            );
+        }
+        if ($dto->appliesTo) {
+            self::validateAppliesToConsistency($dto);
+        }
+    }
+
+    private static function validateAppliesToConsistency(UpdatePaymentConceptRelationsDTO|CreatePaymentConceptDTO $dto): void
+    {
+        $appliesTo = $dto->appliesTo;
+
+        switch ($appliesTo) {
+            case PaymentConceptAppliesTo::CARRERA:
+                if (empty($dto->careers)) {
+                    throw new RequiredForAppliesToException('Debes agregar carreras si es un concepto aplicable a carrera');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::SEMESTRE:
+                if (empty($dto->semesters)) {
+                    throw new RequiredForAppliesToException('Debes agregar semestres si es un concepto aplicable a semestre');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::ESTUDIANTES:
+                if (empty($dto->students)) {
+                    throw new RequiredForAppliesToException('Desbes agregar estudiantes si es un concepto aplicable a estudiante');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::CARRERA_SEMESTRE:
+                if (empty($dto->careers) || empty($dto->semesters)) {
+                    throw new RequiredForAppliesToException('Debes agregar carreras y semestres si es un concepto aplicable a carrera-semestre');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::TAG:
+                if (empty($dto->applicantTags)) {
+                    throw new RequiredForAppliesToException('Debes agregar tags si es un concepto aplicable a casos especiales');
+                }
+                break;
+
+            case PaymentConceptAppliesTo::TODOS:
+                break;
         }
     }
 
     public static function ensureConceptHasRequiredFields(PaymentConcept $concept)
     {
+        $minAmount = config('concepts.amount.min');
+        $maxAmount = config('concepts.amount.max');
         if (empty($concept->concept_name)) {
             throw new ConceptMissingNameException();
         }
-
-        if ($concept->amount === null || bccomp($concept->amount, '10', 2) === -1) {
+        if ($concept->amount === null ||bccomp($concept->amount, $minAmount, 2) === -1 ||
+            bccomp($concept->amount, $maxAmount, 2) === 1) {
             throw new ConceptInvalidAmountException();
         }
 
@@ -195,6 +320,50 @@ class PaymentConceptValidator{
 
         if ($concept->end_date->gt($concept->start_date->clone()->addYears(5))) {
             throw new ConceptEndDateTooFarException();
+        }
+    }
+
+    public static function ensureUpdatedFieldsAreValid(PaymentConcept $original, array $fieldsToUpdate): void
+    {
+        $minAmount = config('concepts.amount.min');
+        $maxAmount = config('concepts.amount.max');
+        if (isset($fieldsToUpdate['amount'])) {
+            $isBelowMin = bccomp($fieldsToUpdate['amount'], $minAmount, 2) === -1;
+            $isAboveMax = bccomp($fieldsToUpdate['amount'], $maxAmount, 2) === 1;
+
+            if ($isBelowMin || $isAboveMax) {
+                throw new ConceptInvalidAmountException();
+            }
+        }
+
+        if (isset($fieldsToUpdate['start_date'])) {
+            $today = today();
+            $oneMonthBefore = $today->clone()->subMonth();
+            $oneMonthAfter = $today->clone()->addMonth();
+
+            if ($fieldsToUpdate['start_date']->gt($oneMonthAfter)) {
+                throw new ConceptStartDateTooFarException();
+            }
+
+            if ($fieldsToUpdate['start_date']->lt($oneMonthBefore)) {
+                throw new ConceptStartDateTooEarlyException();
+            }
+        }
+
+        if (isset($fieldsToUpdate['end_date'])) {
+            $startDate = $fieldsToUpdate['start_date'] ?? $original->start_date;
+
+            if ($fieldsToUpdate['end_date']->lt($startDate)) {
+                throw new ConceptEndDateBeforeStartException();
+            }
+
+            if ($fieldsToUpdate['end_date']->lt(today())) {
+                throw new ConceptEndDateBeforeTodayException();
+            }
+
+            if ($fieldsToUpdate['end_date']->gt($startDate->clone()->addYears(5))) {
+                throw new ConceptEndDateTooFarException();
+            }
         }
     }
 }

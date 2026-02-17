@@ -11,7 +11,7 @@ class DispatchFinalizeConceptsJob extends Command
 
     public function handle()
     {
-        FinalizeExpiredConceptsJob::dispatch();
+        FinalizeExpiredConceptsJob::dispatch()->onQueue('default');
         $this->info('FinalizeExpiredConceptsJob despachado.');
     }
 }

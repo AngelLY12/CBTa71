@@ -27,7 +27,7 @@ class CreateBackupJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Artisan::call('backup:run --only-db --only-to-disk=google --verbose');
+        Artisan::call('backup:run --only-db --only-to-disk=gcs --verbose');
     }
     public function failed(\Throwable $exception): void
     {

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Core\Domain\Enum\User\UserBloodType;
 use App\Core\Domain\Enum\User\UserGender;
 use App\Core\Domain\Enum\User\UserStatus;
+use App\Jobs\SendMailJob;
 use App\Mail\SendPasswordResetLinkMail;
 use App\Mail\SendVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,11 +13,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\traits\ResolvesTargetUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 
 /**
  * @method bool hasRole(string|array $roles)
@@ -24,7 +27,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser, LogsActivity;
+    use HasFactory, Notifiable, HasApiTokens, HasRoles, ResolvesTargetUser, LogsActivity, MustVerifyEmailTrait;
 
 
     /**
@@ -45,7 +48,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'stripe_customer_id',
         'blood_type',
         'registration_date',
-        'status'
+        'status',
+        'mark_as_deleted_at'
     ];
 
 
@@ -55,6 +59,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function payments(){
         return $this->hasMany(Payment::class);
+    }
+
+    public function paymentEvents()
+    {
+        return $this->hasMany(PaymentEvent::class);
     }
 
     public function refreshTokens()
@@ -107,15 +116,22 @@ class User extends Authenticatable implements MustVerifyEmail
             now()->addMinutes(60),
             ['id' => $this->getKey(), 'hash' => sha1($this->getEmailForVerification())]
         );
-        $this->notify(new SendVerifyEmail($this,$verifyUrl));
+
+        SendMailJob::dispatch(
+            new SendVerifyEmail($this, $verifyUrl),
+            $this->email,
+            'email_verification'
+        )->onQueue('emails');
+
     }
-    public function sendPasswordResetNotification(#[\SensitiveParameter] $token)
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
     {
-        $resetUrl = url(route('password.reset', [
-            'token' => $token,
-            'email' => $this->getEmailForPasswordReset(),
-        ], false));
-        $this->notify(new SendPasswordResetLinkMail($this,$resetUrl));
+        $resetUrl=config('app.frontend_url')."/password-reset/$token?email={$this->getEmailForPasswordReset()}";
+        SendMailJob::dispatch(
+            new SendPasswordResetLinkMail($this,$resetUrl),
+            $this->email,
+            'password_reset')
+        ->onQueue('emails');
     }
 
     public function getActivitylogOptions(): LogOptions
@@ -150,6 +166,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'registration_date' => 'date',
             'address' => 'array',
             'email_verified_at' => 'datetime',
+            'mark_as_deleted_at' => 'datetime',
             'password' => 'hashed',
             'gender' => UserGender::class,
             'blood_type' => UserBloodType::class,

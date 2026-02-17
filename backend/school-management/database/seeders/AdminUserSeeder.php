@@ -7,7 +7,6 @@ use App\Core\Domain\Enum\User\UserGender;
 use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Enum\User\UserStatus;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,17 +17,29 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
+        $password = config('admin.password');
+        $email = config('admin.email');
+        $first_name = config('admin.first_name');
+        $last_name = config('admin.last_name');
+        $phone = config('admin.phone');
+        $curp = config('admin.curp');
+        if(!$password || !$email || !$first_name || !$last_name || !$phone || !$curp)
+        {
+            throw new \RuntimeException(
+                "No existen datos para crear al administrador, llena las variables de entorno correspondientes"
+            );
+        }
         $admin = User::firstOrCreate(
-            ['email' => 'lopezyanezangell@gmail.com'],
+            ['email' => $email],
             [
-                'name' => 'Angel',
-                'last_name' => 'Lopez Yáñez',
-                'email' => 'lopezyanezangell@gmail.com',
-                'password' => Hash::make('123'),
-                'phone_number' => '7352770097',
-                'birthdate' => '2003-05-04',
+                'name' => $first_name,
+                'last_name' => $last_name,
+                'email' =>  $email,
+                'password' => Hash::make($password),
+                'phone_number' => $phone,
+                'birthdate' => '1995-09-24',
                 'gender' => UserGender::HOMBRE,
-                'curp' => 'LOYA030504HMSPXNA8',
+                'curp' => $curp,
                 'address' => [
                     'street' => 'Calle Falsa 123',
                     'city' => 'Ciudad de Ejemplo',
@@ -42,7 +53,6 @@ class AdminUserSeeder extends Seeder
             ]
         );
 
-        $admin->assignRole(UserRoles::ADMIN->value);
-
+        $admin->syncRoles([UserRoles::ADMIN->value]);
     }
 }

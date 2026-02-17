@@ -68,15 +68,15 @@ class UpdatePermissionsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'curps' => ['nullable', 'array'],
+            'curps' => ['sometimes', 'required_without:role', 'array'],
             'curps.*' => ['string', 'exists:users,curp'],
 
-            'role' => ['nullable', 'string', 'exists:roles,name'],
+            'role' => ['sometimes', 'required_without:curps', 'string', 'exists:roles,name'],
 
-            'permissionsToAdd' => ['nullable', 'array'],
+            'permissionsToAdd' => ['sometimes', 'array'],
             'permissionsToAdd.*' => ['string', 'exists:permissions,name'],
 
-            'permissionsToRemove' => ['nullable', 'array'],
+            'permissionsToRemove' => ['sometimes', 'array'],
             'permissionsToRemove.*' => ['string', 'exists:permissions,name'],
         ];
     }
@@ -84,25 +84,23 @@ class UpdatePermissionsRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-
-            $curps = $this->input('curps');
-            $role = $this->input('role');
-
-            $hasCurps = !empty($curps);
-            $hasRole = !empty($role);
-
-            if ($hasCurps && $hasRole) {
-                $validator->errors()->add(
-                    'curps',
-                    'No puedes especificar CURPs y rol al mismo tiempo.'
-                );
-            }
+            $hasCurps = $this->filled('curps');
+            $hasRole = $this->filled('role');
 
             if (!$hasCurps && !$hasRole) {
-                $validator->errors()->add(
-                    'curps',
-                    'Debes proporcionar al menos un array de CURPs o un rol.'
-                );
+                $validator->errors()->add('curps', 'Debes proporcionar CURPs o rol.');
+                return;
+            }
+
+            if ($hasCurps && $hasRole) {
+                $validator->errors()->add('curps', 'No puedes especificar CURPs y rol al mismo tiempo.');
+            }
+
+            $hasPermissionsToAdd = $this->filled('permissionsToAdd');
+            $hasPermissionsToRemove = $this->filled('permissionsToRemove');
+
+            if (!$hasPermissionsToAdd && !$hasPermissionsToRemove) {
+                $validator->errors()->add('permissionsToAdd', 'Debes proporcionar permisos para agregar o remover.');
             }
         });
     }

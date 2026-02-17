@@ -3,6 +3,7 @@
 namespace App\Core\Application\DTO\Request\PaymentConcept;
 
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
+use Carbon\Carbon;
 
 /**
  * @OA\Schema(
@@ -11,69 +12,33 @@ use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
  *     description="Datos para actualizar un concepto de pago",
  *     required={"id","fieldsToUpdate"},
  *     @OA\Property(property="id", type="integer", example=1, description="ID del concepto a actualizar"),
- *     @OA\Property(
- *         property="fieldsToUpdate",
- *         type="object",
- *         description="Campos del concepto a actualizar con sus nuevos valores",
- *         example={"concept_name":"Pago matrícula","amount":"2000.00","status":"activo"}
- *     ),
- *     @OA\Property(
- *         property="semesters",
- *         type="array",
- *         @OA\Items(type="integer"),
- *         nullable=true,
- *         example={1,2,3},
- *         description="Semestres asociados al concepto"
- *     ),
- *     @OA\Property(
- *         property="careers",
- *         type="array",
- *         @OA\Items(type="integer"),
- *         nullable=true,
- *         example={1,2},
- *         description="Carreras asociadas al concepto"
- *     ),
- *     @OA\Property(
- *         property="students",
- *         type="array",
- *         @OA\Items(type="string"),
- *         nullable=true,
- *         example={"12345","67891"},
- *         description="Numeros de control de estudiantes asociados al concepto"
- *     ),
- *     @OA\Property(
- *          property="exceptionStudents",
- *          type="array",
- *          @OA\Items(type="string"),
- *          nullable=true,
- *          example={"12345","67891"},
- *          description="Numeros de control de estudiantes a los que el concepto no aplica"
- *      ),
- *     @OA\Property(
-*            property="applicantTags",
-*            type="array",
-*            @OA\Items(type="string"),
-*            nullable=true,
-*            example={"no_student_details","applicants"},
-*            description="Array para aplicar conceptos a alumnos con casos especiales"
-*       ),
- *     @OA\Property(property="appliesTo", ref="#/components/schemas/PaymentConceptAppliesTo", nullable=true, example="todos", description="A quién aplica el concepto"),
- *     @OA\Property(property="replaceRelations", type="boolean", example=false, description="Si es true, reemplaza las relaciones existentes con las nuevas"),
- *     @OA\Property(property="replaceExceptions", type="boolean", example=false, description="Si es true, reemplaza los estudiantes a los que no aplica el concepto")
+ *     @OA\Property(property="concept_name", type="string", example="Pago de inscripción"),
+ *     @OA\Property(property="description", type="string", nullable=true, example="Pago correspondiente al semestre 2025A"),
+ *     @OA\Property(property="amount", type="string", example="1500.00"),
+ *     @OA\Property(property="start_date", type="string", format="date", nullable=true, example="2025-09-01"),
+ *     @OA\Property(property="end_date", type="string", format="date", nullable=true, example="2025-12-31"),
  * )
  */
 class UpdatePaymentConceptDTO
 {
     public function __construct(
         public int $id,
-        public array $fieldsToUpdate,
-        public array|int|null $semesters = null,
-        public array|int|null $careers = null,
-        public array|string|null $students = null,
-        public ?PaymentConceptAppliesTo $appliesTo = null,
-        public bool $replaceRelations = false,
-        public array|string|null $exceptionStudents = null,
-        public bool $replaceExceptions = false,
-        public array|string|null $applicantTags = null,
+        public ?string $concept_name = null,
+        public ?string $description = null,
+        public ?Carbon $start_date = null,
+        public ?Carbon $end_date = null,
+        public ?string $amount = null,
+
     ) {}
+
+    public function toArray(): array
+    {
+        return [
+            'concept_name' => $this->concept_name,
+            'description' => $this->description,
+            'start_date' => $this->start_date,
+            'end_date' => $this->end_date,
+            'amount' => $this->amount,
+        ];
+    }
 }

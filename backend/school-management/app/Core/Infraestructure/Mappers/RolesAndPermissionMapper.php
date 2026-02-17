@@ -22,7 +22,6 @@ class RolesAndPermissionMapper{
             id:$permission->id,
             name: $permission->name,
             type:$permission->type,
-            belongsTo: $permission->belongs_to ?? null
         );
     }
 }

@@ -4,6 +4,7 @@ namespace App\Core\Application\Traits;
 
 use App\Core\Application\DTO\Request\PaymentConcept\CreatePaymentConceptDTO;
 use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptDTO;
+use App\Core\Application\DTO\Request\PaymentConcept\UpdatePaymentConceptRelationsDTO;
 use App\Core\Application\DTO\Response\User\UserIdListDTO;
 use App\Core\Application\Mappers\MailMapper;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -24,7 +25,7 @@ trait HasPaymentConcept
         $this->repository = $repository;
     }
 
-    public function getUserIdListDTO(CreatePaymentConceptDTO|UpdatePaymentConceptDTO $dto, bool $exceptions=false): UserIdListDTO
+    public function getUserIdListDTO(CreatePaymentConceptDTO|UpdatePaymentConceptRelationsDTO $dto, bool $exceptions=false): UserIdListDTO
     {
         $list = $exceptions
             ? (array) ($dto->exceptionStudents ?? [])
@@ -46,17 +47,19 @@ trait HasPaymentConcept
         if (empty($recipients)) {
             return;
         }
-        $chunks = array_chunk($recipients, 50);
+        $chunks = array_chunk($recipients, 100);
 
         foreach ($chunks as $chunk) {
             $userIds = array_map(fn($user) => $user->id, $chunk);
             ClearCacheForUsersJob::forConceptStatus($userIds, $concept->status)
-                ->delay(now()->addSeconds(rand(1, 10)));
+                ->onQueue('cache')
+                ->delay(now()->addSeconds(5));
 
             $mailables = [];
             $recipientEmails = [];
 
             foreach ($chunk as $user) {
+
                 $data = [
                     'recipientName' => $user->name,
                     'recipientEmail' => $user->email,
@@ -72,7 +75,8 @@ trait HasPaymentConcept
             }
 
             SendBulkMailJob::forRecipients($mailables, $recipientEmails, 'concept_notification')
-                ->delay(now()->addSeconds(rand(5, 15)));
+                ->onQueue('emails')
+                ->delay(now()->addSeconds(5));
         }
     }
 }

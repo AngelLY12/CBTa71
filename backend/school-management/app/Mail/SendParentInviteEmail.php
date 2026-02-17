@@ -5,13 +5,13 @@ namespace App\Mail;
 use App\Core\Application\DTO\Request\Mail\SendParentInviteEmailDTO;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use MailerSend\LaravelDriver\MailerSendTrait;
-use MailerSend\Helpers\Builder\Personalization;
 
 class SendParentInviteEmail extends Mailable
 {
-    use Queueable, SerializesModels, MailerSendTrait;
+    use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
@@ -23,37 +23,40 @@ class SendParentInviteEmail extends Mailable
         $this->data = $data;
     }
 
-
-    public function build()
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
-       try {
-            $acceptUrl = config('app.frontend_url') . '/parent/accept-invite?token=' . $this->data->token;
+        return new Envelope(
+            subject: 'Invitación de vinculación',
+        );
+    }
 
-            $messageDetails = "
-                <p>Has sido invitado a vincular tu cuenta como <strong>padre/madre o tutor</strong>.</p>
-                <p>Para aceptar la invitación, haz clic en el siguiente enlace:</p>
-                <p><a href=\"{$acceptUrl}\" target=\"_blank\">Aceptar invitación</a></p>
-                <p>Si no reconoces esta invitación, puedes ignorar este mensaje.</p>
-            ";
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.parents.invite',
+            with: [
+                'recipientName' => $this->data->recipientName,
+                'acceptUrl' => config('app.frontend_url')
+                    . '/parent/accept-invite?token='
+                    . $this->data->token,
+            ]
+        );
+    }
 
-            $personalization = [
-                new Personalization($this->data->recipientEmail, [
-                    'greeting' => "Hola {$this->data->recipientName}",
-                    'header_title' => 'Invitación de vinculación',
-                    'message_intro' => 'Has recibido una invitación para vincularte como tutor.',
-                    'message_details' => $messageDetails,
-                    'message_footer' => 'Este enlace expirará en 48 horas por seguridad.',
-                ])
-            ];
-            return $this->mailersend(
-                     template_id:'pq3enl6d8z7g2vwr',
-                     personalization: $personalization
-                 );
-
-        } catch (\Throwable $e) {
-            logger()->error('Fallo al construir mail: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            throw $e;
-        }
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 
 }

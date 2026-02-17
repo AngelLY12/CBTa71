@@ -3,6 +3,7 @@
 namespace App\Core\Infraestructure\Traits;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptApplicantType;
+use App\Core\Domain\Enum\PaymentConcept\PaymentConceptAppliesTo;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptStatus;
 use App\Core\Domain\Enum\PaymentConcept\PaymentConceptTimeScope;
 use App\Core\Domain\Enum\User\UserRoles;
@@ -19,6 +20,11 @@ trait HasPendingQuery
 
         $usersContext = DB::table('users')
             ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
+            ->leftJoin('model_has_roles', function($join) {
+                $join->on('model_has_roles.model_id', '=', 'users.id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->leftJoin('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->whereIn('users.id', $userIds)
             ->where('users.status', UserStatus::ACTIVO->value)
             ->select(
@@ -27,24 +33,32 @@ trait HasPendingQuery
                 'student_details.semestre',
                 DB::raw("
                     CASE
+                        WHEN roles.name = 'applicant'
+                            THEN '" . PaymentConceptApplicantType::APPLICANT->value . "'
                         WHEN student_details.id IS NULL
                             THEN '" . PaymentConceptApplicantType::NO_STUDENT_DETAILS->value . "'
-                        ELSE '" . PaymentConceptApplicantType::APPLICANT->value . "'
+
+                        ELSE NULL
                     END as applicant_type
-                ")
-            );
+                "),
+                DB::raw("CASE WHEN roles.name = '" . UserRoles::STUDENT->value . "' THEN 1 ELSE 0 END as is_student")
+            )
+            ->distinct('users.id')
+        ;
 
         $baseConcepts = DB::table('payment_concepts')
-            ->where('payment_concepts.status', PaymentConceptStatus::ACTIVO->value)
             ->whereDate('payment_concepts.start_date', '<=', $now)
             ->when(
                 $scope === PaymentConceptTimeScope::ONLY_ACTIVE,
-                fn($q) =>
-                $q->where(function ($q) use ($now) {
-                    $q->whereNull('payment_concepts.end_date')
-                        ->orWhereDate('payment_concepts.end_date', '>=', $now);
-                })
-
+                fn($q) => $q->where('payment_concepts.status', PaymentConceptStatus::ACTIVO->value)
+                    ->where(function ($q) use ($now) {
+                        $q->whereNull('payment_concepts.end_date')
+                            ->orWhereDate('payment_concepts.end_date', '>=', $now);
+                    }),
+                fn($q) => $q->whereIn('payment_concepts.status', [
+                    PaymentConceptStatus::ACTIVO->value,
+                    PaymentConceptStatus::FINALIZADO->value
+                ])
             );
 
 
@@ -54,8 +68,7 @@ trait HasPendingQuery
 
             ->leftJoin('payments', function ($q) {
                 $q->on('payments.payment_concept_id', '=', 'payment_concepts.id')
-                    ->on('payments.user_id', '=', 'u.user_id')
-                    ->whereNotIn('payments.status', PaymentStatus::terminalStatuses());;
+                    ->on('payments.user_id', '=', 'u.user_id');
             })
 
             ->leftJoin('concept_exceptions', function ($q) {
@@ -78,51 +91,71 @@ trait HasPendingQuery
             ->whereNull('concept_exceptions.id')
 
             ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('payment_concepts.applies_to', PaymentConceptAppliesTo::TODOS->value)
+                        ->where('u.is_student', 1);
+                })
 
-                $q->where(function ($q) {
-                    $q->where('payment_concepts.is_global', true)
-                        ->whereExists(function ($r) {
-                            $r->select(DB::raw(1))
-                                ->from('model_has_roles')
-                                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                                ->whereColumn('model_has_roles.model_id', 'u.user_id')
-                                ->where('model_has_roles.model_type', User::class)
-                                ->where('roles.name', UserRoles::STUDENT->value);
+                ->orWhere(function ($sub) {
+                    $sub->where('payment_concepts.applies_to', PaymentConceptAppliesTo::ESTUDIANTES->value)
+                        ->whereExists(function ($exists) {
+                            $exists->select(DB::raw(1))
+                                ->from('payment_concept_user')
+                                ->whereColumn('payment_concept_user.payment_concept_id', 'payment_concepts.id')
+                                ->whereColumn('payment_concept_user.user_id', 'u.user_id');
                         });
-                });
+                })
 
-                $q->orWhereExists(function ($sub) {
-                    $sub->select(DB::raw(1))
-                        ->from('payment_concept_user')
-                        ->whereColumn('payment_concept_user.payment_concept_id', 'payment_concepts.id')
-                        ->whereColumn('payment_concept_user.user_id', 'u.user_id');
-                });
+                ->orWhere(function ($sub) {
+                    $sub->where('payment_concepts.applies_to', PaymentConceptAppliesTo::CARRERA->value)
+                        ->whereExists(function ($exists) {
+                            $exists->select(DB::raw(1))
+                                ->from('career_payment_concept')
+                                ->whereColumn('career_payment_concept.payment_concept_id', 'payment_concepts.id')
+                                ->whereColumn('career_payment_concept.career_id', 'u.career_id');
+                        });
+                })
 
-                $q->orWhereExists(function ($sub) {
-                    $sub->select(DB::raw(1))
-                        ->from('career_payment_concept')
-                        ->whereColumn('career_payment_concept.payment_concept_id', 'payment_concepts.id')
-                        ->whereColumn('career_payment_concept.career_id', 'u.career_id');
-                });
+                ->orWhere(function ($sub) {
+                    $sub->where('payment_concepts.applies_to', PaymentConceptAppliesTo::SEMESTRE->value)
+                        ->whereExists(function ($exists) {
+                            $exists->select(DB::raw(1))
+                                ->from('payment_concept_semester')
+                                ->whereColumn('payment_concept_semester.payment_concept_id', 'payment_concepts.id')
+                                ->whereColumn('payment_concept_semester.semestre', 'u.semestre');
+                        });
+                })
 
-                $q->orWhereExists(function ($sub) {
-                    $sub->select(DB::raw(1))
-                        ->from('payment_concept_semesters')
-                        ->whereColumn('payment_concept_semesters.payment_concept_id', 'payment_concepts.id')
-                        ->whereColumn('payment_concept_semesters.semestre', 'u.semestre');
-                });
+                ->orWhere(function ($sub) {
+                    $sub->where('payment_concepts.applies_to', PaymentConceptAppliesTo::CARRERA_SEMESTRE->value)
+                        ->whereExists(function ($exists) {
+                            $exists->select(DB::raw(1))
+                                ->from('career_payment_concept')
+                                ->whereColumn('career_payment_concept.payment_concept_id', 'payment_concepts.id')
+                                ->whereColumn('career_payment_concept.career_id', 'u.career_id');
+                        })
+                        ->whereExists(function ($exists) {
+                            $exists->select(DB::raw(1))
+                                ->from('payment_concept_semester')
+                                ->whereColumn('payment_concept_semester.payment_concept_id', 'payment_concepts.id')
+                                ->whereColumn('payment_concept_semester.semestre', 'u.semestre');
+                        });
+                })
 
-                $q->orWhereExists(function ($sub) {
-                    $sub->select(DB::raw(1))
-                        ->from('payment_concept_applicant_tags')
-                        ->whereColumn('payment_concept_applicant_tags.payment_concept_id', 'payment_concepts.id')
-                        ->whereColumn('payment_concept_applicant_tags.tag', 'u.applicant_type');
+                ->orWhere(function ($sub) {
+                    $sub->where('payment_concepts.applies_to', PaymentConceptAppliesTo::TAG->value)
+                        ->whereExists(function ($exists) {
+                            $exists->select(DB::raw(1))
+                                ->from('payment_concept_applicant_tags')
+                                ->whereColumn('payment_concept_applicant_tags.payment_concept_id', 'payment_concepts.id')
+                                ->whereColumn('payment_concept_applicant_tags.tag', 'u.applicant_type');
+                        });
                 });
             })
 
             ->select(
                 'payment_concepts.*',
-                DB::raw('COALESCE(payment_concepts.amount - COALESCE(p.amount_received, 0), payment_concepts.amount) as amount'),
+                DB::raw('COALESCE(payment_concepts.amount - COALESCE(payments.amount_received, 0), payment_concepts.amount) as pending_amount'),
                 'u.user_id as target_user_id',
                 DB::raw("
                     CASE

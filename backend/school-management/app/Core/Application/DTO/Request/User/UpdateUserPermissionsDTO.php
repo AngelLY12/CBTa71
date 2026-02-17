@@ -45,6 +45,15 @@ class UpdateUserPermissionsDTO{
         public readonly ?array $permissionsToRemove = []
     )
     {
+    }
 
+    public function toArray(): array
+    {
+        return [
+            'curps' => $this->curps ?? [],
+            'role' => $this->role ?? null,
+            'permissionsToAdd' => $this->permissionsToAdd ?? [],
+            'permissionsToRemove' => $this->permissionsToRemove ?? []
+        ];
     }
 }

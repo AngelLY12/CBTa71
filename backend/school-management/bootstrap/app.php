@@ -8,8 +8,6 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Exceptions\DomainException;
-use App\Http\Middleware\CheckUserStatus;
-use App\Http\Middleware\LogUserAction;
 use App\Http\Middleware\SecureHeadersMiddleware;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -17,7 +15,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use App\Core\Domain\Enum\Exceptions\ErrorCode;
 
@@ -27,51 +24,56 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
-        then: function () {
-            Route::middleware('api')
-                ->prefix('api')
-                ->group(base_path('routes/auth.php'));
-        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(prepend: [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        $middleware->use([
+            \App\Http\Middleware\HandleStaticRequests::class,
+            \Illuminate\Http\Middleware\HandleCors::class,
         ]);
-        $middleware->append(SecureHeadersMiddleware::class);
 
+        $middleware->api(prepend: [
+            \App\Http\Middleware\SecureHeadersMiddleware::class
+            //\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
+        $middleware->redirectGuestsTo(function ($request){
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return null;
+            }
+        });
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'log.action' => LogUserAction::class,
-            'user.status' => CheckUserStatus::class
         ]);
 
         //
     })
     ->withSchedule(function (Schedule $schedule){
-        $schedule->command('payments:dispatch-reconcile-payments-job')->everyTwoHours()->withoutOverlapping()->onOneServer();
-        $schedule->command('backup:dispatch-create-backup-job')->dailyAt('02:00');
+        $schedule->command('payments:dispatch-reconcile-payments-job')->everyTwoHours()->withoutOverlapping(30)->onOneServer();
+        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyThreeHours()->withoutOverlapping(30)->onOneServer();
+        $schedule->command('backup:clean')->dailyAt('23:50');
+        $schedule->command('concepts:dispatch-finalize-job')->dailyAt('00:05')->withoutOverlapping(30)->onOneServer();
+        $schedule->command('backup:dispatch-create-backup-job')->dailyAt('00:30') ->withoutOverlapping(120);
+        $schedule->command('db:auto-restore')->dailyAt('01:30')->withoutOverlapping(30);
+        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('01:20');
+        $schedule->command('users:dispatch-delete-users')->weekly()->at('01:45')->withoutOverlapping(30)->onOneServer();
+        $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('02:10')->withoutOverlapping(30)->onOneServer();
+        $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('02:35');
         $schedule->command('app:dispatch-promote-students-job')
-        ->dailyAt('23:55')
+        ->dailyAt('22:50')
         ->when(function () {
             $today = now();
             $lastDay = $today->endOfMonth()->day;
             $daysBeforeEnd = $lastDay - $today->day;
             return $daysBeforeEnd <= 8
                 && in_array($today->month, config('promotions.allowed_months'));
-        });
-        $schedule->command('cache:dispatch-clean-cache-job')->cron('0 0 1 */3 *');
-        $schedule->command('backup:clean')->dailyAt('02:30');
-        $schedule->command('logs:dispatch-clean-older-logs-job')->quarterly();
-        $schedule->command('db:auto-restore')->dailyAt('03:00');
-        $schedule->command('concepts:dispatch-finalize-job')->daily();
-        $schedule->command('tokens:dispatch-clean-expired-tokens')->everyFourHours();
-        $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('03:00');
-        $schedule->command('users:dispatch-delete-users')->weekly()->at('00:00');
-        $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('00:00');
-        $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('02:00');
+        })
+            ->withoutOverlapping(120)
+            ->onOneServer();
+        $schedule->command('logs:dispatch-clean-older-logs-job')->quarterly()->withoutOverlapping(120);
+        $schedule->command('app:dispatch-optimize-database-job')->quarterly()->withoutOverlapping()->onOneServer();
+        $schedule->command('payments:dispath-clean-older-payment-events-job')->cron('0 0 1 */3 *')->withoutOverlapping(30);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
@@ -98,6 +100,15 @@ return Application::configure(basePath: dirname(__DIR__))
             return Response::error('No tienes permisos para realizar esta acción.', 403, null, ErrorCode::FORBIDDEN->value);
         });
 
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, Request $request) {
+            return Response::error(
+                'Acceso denegado para esta acción.',
+                403,
+                null,
+                ErrorCode::FORBIDDEN->value
+            );
+        });
+
         $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, Request $request) {
             return Response::error(
                 'No tienes permisos para acceder a este recurso',
@@ -107,16 +118,38 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        $exceptions->render(function (QueryException $e, Request $request) {
-            if ($e->errorInfo[1] === 1062) {
-                return Response::error('Registro duplicado, ya existe una entidad con esos datos.', 409, $e->errorInfo, ErrorCode::DUPLICATE_ENTRY->value);
-            }
-            return Response::error('Error interno al procesar la base de datos.', 500, $e->errorInfo, ErrorCode::DATABASE_ERROR->value);
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) {
+            return Response::error('Ruta no encontrada', 404, null, ErrorCode::NOT_FOUND->value);
         });
 
         $exceptions->render(function (ModelNotFoundException $e, Request $request) {
             return Response::error('Recurso no encontrado', 404, null, ErrorCode::NOT_FOUND->value);
         });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e, Request $request) {
+            return Response::error('Método no permitido', 405, null, ErrorCode::METHOD_NOT_ALLOWED->value);
+        });
+
+        $exceptions->render(function (\Illuminate\Http\Exceptions\PostTooLargeException $e, Request $request) {
+            return Response::error('El payload es demasiado grande', 413, null, ErrorCode::PAYLOAD_TOO_LARGE->value);
+        });
+
+        $exceptions->render(function (QueryException $e, Request $request) {
+            $errorCode = $e->errorInfo[1] ?? null;
+
+            $connectionErrors = [2002, 2003, 2006, 2013];
+
+            if (in_array($errorCode, $connectionErrors)) {
+                return Response::error('Error de conexión a la base de datos', 503, null, ErrorCode::SERVICE_UNAVAILABLE->value);
+            }
+
+            if ($errorCode === 1062) {
+                return Response::error('Registro duplicado', 409, $e->errorInfo, ErrorCode::DUPLICATE_ENTRY->value);
+            }
+
+            return Response::error('Error interno al procesar la base de datos', 500, $e->errorInfo, ErrorCode::DATABASE_ERROR->value);
+        });
+
 
         $exceptions->render(function (\InvalidArgumentException $e, Request $request) {
             return Response::error($e->getMessage(), 422, null, ErrorCode::INVALID_ARGUMENT->value);
@@ -164,28 +197,22 @@ return Application::configure(basePath: dirname(__DIR__))
             return Response::error('Errores de validación', 422, $e->errors(),ErrorCode::VALIDATION_ERROR->value);
         });
 
-        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, Request $request) {
-            $headers = $e->getHeaders();
-            $retryAfter = $headers['Retry-After'] ?? 60;
-
-            return Response::error(
-                "Demasiadas solicitudes. Intenta de nuevo en {$retryAfter} segundos.",
-                429,
-                [
-                    'retry_after' => $retryAfter,
-                    'retry_after_seconds' => (int) $retryAfter,
-                    'limit' => $headers['X-RateLimit-Limit'] ?? null,
-                    'remaining' => $headers['X-RateLimit-Remaining'] ?? null,
-                ],
-                ErrorCode::RATE_LIMIT_EXCEEDED->value ?? 'RATE_LIMIT_EXCEEDED'
-            );
-        });
-
         $exceptions->render(function (\Throwable $e, Request $request) {
-            logger()->error("[UNHANDLED] " . $e->getMessage(), [
-                'exception' => get_class($e),
-                'trace' => $e->getTraceAsString(),
-            ]);
+
+            if ($e instanceof \TypeError) {
+                logger()->error('[UNHANDLED][TYPE_ERROR]', [
+                    'message'   => $e->getMessage(),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                    'exception' => get_class($e),
+                ]);
+            } else {
+                logger()->error('[UNHANDLED]', [
+                    'message'   => $e->getMessage(),
+                    'exception' => get_class($e),
+                    'trace'     => $e->getTraceAsString(),
+                ]);
+            }
 
             return Response::error(
                 app()->isProduction()

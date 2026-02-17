@@ -9,6 +9,14 @@ class SemesterPromotionValidator
 {
     public static function ensurePromotionIsValid(bool $wasExecuted)
     {
+        $forceExecution = config('promotions.force_execution');
+        if ($forceExecution) {
+            if ($wasExecuted) {
+                throw new PromotionAlreadyExecutedException();
+            }
+            return;
+        }
+
         $allowedMonths = config('promotions.allowed_months');
         $currentMonth = now()->month;
 

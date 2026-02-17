@@ -5,11 +5,13 @@ namespace App\Core\Domain\Entities;
 class UserActionLog
 {
     public function __construct(
-        public ?int $userId,
-        public ?array $roles,
-        public ?string $ip,
         public string $method,
         public string $url,
+        public ?array $roles = [],
+        public ?int $id = null,
+        public ?int $userId = null,
+        public ?string $ip = null,
+
     )
     {
     }
@@ -17,11 +19,12 @@ class UserActionLog
     public function toArray(): array
     {
         return [
-            'userId' => $this->userId,
-            'roles' => $this->roles,
-            'ip' => $this->ip,
             'method' => $this->method,
             'url' => $this->url,
+            'roles' => $this->roles ?? [],
+            'id' => $this->id ?? null,
+            'userId' => $this->userId ?? null,
+            'ip' => $this->ip ?? null,
         ];
     }
 }

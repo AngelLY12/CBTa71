@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptRelationsToDisplay;
 use App\Core\Application\Mappers\PaymentConceptMapper;
 use App\Core\Infraestructure\Mappers\PaymentConceptMapper as InfraPaymentConceptMapper;
 use App\Core\Application\Services\Payments\Staff\ConceptsServiceFacades;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\General\ForceRefreshRequest;
+use App\Http\Requests\General\SearchRequest;
 use App\Http\Requests\Payments\Staff\ConceptsIndexRequest;
 use App\Http\Requests\Payments\Staff\StorePaymentConceptRequest;
+use App\Http\Requests\Payments\Staff\UpdatePaymentConceptRelationsRequest;
 use App\Http\Requests\Payments\Staff\UpdatePaymentConceptRequest;
 use App\Models\PaymentConcept;
 use Illuminate\Support\Facades\Response;
@@ -46,6 +50,32 @@ class ConceptsController extends Controller
 
     }
 
+    public function findConcept(ForceRefreshRequest $request,int $id)
+    {
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $concept=$this->conceptsService->findConcept($id, $forceRefresh);
+        return Response::success(['concept' => $concept], 'Concepto encontrado.');
+
+    }
+
+    public function findRelations(ForceRefreshRequest $request,int $id)
+    {
+        $forceRefresh = $request->validated()['forceRefresh'] ?? false;
+        $concept=$this->conceptsService->findRelations($id, $forceRefresh);
+        return Response::success(['relations' => $concept], 'Relaciones del concepto encontradas.');
+    }
+
+    public function findNumberControlsBySearch(SearchRequest $request)
+    {
+        $validated = $request->validated();
+        $search = $validated['search'] ?? '';
+        $limit = $validated['limit'] ?? 15;
+        $forceRefresh = $validated['forceRefresh'] ?? false;
+        $search=$this->conceptsService->findNumberControlsBySearch($search, $limit ,$forceRefresh);
+        return Response::success(['search' => $search], 'Búsqueda exitosa');
+
+    }
+
     public function store(StorePaymentConceptRequest $request)
     {
         $data = $request->validated();
@@ -72,6 +102,20 @@ class ConceptsController extends Controller
         return Response::success(
             ['concept' => $updatedConcept],
             'Concepto de pago actualizado correctamente.'
+        );
+    }
+
+    public function updateRelations(UpdatePaymentConceptRelationsRequest $request, int $id)
+    {
+        $data = $request->validated();
+        $data['id'] = $id;
+        $dto = PaymentConceptMapper::toUpdateConceptRelationsDTO($data);
+
+        $updatedConcept = $this->conceptsService->updatePaymentConceptRelations($dto);
+
+        return Response::success(
+            ['concept' => $updatedConcept],
+            'Relaciones del Concepto de pago actualizadas correctamente.'
         );
     }
 
@@ -108,9 +152,9 @@ class ConceptsController extends Controller
         );
     }
 
-    public function eliminate(int $conceptId)
+    public function eliminate(int $id)
     {
-        $this->conceptsService->eliminatePaymentConcept($conceptId);
+        $this->conceptsService->eliminatePaymentConcept($id);
 
          return Response::success(
             null,

@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('permissions', function (Blueprint $table) {
-            $table->string('type',50)->default('role');
-            $table->string('belongs_to')->nullable()->index();
-            $table->index(['type', 'belongs_to']);
+            $table->string('type',50)->after('guard_name')->default('role');
+            $table->index(['type']);
         });
     }
 
@@ -25,7 +24,6 @@ return new class extends Migration
     {
         Schema::table('permissions', function (Blueprint $table) {
             $table->dropColumn('type');
-            $table->dropColumn('belongs_to');
         });
     }
 };

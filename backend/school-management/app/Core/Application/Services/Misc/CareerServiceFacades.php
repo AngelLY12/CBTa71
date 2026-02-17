@@ -15,6 +15,7 @@ use App\Core\Infraestructure\Cache\CacheService;
 class CareerServiceFacades
 {
      use HasCache;
+    private const TAG_CAREERS_ALL = [CachePrefix::CAREERS->value, 'all'];
 
     public function __construct(
         private CreateCareerUseCase $create,
@@ -31,21 +32,37 @@ class CareerServiceFacades
 
     public function createCareer(Career $career): Career
     {
-        $career = $this->create->execute($career);
-        $this->service->clearKey(CachePrefix::CAREERS->value, 'all');
-        return $career;
+        return $this->idempotent(
+            'career_create',
+            [
+                'career_id' => $career->id,
+                'career_name' => $career->career_name
+            ],
+            function () use ($career) {
+                $career = $this->create->execute($career);
+                $this->service->flushTags(self::TAG_CAREERS_ALL);
+                return $career;
+            }
+        );
     }
 
     public function deleteCareer(int $careerId): void
     {
-        $this->delete->execute($careerId);
-        $this->service->clearKey(CachePrefix::CAREERS->value, 'all');
+        $this->idempotent(
+            'career.delete',
+            ['career_id' => $careerId],
+            function () use ($careerId) {
+                $this->delete->execute($careerId);
+                $this->service->flushTags(self::TAG_CAREERS_ALL);
+                return true;
+            }
+        );
     }
 
     public function findAllCareers(bool $forceRefresh): array
     {
-        $key = $this->service->makeKey(CachePrefix::CAREERS->value, "all");
-        return $this->cache($key, $forceRefresh, fn() => $this->all->execute());
+        $key = $this->generateCacheKey(CachePrefix::CAREERS->value, "all");
+        return $this->weeklyCache($key, fn() => $this->all->execute(), self::TAG_CAREERS_ALL ,$forceRefresh,);
     }
 
     public function findById(int $id, bool $forceRefresh): Career
@@ -55,8 +72,14 @@ class CareerServiceFacades
 
     public function updateCareer(int $careerId, array $fields): Career
     {
-        $career = $this->update->execute($careerId, $fields);
-        $this->service->clearKey(CachePrefix::CAREERS->value, 'all');
-        return $career;
+        return $this->idempotent(
+            'career_update',
+            ['career_id' => $careerId, 'fields' => $fields],
+            function () use ($careerId, $fields) {
+                $career = $this->update->execute($careerId, $fields);
+                $this->service->flushTags(self::TAG_CAREERS_ALL);
+                return $career;
+            }
+        );
     }
 }

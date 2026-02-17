@@ -80,8 +80,8 @@ class UpdateUserRequest extends FormRequest
         return [
             'name'          => 'sometimes|required|string',
             'last_name'     => 'sometimes|required|string',
-            'email'         => 'sometimes|required|email|unique:users,email,' . $userId,
-            'phone_number'  => 'sometimes|required|string',
+            'email'         => 'sometimes|required|email:rfc,dns|unique:users,email,' . $userId,
+            'phone_number'  => 'sometimes|required|string|regex:/^\+52\d{10}$/',
             'birthdate'     => 'sometimes|required|date|date_format:Y-m-d',
             'gender'       => [
                 'sometimes',
@@ -126,16 +126,32 @@ class UpdateUserRequest extends FormRequest
         return [
             'email.unique' => 'El correo ya está registrado por otro usuario.',
             'email.email' => 'El correo no tiene un formato válido.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+
             'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser una cadena de texto.',
+
             'gender.required' => 'El género es obligatorio.',
             'gender.in'          => 'El género no es válido.',
+            'gender.string' => 'El género debe ser texto.',
+
             'last_name.required' => 'El apellido es obligatorio.',
+            'last_name.string' => 'El apellido debe ser una cadena de texto.',
+
             'birthdate.date' => 'La fecha de nacimiento debe ser una fecha válida.',
             'birthdate.date_format' => 'La fecha de nacimiento debe tener el formato AAAA-MM-DD.',
+            'birthdate.required' => 'La fecha de nacimiento es obligatoria.',
+
             'phone_number.required' => 'El número de teléfono es obligatorio.',
+            'phone_number.string' => 'El número de teléfono debe ser texto.',
+            'phone_number.regex' => 'El teléfono debe ser un número mexicano válido: +521234567890',
+
             'blood_type.required' => 'El tipo de sangre es obligatorio.',
             'blood_type.in'      => 'El tipo de sangre no es válido.',
+            'blood_type.string' => 'El tipo de sangre debe ser texto.',
+
             'address.array' => 'La dirección debe ser un arreglo válido.',
+            'address.required' => 'La dirección es obligatoria.',
         ];
     }
 }

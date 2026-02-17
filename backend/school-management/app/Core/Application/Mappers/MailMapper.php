@@ -10,6 +10,7 @@ use App\Core\Application\DTO\Request\Mail\PaymentValidatedEmailDTO;
 use App\Core\Application\DTO\Request\Mail\RequiresActionEmailDTO;
 use App\Core\Application\DTO\Request\Mail\SendParentInviteEmailDTO;
 use App\Core\Domain\Entities\Payment;
+use App\Core\Domain\Utils\Helpers\Money;
 use Carbon\Carbon;
 
 class MailMapper
@@ -66,13 +67,14 @@ class MailMapper
 
     public static function toRequiresActionEmailDTO(array $data): RequiresActionEmailDTO
     {
+        $nextAction = $data['next_action'];
+        $methodOptions = $data['payment_method_options'];
         return new RequiresActionEmailDTO(
             recipientName: $data['recipientName'],
             recipientEmail: $data['recipientEmail'],
-            concept_name: $data['concept_name'],
             amount: $data['amount'],
-            next_action: $data['next_action'],
-            payment_method_options: $data['payment_method_options']
+            next_action: $nextAction,
+            payment_method_options: $methodOptions
         );
     }
     public static function toNewUserCreatedEmailDTO(array $data): NewUserCreatedEmailDTO

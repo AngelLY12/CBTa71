@@ -19,6 +19,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         PaymentConceptMapper::toPersistence($concept)
         );
         $pc->refresh();
+        $pc->load(['careers', 'users', 'paymentConceptSemesters', 'exceptions', 'applicantTypes']);
         return PaymentConceptMapper::toDomain($pc);
     }
 
@@ -26,6 +27,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $pc = $this->findOrFail($conceptId);
         $pc->update($data);
+        $pc->refresh();
         return PaymentConceptMapper::toDomain($pc);
     }
 
@@ -34,25 +36,32 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         return $this->update($concept->id, [
             'end_date' => now(),
             'status'   => PaymentConceptStatus::FINALIZADO,
+            'mark_as_deleted_at' => null
         ]);
     }
 
     public function activate(PaymentConcept $concept): PaymentConcept
     {
+        $endDate = $concept->end_date;
+
+        if ($endDate !== null && $endDate < now()) {
+            $endDate = null;
+        }
         return $this->update($concept->id,[
             'status'   => PaymentConceptStatus::ACTIVO,
             'end_date' => null,
+            'mark_as_deleted_at' => null
         ]);
     }
 
     public function disable(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept->id, ['status' => PaymentConceptStatus::DESACTIVADO]);
+        return $this->update($concept->id, ['status' => PaymentConceptStatus::DESACTIVADO, 'mark_as_deleted_at' => null]);
     }
 
     public function deleteLogical(PaymentConcept $concept): PaymentConcept
     {
-        return $this->update($concept->id, ['status' => PaymentConceptStatus::ELIMINADO]);
+        return $this->update($concept->id, ['status' => PaymentConceptStatus::ELIMINADO,'mark_as_deleted_at' => now()]);
     }
 
     public function delete(int $conceptId): void
@@ -64,20 +73,14 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     public function attachToUsers(int $conceptId, UserIdListDTO $userIds, bool $replaceRelations=false): PaymentConcept
     {
         $pc = $this->findOrFail($conceptId);
-        $chunkSize = 50;
 
         if($replaceRelations){
-           $pc->users()->detach();
-
-            foreach (array_chunk($userIds->userIds, $chunkSize) as $chunk) {
-                $pc->users()->attach($chunk);
-            }
+            $pc->users()->sync($userIds->userIds);
         }else{
-            foreach (array_chunk($userIds->userIds, $chunkSize) as $chunk) {
-                $pc->users()->syncWithoutDetaching($chunk);
-            }
+            $pc->users()->syncWithoutDetaching($userIds->userIds);
         }
-        $pc->refresh();
+
+        $pc->load('users');
         return PaymentConceptMapper::toDomain($pc);
 
     }
@@ -90,7 +93,7 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         }else{
             $pc->careers()->syncWithoutDetaching($careerIds);
         }
-        $pc->refresh();
+        $pc->load('careers');
         return PaymentConceptMapper::toDomain($pc);
 
     }
@@ -100,18 +103,21 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
     {
         $pc = $this->findOrFail($conceptId);
         if ($replaceRelations) {
-            $pc->paymentConceptSemesters()->delete();
+            $pc->paymentConceptSemesters()->where('payment_concept_id', $pc->id)->delete();
         }
-        foreach ($semesters as $semester) {
-                $pc->paymentConceptSemesters()->updateOrCreate(
-                    [
-                        'payment_concept_id' => $pc->id,
-                        'semestre' => $semester
-                    ],
-                    ['semestre' => $semester]
-                );
-        }
-        $pc->refresh();
+        $data = array_map(fn($semester) => [
+            'payment_concept_id' => $pc->id,
+            'semestre' => $semester,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], $semesters);
+
+        $pc->paymentConceptSemesters()->upsert(
+            $data,
+            ['payment_concept_id', 'semestre'],
+            ['semestre']
+        );
+        $pc->load('paymentConceptSemesters');
         return PaymentConceptMapper::toDomain($pc);
     }
 
@@ -120,20 +126,12 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         $pc= $this->findOrFail($conceptId);
         if($replaceRelations)
         {
-            $pc->exceptions()->delete();
+            $pc->exceptions()->sync($userIds->userIds);
+        }else{
+            $pc->exceptions()->syncWithoutDetaching($userIds->userIds);
         }
-        foreach (array_chunk($userIds->userIds, 50) as $chunk) {
-            foreach ($chunk as $userId) {
-                $pc->exceptions()->updateOrCreate(
-                    [
-                        'payment_concept_id' => $pc->id,
-                        'user_id' => $userId
-                    ],
-                    ['user_id' => $userId]
-                );
-            }
-        }
-        $pc->refresh();
+
+        $pc->load('exceptions');
         return PaymentConceptMapper::toDomain($pc);
 
     }
@@ -146,24 +144,26 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
             $pc->applicantTypes()->delete();
         }
 
-        foreach ($tags as $tag) {
-            $pc->applicantTypes()->updateOrCreate(
-                [
-                    'payment_concept_id' => $pc->id,
-                    'tag' => $tag
-                ],
-                ['tag' => $tag]
-            );
-        }
-        $pc->refresh();
-        return PaymentConceptMapper::toDomain($pc);
+        $data = array_map(fn($tag) => [
+            'payment_concept_id' => $pc->id,
+            'tag' => $tag,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], $tags);
 
+        $pc->applicantTypes()->upsert(
+            $data,
+            ['payment_concept_id', 'tag'],
+            ['tag']
+        );
+        $pc->load('applicantTypes');
+        return PaymentConceptMapper::toDomain($pc);
 
     }
 
     public function detachFromExceptionStudents(int $conceptId): void
     {
-        $this->findOrFail($conceptId)->exceptions()->delete();
+        $this->findOrFail($conceptId)->exceptions()->detach();
     }
 
     public function detachFromSemester(int $conceptId): void
@@ -188,7 +188,8 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
 
     private function findOrFail(int $id): EloquentPaymentConcept
     {
-        return EloquentPaymentConcept::findOrFail($id);
+        return EloquentPaymentConcept::with(['careers', 'users', 'paymentConceptSemesters', 'exceptions', 'applicantTypes'])
+        ->findOrFail($id);
     }
 
     public function cleanDeletedConcepts(): int
@@ -196,17 +197,32 @@ class EloquentPaymentConceptRepository implements PaymentConceptRepInterface {
         $thresholdDate = Carbon::now()->subDays(30);
         return DB::table('payment_concepts')
             ->where('status', PaymentConceptStatus::ELIMINADO)
-            ->where('updated_at', '<', $thresholdDate)
+            ->whereNotNull('mark_as_deleted_at')
+            ->where('mark_as_deleted_at', '<', $thresholdDate)
             ->delete();
     }
 
-    public function finalizePaymentConcepts(): int
+    public function finalizePaymentConcepts(): array
     {
         $today = Carbon::today();
 
-        return EloquentPaymentConcept::where('status', PaymentConceptStatus::ACTIVO)
+        $updatedConcepts = [];
+
+        EloquentPaymentConcept::where('status', PaymentConceptStatus::ACTIVO)
             ->whereDate('end_date', '<', $today)
-            ->update(['status' => PaymentConceptStatus::FINALIZADO]);
+            ->chunk(100, function ($concepts) use (&$updatedConcepts) {
+                foreach ($concepts as $concept) {
+                    $concept->update(['status' => PaymentConceptStatus::FINALIZADO]);
+
+                    $updatedConcepts[] = [
+                        'id' => $concept->id,
+                        'old_status' => PaymentConceptStatus::ACTIVO->value,
+                        'new_status' => PaymentConceptStatus::FINALIZADO->value
+                    ];
+                }
+            });
+
+        return $updatedConcepts;
 
     }
 }

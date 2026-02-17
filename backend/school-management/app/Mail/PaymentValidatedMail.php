@@ -4,15 +4,16 @@ namespace App\Mail;
 
 use App\Core\Application\DTO\Request\Mail\PaymentValidatedEmailDTO;
 use App\Core\Domain\Enum\Payment\PaymentStatus;
+use App\Core\Domain\Utils\Helpers\Money;
 use Illuminate\Bus\Queueable;
-use MailerSend\Helpers\Builder\Personalization;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use MailerSend\LaravelDriver\MailerSendTrait;
 
 class PaymentValidatedMail extends Mailable
 {
-    use Queueable, SerializesModels, MailerSendTrait;
+    use Queueable, SerializesModels;
 
     protected PaymentValidatedEmailDTO $data;
 
@@ -24,66 +25,63 @@ class PaymentValidatedMail extends Mailable
         $this->data = $data;
     }
 
-    public function build()
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
-       try {
-
-        $voucherNumber = $this->data->payment_method_detail['oxxo']['number'] ?? 'No aplica';
-        $speiReference = $this->data->payment_method_detail['spei']['reference'] ?? 'No aplica';
-        $type_payment_method = $this->data->payment_method_detail['type'] ?? 'Desconocido';
-        $paymentLegend = $this->buildPaymentLegend();
-        $messageDetails = "
-            <p><strong>Concepto:</strong> {$this->data->concept_name}</p>
-            <p><strong>Monto:</strong> $".number_format($this->data->amount, 2)."</p>
-            <p><strong>Monto recibido: $".number_format($this->data->amount_received, 2)." </strong></p>
-            <p><strong>Método de pago:</strong> {$type_payment_method}</p>
-            <p><strong>Código de referencia:</strong> {$this->data->payment_intent_id}</p>
-            <p><strong>Voucher OXXO:</strong> {$voucherNumber}</p>
-            <p><strong>Referencia SPEI:</strong> {$speiReference}</p>
-            <p><strong>URL comprobante:</strong> <a href='{$this->data->url}' target='_blank'>{$this->data->url}</a></p>
-            {$paymentLegend}
-        ";
-
-        $personalization = [
-                new Personalization($this->data->recipientEmail, [
-                    'greeting' => "Hola {$this->data->recipientName}",
-                    'header_title' => 'Pago Validado',
-                    'message_intro' => 'Tu pago ha sido validado exitosamente.',
-                    'message_details' => $messageDetails,
-                    'message_footer' => 'Gracias por realizar tu pago a tiempo.',
-                ])
-            ];
-
-        return $this->mailersend(
-                     template_id:'pq3enl6d8z7g2vwr',
-                     personalization: $personalization
-                 );
-
-    } catch (\Throwable $e) {
-        logger()->error('Fallo al construir mail: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-        throw $e;
+        return new Envelope(
+            subject: 'Pago validado',
+        );
     }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.payments.validated',
+            with: [
+                'recipientName' => $this->data->recipientName,
+                'conceptName' => $this->data->concept_name,
+                'amount' => $this->data->amount,
+                'amountReceived' => $this->data->amount_received,
+                'paymentMethodType' => $this->data->payment_method_detail['type'],
+                'paymentIntentId' => $this->data->payment_intent_id,
+                'voucherNumber' => $this->data->payment_method_detail['oxxo']['number'],
+                'speiReference' => $this->data->payment_method_detail['spei']['reference'],
+                'url' => $this->data->url,
+                'paymentLegend' => $this->buildPaymentLegend(),
+            ]
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 
     private function buildPaymentLegend(): string
     {
-        $pending = bcsub(
-            (string) $this->data->amount,
-            (string) $this->data->amount_received,
-            2
-        );
-        $balance= bcsub(
-            (string) $this->data->amount_received,
-            (string) $this->data->amount,
-            2
-        );
+        $pending = Money::from((string) $this->data->amount)
+            ->sub((string)$this->data->amount_received)
+            ->finalize();
+        $balance=Money::from((string) $this->data->amount_received)
+            ->sub((string)$this->data->amount)
+            ->finalize();
         return match ($this->data->status) {
             PaymentStatus::UNDERPAID->value =>
                 "<p style='color:#d97706;'>
                 Detectamos que el monto recibido es menor al esperado.
                 <br>
                 <strong>Monto pendiente:</strong> $"
-                . number_format($pending, 2)
+                . $pending
                 .
                 "</p>",
 
@@ -92,10 +90,7 @@ class PaymentValidatedMail extends Mailable
                 Tu pago tiene un <strong>monto extra</strong>.
                 <br>
                 <strong>Saldo extra pagado:</strong> $"
-                . number_format(
-                    $balance,
-                    2
-                ) .
+                . $balance .
                 "</p>",
 
             PaymentStatus::SUCCEEDED->value => '',

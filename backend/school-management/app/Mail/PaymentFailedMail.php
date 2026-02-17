@@ -4,14 +4,14 @@ namespace App\Mail;
 
 use App\Core\Application\DTO\Request\Mail\PaymentFailedEmailDTO;
 use Illuminate\Bus\Queueable;
-use MailerSend\Helpers\Builder\Personalization;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use MailerSend\LaravelDriver\MailerSendTrait;
 
 class PaymentFailedMail extends Mailable
 {
-    use Queueable, SerializesModels, MailerSendTrait;
+    use Queueable, SerializesModels;
 
     protected PaymentFailedEmailDTO $data;
 
@@ -24,27 +24,40 @@ class PaymentFailedMail extends Mailable
         $this->data = $data;
     }
 
-    public function build()
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
     {
-       try {
-        $personalization = [
-            new Personalization($this->data->recipientEmail, [
-                'greeting' => "Hola {$this->data->recipientName}",
-                'error' => $this->data->error,
-                'concept_name' => $this->data->concept_name ?? 'No disponible',
-                'amount' => isset($this->data->amount) ? number_format($this->data->amount, 2) : '0.00',
-            ])
-        ];
-
-        return $this->mailersend(
-                     template_id:'351ndgwmzxnlzqx8',
-                     personalization: $personalization
-                 );
-
-    } catch (\Throwable $e) {
-        logger()->error('Fallo al construir mail: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-        throw $e;
+        return new Envelope(
+            subject: 'Error al procesar el pago',
+        );
     }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.payments.failed',
+            with: [
+                'recipientName' => $this->data->recipientName,
+                'conceptName' => $this->data->concept_name,
+                'amount' => $this->data->amount,
+                'error' => $this->data->error,
+            ]
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
     }
 
 }

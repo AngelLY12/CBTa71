@@ -10,21 +10,35 @@ class PaymentConceptMapper{
 
     public static function toDomain(PaymentConcept $paymentConcept){
         $domain= new DomainPaymentConcept(
-            id:$paymentConcept->id,
-            concept_name:$paymentConcept->concept_name,
-            description:$paymentConcept->description,
-            status:$paymentConcept->status,
-            start_date:$paymentConcept->start_date,
-            end_date:$paymentConcept->end_date,
-            amount:$paymentConcept->amount,
-            applies_to:$paymentConcept->applies_to,
-            is_global:$paymentConcept->is_global
+            concept_name: $paymentConcept->concept_name,
+            status: $paymentConcept->status,
+            start_date: $paymentConcept->start_date,
+            amount: $paymentConcept->amount,
+            applies_to: $paymentConcept->applies_to,
+            id: $paymentConcept->id,
+            description: $paymentConcept->description,
+            end_date: $paymentConcept->end_date
         );
-        $domain->setCareerIds($paymentConcept->careers->pluck('id')->toArray());
-        $domain->setUserIds($paymentConcept->users->pluck('id')->toArray());
-        $domain->setSemesters($paymentConcept->paymentConceptSemesters->pluck('semestre')->toArray());
-        $domain->setExceptionUsersIds($paymentConcept->exceptions->pluck('user_id')->toArray());
-        $domain->setApplicantTag($paymentConcept->applicantTypes->pluck('tag')->toArray());
+        if($paymentConcept->relationLoaded('careers'))
+        {
+            $domain->setCareerIds($paymentConcept->careers->pluck('id')->toArray());
+        }
+        if($paymentConcept->relationLoaded('users')){
+            $domain->setUserIds($paymentConcept->users->pluck('id')->toArray());
+
+        }
+        if($paymentConcept->relationLoaded('paymentConceptSemesters'))
+        {
+            $domain->setSemesters($paymentConcept->paymentConceptSemesters->pluck('semestre')->toArray());
+        }
+        if($paymentConcept->relationLoaded('exceptions'))
+        {
+            $domain->setExceptionUsersIds($paymentConcept->exceptions->pluck('pivot.user_id')->toArray());
+        }
+        if($paymentConcept->relationLoaded('applicantTypes'))
+        {
+            $domain->setApplicantTag($paymentConcept->applicantTypes->pluck('tag')->toArray());
+        }
 
         return $domain;
     }
@@ -39,7 +53,6 @@ class PaymentConceptMapper{
             'end_date'     => $concept->end_date,
             'amount'       => $concept->amount,
             'applies_to'   => $concept->applies_to,
-            'is_global'    => $concept->is_global,
         ];
     }
 
