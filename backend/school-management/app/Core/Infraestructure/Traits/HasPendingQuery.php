@@ -47,16 +47,18 @@ trait HasPendingQuery
         ;
 
         $baseConcepts = DB::table('payment_concepts')
-            ->where('payment_concepts.status', PaymentConceptStatus::ACTIVO->value)
             ->whereDate('payment_concepts.start_date', '<=', $now)
             ->when(
                 $scope === PaymentConceptTimeScope::ONLY_ACTIVE,
-                fn($q) =>
-                $q->where(function ($q) use ($now) {
-                    $q->whereNull('payment_concepts.end_date')
-                        ->orWhereDate('payment_concepts.end_date', '>=', $now);
-                })
-
+                fn($q) => $q->where('payment_concepts.status', PaymentConceptStatus::ACTIVO->value)
+                    ->where(function ($q) use ($now) {
+                        $q->whereNull('payment_concepts.end_date')
+                            ->orWhereDate('payment_concepts.end_date', '>=', $now);
+                    }),
+                fn($q) => $q->whereIn('payment_concepts.status', [
+                    PaymentConceptStatus::ACTIVO->value,
+                    PaymentConceptStatus::FINALIZADO->value
+                ])
             );
 
 
