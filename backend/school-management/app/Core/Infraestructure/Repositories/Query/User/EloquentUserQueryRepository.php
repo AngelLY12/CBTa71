@@ -351,10 +351,10 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                 student_details.n_control as n_control,
                 student_details.semestre AS semestre,
                 careers.career_name AS career,
-                COUNT(pending_concepts.id) AS total_count,
-                COALESCE(SUM(pending_concepts.pending_amount), 0) AS total_amount,
+                COUNT(CASE WHEN pending_concepts.is_expired = 0 THEN 1 END) AS total_count,
+                COALESCE(SUM(CASE WHEN pending_concepts.is_expired = 0 THEN pending_concepts.pending_amount END), 0) AS total_amount,
                 COALESCE(
-                    SUM(CASE WHEN pending_concepts.is_expired = 1 THEN 1 ELSE 0 END),
+                    SUM(CASE WHEN pending_concepts.is_expired = 1 THEN 1 END),
                     0
                 ) AS expired_count,
                 COALESCE(
@@ -362,7 +362,7 @@ class EloquentUserQueryRepository implements UserQueryRepInterface
                         CASE
                             WHEN pending_concepts.is_expired = 1
                             THEN pending_concepts.pending_amount
-                            ELSE 0
+
                         END
                     ),
                     0
