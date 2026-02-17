@@ -3,6 +3,12 @@
 use Laravel\Telescope\Http\Middleware\Authorize;
 use Laravel\Telescope\Watchers;
 
+if (!class_exists(\Laravel\Telescope\TelescopeServiceProvider::class)) {
+    return [
+        'enabled' => false,
+    ];
+}
+
 return [
 
     /*

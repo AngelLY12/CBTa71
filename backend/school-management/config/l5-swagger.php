@@ -1,5 +1,16 @@
 <?php
 
+if (!class_exists(\L5Swagger\Generator::class)) {
+    return [
+        'generate_always' => false,
+        'routes' => [
+            'api' => '/api/documentation',
+            'docs' => '/docs',
+            'asset' => '/swagger-ui-assets',
+        ],
+    ];
+}
+
 return [
     'default' => 'default',
     'documentations' => [
