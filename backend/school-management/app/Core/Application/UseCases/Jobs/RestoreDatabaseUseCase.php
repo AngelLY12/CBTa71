@@ -88,6 +88,15 @@ class RestoreDatabaseUseCase
         $password = config('database.connections.mysql.password');
         $host     = config('database.connections.mysql.host');
 
+        $dropCreateCommand = "mysql -h {$host} -u {$user} -p{$password} --skip-ssl -e 'DROP DATABASE IF EXISTS {$database}; CREATE DATABASE {$database};'";
+        exec($dropCreateCommand, $dropOutput, $dropReturnVar);
+
+        if ($dropReturnVar !== 0) {
+            Log::channel('stderr')->error('Error al dropear/crear la base de datos');
+            Log::channel('stderr')->error('Output: ' . implode("\n", $dropOutput));
+            return false;
+        }
+
         $command = "mysql -h {$host} -u {$user} -p{$password} --skip-ssl {$database} < {$sqlFile}";
         exec($command, $output, $returnVar);
 
