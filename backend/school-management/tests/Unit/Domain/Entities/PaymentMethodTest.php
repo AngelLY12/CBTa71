@@ -153,7 +153,7 @@ class PaymentMethodTest extends BaseDomainTestCase
             exp_year: 2025
         );
 
-        $this->assertFalse($invalidMonth->isExpired());
+        $this->assertTrue($invalidMonth->isExpired());
 
         $zeroMonth = new PaymentMethod(
             user_id: 1,

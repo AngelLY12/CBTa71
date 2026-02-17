@@ -1,6 +1,7 @@
 <?php
 
 namespace Tests\Stubs\Repositories\Query;
+use App\Core\Application\DTO\Response\User\UserExtraDataResponse;
 use App\Core\Domain\Repositories\Query\User\UserQueryRepInterface;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Entities\PaymentConcept;
@@ -21,6 +22,7 @@ class UserQueryRepStub implements UserQueryRepInterface
     private User $nextGetUserWithStudentDetailResult;
     private User $nextGetUserByStripeCustomerResult;
     private UserIdListDTO $nextGetUserIdsByControlNumbersResult;
+    private UserExtraDataResponse $nextGetUserExtraDataResult;
     private int $nextCountStudentsResult = 0;
     private ?User $nextFindBySearchResult = null;
     private array $nextGetRecipientsResult = [];
@@ -152,6 +154,10 @@ class UserQueryRepStub implements UserQueryRepInterface
     public function findAllUsers(int $perPage, int $page, ?UserStatus $status = null): LengthAwarePaginator
     {
         return $this->nextFindAllUsersResult;
+    }
+    public function getExtraUserData(int $userId): UserExtraDataResponse
+    {
+        return $this->nextGetUserExtraDataResult;
     }
 
     public function findAuthUser(): ?UserAuthResponse

@@ -223,16 +223,22 @@ class CacheServiceTest extends TestCase
         // Arrange
         $key = 'test_key';
         $ttl = 3600;
+        $tags = ['admin', 'dashboard'];
         $expectedValue = 'cached_value';
         $callback = fn() => $expectedValue;
 
-        Cache::shouldReceive('remember')
+        $taggedCacheMock = Mockery::mock(\Illuminate\Cache\TaggedCache::class);
+        $taggedCacheMock->shouldReceive('remember')
             ->once()
             ->with($key, $ttl, $callback)
             ->andReturn($expectedValue);
 
+        Cache::shouldReceive('tags')
+            ->once()
+            ->with($tags)
+            ->andReturn($taggedCacheMock);
         // Act
-        $result = $this->cacheService->remember($key, $ttl, $callback);
+        $result = $this->cacheService->remember($tags,$key, $ttl, $callback);
 
         // Assert
         $this->assertEquals($expectedValue, $result);
@@ -320,6 +326,7 @@ class CacheServiceTest extends TestCase
     #[Test]
     public function makeKey_generates_key_from_config(): void
     {
+        Config::set('cache-prefixes.staff', 'staff:');
         // Arrange
         $prefixKey = 'staff';
         $suffix = 'dashboard';
@@ -340,29 +347,25 @@ class CacheServiceTest extends TestCase
         // Arrange
         $prefix = 'staff:dashboard:*';
         $keys = ['staff:dashboard:1', 'staff:dashboard:2'];
+        $tags = ['staff', 'dashboard'];
 
-        $this->mockRedis([$keys], true, $keys);
+        $taggedCacheMock = Mockery::mock(\Illuminate\Cache\TaggedCache::class);
+        $taggedCacheMock->shouldReceive('flush')
+            ->once()
+            ->andReturn(true);
+
+        // Mock de Cache
+        Cache::shouldReceive('tags')
+            ->once()
+            ->with($tags)
+            ->andReturn($taggedCacheMock);
+
 
         // Act
-        $this->cacheService->clearPrefix($prefix);
+        $result =$this->cacheService->flushTags($tags);
 
         // Assert - el mock se verifica automáticamente
-        $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function clearPrefix_handles_empty_keys(): void
-    {
-        // Arrange
-        $prefix = 'staff:dashboard:*';
-
-        $this->mockRedis([[]], false);
-
-        // Act
-        $this->cacheService->clearPrefix($prefix);
-
-        // Assert
-        $this->assertTrue(true);
+        $this->assertTrue($result);
     }
 
     #[Test]
@@ -378,58 +381,17 @@ class CacheServiceTest extends TestCase
         ];
 
         foreach ($statuses as $status) {
-            $cacheServiceMock = Mockery::mock(CacheService::class)->makePartial();
+            // Mock de TaggedCache para flushTags
+            $taggedCacheMock = Mockery::mock(\Illuminate\Cache\TaggedCache::class);
+            $taggedCacheMock->shouldReceive('flush')
+                ->andReturn(true);
 
-            // Mock Redis para evitar errores
-            $this->mockRedis([[]], false);
+            Cache::shouldReceive('tags')
+                ->andReturn($taggedCacheMock);
 
-            // Expectativa: clearKey debe ser llamado 4 veces para las staff suffixes
-            $cacheServiceMock->shouldReceive('clearKey')
-                ->times(4)
-                ->with(CachePrefix::STAFF->value, Mockery::type('string'));
-
-            // Act
-            $cacheServiceMock->clearCacheWhileConceptChangeStatus($userId, $status);
+            $this->cacheService->clearCacheWhileConceptChangeStatus($userId, $status);
         }
 
-        $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function clearKey_does_nothing_when_prefix_not_configured(): void
-    {
-        // Arrange
-        Config::set('cache-prefixes.staff', null);
-        $prefixKey = 'staff';
-        $suffix = 'dashboard:*';
-
-        // Mock Redis vacío
-        $this->mockRedis([[]], false);
-
-        // Act
-        $this->cacheService->clearKey($prefixKey, $suffix);
-
-        // Assert
-        $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function clearKey_uses_config_to_generate_prefix_and_clears_it(): void
-    {
-        // Arrange
-        $prefixKey = 'staff';
-        $suffix = 'dashboard:*';
-
-        // Crear un partial mock del servicio
-        $cacheServiceMock = Mockery::mock(CacheService::class)->makePartial();
-
-        // Expectativa: clearPrefix debe ser llamado con el prefijo completo
-        $cacheServiceMock->shouldReceive('clearPrefix')
-            ->once()
-            ->with('staff:dashboard:*');
-
-        // Act & Assert
-        $cacheServiceMock->clearKey($prefixKey, $suffix);
         $this->assertTrue(true);
     }
 
@@ -437,27 +399,15 @@ class CacheServiceTest extends TestCase
     public function clearStaffCache_clears_all_staff_cache_suffixes(): void
     {
         // Arrange
-        $cacheServiceMock = Mockery::mock(CacheService::class)->makePartial();
+        $this->mockCacheTags([CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value]);
+        $this->mockCacheTags([CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value]);
+        $this->mockCacheTags([CachePrefix::STAFF->value, StaffCacheSufix::PAYMENTS->value]);
+        $this->mockCacheTags([CachePrefix::STAFF->value, StaffCacheSufix::STUDENTS->value]);
 
-        // Expectativas para cada clearKey
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value . ":*");
+        // Act
+        $this->cacheService->clearStaffCache();
 
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value . ":*");
-
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STAFF->value, StaffCacheSufix::PAYMENTS->value . ":*");
-
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STAFF->value, StaffCacheSufix::STUDENTS->value . ":*");
-
-        // Act & Assert
-        $cacheServiceMock->clearStaffCache();
+        // Assert - las expectativas se verifican automáticamente
         $this->assertTrue(true);
     }
 
@@ -466,40 +416,14 @@ class CacheServiceTest extends TestCase
     {
         // Arrange
         $userId = 123;
-        $cacheServiceMock = Mockery::mock(CacheService::class)->makePartial();
+        $this->mockCacheTags([CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value, "userId:{$userId}"]);
+        $this->mockCacheTags([CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value, "userId:{$userId}"]);
+        $this->mockCacheTags([CachePrefix::STUDENT->value, StudentCacheSufix::HISTORY->value, "userId:{$userId}"]);
 
-        // Expectativas
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STAFF->value, StudentCacheSufix::DASHBOARD_USER->value . ":*:$userId");
+        // Act
+        $this->cacheService->clearStudentCache($userId);
 
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STAFF->value, StudentCacheSufix::PENDING->value . ":*:$userId");
-
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STAFF->value, StudentCacheSufix::HISTORY->value . ":$userId");
-
-        // Act & Assert
-        $cacheServiceMock->clearStudentCache($userId);
-        $this->assertTrue(true);
-    }
-
-    #[Test]
-    public function clearParentCache_clears_parent_cache(): void
-    {
-        // Arrange
-        $parentId = 456;
-        $cacheServiceMock = Mockery::mock(CacheService::class)->makePartial();
-
-        // Expectativa
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::PARENT->value, ParentCacheSufix::CHILDREN->value . ":$parentId");
-
-        // Act & Assert
-        $cacheServiceMock->clearParentCache($parentId);
+        // Assert - las expectativas del mock se verifican solas
         $this->assertTrue(true);
     }
 
@@ -509,23 +433,21 @@ class CacheServiceTest extends TestCase
         // Arrange
         $userId = 123;
         $status = PaymentConceptStatus::ACTIVO;
-        $cacheServiceMock = Mockery::mock(CacheService::class)->makePartial();
 
-        // Expectativas para student suffixes
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STUDENT->value, StudentCacheSufix::PENDING->value . ":*:$userId");
+        $this->mockCacheTags([
+            CachePrefix::STUDENT->value,
+            "userId:{$userId}",
+            StudentCacheSufix::PENDING->value
+        ]);
 
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->once()
-            ->with(CachePrefix::STUDENT->value, StudentCacheSufix::DASHBOARD_USER->value . ":pending:$userId");
+        $this->mockCacheTags([CachePrefix::STAFF->value, StaffCacheSufix::DASHBOARD->value]);
+        $this->mockCacheTags([CachePrefix::STAFF->value, StaffCacheSufix::DEBTS->value]);
+        $this->mockCacheTags([CachePrefix::STAFF->value, StaffCacheSufix::PAYMENTS->value]);
+        $this->mockCacheTags([CachePrefix::STAFF->value, StaffCacheSufix::STUDENTS->value]);
 
-        // Expectativas para staff suffixes
-        $cacheServiceMock->shouldReceive('clearKey')
-            ->times(4); // Para las 4 staff suffixes
+        // Act
+        $this->cacheService->clearCacheWhileConceptChangeStatus($userId, $status);
 
-        // Act & Assert
-        $cacheServiceMock->clearCacheWhileConceptChangeStatus($userId, $status);
         $this->assertTrue(true);
     }
 
@@ -543,6 +465,22 @@ class CacheServiceTest extends TestCase
         $result = $this->cacheService->makeKey($prefixKey, $suffix);
 
         // Assert
-        $this->assertEquals(':dashboard', $result);
+        $this->assertEquals('dashboard', $result);
+    }
+
+    protected function mockCacheTags(array $tags, bool $shouldFlush = true): void
+    {
+        $taggedCacheMock = Mockery::mock(\Illuminate\Cache\TaggedCache::class);
+
+        if ($shouldFlush) {
+            $taggedCacheMock->shouldReceive('flush')
+                ->once()
+                ->andReturn(true);
+        }
+
+        Cache::shouldReceive('tags')
+            ->once()
+            ->with($tags)
+            ->andReturn($taggedCacheMock);
     }
 }

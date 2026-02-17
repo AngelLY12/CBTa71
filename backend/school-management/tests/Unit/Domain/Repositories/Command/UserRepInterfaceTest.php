@@ -80,7 +80,7 @@ class UserRepInterfaceTest extends BaseRepositoryTestCase
         $user = $this->repository->create($dto);
 
         // Assert
-        $this->assertInstanceOf(User::class, $user);
+        $this->assertInstanceOf(\App\Models\User::class, $user);
         $this->assertEquals('Test', $user->name);
         $this->assertEquals('User', $user->last_name);
         $this->assertEquals('test@example.com', $user->email);
@@ -300,6 +300,7 @@ class UserRepInterfaceTest extends BaseRepositoryTestCase
             password: 'Password123!',
             phone_number: '+5215512345678',
             curp: 'ENUM950101HDFRRN09',
+            birthdate: new Carbon('2000-01-01'),
             status: UserStatus::BAJA_TEMPORAL
         );
 

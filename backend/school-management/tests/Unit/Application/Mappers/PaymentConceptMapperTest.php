@@ -165,7 +165,7 @@ class PaymentConceptMapperTest extends TestCase
         // Check collections - estos deben estar vacíos porque el mapper está usando studentDetail?->n_control
         // pero el factory no está creando las relaciones cargadas
         $this->assertEmpty($result->users);
-        $this->assertEquals(['Computer Science', 'Engineering'], $result->careers);
+        $this->assertEquals([$career1->id, $career2->id], $result->careers);
         $this->assertEquals([1, 2], $result->semesters);
         $this->assertEquals([$exceptionUser->studentDetail->n_control],$result->exceptionUsers);
         $this->assertEquals([PaymentConceptApplicantType::APPLICANT, PaymentConceptApplicantType::NO_STUDENT_DETAILS], $result->applicantTags);

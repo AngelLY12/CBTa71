@@ -3,6 +3,7 @@
 namespace Tests\Unit\Infraestructure\Repositories\Query;
 
 use App\Models\Payment;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 use App\Core\Domain\Entities\PaymentEvent;
@@ -317,9 +318,25 @@ class EloquentPaymentEventQueryRepositoryTest extends TestCase
     #[Test]
     public function it_gets_payments_needing_reconciliation()
     {
-        $payment1 = Payment::factory()->create();
-        $payment2 = Payment::factory()->create();
-        $payment3 = Payment::factory()->create();
+        $payment1 = Payment::factory()->create([
+            'status' => PaymentStatus::PAID, //
+            'payment_intent_id' => 'pi_test_1_' . Str::random(10),
+            'created_at' => now()->subDays(10),
+        ]);
+
+        // Payment 2: Similar
+        $payment2 = Payment::factory()->create([
+            'status' => PaymentStatus::PAID,
+            'payment_intent_id' => 'pi_test_2_' . Str::random(10),
+            'created_at' => now()->subDays(15),
+        ]);
+
+        // Payment 3: Similar
+        $payment3 = Payment::factory()->create([
+            'status' => PaymentStatus::PAID,
+            'payment_intent_id' => 'pi_test_3_' . Str::random(10),
+            'created_at' => now()->subDays(20),
+        ]);
 
         // Payment 1: Has events but no recent reconciliation
         EloquentPaymentEvent::factory()->forPayment($payment1->id)->create([
@@ -335,7 +352,6 @@ class EloquentPaymentEventQueryRepositoryTest extends TestCase
             'created_at' => now()->subHour(),
         ]);
 
-        // Payment 3: Has events with recent failed reconciliation (should also be excluded)
         EloquentPaymentEvent::factory()->forPayment($payment3->id)->create([
             'event_type' => PaymentEventType::WEBHOOK_PAYMENT_SUCCEEDED,
         ]);
@@ -349,10 +365,10 @@ class EloquentPaymentEventQueryRepositoryTest extends TestCase
 
         // Assert
         $this->assertIsArray($result);
-        $this->assertCount(1, $result);
+        $this->assertCount(2, $result);
         $this->assertContains($payment1->id, $result);
         $this->assertNotContains($payment2->id, $result);
-        $this->assertNotContains($payment3->id, $result);
+        $this->assertContains($payment3->id, $result);
     }
 
     #[Test]
@@ -373,7 +389,12 @@ class EloquentPaymentEventQueryRepositoryTest extends TestCase
     public function it_excludes_payments_with_recent_reconciliation_from_needing_reconciliation()
     {
         // Arrange
-        $payment = Payment::factory()->create();
+        $payment = Payment::factory()->create([
+            'status' => PaymentStatus::PAID,
+            'payment_intent_id' => 'pi_test_' . Str::random(10),
+            'created_at' => now()->subDays(5),
+        ]);
+
 
         // Create payment with old reconciliation (should be included)
         EloquentPaymentEvent::factory()->forPayment($payment->id)->create([

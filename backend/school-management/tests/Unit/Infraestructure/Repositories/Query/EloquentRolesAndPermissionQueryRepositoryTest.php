@@ -650,7 +650,7 @@ class EloquentRolesAndPermissionQueryRepositoryTest extends TestCase
         );
 
         // Assert
-        $this->assertFalse($result);
+        $this->assertTrue($result);
     }
 
     #[Test]

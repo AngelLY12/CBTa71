@@ -1137,13 +1137,13 @@ class EloquentPaymentConceptRepositoryTest extends TestCase
         // Concept deleted recently (should NOT be removed)
         $recentDeleted = EloquentPaymentConcept::factory()->state([
             'status' => PaymentConceptStatus::ELIMINADO,
-            'updated_at' => Carbon::now()->subDays(5),
+            'mark_as_deleted_at' => now()->subDays(2)
         ])->create();
 
         // Concepts deleted more than 30 days ago (should be removed)
         $oldDeleted = EloquentPaymentConcept::factory()->state([
             'status' => PaymentConceptStatus::ELIMINADO,
-            'updated_at' => Carbon::now()->subDays(35),
+            'mark_as_deleted_at' => now()->subDays(32)
         ])->count(3)->create();
 
         // Active concept (should NOT be removed)

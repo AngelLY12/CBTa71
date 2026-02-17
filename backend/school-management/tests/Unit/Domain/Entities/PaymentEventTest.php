@@ -180,9 +180,9 @@ class PaymentEventTest extends TestCase
         // Assert
         $this->assertNull($event->id);
         $this->assertEquals($paymentId, $event->paymentId);
-        $this->assertNull($event->stripeEventId);
-        $this->assertNull($event->stripePaymentIntentId);
-        $this->assertNull($event->stripeSessionId);
+        $this->assertEquals($eventId,$event->stripeEventId);
+        $this->assertEquals($paymentIntent,$event->stripePaymentIntentId);
+        $this->assertEquals($sessionId,$event->stripeSessionId);
         $this->assertEquals($eventType, $event->eventType);
         $this->assertNull($event->amountReceived);
         $this->assertNull($event->status);

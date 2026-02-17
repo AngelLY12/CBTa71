@@ -27,14 +27,12 @@ class PermissionTest extends BaseDomainTestCase
             id: 5,
             name: 'edit_post',
             type: 'action',
-            belongsTo: 'posts'
         );
 
         $this->assertInstanceOf(Permission::class, $permission);
         $this->assertEquals(5, $permission->id);
         $this->assertEquals('edit_post', $permission->name);
         $this->assertEquals('action', $permission->type);
-        $this->assertEquals('posts', $permission->belongsTo);
     }
 
     #[Test]
@@ -49,7 +47,6 @@ class PermissionTest extends BaseDomainTestCase
         $this->assertEquals(10, $permission->id);
         $this->assertEquals('delete_comment', $permission->name);
         $this->assertEquals('action', $permission->type);
-        $this->assertNull($permission->belongsTo);
     }
 
     #[Test]
@@ -59,14 +56,12 @@ class PermissionTest extends BaseDomainTestCase
             id: 15,
             name: 'view_dashboard',
             type: 'view',
-            belongsTo: 'dashboard'
         );
 
         $this->assertInstanceOf(Permission::class, $permission);
         $this->assertEquals(15, $permission->id);
         $this->assertEquals('view_dashboard', $permission->name);
         $this->assertEquals('view', $permission->type);
-        $this->assertEquals('dashboard', $permission->belongsTo);
     }
 
     #[Test]
@@ -76,10 +71,8 @@ class PermissionTest extends BaseDomainTestCase
             id: 20,
             name: 'system_admin',
             type: 'global',
-            belongsTo: null
         );
 
-        $this->assertNull($permission->belongsTo);
         $this->assertEquals('system_admin', $permission->name);
         $this->assertEquals('global', $permission->type);
     }
@@ -96,7 +89,6 @@ class PermissionTest extends BaseDomainTestCase
         $this->assertEquals(25, $permission->id);
         $this->assertEquals('export_data', $permission->name);
         $this->assertEquals('action', $permission->type);
-        $this->assertNull($permission->belongsTo);
     }
 
     #[Test]
@@ -151,33 +143,6 @@ class PermissionTest extends BaseDomainTestCase
     }
 
     #[Test]
-    public function it_accepts_different_belongs_to_values()
-    {
-        $belongsToValues = [
-            'users',
-            'posts',
-            'comments',
-            'products',
-            'orders',
-            'settings',
-            'reports',
-            null,
-            'admin_panel'
-        ];
-
-        foreach ($belongsToValues as $belongsTo) {
-            $permission = new Permission(
-                id: 1,
-                name: 'manage',
-                type: 'action',
-                belongsTo: $belongsTo
-            );
-
-            $this->assertEquals($belongsTo, $permission->belongsTo);
-        }
-    }
-
-    #[Test]
     public function it_accepts_complex_permission_names()
     {
         $names = [
@@ -219,7 +184,6 @@ class PermissionTest extends BaseDomainTestCase
             id: 40,
             name: 'view_analytics',
             type: 'view',
-            belongsTo: 'analytics'
         );
 
         $json = json_encode($permission);
@@ -230,7 +194,6 @@ class PermissionTest extends BaseDomainTestCase
         $this->assertEquals(40, $decoded['id']);
         $this->assertEquals('view_analytics', $decoded['name']);
         $this->assertEquals('view', $decoded['type']);
-        $this->assertEquals('analytics', $decoded['belongsTo']);
     }
 
     #[Test]
@@ -249,7 +212,6 @@ class PermissionTest extends BaseDomainTestCase
         $this->assertEquals(50, $decoded['id']);
         $this->assertEquals('super_admin', $decoded['name']);
         $this->assertEquals('global', $decoded['type']);
-        $this->assertNull($decoded['belongsTo']);
     }
 
     #[Test]
@@ -259,17 +221,15 @@ class PermissionTest extends BaseDomainTestCase
             id: 60,
             name: 'edit_profile',
             type: 'action',
-            belongsTo: 'users'
         );
 
         $json = json_encode($permission);
         $decoded = json_decode($json, true);
 
-        $this->assertCount(4, $decoded);
+        $this->assertCount(3, $decoded);
         $this->assertArrayHasKey('id', $decoded);
         $this->assertArrayHasKey('name', $decoded);
         $this->assertArrayHasKey('type', $decoded);
-        $this->assertArrayHasKey('belongsTo', $decoded);
     }
 
     #[Test]
@@ -279,22 +239,18 @@ class PermissionTest extends BaseDomainTestCase
             id: 70,
             name: 'publish_post',
             type: 'action',
-            belongsTo: 'posts'
         );
 
         $this->assertEquals(70, $permission->id);
         $this->assertEquals('publish_post', $permission->name);
         $this->assertEquals('action', $permission->type);
-        $this->assertEquals('posts', $permission->belongsTo);
 
         $newPermission = new Permission(
             id: 70,
             name: 'publish_post',
             type: 'action',
-            belongsTo: 'articles'
         );
 
-        $this->assertEquals('articles', $newPermission->belongsTo);
         $this->assertEquals($permission->id, $newPermission->id);
         $this->assertEquals($permission->name, $newPermission->name);
     }
@@ -306,34 +262,29 @@ class PermissionTest extends BaseDomainTestCase
             id: 1,
             name: 'create',
             type: 'action',
-            belongsTo: 'users'
         );
 
         $permission2 = new Permission(
             id: 1,
             name: 'create',
             type: 'action',
-            belongsTo: 'users'
         );
 
         $permission3 = new Permission(
             id: 2,
             name: 'create',
             type: 'action',
-            belongsTo: 'users'
         );
 
         $permission4 = new Permission(
             id: 1,
             name: 'update',
             type: 'action',
-            belongsTo: 'users'
         );
 
         $this->assertEquals($permission1->id, $permission2->id);
         $this->assertEquals($permission1->name, $permission2->name);
         $this->assertEquals($permission1->type, $permission2->type);
-        $this->assertEquals($permission1->belongsTo, $permission2->belongsTo);
 
         $this->assertNotEquals($permission1->id, $permission3->id);
 
@@ -389,39 +340,12 @@ class PermissionTest extends BaseDomainTestCase
     }
 
     #[Test]
-    public function it_handles_edge_cases_for_belongs_to()
-    {
-        $edgeCases = [
-            'a',
-            str_repeat('c', 255),
-            'module-with-dash',
-            'module_with_underscore',
-            '123module',
-            'ModuleName',
-            null,
-            '',
-        ];
-
-        foreach ($edgeCases as $belongsTo) {
-            $permission = new Permission(
-                id: 1,
-                name: 'test',
-                type: 'action',
-                belongsTo: $belongsTo
-            );
-
-            $this->assertEquals($belongsTo, $permission->belongsTo);
-        }
-    }
-
-    #[Test]
     public function it_provides_consistent_string_representation()
     {
         $permission = new Permission(
             id: 80,
             name: 'delete_user',
             type: 'danger',
-            belongsTo: 'users'
         );
         $string = "Permission[id: 80, name: delete_user, type: danger, belongsTo: users]";
 
@@ -429,7 +353,6 @@ class PermissionTest extends BaseDomainTestCase
         $this->assertStringContainsString('"id":80', $jsonString);
         $this->assertStringContainsString('"name":"delete_user"', $jsonString);
         $this->assertStringContainsString('"type":"danger"', $jsonString);
-        $this->assertStringContainsString('"belongsTo":"users"', $jsonString);
     }
 
     #[Test]

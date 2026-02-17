@@ -8,6 +8,7 @@ use App\Core\Domain\Enum\User\UserGender;
 use App\Core\Domain\Enum\User\UserRoles;
 use App\Core\Domain\Enum\User\UserStatus;
 use App\Core\Domain\Repositories\Command\User\UserRepInterface;
+use App\Core\Infraestructure\Mappers\UserMapper;
 use App\Models\User as ModelsUser;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -86,23 +87,11 @@ class UserRepositoryStub implements UserRepInterface
         );
     }
 
-    public function create(CreateUserDTO $user): User
+    public function create(CreateUserDTO $user): \App\Models\User
     {
-        $newUser = new User(
-            curp: $user->curp,
-            name: $user->name,
-            last_name: $user->last_name,
-            email: $user->email,
-            password: Hash::make($user->password),
-            phone_number: $user->phone_number,
-            status: $user->status ?? UserStatus::ACTIVO,
-            registration_date: $user->registration_date ?? Carbon::now(),
-            id: $this->nextId++,
-            birthdate: $user->birthdate,
-            gender: $user->gender,
-            address: $user->address,
-            blood_type: $user->blood_type
-        );
+        $mappedData = UserMapper::toPersistence($user);
+
+        $newUser = \App\Models\User::create($mappedData);
 
         $this->users[$newUser->id] = $newUser;
         return $newUser;

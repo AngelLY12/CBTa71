@@ -96,6 +96,16 @@ class PaymentMethodRepStub implements PaymentMethodRepInterface
         return $this;
     }
 
+    public function deleteByStripeId(string $stripeId): bool
+    {
+        return true;
+    }
+
+    public function updateByStripeId(string $stripeId, array $fields): int
+    {
+        return 1;
+    }
+
     public function getPaymentMethod(int $id): ?PaymentMethod
     {
         return $this->paymentMethods[$id] ?? null;

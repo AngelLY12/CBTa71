@@ -1,6 +1,7 @@
 <?php
 
 namespace Tests\Stubs\Repositories\Query;
+use App\Core\Application\DTO\Response\PaymentConcept\ConceptRelationsToDisplay;
 use App\Core\Domain\Repositories\Query\Payments\PaymentConceptQueryRepInterface;
 use App\Core\Domain\Entities\PaymentConcept;
 use App\Core\Application\DTO\Response\PaymentConcept\ConceptToDisplay;
@@ -16,6 +17,7 @@ class PaymentConceptQueryRepStub implements PaymentConceptQueryRepInterface
     private PendingSummaryResponse $nextGetOverduePaymentsSummaryResult;
     private LengthAwarePaginator $nextFindAllConceptsResult;
     private PendingSummaryResponse $nextGetAllPendingPaymentAmountResult;
+    private ConceptRelationsToDisplay $nextPaymentConceptRelationsToDisplay;
     private LengthAwarePaginator $nextGetConceptsToDashboardResult;
     private array $nextGetPendingPaymentConceptsWithDetailsResult = [];
     private array $nextGetOverduePaymentsResult = [];
@@ -41,6 +43,11 @@ class PaymentConceptQueryRepStub implements PaymentConceptQueryRepInterface
     public function findByIdToDisplay(int $id): ?ConceptToDisplay
     {
         return $this->nextFindByIdToDisplayResult;
+    }
+
+    public function findRelationsByIdToDisplay(int $id): ?ConceptRelationsToDisplay
+    {
+        return $this->nextPaymentConceptRelationsToDisplay;
     }
 
     public function getPendingPaymentConcepts(User $user, bool $onlyThisYear): PendingSummaryResponse

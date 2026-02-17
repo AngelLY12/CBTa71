@@ -648,7 +648,7 @@ class EloquentUserQueryRepositoryTest extends TestCase
         $this->assertEquals(3, $result->total());
 
         foreach ($result->items() as $item) {
-            $this->assertEquals(UserStatus::ACTIVO, $item->status);
+            $this->assertEquals(UserStatus::ACTIVO->value, $item->status);
         }
     }
 

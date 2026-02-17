@@ -23,6 +23,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role as SpatieRole;
 use Tests\TestCase;
@@ -849,6 +850,7 @@ class EloquentPaymentConceptQueryRepositoryTest extends TestCase
     public function get_pending_with_details_for_students_filters_by_concept_applies_to(): void
     {
         // Arrange
+        $now = Carbon::now();
         $student = EloquentUser::factory()->create([
             'status' => UserStatus::ACTIVO,
             'name' => 'Charlie',
@@ -858,7 +860,7 @@ class EloquentPaymentConceptQueryRepositoryTest extends TestCase
         $student->assignRole(UserRoles::STUDENT->value);
 
         $career = Career::factory()->create();
-        StudentDetail::factory()->forUser($student)->forCareer($career)->create([
+        $studentDetail=StudentDetail::factory()->forUser($student)->forCareer($career)->create([
             'semestre' => 5
         ]);
 
@@ -867,10 +869,11 @@ class EloquentPaymentConceptQueryRepositoryTest extends TestCase
             'status' => PaymentConceptStatus::ACTIVO->value,
             'applies_to' => PaymentConceptAppliesTo::CARRERA->value,
             'concept_name' => 'Career Concept',
-            'amount' => '1200.00'
+            'amount' => '1200.00',
+            'start_date' => $now->copy()->subDays(20),
+            'end_date' => $now->copy()->addDays(10),
         ]);
         $applicableConcept->careers()->attach($career->id);
-        $now = Carbon::now();
 
         // Concept that should NOT apply (different career)
         $otherCareer = Career::factory()->create();

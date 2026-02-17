@@ -2,6 +2,7 @@
 
 namespace Tests\Stubs\Repositories\Command;
 use App\Core\Application\DTO\Request\StudentDetail\CreateStudentDetailDTO;
+use App\Core\Application\DTO\Response\StudentDetail\StudentDetailDTO;
 use App\Core\Domain\Entities\StudentDetail;
 use App\Core\Domain\Entities\User;
 use App\Core\Domain\Repositories\Command\User\StudentDetailReInterface;
@@ -12,6 +13,7 @@ class StudentDetailRepositoryStub implements StudentDetailReInterface
     private array $studentDetails = [];
     private array $users = [];
     private int $incrementCount = 0;
+    private StudentDetailDTO $nextStudentDetail;
 
     public function __construct()
     {
@@ -76,6 +78,11 @@ class StudentDetailRepositoryStub implements StudentDetailReInterface
         }
 
         return $exceedingStudents;
+    }
+
+    public function findStudentDetailsToDisplay(int $userId): ?StudentDetailDTO
+    {
+        return $this->nextStudentDetail;
     }
 
     public function updateStudentDetails(int $user_id, array $fields): User

@@ -65,7 +65,7 @@ class EloquentUserRepositoryTest extends TestCase
         $result = $this->repository->create($userDTO);
 
         // Assert
-        $this->assertInstanceOf(User::class, $result);
+        $this->assertInstanceOf(\App\Models\User::class, $result);
         $this->assertNotNull($result->id);
         $this->assertEquals('Juan', $result->name);
         $this->assertEquals('juan@example.com', $result->email);
@@ -99,7 +99,7 @@ class EloquentUserRepositoryTest extends TestCase
         $result = $this->repository->create($userDTO);
 
         // Assert
-        $this->assertInstanceOf(User::class, $result);
+        $this->assertInstanceOf(\App\Models\User::class, $result);
         $this->assertEquals('Ana', $result->name);
         $this->assertEquals('ana@example.com', $result->email);
         $this->assertNull($result->blood_type);
@@ -242,8 +242,8 @@ class EloquentUserRepositoryTest extends TestCase
         $user = EloquentUser::factory()->create();
         $user->assignRole(UserRoles::ADMIN->value);
 
-        config(['refresh_token.expiration_time_by_role.admin' => 1440]); // 24 horas
-        config(['refresh_token.default_refresh_ttl' => 60]); // 1 hora por defecto
+        config(['refresh-token.expiration_time_by_role.admin' => 1440]); // 24 horas
+        config(['refresh-token.default_refresh_ttl' => 60]); // 1 hora por defecto
 
         // Act
         $refreshToken = $this->repository->createRefreshToken($user->id, 'Admin Token');
@@ -440,17 +440,17 @@ class EloquentUserRepositoryTest extends TestCase
         // Arrange
         $recentEliminated = EloquentUser::factory()->create([
             'status' => UserStatus::ELIMINADO,
-            'updated_at' => now()->subDays(15) // Hace 15 días
+            'mark_as_deleted_at' => now()->subDays(15) // Hace 15 días
         ]);
 
         $oldEliminated = EloquentUser::factory()->count(3)->create([
             'status' => UserStatus::ELIMINADO,
-            'updated_at' => now()->subDays(45) // Hace 45 días (> 30)
+            'mark_as_deleted_at' => now()->subDays(45) // Hace 45 días (> 30)
         ]);
 
         $activeUser = EloquentUser::factory()->create([
             'status' => UserStatus::ACTIVO,
-            'updated_at' => now()->subDays(60) // Hace 60 días pero activo
+            'mark_as_deleted_at' => now()->subDays(60) // Hace 60 días pero activo
         ]);
 
         // Crear notificaciones para usuarios eliminados
@@ -492,7 +492,7 @@ class EloquentUserRepositoryTest extends TestCase
         // Arrange
         EloquentUser::factory()->count(3)->create([
             'status' => UserStatus::ELIMINADO,
-            'updated_at' => now()->subDays(15) // Todos recientes
+            'mark_as_deleted_at' => now()->subDays(15) // Todos recientes
         ]);
 
         // Act
@@ -608,7 +608,7 @@ class EloquentUserRepositoryTest extends TestCase
         );
 
         $createdUser = $this->repository->create($userDTO);
-        $this->assertInstanceOf(User::class, $createdUser);
+        $this->assertInstanceOf(\App\Models\User::class, $createdUser);
         $this->assertEquals('Carlos', $createdUser->name);
 
         // 2. Actualizar usuario
@@ -650,7 +650,7 @@ class EloquentUserRepositoryTest extends TestCase
                 'gender' => $i % 2 ? \App\Core\Domain\Enum\User\UserGender::HOMBRE : \App\Core\Domain\Enum\User\UserGender::MUJER,
                 'curp' => 'BULK' . str_pad($i, 2, '0', STR_PAD_LEFT) . '0101HDFRRN09',
                 'password' => bcrypt('password'),
-                'status' => $i <= 5 ? UserStatus::ACTIVO : UserStatus::ELIMINADO,
+                'status' => UserStatus::ACTIVO,
                 'registration_date' => now(),
                 'created_at' => now()->subDays($i),
                 'updated_at' => now()->subDays($i),
@@ -665,11 +665,14 @@ class EloquentUserRepositoryTest extends TestCase
         $statusResult = $this->repository->changeStatus($userIds, UserStatus::BAJA->value);
         $this->assertEquals(3, $statusResult->totalUpdated);
 
+        $eliminatedIds = $insertedUsers->slice(5, 5)->pluck('id')->toArray();
+        $this->repository->changeStatus($eliminatedIds, UserStatus::ELIMINADO->value);
+
         // 3. Simular eliminación de usuarios antiguos eliminados
         // Forzar que algunos usuarios eliminados sean antiguos
         DB::table('users')
             ->whereIn('id', $insertedUsers->slice(5, 3)->pluck('id'))
-            ->update(['updated_at' => now()->subDays(45)]);
+            ->update(['mark_as_deleted_at' => now()->subDays(45)]);
 
         $deletedCount = $this->repository->deletionEliminateUsers();
         $this->assertEquals(3, $deletedCount); // Los 3 eliminados antiguos
