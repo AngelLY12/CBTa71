@@ -20,6 +20,11 @@ trait HasPendingQuery
 
         $usersContext = DB::table('users')
             ->leftJoin('student_details', 'student_details.user_id', '=', 'users.id')
+            ->leftJoin('model_has_roles', function($join) {
+                $join->on('model_has_roles.model_id', '=', 'users.id')
+                    ->where('model_has_roles.model_type', '=', User::class);
+            })
+            ->leftJoin('roles', 'roles.id', '=', 'model_has_roles.role_id')
             ->whereIn('users.id', $userIds)
             ->where('users.status', UserStatus::ACTIVO->value)
             ->select(
@@ -28,12 +33,18 @@ trait HasPendingQuery
                 'student_details.semestre',
                 DB::raw("
                     CASE
+                        WHEN roles.name = 'applicant'
+                            THEN '" . PaymentConceptApplicantType::APPLICANT->value . "'
                         WHEN student_details.id IS NULL
                             THEN '" . PaymentConceptApplicantType::NO_STUDENT_DETAILS->value . "'
-                        ELSE '" . PaymentConceptApplicantType::APPLICANT->value . "'
+
+                        ELSE NULL
                     END as applicant_type
-                ")
-            );
+                "),
+                DB::raw("CASE WHEN roles.name = '" . UserRoles::STUDENT->value . "' THEN 1 ELSE 0 END as is_student")
+            )
+            ->distinct('users.id')
+        ;
 
         $baseConcepts = DB::table('payment_concepts')
             ->where('payment_concepts.status', PaymentConceptStatus::ACTIVO->value)
@@ -78,17 +89,9 @@ trait HasPendingQuery
             ->whereNull('concept_exceptions.id')
 
             ->where(function ($q) {
-                // 1. TODOS los estudiantes
                 $q->where(function ($sub) {
                     $sub->where('payment_concepts.applies_to', PaymentConceptAppliesTo::TODOS->value)
-                        ->whereExists(function ($r) {
-                            $r->select(DB::raw(1))
-                                ->from('model_has_roles')
-                                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                                ->whereColumn('model_has_roles.model_id', 'u.user_id')
-                                ->where('model_has_roles.model_type', User::class)
-                                ->where('roles.name', UserRoles::STUDENT->value);
-                        });
+                        ->where('u.is_student', 1);
                 })
 
                 ->orWhere(function ($sub) {
