@@ -55,7 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('backup:clean')->dailyAt('23:50');
         $schedule->command('concepts:dispatch-finalize-job')->dailyAt('00:05')->withoutOverlapping(30)->onOneServer();
         $schedule->command('backup:dispatch-create-backup-job')->dailyAt('00:30') ->withoutOverlapping(120);
-        $schedule->command('db:auto-restore')->everyFiveMinutes()->withoutOverlapping(30);
+        $schedule->command('db:auto-restore')->dailyAt('01:30')->withoutOverlapping(30);
         $schedule->command('tokens:dispatch-clean-expired-refresh-tokens')->dailyAt('01:20');
         $schedule->command('users:dispatch-delete-users')->weekly()->at('01:45')->withoutOverlapping(30)->onOneServer();
         $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('02:10')->withoutOverlapping(30)->onOneServer();
