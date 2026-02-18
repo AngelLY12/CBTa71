@@ -168,12 +168,15 @@ return Application::configure(basePath: dirname(__DIR__))
             $headers = $e->getHeaders();
             $retryAfter = $headers['Retry-After'] ?? null;
             $reset = $headers['X-RateLimit-Reset'] ?? null;
-
+            $retryAt = $retryAfter ? now()->addSeconds($retryAfter) : null;
+            $message = $retryAt
+                ? "Límite de solicitudes excedido. Próximo intento disponible: {$retryAt->format('H:i:s')}"
+                : "Límite de solicitudes excedido. Intenta más tarde.";
             $response = Response::error(
-                'Has excedido el límite de solicitudes, intenta nuevamente en unos segundos',
+                $message,
                 429,
                 [
-                    'retry_at'     => $retryAfter ? now()->addSeconds($retryAfter)->timestamp : null,
+                    'retry_at'     => $retryAt,
                     'available_in' => $retryAfter ? (int) $retryAfter : null,
                     'limit'        => $headers['X-RateLimit-Limit'] ?? null,
                     'remaining'    => $headers['X-RateLimit-Remaining'] ?? null,
