@@ -43,12 +43,13 @@ class PaymentMapper{
 
     public static function toHistoryResponse(Payment $payment): PaymentHistoryResponse
     {
+        $status = config("payments_ui.statuses.{$payment->status->value}", $payment->status->value);
         return new PaymentHistoryResponse(
             id: $payment->id ?? null,
             concept: $payment->concept_name ?? null,
             amount: $payment->amount ?? null,
             amount_received: $payment->amount_received ?? null,
-            status: $payment->status->value ?? null,
+            status: $status ?? null,
             date: $payment->created_at->diffForHumans(),
             date_iso: $payment->created_at->format('Y-m-d H:i:s')
         );
@@ -62,11 +63,12 @@ class PaymentMapper{
         } elseif ($domainPayment->isUnderPaid()) {
             $balance = '-' . $domainPayment->getPendingAmount();
         }
+        $status = config("payments_ui.statuses.{$payment->status->value}", $payment->status->value);
         return new PaymentToDisplay(
             id: $payment->id,
             concept_name: $payment->concept_name,
             amount: $payment->amount,
-            status: $payment->status->value,
+            status: $status,
             created_at_human: $payment->created_at->diffForHumans(),
             has_pending_amount: $payment->amount_received < $payment->amount,
             balance: $balance ?? 'N/A',
