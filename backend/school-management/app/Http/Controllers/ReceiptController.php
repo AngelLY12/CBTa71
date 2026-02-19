@@ -17,7 +17,7 @@ class ReceiptController extends Controller
             $token = urldecode($token);
             $payload = json_decode(base64_decode($token), true);
 
-            $expectedHash = hash_hmac('sha256', $payload['folio'], config('app.key'));
+            $expectedHash = hash_hmac('sha256', $payload['folio'], config('receipt.key'));
 
             if (!hash_equals($expectedHash, $payload['hash'])) {
                 abort(403, 'QR inválido o modificado');
