@@ -1,0 +1,562 @@
+---
+interface Props {
+	title: string;
+}
+const { title } = Astro.props;
+
+
+import '../styles/global.css';
+import '../styles/tailwind.css';
+const API_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? (() => { throw new Error('Falta PUBLIC_API_BASE_URL'); })()).replace(/\/$/, '');
+
+
+// Colores: El Sidebar verde oscuro y el contenido en blanco/gris
+const PRIMARY_COLOR = '#2e594d'; // Sidebar: Verde Azulado Oscuro
+const ACCENT_COLOR = '#86efad'; // Acento: Verde claro (para el enlace activo)
+const BACKGROUND_COLOR = '#d9dde2'; // Fondo de Página: Gris muy sutil
+const TEXT_COLOR_DARK = '#374151'; // Color principal del texto en el contenido
+---
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{title} | CBTA 71</title>
+
+
+	<link rel="icon" href="/Logo.png" type="image/png">
+
+
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+
+	<style define:vars={{ PRIMARY_COLOR, ACCENT_COLOR, BACKGROUND_COLOR, TEXT_COLOR_DARK }}>
+		/* Estilos base limpios y modernos */
+		body {
+			font-family: 'Inter', sans-serif;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+			background: var(--BACKGROUND_COLOR);
+			color: var(--TEXT_COLOR_DARK);
+		}
+		
+		/* Clases de transición simplificadas */
+		.sidebar-closed { 
+            transform: translateX(-100%); 
+        }
+		.transition-transform-fast { 
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+        }
+
+
+		/* Scrollbar elegante (oculto) */
+		#sidebar-menu { scrollbar-width: none; }
+		#sidebar-menu::-webkit-scrollbar { width: 0; height: 0; }
+
+
+		/* Animación de contenido sutil */
+		.content-fade-in { animation: fadeIn 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+		@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+
+		/* Clase para el enlace activo */
+		.nav-active {
+			background-color: white;
+			color: var(--PRIMARY_COLOR);
+			font-weight: 700;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+			border-left: 5px solid var(--ACCENT_COLOR);
+			padding-left: 1rem;
+		}
+		/* Clase para el enlace inactivo */
+		.nav-inactive:hover {
+			background-color: rgba(255, 255, 255, 0.2);
+			color: white;
+		}
+	</style>
+	<script is:inline define:vars={{ API_BASE_URL }}>
+		window.__API_BASE_URL__ = API_BASE_URL;
+	</script>
+	<script is:inline>
+		if (!window.__consoleMutedGlobal__) {
+			const silent = () => {};
+			['log', 'info', 'warn', 'error', 'debug', 'trace'].forEach((method) => {
+				if (typeof console?.[method] === 'function') {
+					console[method] = silent;
+				}
+			});
+			window.__consoleMutedGlobal__ = true;
+		}
+	</script>
+	<script is:inline>
+		(function () {
+			if (typeof window === 'undefined') return;
+			if (window.__authFetchPatched__) return;
+
+			const apiBase = String(window.__API_BASE_URL__ || '').replace(/\/$/, '');
+			if (!apiBase) return;
+
+			const originalFetch = window.fetch.bind(window);
+
+			const getRequestUrl = (input) => {
+				if (typeof input === 'string') return input;
+				if (input && typeof input.url === 'string') return input.url;
+				return '';
+			};
+
+			const shouldHandle = (url) => url.startsWith(`${apiBase}/`);
+			const isRefreshUrl = (url) => /\/v1\/refresh-token(?:\?|$)/.test(url);
+			const handleExpiredSession = () => {
+				if (window.__sessionExpiredHandled__) return;
+				window.__sessionExpiredHandled__ = true;
+				localStorage.removeItem('access_token');
+				localStorage.removeItem('refresh_token');
+
+				if (window.location.pathname !== '/') {
+					window.location.href = '/';
+				}
+			};
+
+			const buildHeaders = (headersInput) => {
+				if (headersInput instanceof Headers) return new Headers(headersInput);
+				return new Headers(headersInput || {});
+			};
+
+			const refreshAccessToken = async () => {
+				const refreshToken = localStorage.getItem('refresh_token');
+				if (!refreshToken) return null;
+
+				const response = await originalFetch(`${apiBase}/v1/refresh-token`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json'
+					},
+					body: JSON.stringify({ refresh_token: refreshToken })
+				});
+
+				if (!response.ok) return null;
+
+				const data = await response.json().catch(() => null);
+				const tokenBundle = data?.data?.user_tokens || data?.data || {};
+				const newAccessToken = tokenBundle.access_token || data?.access_token || '';
+				const newRefreshToken = tokenBundle.refresh_token || data?.refresh_token || '';
+
+				if (!newAccessToken) return null;
+
+				localStorage.setItem('access_token', newAccessToken);
+				if (newRefreshToken) {
+					localStorage.setItem('refresh_token', newRefreshToken);
+				}
+
+				return newAccessToken;
+			};
+
+			window.fetch = async (input, init = {}) => {
+				const requestUrl = getRequestUrl(input);
+				if (!shouldHandle(requestUrl)) {
+					return originalFetch(input, init);
+				}
+
+				const headersInput = init?.headers
+					|| ((typeof Request !== 'undefined' && input instanceof Request) ? input.headers : undefined);
+				const headers = buildHeaders(headersInput);
+
+				if (!headers.has('Authorization')) {
+					const token = localStorage.getItem('access_token');
+					if (token) headers.set('Authorization', `Bearer ${token}`);
+				}
+
+				if (!headers.has('Accept')) {
+					headers.set('Accept', 'application/json');
+				}
+
+				const firstResponse = await originalFetch(input, { ...init, headers });
+
+				const alreadyRetried = Boolean(init?.__retriedByAuthPatch);
+				if (
+					alreadyRetried
+					|| isRefreshUrl(requestUrl)
+					|| (firstResponse.status !== 401 && firstResponse.status !== 403)
+				) {
+					return firstResponse;
+				}
+
+				const newAccessToken = await refreshAccessToken();
+				if (!newAccessToken) {
+					if (firstResponse.status === 401) {
+						handleExpiredSession();
+					}
+					return firstResponse;
+				}
+
+				const retryHeaders = buildHeaders(headersInput);
+				retryHeaders.set('Authorization', `Bearer ${newAccessToken}`);
+				if (!retryHeaders.has('Accept')) {
+					retryHeaders.set('Accept', 'application/json');
+				}
+
+				return originalFetch(input, {
+					...init,
+					headers: retryHeaders,
+					__retriedByAuthPatch: true
+				});
+			};
+
+			window.__authFetchPatched__ = true;
+		})();
+	</script>
+</head>
+
+
+<body class="flex min-h-screen antialiased">
+
+
+	<nav id="sidebar-menu"
+		class={`bg-[${PRIMARY_COLOR}] text-white flex-col p-5 shadow-2xl z-50 overflow-y-auto
+		fixed inset-0 w-full max-w-[250px] h-full transition-transform-fast sidebar-closed
+		md:fixed md:top-0 md:flex md:h-screen md:w-[250px] md:shadow-lg md:rounded-r-xl`}>
+	
+		{/* Botón de Cierre (Móvil) */}
+		<button id="close-sidebar-button" class="md:hidden absolute top-3 right-3 p-2 rounded-full bg-white/20 hover:bg-white/40 z-50 transition text-white" aria-label="Cerrar menú lateral">
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>
+		</button>
+		
+		{/* Logo y Título */}
+		<div class="flex items-center gap-4 mb-10 pt-3 border-b border-white/10 pb-4">
+			
+			<div class="h-10 w-10">
+				<img
+					src="/Logo.png"
+					alt="Logo CBTA 71"
+					class="w-full h-full object-contain"
+				>
+			</div>
+			
+			<div>
+				<h1 class="text-xl font-extrabold tracking-wide">CBTA 71</h1>
+				<p class="text-xs opacity-80">Sistema Administrativo</p>
+			</div>
+		</div>
+
+
+		{/* Menú de Navegación */}
+		<div class="flex-grow overflow-y-auto pr-2">
+			<ul id="main-navigation" class="space-y-2">
+
+
+				{/* Dashboard: Gráfico de Barras (Estadísticas) */}
+				<li data-role="financiero">
+					<a href="/Dashboard" data-path="/Dashboard" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 3v18h18"/><path d="M18 17v-4"/><path d="M12 17v-8"/><path d="M6 17v-2"/></svg>
+						Dashboard
+					</a>
+				</li>
+
+
+				{/* Conceptos: Lápiz y Regla (Configuración de Ítems) */}
+				<li data-role="financiero">
+					<a href="/concepts" data-path="/concepts" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/><path d="M19 16v3h-3"/></svg>
+						Conceptos
+					</a>
+				</li>
+
+
+				{/* Estudiantes: Grupo de Usuarios (Lista de Personas) */}
+				<li data-role="financiero">
+					<a href="/students" data-path="/students" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.125a4 4 0 1 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/></svg>
+						Estudiantes
+					</a>
+				</li>
+
+
+				{/* Pagos: Stack de Monedas (Transacciones completadas) */}
+				<li data-role="financiero">
+					<a href="/payments" data-path="/payments" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14h-2a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-2"/><path d="M12 17v-1h-3a1 1 0 0 0 -1 1v2a1 1 0 0 0 1 1h3v1"/></svg>
+						Pagos
+					</a>
+				</li>
+
+
+				{/* Adeudos: Lista de Documentos con Alerta (Cuentas Pendientes) */}
+				<li data-role="financiero">
+					<a href="/debts" data-path="/debts" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/><path d="M10 12l4 4m0 -4l-4 4"/></svg>
+						Adeudos
+					</a>
+				</li>
+
+				{/* Notificaciones: Campana (Avisos y Alertas) */}
+				<li data-role="financiero,administrador">
+					<a href="/Notificaciones" data-path="/Notificaciones" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+						Notificaciones
+					</a>
+				</li>
+
+
+				{/* Roles y Usuarios: Engranajes (Administración de Permisos) */}
+			<li data-role="administrador">
+					<a href="/roles" data-path="/roles" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/><path d="M12 10a2 2 0 0 1 2 2a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-4a2 2 0 0 1 -2 -2a2 2 0 0 1 2 -2a2 2 0 0 1 2 -2z"/></svg>
+						Roles y Usuarios
+					</a>
+				</li>
+
+
+			</ul>
+		</div>
+
+
+		{/* Enlace Perfil y Salir */}
+		<div class="mt-auto pt-4 border-t border-white/10">
+			<ul class="space-y-2">
+				<li>
+					<a href="/perfil" class="flex items-center gap-4 py-3 px-4 rounded-lg text-white hover:bg-white/10 transition-colors duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg>
+						Mi Perfil
+					</a>
+				</li>
+				<li>
+					<a href="/" onclick="localStorage.clear();" class="flex items-center gap-4 py-3 px-4 rounded-lg text-white hover:bg-white/10 transition-colors duration-200">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2"/><path d="M7 12h14l-3 -3m0 6l3 -3"/></svg>
+						Salir
+					</a>
+				</li>
+			</ul>
+		</div>
+
+
+	</nav>
+
+
+	{/* Contenido Principal */}
+	<main class="flex-1 p-4 md:p-8 overflow-y-auto md:ml-[250px] relative">
+		{/* Botón de Abrir Sidebar (Móvil) */}
+		<button id="open-sidebar-button" class="md:hidden fixed top-4 left-4 p-3 rounded-xl bg-[#2e594d] text-white shadow-xl z-40 transition hover:bg-[#256d5e]" aria-label="Abrir menú lateral">
+			<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 6l16 0"/><path d="M4 12l16 0"/><path d="M4 18l16 0"/></svg>
+		</button>
+
+
+		<div class="h-16 md:hidden"></div> {/* Espacio para el botón móvil */}
+		<div class="bg-white p-6 md:p-8 rounded-xl shadow-2xl content-fade-in min-h-[calc(100vh-4rem)]">
+			<slot />
+		</div>
+	</main>
+
+
+	<script is:inline>
+		const sidebar = document.getElementById('sidebar-menu');
+		const openButton = document.getElementById('open-sidebar-button');
+		const closeButton = document.getElementById('close-sidebar-button');
+		const navLinks = document.querySelectorAll('.nav-link');
+		const NAV_ROLE_DEBUG = false;
+		const roleDebugLog = (...args) => {
+			if (NAV_ROLE_DEBUG) console.log(...args);
+		};
+		const activeClass = 'nav-active';
+		const inactiveClass = 'nav-inactive';
+
+		function decodeJwtPayload(token) {
+			if (!token || !token.includes('.')) return null;
+			try {
+				const payload = token.split('.')[1];
+				const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+				const padded = base64 + '==='.slice((base64.length + 3) % 4);
+				return JSON.parse(atob(padded));
+			} catch {
+				return null;
+			}
+		}
+
+		// Función para obtener el rol del usuario desde localStorage o JWT
+		function getUserRole() {
+			const userData = localStorage.getItem('user_data'); // Corregido: era 'userData', debe ser 'user_data'
+			if (userData) {
+				try {
+					const parsed = JSON.parse(userData);
+					// roles es un array: ["admin"]
+					if (parsed.roles && Array.isArray(parsed.roles) && parsed.roles.length > 0) {
+						return parsed.roles[0]; // Devolver primer rol
+					}
+					return parsed.role || parsed.rol || parsed.type || null;
+				} catch {
+					return null;
+				}
+			}
+
+			const token = localStorage.getItem('access_token');
+			const payload = decodeJwtPayload(token);
+			if (!payload) return null;
+			if (payload.roles && Array.isArray(payload.roles) && payload.roles.length > 0) {
+				return payload.roles[0];
+			}
+			return payload.role || payload.rol || payload.type || null;
+		}
+
+		// Función para normalizar el rol a un formato estándar
+		function normalizeRole(role) {
+			if (!role) return null;
+			const roleLower = role.toLowerCase().trim();
+			
+			// Mapeo de roles
+			if (roleLower === 'admin' || roleLower === 'administrador') {
+				return 'administrador';
+			}
+			if (roleLower === 'financial-staff' || roleLower === 'financial staff' || 
+				roleLower === 'financiero' || roleLower === 'caja') {
+				return 'financiero';
+			}
+			if (roleLower === 'supervisor') {
+				return 'administrador';
+			}
+			
+			return roleLower;
+		}
+
+		// Función para filtrar elementos de navegación basados en el rol
+		function filterNavigationByRole() {
+			const userRole = getUserRole();
+			const normalizedRole = normalizeRole(userRole);
+
+			roleDebugLog('🔐 Rol del usuario:', userRole);
+			roleDebugLog('🔄 Rol normalizado:', normalizedRole);
+			roleDebugLog('📦 localStorage user_data:', localStorage.getItem('user_data'));
+
+			const navigationItems = Array.from(document.querySelectorAll('#main-navigation li[data-role]'));
+			roleDebugLog('📋 Items de navegación encontrados:', navigationItems.length);
+
+			const visibilityPlan = navigationItems.map((item, index) => {
+				const allowedRoles = (item.getAttribute('data-role') || '')
+					.split(',')
+					.map(r => r.trim())
+					.filter(Boolean);
+				const linkText = item.querySelector('a')?.textContent?.trim() || 'Unknown';
+				const shouldShow = Boolean(normalizedRole && allowedRoles.includes(normalizedRole));
+
+				roleDebugLog(`Item ${index}: "${linkText}" - Roles permitidos:`, allowedRoles);
+				roleDebugLog(shouldShow
+					? `  ✅ Mostrado (rol coincide: ${normalizedRole})`
+					: (normalizedRole ? `  ❌ Oculto (rol no coincide)` : `  ❌ Oculto (sin rol)`)
+				);
+
+				return { item, shouldShow };
+			});
+
+			requestAnimationFrame(() => {
+				let itemsShown = 0;
+				for (const { item, shouldShow } of visibilityPlan) {
+					item.hidden = !shouldShow;
+					if (shouldShow) itemsShown++;
+				}
+				roleDebugLog(`✨ Total de items mostrados: ${itemsShown}`);
+			});
+		}
+
+		function setActiveLink() {
+			// Normaliza la ruta actual: / o /Dashboard
+			let currentPath = window.location.pathname.replace(/\/$/, "");
+			if (currentPath === "") currentPath = "/Dashboard";
+			
+			navLinks.forEach(link => {
+				const linkPath = link.getAttribute('data-path');
+				
+				link.classList.remove(activeClass, inactiveClass);
+
+
+				if (linkPath === currentPath) {
+					link.classList.add(activeClass);
+				} else {
+					link.classList.add(inactiveClass);
+				}
+			});
+		}
+
+
+		function openSidebar() {
+			sidebar.classList.remove('sidebar-closed', 'hidden');
+			openButton.style.display = 'none';
+			document.body.style.overflow = 'hidden';
+			if (window.innerWidth < 768) {
+				sidebar.classList.remove('hidden');
+				sidebar.classList.add('fixed', 'inset-0');
+			}
+		}
+
+		function closeSidebar() {
+			sidebar.classList.add('sidebar-closed');
+			// Usamos setTimeout solo para acciones después de la transición
+			setTimeout(() => {
+				if (window.innerWidth < 768) {
+					sidebar.classList.add('hidden');
+					sidebar.classList.remove('fixed', 'inset-0');
+					openButton.style.display = 'block';
+				}
+				document.body.style.overflow = '';
+			}, 300); // 300ms = duración de la transición CSS
+		}
+
+
+		openButton?.addEventListener('click', openSidebar);
+		closeButton?.addEventListener('click', closeSidebar);
+		
+		// Cerrar sidebar en móvil al hacer click en un enlace
+		navLinks.forEach(link => link.addEventListener('click', (e) => {
+			if (window.innerWidth < 768) closeSidebar();
+			// No llamar setActiveLink aquí, sino dejar que Astro lo maneje o window.load
+		}));
+
+
+		const handleResize = () => {
+			if (window.innerWidth >= 768) {
+				// Desktop: Sidebar siempre visible y abierto
+				sidebar.classList.remove('hidden', 'sidebar-closed', 'inset-0');
+				openButton.style.display = 'none';
+				document.body.style.overflow = '';
+			} else {
+				// Mobile: Ocultar si está cerrado
+				if (sidebar.classList.contains('sidebar-closed')) {
+                    sidebar.classList.add('hidden');
+                    openButton.style.display = 'block';
+                } else {
+                    openButton.style.display = 'none';
+                }
+			}
+		};
+
+
+		window.addEventListener('resize', handleResize);
+		window.addEventListener('load', () => { 
+			handleResize(); 
+			setActiveLink(); 
+			roleDebugLog('🚀 Ejecutando filterNavigationByRole en load...');
+			filterNavigationByRole(); // Filtrar navegación por rol al cargar
+			
+			// Redireccionar automáticamente a /roles si el usuario es admin y está en Dashboard
+			const userRole = getUserRole();
+			const normalizedRole = normalizeRole(userRole);
+			const currentPath = window.location.pathname.replace(/\/$/, "") || "/Dashboard";
+			
+			if (normalizedRole === 'administrador' && (currentPath === '/Dashboard' || currentPath === '/' || currentPath === '')) {
+				console.log('🔀 Usuario administrador detectado, redirigiendo a /roles');
+				window.location.href = '/roles';
+			}
+		});
+		document.addEventListener("astro:after-swap", () => {
+			setActiveLink();
+			roleDebugLog('🔄 Ejecutando filterNavigationByRole en astro:after-swap...');
+			filterNavigationByRole(); // Filtrar navegación por rol en cambio de página
+		});
+		
+		// Exponer función globalmente para debugging
+		window.filterNavigationByRole = filterNavigationByRole;
+		window.getUserRole = getUserRole;
+		window.normalizeRole = normalizeRole;
+	</script>
+</body>
+</html>

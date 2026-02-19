@@ -1,0 +1,734 @@
+---
+import Layout from "../layouts/Layout.astro";
+// Note: StudentAPI is available as window.StudentAPI from public/studentAPI.js
+
+const pageTitle = "Gestión de Pagos - CBTA 71";
+---
+
+<Layout title={pageTitle}>
+  <!-- Load StudentAPI globally before any module scripts -->
+  <script src="/studentAPI.js" is:inline></script>
+  
+<style is:global>
+    :root { --cbta-green: #2E594D; }
+
+    body {
+        overflow-x: hidden;
+    }
+
+    @keyframes refreshSpin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .refresh-icon-spin {
+        animation: refreshSpin 0.9s linear infinite;
+    }
+    
+    .page-link {
+        width: 2.5rem; height: 2.5rem;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 0.75rem; border: 1px solid #f3f4f6;
+        color: #9ca3af; transition: all 0.2s;
+        background: white; cursor: pointer; font-weight: 700;
+    }
+    .page-link.active {
+        background-color: #2E594D; color: white; border-color: #2E594D;
+    }
+
+    .filter-card {
+        position: absolute; top: 100%; right: 0; margin-top: 0.5rem;
+        width: 18rem; background: white; border-radius: 1rem;
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        border: 1px solid #f3f4f6; padding: 1.25rem;
+        z-index: 50; display: none;
+    }
+    .filter-card.show { display: block; }
+</style>
+
+<div class="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-10 bg-gradient-to-br from-gray-50 via-white to-[#2E594D]/5 min-h-screen overflow-x-hidden">
+
+    <header class="flex items-start sm:items-center gap-3 sm:gap-5 mb-8 sm:mb-10 bg-white rounded-2xl shadow-lg px-4 sm:px-6 py-4 sm:py-5 overflow-hidden">
+        <div class="p-3 sm:p-4 bg-gradient-to-br from-[#2D584C] to-[#1e3d35] rounded-2xl shadow-xl shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 sm:h-8 sm:w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+            <h1 class="text-xl sm:text-3xl font-black text-[#2D584C] tracking-tight leading-tight flex flex-wrap items-center gap-2 sm:gap-3">
+                <span class="min-w-0 break-words">Historial de Pagos Realizados</span>
+                <span class="text-[10px] sm:text-xs bg-[#2D584C]/10 text-[#2D584C] px-2 sm:px-3 py-1 rounded-full font-semibold whitespace-nowrap">Auditoría</span>
+            </h1>
+            <p class="text-xs sm:text-sm text-gray-600 mt-2 font-medium flex items-center gap-2 break-words">
+                <i class="fas fa-chart-line text-[#2D584C]"></i>
+                Panel de control y auditoría financiera
+            </p>
+        </div>
+    </header>
+
+    <div class="flex flex-row items-center gap-2 sm:gap-3 mb-8 w-full">
+        <div class="relative flex-1 min-w-0">
+            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-[#2E594D] text-base sm:text-xl font-black" style="z-index: 10; pointer-events: none;"></i>
+            <input type="text" id="search-input" placeholder="Buscar por concepto..." class="w-full pl-12 pr-12 h-[48px] bg-white border-2 border-gray-200 rounded-xl text-sm text-gray-700 focus:ring-4 focus:ring-[#2E594D]/10 focus:border-[#2E594D] outline-none transition-all shadow-md" />
+            <button id="clear-search" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors hidden">
+                <i class="fas fa-times-circle"></i>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+            <button id="refresh-btn" class="flex items-center justify-center gap-1.5 px-3 sm:px-4 h-[42px] sm:h-[48px] border-2 border-green-600 text-green-600 font-bold text-xs sm:text-sm rounded-xl hover:bg-green-600 hover:text-white hover:scale-105 hover:shadow-xl transition-all shadow-md whitespace-nowrap" title="Actualizar caché">
+                <svg class="refresh-icon w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+                <span class="hidden sm:inline">Actualizar</span>
+            </button>
+        </div>
+    </div>
+
+        <div class="mb-4 bg-white rounded-xl shadow-md p-2 flex items-center gap-2 w-full sm:w-fit">
+            <button id="mode-by-concept" class="px-4 py-2 rounded-lg text-sm font-bold bg-[#2D584C] text-white">Por concepto</button>
+            <button id="mode-by-student" class="px-4 py-2 rounded-lg text-sm font-bold text-[#2D584C] hover:bg-[#2D584C]/10">Por alumnos</button>
+        </div>
+
+    <!-- Indicador de búsqueda activa -->
+    <div id="search-indicator" class="hidden mb-4 p-3 bg-green-50 border-2 border-green-200 rounded-xl flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <i class="fas fa-search text-green-600 text-lg"></i>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-green-900">Buscando: "<span id="search-term" class="font-black text-green-700"></span>"</span>
+            <span id="search-results-count" class="px-2 py-1 bg-green-600 text-white text-xs font-black rounded-full"></span>
+          </div>
+          <p class="text-[10px] text-green-600 mt-1">
+                        <i class="fas fa-info-circle"></i> <span id="search-scope-label">Se busca en: nombre del concepto</span>
+          </p>
+        </div>
+      </div>
+      <button id="clear-search-badge" class="text-green-600 hover:text-green-800 font-bold text-sm flex items-center gap-2 px-3 py-2 hover:bg-green-100 rounded-lg transition">
+        <i class="fas fa-times"></i> Limpiar
+      </button>
+    </div>
+
+    <div class="bg-gradient-to-br from-white via-[#2D584C]/5 to-white rounded-2xl shadow-2xl border-2 border-[#2D584C]/20 overflow-hidden mb-8">
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead id="payments-table-head" class="bg-gradient-to-r from-[#2D584C] to-[#1e3d35]"></thead>
+                <tbody id="payments-table-body" class="bg-white divide-y divide-gray-100"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="flex flex-col items-center gap-4 py-6 bg-white rounded-xl shadow-md">
+        <div class="flex items-center gap-6">
+            <p class="text-xs font-bold text-[#2D584C] flex items-center gap-2">
+                <i class="fas fa-list"></i>
+                <span>Total de Registros: <span id="p-total" class="text-base">0</span></span>
+            </p>
+            <p class="text-xs font-bold text-gray-500 flex items-center gap-2">
+                <i class="fas fa-file-alt"></i>
+                <span>Página <span id="current-page" class="text-base text-[#2D584C]">1</span> de <span id="last-page" class="text-base text-[#2D584C]">1</span></span>
+            </p>
+        </div>
+        <div class="flex items-center gap-2" id="pagination-controls"></div>
+    </div>
+</div>
+
+<script type="module">
+// StudentAPI is loaded globally via public/studentAPI.js
+
+// Wait for StudentAPI to be available
+async function ensureStudentAPI() {
+  let attempts = 0;
+  while (!window.StudentAPI && attempts < 50) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+    attempts++;
+  }
+  if (!window.StudentAPI) {
+    throw new Error('StudentAPI could not be loaded');
+  }
+}
+
+const ITEMS_PER_PAGE = 15;
+let currentPage = 1;
+let lastPage = 1;
+let totalRecords = 0;
+let isLoading = false;
+let searchTerm = '';
+let searchTimeout = null;
+let viewMode = 'by-concept';
+
+const tableHead = document.getElementById('payments-table-head');
+const tableBody = document.getElementById('payments-table-body');
+    const searchInput = document.getElementById('search-input');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const AUTO_REFRESH_INTERVAL_MS = 180000;
+    let autoRefreshTimer = null;
+    let autoRefreshFocusHandler = null;
+    let autoRefreshVisibilityHandler = null;
+    const modeByConceptBtn = document.getElementById('mode-by-concept');
+    const modeByStudentBtn = document.getElementById('mode-by-student');
+
+    const getColumnCount = () => viewMode === 'by-concept' ? 6 : 6;
+
+    const updateModeUI = () => {
+        const isConcept = viewMode === 'by-concept';
+
+        modeByConceptBtn.className = isConcept
+            ? 'px-4 py-2 rounded-lg text-sm font-bold bg-[#2D584C] text-white'
+            : 'px-4 py-2 rounded-lg text-sm font-bold text-[#2D584C] hover:bg-[#2D584C]/10';
+
+        modeByStudentBtn.className = !isConcept
+            ? 'px-4 py-2 rounded-lg text-sm font-bold bg-[#2D584C] text-white'
+            : 'px-4 py-2 rounded-lg text-sm font-bold text-[#2D584C] hover:bg-[#2D584C]/10';
+
+        searchInput.placeholder = isConcept
+            ? 'Buscar por concepto...'
+            : 'Buscar por alumno, concepto o método...';
+
+        document.getElementById('search-scope-label').textContent = isConcept
+            ? 'Se busca en: nombre del concepto'
+            : 'Se busca en: alumno, concepto y método';
+
+        renderTableHeader();
+    };
+
+    const renderTableHeader = () => {
+        if (viewMode === 'by-concept') {
+            tableHead.innerHTML = `
+                <tr>
+                    <th class="px-8 py-5 text-left text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center gap-2"><i class="fas fa-file-invoice-dollar"></i><span>Concepto</span></div></th>
+                    <th class="px-8 py-5 text-right text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center justify-end gap-2"><i class="fas fa-coins"></i><span>Total</span></div></th>
+                    <th class="px-8 py-5 text-right text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center justify-end gap-2"><i class="fas fa-hand-holding-dollar"></i><span>Recaudado</span></div></th>
+                    <th class="px-8 py-5 text-right text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center justify-end gap-2"><i class="fas fa-percentage"></i><span>Tasa Cobranza</span></div></th>
+                    <th class="px-8 py-5 text-left text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center gap-2"><i class="fas fa-calendar-check"></i><span>Período de Pagos</span></div></th>
+                    <th class="px-8 py-5 text-center text-xs font-black uppercase tracking-wider text-white"><i class="fas fa-chevron-down"></i></th>
+                </tr>
+            `;
+            return;
+        }
+
+        tableHead.innerHTML = `
+            <tr>
+                <th class="px-8 py-5 text-left text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center gap-2"><i class="fas fa-user"></i><span>Alumno</span></div></th>
+                <th class="px-8 py-5 text-left text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center gap-2"><i class="fas fa-file-invoice-dollar"></i><span>Concepto</span></div></th>
+                <th class="px-8 py-5 text-right text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center justify-end gap-2"><i class="fas fa-coins"></i><span>Monto</span></div></th>
+                <th class="px-8 py-5 text-right text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center justify-end gap-2"><i class="fas fa-hand-holding-dollar"></i><span>Recibido</span></div></th>
+                <th class="px-8 py-5 text-left text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center gap-2"><i class="fas fa-credit-card"></i><span>Método</span></div></th>
+                <th class="px-8 py-5 text-left text-xs font-black uppercase tracking-wider text-white"><div class="flex items-center gap-2"><i class="fas fa-calendar-check"></i><span>Fecha</span></div></th>
+            </tr>
+        `;
+    };
+
+    // Formatear fecha
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch {
+            return dateString;
+        }
+    };
+
+    // Normalizar concepto de pago
+    const normalizePaymentConcept = (item) => {
+        return {
+            conceptName: item.concept_name || item.conceptName || 'N/A',
+            amountTotal: parseFloat(item.amount_total || item.amountTotal || 0),
+            amountReceivedTotal: parseFloat(item.amount_received_total || item.amountReceivedTotal || 0),
+            collectionRate: parseFloat(item.collection_rate || item.collectionRate || 0),
+            firstPaymentDate: item.first_payment_date || item.firstPaymentDate || null,
+            lastPaymentDate: item.last_payment_date || item.lastPaymentDate || null
+        };
+    };
+
+    // Cargar pagos (por concepto o por alumnos) con paginación
+    async function loadPayments(forceRefresh = false) {
+        if (isLoading) return;
+        isLoading = true;
+
+        // Mostrar indicador de carga
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="${getColumnCount()}" class="px-8 py-12 text-center">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="fas fa-spinner fa-spin text-4xl text-[#2D584C]"></i>
+                        <p class="text-gray-600 font-bold">${forceRefresh ? 'Actualizando datos...' : 'Cargando pagos...'}</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                showError('No hay sesión activa. Por favor inicia sesión.');
+                setTimeout(() => window.location.href = '/login', 2000);
+                return;
+            }
+
+            const response = viewMode === 'by-concept'
+                ? await window.StudentAPI.getPaymentsByConcept(token, {
+                    search: searchTerm,
+                    page: currentPage,
+                    perPage: ITEMS_PER_PAGE,
+                    forceRefresh: forceRefresh
+                })
+                : await window.StudentAPI.getAllPayments(token, {
+                    search: searchTerm,
+                    page: currentPage,
+                    perPage: ITEMS_PER_PAGE,
+                    forceRefresh: forceRefresh
+                });
+
+            if (response.success && response.data?.payments) {
+                const paymentsData = response.data.payments;
+
+                // Actualizar variables de paginación
+                currentPage = paymentsData.currentPage || 1;
+                lastPage = paymentsData.lastPage || 1;
+                totalRecords = paymentsData.total || 0;
+
+                console.log(`✅ Pagos cargados (${viewMode}): ${paymentsData.items?.length || 0} de ${totalRecords} total`);
+
+                renderPayments(paymentsData.items || []);
+                updatePaginationInfo();
+            } else {
+                showError(viewMode === 'by-concept'
+                    ? 'No se pudieron cargar los pagos por concepto'
+                    : 'No se pudo cargar la lista de pagos por alumnos');
+            }
+        } catch (error) {
+            console.error('❌ Error al cargar pagos:', error);
+            showError(error.message || 'Error al cargar los pagos');
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    // Renderizar pagos por concepto en la tabla
+    const renderPayments = (payments) => {
+        const term = searchTerm.toLowerCase().trim();
+        
+        // Filtrar localmente
+        let filtered = payments;
+        if (term && viewMode === 'by-concept') {
+            filtered = payments.filter(p => {
+                const conceptName = String(p.concept_name || p.conceptName || '').toLowerCase();
+                return conceptName.includes(term);
+            });
+        } else if (term && viewMode === 'by-student') {
+            filtered = payments.filter(p => {
+                const fullName = String(p.fullName || '').toLowerCase();
+                const concept = String(p.concept || '').toLowerCase();
+                const method = String(p.method || '').toLowerCase();
+                return fullName.includes(term) || concept.includes(term) || method.includes(term);
+            });
+        }
+
+        // Mostrar/ocultar indicador de búsqueda
+        const searchIndicator = document.getElementById('search-indicator');
+        const searchTermElement = document.getElementById('search-term');
+        const searchResultsCount = document.getElementById('search-results-count');
+        const clearSearchBtn = document.getElementById('clear-search');
+
+        if (term) {
+            searchIndicator.classList.remove('hidden');
+            searchTermElement.textContent = searchInput.value;
+            searchResultsCount.textContent = `${filtered.length} resultado${filtered.length !== 1 ? 's' : ''}`;
+            clearSearchBtn.classList.remove('hidden');
+        } else {
+            searchIndicator.classList.add('hidden');
+            clearSearchBtn.classList.add('hidden');
+        }
+
+        if (!filtered || filtered.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="${getColumnCount()}" class="px-8 py-12 text-center">
+                        <div class="flex flex-col items-center gap-3">
+                            <i class="fas fa-search text-5xl text-gray-300"></i>
+                            <p class="text-gray-500 font-bold">
+                                ${term ? 'No se encontraron resultados' : (viewMode === 'by-concept' ? 'No se encontraron conceptos de pago' : 'No se encontraron pagos')}
+                            </p>
+                            <p class="text-gray-400 text-sm">
+                                ${term ? `No hay coincidencias para "${searchInput.value}"` : 'Intenta ajustar los filtros de búsqueda'}
+                            </p>
+                            ${term ? `<button onclick="document.getElementById('search-input').value=''; document.getElementById('search-input').dispatchEvent(new Event('input'));" class="mt-4 px-4 py-2 bg-[#2D584C] text-white rounded-lg font-bold text-sm hover:bg-[#1e3d35] transition">Limpiar búsqueda</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        if (viewMode === 'by-student') {
+            tableBody.innerHTML = filtered.map((p) => {
+                const amount = parseFloat(p.amount || 0);
+                const amountReceived = parseFloat(p.amount_received || 0);
+
+                return `
+                    <tr class="hover:bg-gradient-to-r hover:from-[#2D584C]/5 hover:to-transparent transition-all duration-200">
+                        <td class="px-8 py-5">
+                            <span class="text-gray-900 font-extrabold text-sm block tracking-tight">${p.fullName || 'N/A'}</span>
+                            <span class="text-[10px] text-gray-500">ID: ${p.userId || 'N/A'}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-gray-800 font-bold text-sm">${p.concept || 'N/A'}</span>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <span class="text-gray-700 font-bold text-sm">$${amount.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <span class="text-emerald-700 font-black text-sm">$${amountReceived.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-gray-700 text-xs font-semibold">${p.method || 'N/A'}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-gray-600 text-xs font-semibold">${formatDate(p.date)}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            return;
+        }
+
+        tableBody.innerHTML = filtered.map((p, idx) => {
+            const normalized = normalizePaymentConcept(p);
+            
+            // Highlight del término de búsqueda
+            const highlightText = (text, term) => {
+                if (!term || !text) return text;
+                try {
+                    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(${escapedTerm})`, 'gi');
+                    return text.replace(regex, '<mark class="bg-yellow-300 text-gray-900 font-extrabold px-1 rounded">$1</mark>');
+                } catch (e) {
+                    return text;
+                }
+            };
+            
+            // Determinar color de tasa de cobranza
+            let collectionColor = 'text-red-600';
+            if (normalized.collectionRate >= 75) collectionColor = 'text-emerald-600';
+            else if (normalized.collectionRate >= 50) collectionColor = 'text-amber-600';
+
+            // Período de pagos
+            const periodStart = formatDate(normalized.firstPaymentDate);
+            const periodEnd = formatDate(normalized.lastPaymentDate);
+            const periodText = periodStart === 'N/A' ? 'Sin registros' : `${periodStart} - ${periodEnd}`;
+
+            return `
+                <tr class="hover:bg-gradient-to-r hover:from-[#2D584C]/5 hover:to-transparent transition-all duration-200 cursor-pointer concept-row" data-concept="${normalized.conceptName}" data-index="${idx}">
+                    <td class="px-8 py-5">
+                        <span class="text-gray-900 font-extrabold text-sm uppercase block tracking-tight">
+                            ${highlightText(normalized.conceptName, term)}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <span class="text-gray-700 font-bold text-sm">
+                            $${normalized.amountTotal.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <span class="text-emerald-700 font-black text-sm">
+                            $${normalized.amountReceivedTotal.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <span class="font-black text-base ${collectionColor}">
+                            ${normalized.collectionRate.toFixed(2)}%
+                        </span>
+                    </td>
+                    <td class="px-8 py-5 text-left">
+                        <div class="flex items-center gap-2 text-xs text-gray-600 font-semibold">
+                            <i class="fas fa-calendar text-[#2D584C]"></i>
+                            <span>${periodText}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5 text-center">
+                        <i class="fas fa-chevron-down toggle-icon text-[#2D584C] transition-transform"></i>
+                    </td>
+                </tr>
+                <tr class="concept-details hidden bg-gray-50">
+                    <td colspan="6" class="px-8 py-4">
+                        <div class="text-xs">
+                            <p class="font-bold text-[#2D584C] mb-3">📋 Estudiantes que pagaron:</p>
+                            <div id="students-list-${idx}" class="bg-white border-2 border-gray-200 rounded-lg p-3 max-h-64 overflow-y-auto">
+                                <div class="text-center text-gray-500 py-4">
+                                    <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Agregar eventos de click para expandir
+        document.querySelectorAll('.concept-row').forEach((row, idx) => {
+            row.onclick = () => {
+                const detailsRow = row.nextElementSibling;
+                const icon = row.querySelector('.toggle-icon');
+                const isHidden = detailsRow.classList.contains('hidden');
+
+                detailsRow.classList.toggle('hidden');
+                icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+
+                if (isHidden) {
+                    // Cargar datos de estudiantes para este concepto
+                    loadStudentsForConcept(row.dataset.concept, idx);
+                }
+            };
+        });
+    };
+
+    // Cargar estudiantes que pagaron un concepto específico
+    async function loadStudentsForConcept(conceptName, rowIdx) {
+        const container = document.getElementById(`students-list-${rowIdx}`);
+        
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                container.innerHTML = '<p class="text-red-600 font-bold">Error: No autenticado</p>';
+                return;
+            }
+
+            // Llamar endpoint /payments (pagos individuales) filtrado por concepto
+            const response = await window.StudentAPI.getAllPayments(token, {
+                search: conceptName,
+                page: 1,
+                perPage: 100,
+                forceRefresh: false
+            });
+
+            if (response.success && response.data?.payments?.items) {
+                const payments = response.data.payments.items;
+                
+                // Filtrar solo los que coincidan con el concepto
+                const filtered = payments.filter(p => 
+                    (p.concept || '').toLowerCase().includes(conceptName.toLowerCase()) ||
+                    conceptName.toLowerCase().includes((p.concept || '').toLowerCase())
+                );
+
+                if (filtered.length > 0) {
+                    container.innerHTML = filtered.map(p => `
+                        <div class="flex items-center justify-between p-2 border-b border-gray-200 hover:bg-blue-50 rounded transition">
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-900">${p.fullName || 'N/A'}</p>
+                                <p class="text-[10px] text-gray-500">ID Usuario: ${p.userId || 'N/A'} | ${p.method || 'N/A'}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-black text-emerald-700">$${parseFloat(p.amount_received || 0).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}</p>
+                                <p class="text-[9px] text-gray-400">${formatDate(p.date)}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-4">Sin registros de estudiantes para este concepto</p>';
+                }
+            } else {
+                container.innerHTML = '<p class="text-red-600 font-bold">Error al cargar datos</p>';
+            }
+        } catch (error) {
+            console.error('Error cargando estudiantes:', error);
+            container.innerHTML = '<p class="text-red-600 font-bold">Error: ' + error.message + '</p>';
+        }
+    }
+
+    // Mostrar errores
+    const showError = (message) => {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="${getColumnCount()}" class="px-8 py-12 text-center">
+                    <div class="flex flex-col items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-5xl text-red-400"></i>
+                        <p class="text-red-600 font-bold">${message}</p>
+                        <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-[#2D584C] text-white rounded-lg hover:bg-[#1e3d35] transition">
+                            Reintentar
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    };
+
+    // Actualizar información de paginación
+    const updatePaginationInfo = () => {
+        document.getElementById('p-total').textContent = totalRecords;
+        document.getElementById('current-page').textContent = currentPage;
+        document.getElementById('last-page').textContent = lastPage;
+        renderPagination();
+    };
+
+    const renderPagination = () => {
+        const controls = document.getElementById('pagination-controls');
+        if(lastPage <= 1) { 
+            controls.innerHTML = ''; 
+            return; 
+        }
+
+        let html = '';
+        
+        // Botón anterior
+        html += `
+            <button class="page-link ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}" 
+                    data-page="${currentPage - 1}" 
+                    ${currentPage === 1 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        `;
+
+        // Páginas
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(lastPage, startPage + maxVisible - 1);
+        
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        if (startPage > 1) {
+            html += `<button class="page-link" data-page="1">1</button>`;
+            if (startPage > 2) {
+                html += `<span class="px-2 text-gray-400">...</span>`;
+            }
+        }
+
+        for(let i = startPage; i <= endPage; i++) {
+            html += `<button class="page-link ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+
+        if (endPage < lastPage) {
+            if (endPage < lastPage - 1) {
+                html += `<span class="px-2 text-gray-400">...</span>`;
+            }
+            html += `<button class="page-link" data-page="${lastPage}">${lastPage}</button>`;
+        }
+
+        // Botón siguiente
+        html += `
+            <button class="page-link ${currentPage === lastPage ? 'opacity-50 cursor-not-allowed' : ''}" 
+                    data-page="${currentPage + 1}" 
+                    ${currentPage === lastPage ? 'disabled' : ''}>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+
+        controls.innerHTML = html;
+        controls.querySelectorAll('button:not([disabled])').forEach(b => {
+            b.onclick = () => { 
+                const newPage = parseInt(b.dataset.page);
+                if (newPage >= 1 && newPage <= lastPage && newPage !== currentPage) {
+                    currentPage = newPage;
+                    loadPayments();
+                }
+            };
+        });
+    };
+
+    // Event listeners
+    searchInput.oninput = () => { 
+        clearTimeout(searchTimeout);
+        
+        // Mostrar indicador de "buscando..."
+        const searchIndicator = document.getElementById('search-indicator');
+        if (searchInput.value.trim()) {
+            searchIndicator.classList.remove('hidden');
+            document.getElementById('search-term').textContent = searchInput.value;
+            document.getElementById('search-results-count').innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+        
+        searchTimeout = setTimeout(() => {
+            searchTerm = searchInput.value.trim();
+            currentPage = 1;
+            loadPayments();
+        }, 300); // Debounce de 300ms
+    };
+
+    // Limpiar búsqueda
+    document.getElementById('clear-search').addEventListener('click', () => {
+        searchInput.value = '';
+        searchTerm = '';
+        currentPage = 1;
+        loadPayments();
+        searchInput.focus();
+    });
+
+    document.getElementById('clear-search-badge').addEventListener('click', () => {
+        searchInput.value = '';
+        searchTerm = '';
+        currentPage = 1;
+        loadPayments();
+        searchInput.focus();
+    });
+
+    refreshBtn.onclick = () => {
+        const icon = refreshBtn.querySelector('.refresh-icon');
+        icon?.classList.add('refresh-icon-spin');
+        loadPayments(true).finally(() => {
+            icon?.classList.remove('refresh-icon-spin');
+        });
+    };
+
+    const triggerAutoRefresh = () => {
+        if (isLoading || document.hidden) return;
+        loadPayments(true).catch((err) => console.warn('⚠️ Auto-refresh payments:', err?.message || err));
+    };
+
+    const setupAutoRefresh = () => {
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+        autoRefreshTimer = setInterval(triggerAutoRefresh, AUTO_REFRESH_INTERVAL_MS);
+
+        if (!autoRefreshFocusHandler) {
+            autoRefreshFocusHandler = () => triggerAutoRefresh();
+            window.addEventListener('focus', autoRefreshFocusHandler);
+        }
+
+        if (!autoRefreshVisibilityHandler) {
+            autoRefreshVisibilityHandler = () => {
+                if (!document.hidden) triggerAutoRefresh();
+            };
+            document.addEventListener('visibilitychange', autoRefreshVisibilityHandler);
+        }
+    };
+
+        modeByConceptBtn.onclick = () => {
+                if (viewMode === 'by-concept') return;
+                viewMode = 'by-concept';
+                currentPage = 1;
+                updateModeUI();
+                loadPayments();
+        };
+
+        modeByStudentBtn.onclick = () => {
+                if (viewMode === 'by-student') return;
+                viewMode = 'by-student';
+                currentPage = 1;
+                updateModeUI();
+                loadPayments();
+        };
+
+    // Cargar pagos al iniciar (esperar a que StudentAPI esté disponible)
+    ensureStudentAPI()
+            .then(() => {
+                updateModeUI();
+                setupAutoRefresh();
+                return loadPayments();
+            })
+      .catch(err => console.error('❌ Error al inicializar:', err));
+
+    window.addEventListener('beforeunload', () => {
+        if (autoRefreshTimer) {
+            clearInterval(autoRefreshTimer);
+            autoRefreshTimer = null;
+        }
+    }, { once: true });
+</script>
+</Layout>

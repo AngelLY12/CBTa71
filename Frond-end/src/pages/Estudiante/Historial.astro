@@ -1,0 +1,1257 @@
+﻿---
+import StudentLayout from '../../layouts/LayoutEstu.astro';
+
+let alumnoBackend = "Estudiante";
+let title = "Historial de Pagos";
+let historialData = {
+  items: [],
+  currentPage: 1,
+  lastPage: 1,
+  perPage: 15,
+  total: 0,
+  hasMorePages: false,
+  nextPage: null,
+  previousPage: null
+};
+let error = null;
+let loading = false;
+
+const pageParam = typeof Astro !== 'undefined' && Astro.url ? Astro.url.searchParams.get('page') : null;
+const perPageParam = typeof Astro !== 'undefined' && Astro.url ? Astro.url.searchParams.get('perPage') : null;
+const forceRefreshParam = typeof Astro !== 'undefined' && Astro.url ? Astro.url.searchParams.get('forceRefresh') : null;
+const resultParam = typeof Astro !== 'undefined' && Astro.url ? Astro.url.searchParams.get('result') : null;
+const page = pageParam ? Number(pageParam) : 1;
+const perPage = perPageParam ? Number(perPageParam) : 15;
+const forceRefresh = forceRefreshParam === 'true';
+
+---
+
+<script src="/studentAPI.js?v=20260218r32" is:inline></script>
+
+
+<StudentLayout title={title}>
+  <div 
+    class="page-wrapper"
+    x-data={`{
+      currentPage: ${page},
+      lastPage: 1,
+      total: 0,
+      perPage: ${perPage},
+      hasMorePages: false,
+      nextPage: null,
+      previousPage: null,
+      search: '',
+      pagos: [],
+      loading: true,
+      errorMessage: '',
+      downloadingReceiptId: null,
+      alumnoBackend: '${alumnoBackend}',
+      roleForPortal: 'student',
+      roleNotice: '',
+      initInProgress: false,
+      initCompleted: false,
+      showResultModal: false,
+      resultType: '${resultParam || ''}',
+      autoRefreshEnabled: true,
+      autoRefreshIntervalMs: 180000,
+      autoRefreshTimerId: null,
+      autoRefreshFocusHandler: null,
+      autoRefreshVisibilityHandler: null,
+
+      detectPortalRole() {
+        const userDataCandidates = [
+          localStorage.getItem('user_data'),
+          localStorage.getItem('userData')
+        ].filter(Boolean);
+
+        const roleValues = [];
+
+        userDataCandidates.forEach((userDataRaw) => {
+          try {
+            const parsed = JSON.parse(userDataRaw);
+            const userData = parsed?.data?.user || parsed?.user || parsed?.data || parsed || {};
+
+            const roles = [];
+            if (Array.isArray(userData?.roles)) roles.push(...userData.roles);
+            if (userData?.role) roles.push(userData.role);
+            if (userData?.role_name) roles.push(userData.role_name);
+            if (userData?.type) roles.push(userData.type);
+
+            roles.forEach((entry) => {
+              if (!entry) return;
+              if (typeof entry === 'string') {
+                roleValues.push(entry);
+                return;
+              }
+              roleValues.push(entry?.name || entry?.slug || entry?.role || '');
+            });
+          } catch (_) {}
+        });
+
+        const roleCandidates = [
+          localStorage.getItem('userRole'),
+          localStorage.getItem('role'),
+          ...roleValues
+        ]
+          .filter(Boolean)
+          .map(function(roleValue) {
+            return String(roleValue).toLowerCase().trim();
+          });
+
+        const hasParentRole = roleCandidates.some(function(roleValue) {
+          return roleValue === 'parent' || roleValue === 'padre';
+        });
+
+        const hasApplicantRole = roleCandidates.some(function(roleValue) {
+          return roleValue === 'applicant' || roleValue === 'aspirante' || roleValue === 'solicitante';
+        });
+
+        const hasStudentRole = roleCandidates.some(function(roleValue) {
+          return roleValue === 'student' || roleValue === 'estudiante' || roleValue === 'alumno';
+        });
+
+        if (hasParentRole) return 'parent';
+        if (hasApplicantRole) return 'applicant';
+        if (hasStudentRole) return 'student';
+        return '';
+      },
+
+      async syncPortalRoleFromApi(token) {
+        if (!token || !window.StudentAPI?.getAuthenticatedUser) return;
+        if (this.roleForPortal === 'applicant') return;
+
+        const now = Date.now();
+        const nextAllowedSyncAt = Number(localStorage.getItem('historial_role_sync_next_at') || '0');
+        if (Number.isFinite(nextAllowedSyncAt) && now < nextAllowedSyncAt) {
+          return;
+        }
+
+        try {
+          const response = await window.StudentAPI.getAuthenticatedUser(token);
+          const user = response?.data?.user || response?.user || response?.data || {};
+
+          const rawRoles = [];
+          if (Array.isArray(user?.roles)) rawRoles.push(...user.roles);
+          if (user?.role) rawRoles.push(user.role);
+          if (user?.role_name) rawRoles.push(user.role_name);
+          if (user?.type) rawRoles.push(user.type);
+
+          const normalizedRoles = rawRoles
+            .map((entry) => {
+              if (!entry) return '';
+              if (typeof entry === 'string') return entry;
+              return entry?.name || entry?.slug || entry?.role || '';
+            })
+            .map((value) => String(value).toLowerCase().trim())
+            .filter(Boolean);
+
+          if (!normalizedRoles.length) return;
+
+          const hasParentRole = normalizedRoles.some((roleValue) => roleValue === 'parent' || roleValue === 'padre');
+          const hasApplicantRole = normalizedRoles.some((roleValue) => roleValue === 'applicant' || roleValue === 'aspirante' || roleValue === 'solicitante');
+          const hasStudentRole = normalizedRoles.some((roleValue) => roleValue === 'student' || roleValue === 'estudiante' || roleValue === 'alumno');
+
+          const resolvedRole = hasParentRole
+            ? 'parent'
+            : hasApplicantRole
+              ? 'applicant'
+              : hasStudentRole
+                ? 'student'
+                : '';
+
+          if (!resolvedRole) return;
+
+          this.roleForPortal = resolvedRole;
+          localStorage.setItem('userRole', resolvedRole);
+          localStorage.setItem('role', resolvedRole);
+          localStorage.setItem('historial_role_sync_next_at', String(now + (15 * 60 * 1000)));
+          console.log('🔍 [Historial] Rol sincronizado desde API:', resolvedRole);
+        } catch (error) {
+          const errorMessage = String(error?.message || error || '').toLowerCase();
+          const isRateLimited = errorMessage.includes('429') || errorMessage.includes('límite de solicitudes') || errorMessage.includes('limite de solicitudes') || errorMessage.includes('too many requests');
+          if (isRateLimited) {
+            localStorage.setItem('historial_role_sync_next_at', String(now + (5 * 60 * 1000)));
+          }
+          console.warn('⚠️ [Historial] No se pudo sincronizar rol desde API:', error?.message || error);
+        }
+      },
+
+      openUrlInNewTab(url) {
+        if (!url) return false;
+        const popup = window.open(url, '_blank', 'noopener,noreferrer');
+        if (popup) return true;
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return true;
+      },
+
+      async init() {
+        if (this.initCompleted || this.initInProgress) {
+          return;
+        }
+        this.initInProgress = true;
+
+        this.roleForPortal = this.detectPortalRole();
+        this.roleNotice = '';
+
+        const token = localStorage.getItem('access_token');
+        if (token && window.StudentAPI && !this.roleForPortal) {
+          await this.syncPortalRoleFromApi(token);
+        }
+
+        await this.loadHistory();
+        // Mostrar modal si hay parÃ¡metro result
+        if (this.resultType === 'paid') {
+          this.showResultModal = true;
+          // Limpiar URL despuÃ©s de 3 segundos
+          setTimeout(() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('result');
+            window.history.replaceState({}, '', url);
+          }, 3000);
+        }
+
+        this.initCompleted = true;
+        this.initInProgress = false;
+        this.setupAutoRefresh();
+      },
+
+      closeResultModal() {
+        this.showResultModal = false;
+      },
+
+      setupAutoRefresh() {
+        if (!this.autoRefreshEnabled) return;
+
+        const runAutoRefresh = async () => {
+          if (document.hidden) return;
+          if (this.loading || this.initInProgress || this.downloadingReceiptId) return;
+          try {
+            await this.loadHistory(true);
+          } catch (error) {
+            console.warn('⚠️ [Historial] Auto-refresh omitido por error:', error?.message || error);
+          }
+        };
+
+        if (this.autoRefreshTimerId) {
+          clearInterval(this.autoRefreshTimerId);
+          this.autoRefreshTimerId = null;
+        }
+
+        this.autoRefreshTimerId = setInterval(() => {
+          void runAutoRefresh();
+        }, this.autoRefreshIntervalMs);
+
+        if (!this.autoRefreshFocusHandler) {
+          this.autoRefreshFocusHandler = () => {
+            void runAutoRefresh();
+          };
+          window.addEventListener('focus', this.autoRefreshFocusHandler);
+        }
+
+        if (!this.autoRefreshVisibilityHandler) {
+          this.autoRefreshVisibilityHandler = () => {
+            if (!document.hidden) {
+              void runAutoRefresh();
+            }
+          };
+          document.addEventListener('visibilitychange', this.autoRefreshVisibilityHandler);
+        }
+
+        window.addEventListener('beforeunload', () => {
+          if (this.autoRefreshTimerId) {
+            clearInterval(this.autoRefreshTimerId);
+            this.autoRefreshTimerId = null;
+          }
+        }, { once: true });
+      },
+
+      async loadHistory(forceRefreshRequest = ${forceRefresh}) {
+        this.loading = true;
+        this.errorMessage = '';
+        this.roleNotice = '';
+
+        if (!window.StudentAPI) {
+          this.errorMessage = 'StudentAPI no esta disponible.';
+          this.loading = false;
+          return;
+        }
+
+        const token = localStorage.getItem('access_token');
+        const userId = localStorage.getItem('userId');
+        const userName = localStorage.getItem('userName');
+        if (userName) {
+          this.alumnoBackend = userName;
+        }
+
+        if (!token) {
+          this.errorMessage = 'Usuario no autenticado';
+          this.loading = false;
+          return;
+        }
+
+        try {
+          const historyRes = await window.StudentAPI.getPaymentHistory(
+            userId ? parseInt(userId, 10) : null,
+            token,
+            forceRefreshRequest,
+            this.roleForPortal,
+            this.perPage,
+            this.currentPage
+          );
+
+          const paymentData = historyRes?.data?.payment_history;
+          this.pagos = Array.isArray(paymentData?.items) ? paymentData.items.map(payment => {
+            const amountValue = payment.amount ?? payment.total_amount ?? payment.total ?? payment.monto ?? '0.00';
+            const amountReceivedValue = payment.amount_received ?? payment.received_amount ?? payment.paid_amount ?? amountValue;
+            const balanceValue = payment.balance ?? payment.pending_amount ?? payment.amount_pending ?? payment.remaining_amount ?? payment.remaining_balance ?? '0.00';
+            const conceptValue = payment.concept ?? payment.concept_name ?? payment.concepto ?? payment.description ?? 'Pago';
+            const dateValue = payment.date ?? payment.payment_date ?? payment.created_at_human ?? payment.created_at ?? new Date().toLocaleDateString('es-MX');
+            const referenceValue = payment.reference ?? payment.payment_reference ?? payment.folio ?? payment.payment_intent_id ?? ('REF-' + payment.id);
+            const receiptUrlValue = payment.url ?? payment.receipt_url ?? payment.receiptUrl ?? payment.receipt?.url ?? null;
+
+            let normalizedStatus = payment.status || 'completed';
+            if (normalizedStatus === 'paid') normalizedStatus = 'completed';
+
+            return {
+              id: payment.id,
+              concept: conceptValue,
+              amount: String(amountValue),
+              amountReceived: String(amountReceivedValue),
+              balance: String(balanceValue),
+              balanceNumeric: Number(balanceValue) || 0,
+              date: dateValue,
+              status: normalizedStatus,
+              reference: referenceValue,
+              url: receiptUrlValue,
+              paymentMethod: payment.payment_method_details?.[0] || 'Metodo desconocido'
+            };
+          }) : [];
+
+          this.currentPage = paymentData?.currentPage || 1;
+          this.lastPage = paymentData?.lastPage || 1;
+          this.perPage = paymentData?.perPage || this.perPage;
+          this.total = paymentData?.total || 0;
+          this.hasMorePages = !!paymentData?.hasMorePages;
+          this.nextPage = paymentData?.nextPage ?? null;
+          this.previousPage = paymentData?.previousPage ?? null;
+        } catch (err) {
+          console.error('âŒ Error fetching payment history:', err);
+          const rawMessage = String(err?.message || 'Error al cargar el historial de pagos');
+          const lowerMessage = rawMessage.toLowerCase();
+          const isForbidden = lowerMessage.includes('403') || lowerMessage.includes('forbidden') || lowerMessage.includes('prohibido');
+          const isNotFound = lowerMessage.includes('404') || lowerMessage.includes('not found') || lowerMessage.includes('no encontrado');
+
+          if ((isForbidden || isNotFound) && this.roleForPortal === 'applicant') {
+            this.roleNotice = 'Tu cuenta está en proceso. El historial de pagos y recibos estará disponible cuando se active tu perfil de estudiante.';
+            this.errorMessage = '';
+          } else {
+            this.errorMessage = rawMessage;
+          }
+          this.pagos = [];
+        } finally {
+          this.loading = false;
+        }
+      },
+
+      get pagosFiltrados() {
+        if(!this.search) return this.pagos;
+        const searchValue = this.search.toLowerCase();
+        return this.pagos.filter(p => 
+          p.concept.toLowerCase().includes(searchValue) || 
+          p.reference.toLowerCase().includes(searchValue) ||
+          String(p.id).includes(searchValue)
+        );
+      },
+
+      getStatusBadge(status) {
+        const badges = {
+          'completed': { text: 'Completado', color: '#10b981', bg: '#ecfdf5' },
+          'pending': { text: 'Pendiente', color: '#f59e0b', bg: '#fffbeb' },
+          'failed': { text: 'Fallido', color: '#ef4444', bg: '#fef2f2' },
+          'refunded': { text: 'Reembolsado', color: '#6366f1', bg: '#eef2ff' }
+        };
+        return badges[status] || { text: status, color: '#6b7280', bg: '#f3f4f6' };
+      },
+
+      getInitials() {
+        if (!this.alumnoBackend) return 'PG';
+        const names = this.alumnoBackend.trim().split(' ');
+        if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
+        return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+      },
+
+      async downloadReceipt(paymentId, receiptUrl = null) {
+        if (!window.StudentAPI) {
+          this.errorMessage = 'StudentAPI no esta disponible.';
+          return;
+        }
+
+        if (this.downloadingReceiptId === paymentId) {
+          return;
+        }
+
+        this.downloadingReceiptId = paymentId;
+
+        let fallbackUrl = receiptUrl || null;
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          this.errorMessage = 'Usuario no autenticado';
+          this.downloadingReceiptId = null;
+          return;
+        }
+
+        try {
+          const result = await window.StudentAPI.downloadPaymentReceipt(paymentId, token, this.roleForPortal);
+          if (result?.url) {
+            this.openUrlInNewTab(result.url);
+            return;
+          }
+        } catch (err) {
+          if (!fallbackUrl) {
+            const localPayment = Array.isArray(this.pagos) ? this.pagos.find(p => String(p.id) === String(paymentId)) : null;
+            fallbackUrl = localPayment?.url || null;
+          }
+
+          if (!fallbackUrl) {
+            try {
+              const detailRes = await window.StudentAPI.getPaymentById(paymentId, token, this.roleForPortal);
+              fallbackUrl = detailRes?.data?.payment?.url || null;
+            } catch (_) {}
+          }
+
+          if (fallbackUrl) {
+            this.openUrlInNewTab(fallbackUrl);
+            return;
+          }
+          const rawMessage = String(err?.message || 'Recibo no disponible para este pago');
+          const lowerMessage = rawMessage.toLowerCase();
+          const isForbidden = lowerMessage.includes('403') || lowerMessage.includes('forbidden') || lowerMessage.includes('prohibido');
+          const isNotFound = lowerMessage.includes('404') || lowerMessage.includes('not found') || lowerMessage.includes('no encontrado');
+
+          if ((isForbidden || isNotFound) && this.roleForPortal === 'applicant') {
+            this.roleNotice = 'Tu cuenta está en proceso. Los recibos estarán disponibles cuando se active tu perfil de estudiante.';
+            this.errorMessage = '';
+          } else {
+            this.errorMessage = rawMessage;
+          }
+        } finally {
+          this.downloadingReceiptId = null;
+        }
+      }
+    }`}
+  >
+    
+    <header class="history-header">
+      <div class="header-main">
+        <div class="title-group">
+          <p class="pre-title">Gestión Financiera</p>
+          <div style="display: flex; align-items: baseline; gap: 12px;">
+            <h1>Mi Historial</h1>
+            <span class="total-badge" x-text="'(' + total + ' pagos)'"></span>
+          </div>
+        </div>
+        <div class="user-pill">
+          <div class="avatar-mini" x-text="getInitials()"></div>
+          <span x-text="alumnoBackend"></span>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input id="search-payments" name="searchPayments" type="text" x-model="search" placeholder="Buscar por concepto o referencia...">
+        </div>
+      </div>
+    </header>
+
+    <div x-show="roleNotice" class="mb-4 px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm font-medium" x-text="roleNotice"></div>
+
+    <main class="history-content">
+      <template x-if="loading">
+        <div class="empty-state">
+          <div class="empty-icon">⏳</div>
+          <h3>Cargando...</h3>
+          <p>Obteniendo historial de pagos.</p>
+        </div>
+      </template>
+
+      <template x-if="!loading && errorMessage">
+        <div class="empty-state">
+          <div class="empty-icon">⚠️</div>
+          <h3>Sin resultados</h3>
+          <p x-text="errorMessage"></p>
+        </div>
+      </template>
+
+      <template x-if="!loading && !errorMessage && pagosFiltrados.length === 0">
+        <div class="empty-state">
+          <div class="empty-icon">📜</div>
+          <h3>Sin registros</h3>
+          <p>No se encontraron pagos.</p>
+        </div>
+      </template>
+
+      <template x-if="!loading && !errorMessage && pagosFiltrados.length > 0">
+        <div class="timeline">
+          <template x-for="pago in pagosFiltrados" :key="pago.id">
+            <div class="timeline-item">
+              <div class="timeline-dot-wrapper">
+                <div class="timeline-dot" :style="`background: ${getStatusBadge(pago.status).color}`"></div>
+                <div class="timeline-line"></div>
+              </div>
+
+              <div class="payment-card">
+                <div class="payment-info">
+                  <div class="concept-header">
+                    <h3 x-text="pago.concept"></h3>
+                    <span class="status-badge" :style="`background: ${getStatusBadge(pago.status).bg}; color: ${getStatusBadge(pago.status).color}`" x-text="getStatusBadge(pago.status).text"></span>
+                  </div>
+                  
+                  <div class="payment-details">
+                    <div class="detail-row">
+                      <span class="label">Fecha</span>
+                      <span class="value" x-text="pago.date"></span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="label">Referencia</span>
+                      <span class="value reference" x-text="pago.reference"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="payment-amounts">
+                  <div class="amount-section">
+                    <div class="label">Monto</div>
+                    <div class="amount-display">
+                      <span class="currency">$</span>
+                      <span class="amount" x-text="pago.amount"></span>
+                    </div>
+                  </div>
+                  
+                  <template x-if="Number(pago.balanceNumeric || 0) !== 0">
+                    <div class="amount-section" :class="Number(pago.balanceNumeric || 0) > 0 ? 'balance' : 'credit'">
+                      <div class="label" x-text="Number(pago.balanceNumeric || 0) > 0 ? 'Monto pendiente' : 'Saldo a favor'"></div>
+                      <div class="amount-display">
+                        <span class="currency">$</span>
+                        <span class="amount" x-text="Math.abs(Number(pago.balanceNumeric || 0)).toFixed(2)"></span>
+                      </div>
+                    </div>
+                  </template>
+
+                  <div class="action-buttons">
+                    <a 
+                      :href="'/Estudiante/DetallePago?id=' + pago.id" 
+                      class="view-detail-btn" 
+                      title="Ver detalle"
+                      @click="console.log('📍 Navegando a detalle con ID:', pago.id)"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                      Detalle
+                    </a>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
+    </main>
+
+    <!-- PAGINACIÓN -->
+    <div class="pagination-section">
+      <div class="pagination-info">
+        <span class="info-text">Página <strong x-text="currentPage"></strong> de <strong x-text="lastPage"></strong> • <strong x-text="total"></strong> registros total</span>
+      </div>
+
+      <div class="pagination-controls">
+        <button 
+          class="pagination-btn prev"
+          :disabled="currentPage === 1"
+          @click="if(currentPage > 1) { currentPage--; window.location.href = '?page=' + currentPage; }"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          Anterior
+        </button>
+
+        <div class="page-buttons">
+          <template x-for="page in Array.from({length: lastPage}, (_, i) => i + 1)" :key="page">
+            <button 
+              class="page-btn"
+              :class="{ active: page === currentPage }"
+              @click="if(page !== currentPage) { currentPage = page; window.location.href = '?page=' + page; }"
+              x-text="page"
+            ></button>
+          </template>
+        </div>
+
+        <button 
+          class="pagination-btn next"
+          :disabled="!hasMorePages"
+          @click="if(hasMorePages) { currentPage = nextPage; window.location.href = '?page=' + nextPage; }"
+        >
+          Siguiente
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal de Resultado --><template x-if="showResultModal && resultType === 'paid'">
+      <div class="modal-overlay" @click="closeResultModal()">
+        <div class="modal-content success" @click.stop>
+          <div class="modal-icon success">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <h3 class="modal-title">¡Pago Exitoso!</h3>
+          <p class="modal-message">Tu pago se ha procesado correctamente. Puedes ver los detalles en tu historial.</p>
+          <button @click="closeResultModal()" class="modal-btn success">Entendido</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</StudentLayout>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  
+  :root {
+    --primary: #112d26;
+    --accent: #c4a47c;
+    --text-muted: #64748b;
+    --bg-page: #f8fafc;
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    --danger: #e53e3e;
+    --success: #10b981;
+  }
+  
+  .page-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-page);
+    min-height: 100vh;
+  }
+  
+  .history-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-main h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  .total-badge {
+    font-size: 0.95rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .pre-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .user-pill {
+    background: white;
+    padding: 8px 14px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: var(--card-shadow);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .avatar-mini {
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  
+  .filter-bar {
+    background: white;
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid #f1f5f9;
+    margin-bottom: 2rem;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    color: var(--text-muted);
+  }
+
+  .search-box input {
+    border: none;
+    width: 100%;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: transparent;
+  }
+
+  .search-box input::placeholder {
+    color: #cbd5e1;
+  }
+
+  .history-content {
+    margin-bottom: 3rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--text-muted);
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+  }
+
+  .empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+  }
+
+  .empty-state h3 {
+    margin: 0.5rem 0;
+    font-size: 1.3rem;
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .empty-state p {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.95rem;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 24px;
+  }
+
+  .timeline-item {
+    position: relative;
+    display: flex;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  .timeline-dot-wrapper {
+    position: relative;
+  }
+
+  .timeline-dot {
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    z-index: 2;
+    margin-top: 28px;
+    box-shadow: 0 0 0 4px rgba(196, 164, 124, 0.15);
+    transition: 0.3s;
+  }
+
+  .timeline-line {
+    position: absolute;
+    top: 35px;
+    bottom: -35px;
+    width: 2px;
+    background: linear-gradient(180deg, #cbd5e1 0%, #e2e8f0 100%);
+    left: 7px;
+  }
+
+  .timeline-item:last-child .timeline-line {
+    display: none;
+  }
+
+  .payment-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    box-shadow: var(--card-shadow);
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 30px;
+  }
+
+  .payment-card:hover {
+    border-color: #e2e8f0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+  }
+
+  .payment-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .concept-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .concept-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .status-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .payment-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    font-size: 0.85rem;
+  }
+
+  .detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .detail-row .label {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .detail-row .value {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .reference {
+    font-family: 'Courier New', monospace;
+    background: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+  }
+
+  .payment-amounts {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+    min-width: 140px;
+  }
+
+  .amount-section {
+    text-align: right;
+  }
+
+  .amount-section.balance {
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .amount-section.credit {
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .amount-section.credit .currency,
+  .amount-section.credit .amount {
+    color: #10b981;
+  }
+
+  .amount-section .label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+  }
+
+  .amount-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 2px;
+  }
+
+  .currency {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .amount {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+  }
+
+  .view-receipt-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, rgba(17, 45, 38, 0.8) 100%);
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(17, 45, 38, 0.2);
+  }
+
+  .view-receipt-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(17, 45, 38, 0.3);
+  }
+
+  .view-receipt-btn:active {
+    transform: scale(0.95);
+  }
+
+  .action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .view-detail-btn {
+    background: linear-gradient(135deg, var(--accent) 0%, rgba(196, 164, 124, 0.8) 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(196, 164, 124, 0.2);
+    text-decoration: none;
+  }
+
+  .view-detail-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(196, 164, 124, 0.3);
+  }
+
+  .view-detail-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* PAGINACIÓN */
+  .pagination-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid #f1f5f9;
+  }
+
+  .pagination-info {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .info-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .pagination-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    background: rgba(17, 45, 38, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(17, 45, 38, 0.2);
+  }
+
+  .pagination-btn:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .page-buttons {
+    display: flex;
+    gap: 6px;
+  }
+
+  .page-btn {
+    width: 36px;
+    height: 36px;
+    border: 2px solid #f1f5f9;
+    background: white;
+    color: var(--primary);
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+  }
+
+  .page-btn:hover {
+    border-color: var(--primary);
+    background: #f8fafc;
+  }
+
+  .page-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  @media (max-width: 768px) {
+    .page-wrapper {
+      padding: 1.5rem 1rem;
+    }
+
+    .header-main {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .header-main h1 {
+      font-size: 1.6rem;
+    }
+
+    .payment-card {
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .payment-amounts {
+      align-items: flex-start;
+      flex-direction: row;
+      justify-content: space-between;
+      width: 100%;;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 12px;
+    }
+
+    .amount-section {
+      text-align: left;
+    }
+
+    .amount-display {
+      justify-content: flex-start;
+    }
+
+    .timeline {
+      padding-left: 12px;
+    }
+
+    .timeline-line {
+      left: 3px;
+    }
+
+    .page-buttons {
+      max-width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .pagination-btn {
+      padding: 8px 12px;
+      font-size: 0.75rem;
+    }
+
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-wrapper { padding: 1.25rem 0.75rem; }
+    .header-main h1 { font-size: 1.4rem; }
+    .user-pill { width: 100%; justify-content: center; }
+    .filter-bar { padding: 6px; }
+    .search-box { padding: 8px 10px; }
+    .search-box input { font-size: 0.85rem; }
+    .payment-card { padding: 14px; }
+    .detail-row { gap: 6px; }
+  }
+
+  /* Estilos del Modal de Resultado */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to { 
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .modal-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+
+  .modal-icon.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+  }
+
+  .modal-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0 0 0.75rem;
+  }
+
+  .modal-message {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 2rem;
+  }
+
+  .modal-btn {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .modal-btn.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+  }
+
+  .modal-btn.success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  }
+
+  .modal-btn:active {
+    transform: translateY(0);
+  }
+</style>

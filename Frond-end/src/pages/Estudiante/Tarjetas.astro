@@ -1,0 +1,943 @@
+﻿---
+import StudentLayout from '../../layouts/LayoutEstu.astro';
+
+const title = "Mis Métodos de Pago";
+const resultParam = typeof Astro !== 'undefined' && Astro.url ? Astro.url.searchParams.get('result') : null;
+---
+
+<StudentLayout title={title}>
+  <script src="/studentAPI.js?v=20260218r33" is:inline></script>
+  <script is:inline>
+    // Crear la definiciÃ³n del componente
+    const tarjetasComponent = () => ({
+          showModal: false,
+          alumno: 'Usuario',
+          tarjetas: [],
+          isLoading: false,
+          error: '',
+          roleNotice: '',
+          portalRole: 'student',
+          initInProgress: false,
+          initCompleted: false,
+          token: null,
+          userId: null,
+          hasCardsAccess: false,
+          lastCardsFetchAt: 0,
+          showResultModal: false,
+          resultType: '',
+
+          logError(context, error, extra = {}) {
+            const message = error?.message || String(error || 'Error desconocido');
+            console.error(`❌ [Tarjetas][${context}]`, {
+              message,
+              stack: error?.stack || null,
+              ...extra,
+              raw: error
+            });
+          },
+
+          detectPortalRole() {
+            const userDataCandidates = [
+              localStorage.getItem('user_data'),
+              localStorage.getItem('userData')
+            ].filter(Boolean);
+
+            const roleValues = [];
+
+            userDataCandidates.forEach((userDataRaw) => {
+              try {
+                const parsed = JSON.parse(userDataRaw);
+                const userData = parsed?.data?.user || parsed?.user || parsed?.data || parsed || {};
+
+                const roles = [];
+                if (Array.isArray(userData?.roles)) roles.push(...userData.roles);
+                if (userData?.role) roles.push(userData.role);
+                if (userData?.role_name) roles.push(userData.role_name);
+                if (userData?.type) roles.push(userData.type);
+
+                roles.forEach((entry) => {
+                  if (!entry) return;
+                  if (typeof entry === 'string') {
+                    roleValues.push(entry);
+                    return;
+                  }
+                  roleValues.push(entry?.name || entry?.slug || entry?.role || '');
+                });
+              } catch (error) {
+                this.logError('detectPortalRole.parseUserData', error, { userDataRaw });
+              }
+            });
+
+            const roleCandidates = [
+              localStorage.getItem('userRole'),
+              localStorage.getItem('role'),
+              ...roleValues
+            ]
+              .filter(Boolean)
+              .map(function(roleValue) {
+                return String(roleValue).toLowerCase().trim();
+              });
+
+            const hasParentRole = roleCandidates.some(function(roleValue) {
+              return roleValue === 'parent' || roleValue === 'padre';
+            });
+
+            const hasApplicantRole = roleCandidates.some(function(roleValue) {
+              return roleValue === 'applicant' || roleValue === 'aspirante' || roleValue === 'solicitante';
+            });
+
+            const hasStudentRole = roleCandidates.some(function(roleValue) {
+              return roleValue === 'student' || roleValue === 'estudiante' || roleValue === 'alumno';
+            });
+
+            if (hasParentRole) return 'parent';
+            if (hasApplicantRole) return 'applicant';
+            if (hasStudentRole) return 'student';
+            return '';
+          },
+
+          isRateLimitedMessage(message) {
+            const normalized = String(message || '').toLowerCase();
+            return normalized.includes('429') ||
+              normalized.includes('límite de solicitudes') ||
+              normalized.includes('limite de solicitudes') ||
+              normalized.includes('too many requests');
+          },
+
+          hasPortalPermission(permissionName) {
+            const expected = String(permissionName || '').toLowerCase().trim();
+            if (!expected) return false;
+
+            const permissionValues = [];
+            const rawUserCandidates = [
+              localStorage.getItem('user_data'),
+              localStorage.getItem('userData')
+            ].filter(Boolean);
+
+            rawUserCandidates.forEach((rawValue) => {
+              try {
+                const parsed = JSON.parse(rawValue);
+                const userData = parsed?.data?.user || parsed?.user || parsed?.data || parsed || {};
+
+                const collectPermissions = (source) => {
+                  if (!source || typeof source !== 'object') return;
+                  if (Array.isArray(source.permissions)) permissionValues.push(...source.permissions);
+                  if (Array.isArray(source.permisos)) permissionValues.push(...source.permisos);
+                };
+
+                collectPermissions(userData);
+                collectPermissions(userData?.role);
+
+                if (Array.isArray(userData?.roles)) {
+                  userData.roles.forEach((roleEntry) => {
+                    if (roleEntry && typeof roleEntry === 'object') {
+                      collectPermissions(roleEntry);
+                    }
+                  });
+                }
+              } catch (_) {}
+            });
+
+            const rawPermissionCandidates = [
+              localStorage.getItem('permissions'),
+              localStorage.getItem('user_permissions'),
+              localStorage.getItem('permisos')
+            ].filter(Boolean);
+
+            rawPermissionCandidates.forEach((rawValue) => {
+              try {
+                const parsed = JSON.parse(rawValue);
+                if (Array.isArray(parsed)) {
+                  permissionValues.push(...parsed);
+                }
+              } catch (_) {
+                permissionValues.push(rawValue);
+              }
+            });
+
+            const normalizedPermissions = permissionValues
+              .map((entry) => {
+                if (!entry) return '';
+                if (typeof entry === 'string') return entry;
+                return entry?.name || entry?.slug || entry?.permission || entry?.code || '';
+              })
+              .map((value) => String(value).toLowerCase().trim())
+              .filter(Boolean);
+
+            return normalizedPermissions.includes(expected);
+          },
+
+          async syncPortalRoleFromApi() {
+            if (!this.token) return;
+            if (this.portalRole === 'applicant') return;
+
+            const now = Date.now();
+            const nextAllowedSyncAt = Number(localStorage.getItem('tarjetas_role_sync_next_at') || '0');
+            if (Number.isFinite(nextAllowedSyncAt) && now < nextAllowedSyncAt) {
+              return;
+            }
+
+            try {
+              if (!window.StudentAPI?.getAuthenticatedUser) return;
+              const payload = await window.StudentAPI.getAuthenticatedUser(this.token);
+              const user = payload?.data?.user || payload?.user || payload?.data || {};
+
+              const rawRoles = [];
+              if (Array.isArray(user?.roles)) rawRoles.push(...user.roles);
+              if (user?.role) rawRoles.push(user.role);
+              if (user?.role_name) rawRoles.push(user.role_name);
+              if (user?.type) rawRoles.push(user.type);
+
+              const normalizedRoles = rawRoles
+                .map((entry) => {
+                  if (!entry) return '';
+                  if (typeof entry === 'string') return entry;
+                  return entry?.name || entry?.slug || entry?.role || '';
+                })
+                .map((value) => String(value).toLowerCase().trim())
+                .filter(Boolean);
+
+              if (!normalizedRoles.length) return;
+
+              const hasParentRole = normalizedRoles.some((roleValue) => roleValue === 'parent' || roleValue === 'padre');
+              const hasApplicantRole = normalizedRoles.some((roleValue) => roleValue === 'applicant' || roleValue === 'aspirante' || roleValue === 'solicitante');
+              const hasStudentRole = normalizedRoles.some((roleValue) => roleValue === 'student' || roleValue === 'estudiante' || roleValue === 'alumno');
+
+              const resolvedRole = hasParentRole
+                ? 'parent'
+                : hasApplicantRole
+                  ? 'applicant'
+                  : hasStudentRole
+                    ? 'student'
+                    : '';
+
+              if (!resolvedRole) return;
+
+              this.portalRole = resolvedRole;
+              localStorage.setItem('userRole', resolvedRole);
+              localStorage.setItem('role', resolvedRole);
+              localStorage.setItem('tarjetas_role_sync_next_at', String(Date.now() + (15 * 60 * 1000)));
+              console.log('🔍 [Tarjetas] Rol sincronizado desde API:', resolvedRole);
+            } catch (error) {
+              const message = error?.message || String(error || 'Error desconocido');
+              if (this.isRateLimitedMessage(message)) {
+                localStorage.setItem('tarjetas_role_sync_next_at', String(Date.now() + (5 * 60 * 1000)));
+                console.warn('⚠️ [Tarjetas] Sync de rol pausado temporalmente por rate-limit');
+                return;
+              }
+
+              this.logError('syncPortalRoleFromApi', error, { hasToken: !!this.token });
+              console.warn('⚠️ [Tarjetas] No se pudo sincronizar rol desde API:', message);
+            }
+          },
+
+          closeResultModal() {
+            this.showResultModal = false;
+          },
+
+          canManageCards() {
+            if (this.hasPortalPermission('create.setup')) return true;
+            if (this.hasCardsAccess) return true;
+            return this.portalRole !== 'applicant';
+          },
+
+          openAddCardModal() {
+            if (!this.canManageCards()) {
+              this.error = 'Tu perfil aún está en proceso. La vinculación de tarjetas estará disponible cuando se active como estudiante.';
+              this.showModal = false;
+              return;
+            }
+            this.error = '';
+            this.showModal = true;
+          },
+
+          async init() {
+            if (this.initCompleted || this.initInProgress) {
+              return;
+            }
+            this.initInProgress = true;
+
+            try {
+              // Obtener parámetro de resultado del URL
+              const urlParams = new URLSearchParams(window.location.search);
+              this.resultType = urlParams.get('result') || '';
+              
+              // Mostrar modal si hay parÃ¡metro result
+              if (this.resultType === 'added' || this.resultType === 'canceled') {
+                this.showResultModal = true;
+                // Limpiar URL despuÃ©s de 3 segundos
+                setTimeout(() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete('result');
+                  window.history.replaceState({}, '', url);
+                }, 3000);
+              }
+
+              this.token = localStorage.getItem('access_token');
+              this.userId = localStorage.getItem('userId');
+              this.portalRole = this.detectPortalRole();
+              const userName = localStorage.getItem('userName');
+              
+              if (userName && userName !== 'Usuario' && userName !== 'Estudiante') {
+                this.alumno = userName;
+              }
+
+              this.roleNotice = '';
+
+              if (this.token && !this.portalRole) {
+                await this.syncPortalRoleFromApi();
+              }
+
+              console.log('âœ… [Tarjetas] Initialized:', { usuario: this.alumno, userId: this.userId });
+                const shouldSkipInitialCardsLoad = this.portalRole === 'applicant';
+
+                if (shouldSkipInitialCardsLoad) {
+                  this.tarjetas = [];
+                  this.hasCardsAccess = true;
+                  this.lastCardsFetchAt = 0;
+                  console.log('ℹ️ [Tarjetas] Se omite GET inicial de tarjetas para applicant para evitar rate-limit previo al alta.');
+                } else {
+                  await this.cargarTarjetas();
+                }
+
+              if (this.portalRole === 'applicant' && !this.canManageCards()) {
+                this.roleNotice = 'Tu perfil está en proceso. La vinculación de tarjetas se habilitará cuando seas estudiante activo.';
+              } else {
+                this.roleNotice = '';
+              }
+
+              this.initCompleted = true;
+            } catch (error) {
+              this.logError('init', error, {
+                hasToken: !!this.token,
+                userId: this.userId,
+                portalRole: this.portalRole
+              });
+              this.error = error?.message || 'Error al inicializar la pantalla de tarjetas';
+            } finally {
+              this.initInProgress = false;
+            }
+          },
+
+          async cargarTarjetas(forceRefresh = false) {
+
+            if (!this.token || !this.userId) {
+              console.error('âŒ Token o userId vacÃ­os:', { token: !!this.token, userId: this.userId });
+              this.error = 'Por favor inicia sesión';
+              return;
+            }
+
+            this.isLoading = true;
+            this.error = '';
+
+            try {
+              console.log('ðŸ” Cargando tarjetas con token:', this.token ? `${this.token.substring(0, 20)}...` : 'VACÃO');
+              if (forceRefresh) console.log('ðŸ”„ Forzando actualizaciÃ³n de tarjetas (POST de pago completado)');
+
+              let data = null;
+
+              if (window.StudentAPI?.getPaymentMethods) {
+                data = await window.StudentAPI.getPaymentMethods(this.userId ? Number(this.userId) : null, this.token, forceRefresh, this.portalRole);
+              } else {
+                const apiBase = String(window.__API_BASE_URL__ || '').replace(/\/$/, '');
+                if (!apiBase) {
+                  throw new Error('API base no configurada para cargar tarjetas');
+                }
+                const endpointCandidates = [
+                  `${apiBase}/v1/cards`,
+                  `${apiBase}/v1/cards/${this.userId}`
+                ];
+
+                for (const rawEndpoint of endpointCandidates) {
+                  const url = new URL(rawEndpoint);
+                  if (forceRefresh) url.searchParams.set('forceRefresh', 'true');
+
+                  const withPermission = await fetch(url.toString(), {
+                    method: 'GET',
+                    headers: {
+                      'Authorization': 'Bearer ' + this.token,
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json',
+                      'X-User-Role': this.portalRole,
+                      'X-User-Permission': 'view.cards'
+                    }
+                  });
+
+                  if (withPermission.ok) {
+                    data = await withPermission.json();
+                    break;
+                  }
+
+                  if (withPermission.status === 429) {
+                    throw new Error('Demasiadas solicitudes. Por favor espera 30 segundos e intenta nuevamente.');
+                  }
+
+                  if (withPermission.status !== 403 && withPermission.status !== 404) {
+                    const errorData = await withPermission.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Error ${withPermission.status}: ${withPermission.statusText}`);
+                  }
+
+                  const withoutPermission = await fetch(url.toString(), {
+                    method: 'GET',
+                    headers: {
+                      'Authorization': 'Bearer ' + this.token,
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json',
+                      'X-User-Role': this.portalRole
+                    }
+                  });
+
+                  if (withoutPermission.ok) {
+                    data = await withoutPermission.json();
+                    break;
+                  }
+
+                  if (withoutPermission.status === 429) {
+                    throw new Error('Demasiadas solicitudes. Por favor espera 30 segundos e intenta nuevamente.');
+                  }
+
+                  if (withoutPermission.status !== 403 && withoutPermission.status !== 404) {
+                    const errorData = await withoutPermission.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Error ${withoutPermission.status}: ${withoutPermission.statusText}`);
+                  }
+                }
+
+                if (!data) {
+                  data = { success: true, data: { cards: [] } };
+                }
+              }
+
+              console.log('ðŸ“¦ Respuesta completa del servidor:', data);
+              
+              const cardsArray = Array.isArray(data.data) ? data.data : 
+                                 data.data?.cards ? data.data.cards : [];
+              
+              console.log(`âœ… ${cardsArray.length} tarjeta(s) cargada(s) del servidor`);
+
+              this.hasCardsAccess = Boolean(data?.success !== false);
+              this.lastCardsFetchAt = Date.now();
+              
+              this.tarjetas = cardsArray.map(card => ({
+                id: card.id,
+                tipo: card.brand || 'Tarjeta',
+                masked_card: card.masked_card || ('**** **** **** ' + (card.last4 || '****')),
+                vencimiento: card.expiration_date || (card.exp_month + '/' + card.exp_year),
+                status: card.status || 'active',
+                logo: this.getCardLogo(card.brand)
+              }));
+
+              localStorage.setItem('mis_tarjetas', JSON.stringify(this.tarjetas));
+            } catch (err) {
+              this.hasCardsAccess = false;
+              this.logError('cargarTarjetas', err, {
+                hasToken: !!this.token,
+                userId: this.userId,
+                portalRole: this.portalRole,
+                forceRefresh
+              });
+              console.error('âŒ Error al cargar tarjetas:', err);
+              this.error = err.message || 'Error al cargar tarjetas';
+            } finally {
+              this.isLoading = false;
+            }
+          },
+
+          getCardLogo(brand) {
+            const brandLower = String(brand || '').toLowerCase().trim();
+            if (brandLower === 'visa') {
+              return this.buildCardLogoDataUri('VISA', '#1a1f71', '#ffffff');
+            }
+            if (brandLower === 'mastercard') {
+              return this.buildCardLogoDataUri('MC', '#eb001b', '#ffffff');
+            }
+            if (brandLower === 'amex' || brandLower === 'american express') {
+              return this.buildCardLogoDataUri('AMEX', '#2e77bb', '#ffffff');
+            }
+            return this.buildCardLogoDataUri(String(brand || 'CARD').toUpperCase(), '#0f172a', '#ffffff');
+          },
+
+          buildCardLogoDataUri(label, bgColor = '#0f172a', textColor = '#ffffff') {
+            const safeLabel = String(label || 'CARD').replace(/[^A-Z0-9 ]/gi, '').trim().slice(0, 10) || 'CARD';
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="72" viewBox="0 0 120 72"><rect x="2" y="2" width="116" height="68" rx="12" fill="${bgColor}"/><text x="60" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="24" fill="${textColor}">${safeLabel}</text></svg>`;
+            return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+          },
+
+        async agregarNuevaTarjeta() {
+
+          if (!this.canManageCards()) {
+            this.error = 'Tu perfil aún está en proceso. La vinculación de tarjetas estará disponible cuando se active como estudiante.';
+            this.showModal = false;
+            return;
+          }
+
+          this.error = '';
+          this.isLoading = true;
+          console.log('ðŸ”„ Iniciando proceso de vincular tarjeta con Stripe...');
+
+          try {
+            let data = null;
+
+            const proxyResponse = await fetch('/api/cards/create', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer ' + this.token,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ portalRole: this.portalRole })
+            });
+
+            const proxyData = await proxyResponse.json().catch(() => ({}));
+
+            if (proxyData?.success) {
+              data = proxyData;
+            } else if (proxyData?.rate_limited) {
+              throw new Error(proxyData?.message || 'Has excedido el límite de solicitudes, intenta nuevamente en unos segundos');
+            } else {
+              throw new Error(proxyData?.message || 'No tienes permisos para acceder a este recurso');
+            }
+
+            console.log('ðŸ“¦ Respuesta del backend:', data);
+            
+            const checkoutUrl = data.data?.url_checkout || data.checkout_url || data.data?.checkout_url;
+            console.log('ðŸ”— Checkout URL extraÃ­da:', checkoutUrl);
+
+            if (checkoutUrl) {
+              console.log('âœ… Redirigiendo a Stripe:', checkoutUrl);
+              console.log('â±ï¸ Hora de redirecciÃ³n:', new Date().toLocaleTimeString());
+              // AquÃ­ el usuario completa el pago en Stripe
+              window.location.href = checkoutUrl;
+            } else {
+              console.error('âŒ Estructura de respuesta:', JSON.stringify(data, null, 2));
+              throw new Error('No se recibió URL de Stripe del backend');
+            }
+          } catch (err) {
+            const message = err?.message || String(err || 'Error desconocido');
+            if (this.isRateLimitedMessage(message)) {
+              console.warn('⚠️ [Tarjetas] Rate-limited al crear setup de tarjeta:', message);
+            } else {
+              this.logError('agregarNuevaTarjeta', err, {
+                hasToken: !!this.token,
+                userId: this.userId,
+                portalRole: this.portalRole
+              });
+              console.error('âŒ Error:', err);
+            }
+            this.error = err.message || 'Error al redirigir a Stripe';
+            this.isLoading = false;
+          }
+        },
+
+        async eliminarTarjeta(paymentMethodId) {
+
+          if (!confirm('¿Estás seguro de que deseas eliminar esta tarjeta?')) return;
+
+          this.isLoading = true;
+          this.error = '';
+
+          try {
+            const apiBase = String(window.__API_BASE_URL__ || '').replace(/\/$/, '');
+            if (!apiBase) {
+              throw new Error('API base no configurada para eliminar tarjeta');
+            }
+            const response = await fetch(`${apiBase}/v1/cards/` + paymentMethodId, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': 'Bearer ' + this.token,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-User-Role': this.portalRole,
+                'X-User-Permission': 'view.cards'
+              }
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.message || 'Error al eliminar tarjeta');
+            }
+
+            this.success = '✅ Tarjeta eliminada correctamente';
+            this.tarjetas = this.tarjetas.filter(t => t.id !== paymentMethodId);
+            localStorage.setItem('mis_tarjetas', JSON.stringify(this.tarjetas));
+            
+            setTimeout(() => this.success = '', 3000);
+          } catch (err) {
+            this.logError('eliminarTarjeta', err, {
+              paymentMethodId,
+              hasToken: !!this.token,
+              userId: this.userId,
+              portalRole: this.portalRole
+            });
+            console.error('âŒ Error:', err);
+            this.error = err.message || 'Error al eliminar tarjeta';
+            setTimeout(() => this.error = '', 3000);
+          } finally {
+            this.isLoading = false;
+          }
+        }
+    });
+
+    // Registrar con Alpine.js
+    const registerTarjetas = () => {
+      if (window.Alpine) {
+        window.Alpine.data('tarjetas', tarjetasComponent);
+      }
+    };
+
+    // Intentar registrar inmediatamente
+    registerTarjetas();
+
+    window.addEventListener('error', (event) => {
+      console.error('❌ [Tarjetas][GlobalError]', {
+        message: event?.message || 'Error no controlado',
+        file: event?.filename || null,
+        line: event?.lineno || null,
+        column: event?.colno || null,
+        error: event?.error || null
+      });
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('❌ [Tarjetas][UnhandledRejection]', event?.reason || event);
+    });
+
+    // Fallback: esperar a que Alpine cargue si no estaba disponible
+    document.addEventListener('alpine:init', registerTarjetas);
+    
+    // Otro fallback: cuando DOM estÃ¡ listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', registerTarjetas);
+    }
+  </script>
+    
+    <div 
+      class="page-wrapper"
+      x-data="tarjetas()"
+      x-init="init()"
+    >
+      <header class="main-header">
+        <div class="header-content">
+          <div class="user-profile">
+            <div class="avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div class="welcome-text">
+              <span class="greeting">Métodos de Pago</span>
+              <h1 x-text="`Hola, ${alumno.split(' ')[0]}`"></h1>
+            </div>
+          </div>
+          <div class="balance-summary">
+            <span class="label">Tarjetas Vinculadas</span>
+            <span class="amount" x-text="tarjetas.length"></span>
+          </div>
+        </div>
+      </header>
+
+      <div x-show="roleNotice" style="margin-bottom: 1rem; padding: 0.85rem 1rem; border-radius: 12px; border: 1px solid #fde68a; background: #fffbeb; color: #92400e; font-size: 0.9rem; font-weight: 600;" x-text="roleNotice"></div>
+
+
+
+    <main class="content-grid">
+      <section class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">Mis Tarjetas</h2>
+          <button @click="openAddCardModal()" :disabled="!canManageCards()" class="add-inline-btn" :style="!canManageCards() ? 'opacity:0.6;cursor:not-allowed;' : ''">
+            + Añadir Nueva
+          </button>
+        </div>
+
+        <div class="cards-stack">
+          <template x-for="tarjeta in tarjetas" :key="tarjeta.id">
+            <div class="modern-card">
+              <div class="card-left">
+                <div class="bank-logo-container">
+                   <img :src="tarjeta.logo" alt="logo" class="bank-logo" @error="($event.target.src = buildCardLogoDataUri('CARD', '#0f172a', '#ffffff'))">
+                </div>
+                <div class="details">
+                  <h3 x-text="'•••• ' + tarjeta.masked_card.slice(-4)"></h3>
+                  <p class="date">
+                    <span x-text="tarjeta.tipo"></span> | Exp: <span x-text="tarjeta.vencimiento"></span>
+                  </p>
+                </div>
+              </div>
+              <button @click="eliminarTarjeta(tarjeta.id)" class="delete-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+          </template>
+
+          <template x-if="tarjetas.length === 0">
+            <div class="empty-state" @click="openAddCardModal()" :style="!canManageCards() ? 'text-align:center;padding:3rem;background:white;border-radius:24px;cursor:default;border:2px dashed #e2e8f0;' : 'text-align:center;padding:3rem;background:white;border-radius:24px;cursor:pointer;border:2px dashed #e2e8f0;'">
+              <p style="color: #64748b; font-weight: 600;" x-text="!canManageCards() ? 'Tu perfil está en proceso. Aquí verás tus tarjetas cuando se active tu cuenta de estudiante.' : 'No tienes tarjetas registradas. Toca para añadir una.'"></p>
+            </div>
+          </template>
+        </div>
+      </section>
+    </main>
+
+    <div x-show="showModal" x-cloak class="modal-overlay">
+      <div class="modal-backdrop" @click="showModal = false" x-show="showModal" x-transition.opacity></div>
+      <div class="modal-sheet" x-show="showModal" x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="translate-y-full md:translate-y-4 md:opacity-0" x-transition:enter-end="translate-y-0 md:translate-y-0 md:opacity-100">
+        <div class="sheet-handle"></div>
+        <div class="sheet-body">
+          <div class="payment-header">
+            <h2 class="grand-total">Vincular Tarjeta</h2>
+            <p class="subtitle">Serás redirigido a Stripe para completar la vinculación</p>
+          </div>
+          <div x-show="error" class="alert alert-error" x-text="error" x-cloak></div>
+          <div class="button-group">
+            <button @click="agregarNuevaTarjeta()" :disabled="isLoading" class="btn-primary-action">
+              <span x-text="isLoading ? 'Redirigiendo...' : 'IR A STRIPE'"></span>
+            </button>
+            <button @click="showModal = false" class="btn-secondary-action">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Resultado - Tarjeta Agregada -->
+    <template x-if="showResultModal && resultType === 'added'">
+      <div class="modal-overlay" @click="closeResultModal()">
+        <div class="modal-content success" @click.stop>
+          <div class="modal-icon success">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <h3 class="modal-title">¡Tarjeta Agregada!</h3>
+          <p class="modal-message">Tu método de pago ha sido vinculado exitosamente. Ya puedes usarlo para realizar tus pagos.</p>
+          <button @click="closeResultModal()" class="modal-btn success">Entendido</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Modal de Resultado - Proceso Cancelado -->
+    <template x-if="showResultModal && resultType === 'canceled'">
+      <div class="modal-overlay" @click="closeResultModal()">
+        <div class="modal-content canceled" @click.stop>
+          <div class="modal-icon canceled">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <h3 class="modal-title">Proceso Cancelado</h3>
+          <p class="modal-message">Has cancelado la vinculación de la tarjeta. No se realizó ningún cargo. Puedes intentar nuevamente cuando desees.</p>
+          <button @click="closeResultModal()" class="modal-btn canceled">Cerrar</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</StudentLayout>
+
+<style>
+  /* [Tus estilos CSS se mantienen iguales] */
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  :root { --primary: #112d26; --accent: #c4a47c; --bg: #f9fbfb; --white: #ffffff; --text-muted: #64748b; --shadow: 0 12px 34px -10px rgba(17, 45, 38, 0.12); }
+  
+  .page-wrapper { max-width: 1000px; margin: 0 auto; padding: 2.5rem 1.5rem; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); min-height: 100vh; }
+  .main-header { background: var(--primary); border-radius: 28px; padding: 2.5rem; color: white; margin-bottom: 2.5rem; box-shadow: 0 20px 40px -15px rgba(17, 45, 38, 0.3); }
+  .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; }
+  .user-profile { display: flex; align-items: center; gap: 1.5rem; }
+  .avatar { width: 64px; height: 64px; background: var(--accent); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: var(--primary); flex-shrink: 0; }
+  .svg-icon { width: 32px; height: 32px; }
+  .welcome-text h1 { margin: 0; font-size: 1.8rem; font-weight: 800; }
+  .greeting { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.7; font-weight: 700; }
+  .balance-summary { background: rgba(255, 255, 255, 0.08); padding: 1rem 1.5rem; border-radius: 22px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+  .balance-summary .label { font-size: 0.75rem; opacity: 0.6; display: block; }
+  .balance-summary .amount { font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .section-title { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+  .add-inline-btn { background: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+  .modern-card { background: var(--white); border-radius: 24px; padding: 1.2rem 1.5rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; box-shadow: var(--shadow); }
+  .card-left { display: flex; align-items: center; gap: 1.2rem; }
+  .bank-logo-container { width: 55px; height: 35px; background: #f8fafc; border-radius: 8px; display: flex; padding: 4px; }
+  .bank-logo { width: 100%; object-fit: contain; }
+  .details h3 { margin: 0; font-size: 1.1rem; color: var(--primary); font-weight: 800; }
+  .date { margin: 2px 0 0; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+  .delete-btn { background: #fff1f1; color: #ff4d4d; border: none; padding: 10px; border-radius: 12px; cursor: pointer; }
+  .modal-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(17, 45, 38, 0.4); backdrop-filter: blur(6px); }
+  .modal-sheet { position: relative; background: white; width: 100%; max-width: 480px; border-radius: 32px; overflow: hidden; z-index: 10; }
+  .sheet-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 10px; margin: 12px auto 0; display: none; }
+  .sheet-body { padding: 2.2rem; }
+  .payment-header { text-align: center; margin-bottom: 1.8rem; }
+  .grand-total { font-size: 1.6rem; font-weight: 800; color: var(--primary); margin: 0; }
+  .subtitle { font-size: 0.85rem; color: var(--text-muted); }
+  .button-group { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem; }
+  .btn-primary-action { background: var(--primary); color: white; padding: 1.1rem; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; }
+  .btn-secondary-action { background: transparent; color: var(--text-muted); border: none; font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+  .alert { padding: 1rem; border-radius: 12px; margin-bottom: 1rem; font-weight: 600; font-size: 0.9rem; }
+  .alert-error { background: #fee2e2; color: #dc2626; border-left: 4px solid #dc2626; }
+  .alert-success { background: #dcfce7; color: #16a34a; border-left: 4px solid #16a34a; }
+
+  @media (max-width: 768px) {
+    .page-wrapper { padding: 1rem 0.5rem; }
+    .main-header { padding: 1.2rem; }
+    .modal-overlay { align-items: flex-end; }
+    .modal-sheet { border-radius: 24px 24px 0 0; max-width: 100%; }
+    .sheet-handle { display: block; }
+  }
+
+  @media (max-width: 480px) {
+    .main-header { padding: 1rem; }
+    .header-content { flex-direction: column; align-items: flex-start; }
+    .section-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    .add-inline-btn { width: 100%; text-align: center; }
+    .modern-card { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+    .card-left { gap: 0.8rem; }
+  }
+
+  [x-cloak] { display: none !important; }
+
+  /* Estilos del Modal de Resultado */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to { 
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .modal-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+
+  .modal-icon.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+  }
+
+  .modal-icon.canceled {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+  }
+
+  .modal-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0 0 0.75rem;
+  }
+
+  .modal-message {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 2rem;
+  }
+
+  .modal-btn {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .modal-btn.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+  }
+
+  .modal-btn.success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  }
+
+  .modal-btn.canceled {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+  }
+
+  .modal-btn.canceled:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+  }
+
+  .modal-btn:active {
+    transform: translateY(0);
+  }
+</style>
+
+<script>
+  // Script para actualizar el nombre del usuario en tiempo real
+  document.addEventListener('DOMContentLoaded', () => {
+    const userNameFromStorage = localStorage.getItem('userName');
+    console.log('ðŸ“ [Tarjetas] Nombre en localStorage:', userNameFromStorage);
+    
+    // Intentar encontrar el elemento Alpine y actualizar
+    const xData = document.querySelector('[x-data]');
+    if (xData && userNameFromStorage && userNameFromStorage !== 'Estudiante' && userNameFromStorage !== 'Usuario') {
+      // El Alpine.js deberÃ­a haber cargado el nombre en init()
+      console.log('âœ… [Tarjetas] Alpine.js deberÃ­a mostrar:', userNameFromStorage);
+    }
+  });
+  
+  // Listener para cambios en localStorage
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'userName') {
+      console.log('ðŸ”„ [Tarjetas] Nombre del usuario cambiÃ³ a:', e.newValue);
+      // Recargar la pÃ¡gina para reflejar el nuevo usuario
+      location.reload();
+    }
+  });
+</script>
+
+<script>
+  // Debug script para verificar localStorage
+  document.addEventListener('alpine:init', () => {
+    console.log('ðŸ” Alpine.js inicializado en Tarjetas');
+    console.log('ðŸ” userName en localStorage:', localStorage.getItem('userName'));
+    console.log('ðŸ” userId en localStorage:', localStorage.getItem('userId'));
+  });
+</script>

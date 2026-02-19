@@ -1,0 +1,509 @@
+---
+// src/pages/Dashboard.astro
+import Layout from '../layouts/Layout.astro';
+import CardInfo from '../components/CardInfo.astro';
+import ChartLine from '../components/ChartLine.astro';
+import ChartDonut from '../components/ChartDonut.astro'; 
+import ConceptsTable from '../components/ConceptsTable.astro';
+
+const pageTitle = "Dashboard - SIGE";
+---
+
+<Layout title={pageTitle}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <header class="flex items-center justify-between mb-6 md:mb-8 border-b pb-4 mt-6"> 
+      <div class="flex items-center gap-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="text-gray-700" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h8v4h-8zM4 12h8v8h-8zM16 4h4v8h-4zM16 16h4v4h-4z"></path>
+        </svg>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Resumen General</h1>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button 
+          id="createPayoutBtn"
+          class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Crear payout con balance disponible"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span class="hidden sm:inline">Crear Payout</span>
+        </button>
+        
+        <button 
+          id="refreshCacheBtn"
+          class="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Limpiar caché del dashboard"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+          <span class="hidden sm:inline">Limpiar Caché</span>
+        </button>
+      </div>
+    </header>
+
+    {/* TARJETAS */}
+    <section class="flex flex-row space-x-4 mb-8 overflow-x-auto pb-4">
+      <CardInfo title="Total Estudiantes" icon="students" />
+      <CardInfo title="Pagos Pendientes" icon="pending" />
+      <CardInfo title="Total Recaudado" icon="recaudado" />
+      <CardInfo title="Balance Pendiente" icon="balance" />
+    </section>
+
+    {/* GRÁFICOS */}
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 lg:col-span-2">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-3">Evolución de Pagos</h2>
+        <ChartLine />
+      </div>
+      
+      <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 lg:col-span-1">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 text-center border-b pb-3">Distribucion de Cobros</h2>
+        <ChartDonut /> 
+      </div>
+    </section>
+
+    {/* TABLA DE CONCEPTOS (Ahora se llena sola) */}
+    <section class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 mb-8"> 
+      <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-3">Conceptos Registrados</h2>
+      <ConceptsTable />
+    </section>
+
+  </div>
+
+  <!-- Toast de notificaciones -->
+  <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl border-l-4 p-4 min-w-[300px] max-w-md">
+      <div class="flex items-start gap-3">
+        <svg id="toastIcon" class="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"></svg>
+        <div class="flex-1">
+          <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+        </div>
+        <button onclick="document.getElementById('toast').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { DashboardAPI } from '../utils/dashboardAPI.js';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const refreshBtn = document.getElementById('refreshCacheBtn') as HTMLButtonElement | null;
+    const payoutBtn = document.getElementById('createPayoutBtn') as HTMLButtonElement | null;
+
+    const parseAmount = (value: unknown): number => {
+      if (value == null) return 0;
+      const clean = String(value).replace(/,/g, '').trim();
+      const parsed = parseFloat(clean);
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    const pickFirst = (source: any, keys: string[], fallback: any = null) => {
+      if (!source || !Array.isArray(keys)) return fallback;
+      for (const key of keys) {
+        const value = source?.[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return value;
+        }
+      }
+      return fallback;
+    };
+
+    const normalizePendingData = (payload: any) => {
+      const root = payload?.data || payload || {};
+      const pendingRaw = pickFirst(root, ['total_pending', 'totalPending', 'pending_data', 'pendingData'], {});
+
+      return {
+        totalAmount: parseAmount(pickFirst(pendingRaw, ['totalAmount', 'total_amount', 'amount', 'monto'], 0)),
+        totalCount: Number(pickFirst(pendingRaw, ['totalCount', 'total_count', 'count', 'cantidad'], 0)) || 0
+      };
+    };
+
+    const normalizeStudentsData = (payload: any) => {
+      const root = payload?.data || payload || {};
+      const studentsRaw = pickFirst(root, ['total_students', 'totalStudents', 'students_data', 'studentsData'], {});
+
+      const studentCount = Number(pickFirst(studentsRaw, ['totalStudents', 'students', 'students_count', 'student_count', 'count_students'], 0)) || 0;
+      const applicantCount = Number(pickFirst(studentsRaw, ['totalApplicants', 'applicants', 'applicants_count', 'applicant_count', 'count_applicants'], 0)) || 0;
+
+      return {
+        studentCount,
+        applicantCount,
+        totalStudents: studentCount + applicantCount
+      };
+    };
+
+    const normalizePaymentsData = (payload: any) => {
+      const root = payload?.data || payload || {};
+      const paymentsRaw = pickFirst(root, ['payments_data', 'paymentsData', 'data', 'summary'], {});
+
+      return {
+        totalPayments: parseAmount(pickFirst(paymentsRaw, ['totalPayments', 'total_payments', 'payments_total', 'recaudado_total'], 0)),
+        totalBalancePending: parseAmount(pickFirst(paymentsRaw, ['totalBalancePending', 'total_balance_pending', 'pending_balance', 'balance_pending'], 0)),
+        totalBalanceAvailable: parseAmount(pickFirst(paymentsRaw, ['totalBalanceAvailable', 'total_balance_available', 'available_balance', 'balance_available'], 0)),
+        paymentsBySemester: pickFirst(paymentsRaw, ['paymentsBySemester', 'payments_by_semester', 'bySemester', 'by_semester'], {}),
+        pendingPercentage: parseAmount(pickFirst(paymentsRaw, ['pendingPercentage', 'pending_percentage'], 0)),
+        availablePercentage: parseAmount(pickFirst(paymentsRaw, ['availablePercentage', 'available_percentage'], 0))
+      };
+    };
+    
+    // Variable para almacenar el balance disponible
+    let availableBalance = 0;
+    
+    // Función para cargar datos de pagos pendientes
+    const loadPendingData = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          console.warn('No token available for pending payments data');
+          return;
+        }
+
+        const data = await DashboardAPI.getPendingPayments(token, true, false);
+        console.log('📤 Datos completos de pending:', JSON.stringify(data, null, 2));
+        
+        if (data?.success || data?.data) {
+          const pendingData = normalizePendingData(data);
+          
+          // Actualizar card de "Pagos Pendientes"
+          const formatMX = (n: unknown) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(parseFloat(String(n ?? 0)));
+          
+          const pendingEl = document.getElementById('count-pending');
+          const pendingDesc = document.getElementById('desc-pending');
+          
+          if (pendingEl) {
+            pendingEl.textContent = formatMX(pendingData.totalAmount);
+          }
+          if (pendingDesc) {
+            const count = pendingData.totalCount || 0;
+            pendingDesc.textContent = count === 1 ? '1 Adeudo' : `${count} Adeudos`;
+          }
+          
+          // Almacenar datos de pagos pendientes para las gráficas
+          localStorage.setItem('dashboardPendingPayments', JSON.stringify({
+            totalAmount: pendingData.totalAmount,
+            totalCount: pendingData.totalCount
+          }));
+          window.dispatchEvent(new Event('dashboardCardsUpdated'));
+          
+          console.log('✅ Datos de pagos pendientes cargados:', pendingData);
+        }
+      } catch (error) {
+        console.error('❌ Error cargando datos de pagos pendientes:', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        if (errorMsg.includes('permisos') || errorMsg.includes('403')) {
+          showToast('error', 'No tienes permisos para ver datos de pagos pendientes');
+        }
+      }
+    };
+
+    // Función para cargar Balance Pendiente
+    const loadBalancePendingData = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          console.warn('No token available for balance pending data');
+          return;
+        }
+
+        const data = await DashboardAPI.getPaymentsMade(token, true, false);
+        
+        if (data?.success || data?.data) {
+          const paymentsData = normalizePaymentsData(data);
+          const formatMX = (n: unknown) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(parseFloat(String(n ?? 0)));
+          const percentage = parseAmount(paymentsData.pendingPercentage || 0);
+          
+          const balanceEl = document.getElementById('count-balance');
+          const balanceDesc = document.getElementById('desc-balance');
+          
+          if (balanceEl) {
+            balanceEl.textContent = formatMX(parseAmount(paymentsData.totalBalancePending || 0));
+          }
+          if (balanceDesc) {
+            balanceDesc.textContent = `${percentage}% del total`;
+          }
+          
+          console.log('✅ Datos de balance pendiente cargados - Pendiente:', paymentsData.totalBalancePending, 'Porcentaje:', percentage);
+          window.dispatchEvent(new Event('dashboardCardsUpdated'));
+        }
+      } catch (error) {
+        console.error('❌ Error cargando datos de balance pendiente:', error);
+      }
+    };
+
+    // Función para cargar datos de estudiantes
+    const loadStudentsData = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          console.warn('No token available for students data');
+          return;
+        }
+
+        const data = await DashboardAPI.getStudentsCount(token, true, false);
+        console.log('📤 Datos completos de students:', JSON.stringify(data, null, 2));
+        
+        if (data?.success || data?.data) {
+          const studentsData = normalizeStudentsData(data);
+          const studentCount = studentsData.studentCount;
+          const applicantCount = studentsData.applicantCount;
+          const totalStudents = studentsData.totalStudents;
+          
+          const description = applicantCount > 0 
+            ? `${studentCount} Estudiantes, ${applicantCount} Aspirantes`
+            : `Actualizado: ${new Date().toLocaleDateString('es-MX')}`;
+          
+          const estudiantesEl = document.getElementById('count-students');
+          const estudiantesDesc = document.getElementById('desc-students');
+          
+          if (estudiantesEl) {
+            estudiantesEl.textContent = String(totalStudents);
+          }
+          if (estudiantesDesc) {
+            estudiantesDesc.textContent = description;
+          }
+
+          localStorage.setItem('dashboardStudents', JSON.stringify({
+            totalStudents,
+            studentCount,
+            applicantCount
+          }));
+          window.dispatchEvent(new Event('dashboardCardsUpdated'));
+          
+          console.log('✅ Datos de estudiantes cargados - Total:', totalStudents, '(', studentCount, 'estudiantes +', applicantCount, 'aspirantes)');
+        }
+      } catch (error) {
+        console.error('❌ Error cargando datos de estudiantes:', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        if (errorMsg.includes('permisos') || errorMsg.includes('403')) {
+          showToast('error', 'No tienes permisos para ver datos de estudiantes');
+        }
+      }
+    };
+
+    // Función para cargar datos de pagos
+    const loadPaymentsData = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          console.warn('No token available for payments data');
+          return;
+        }
+
+        const data = await DashboardAPI.getPaymentsMade(token, true, false);
+        console.log('📤 Datos completos de payments:', JSON.stringify(data, null, 2));
+        
+        if (data?.success || data?.data) {
+          const paymentsData = normalizePaymentsData(data);
+          
+          const formatMX = (n: unknown) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(parseFloat(String(n ?? 0)));
+          
+          const recaudadoEl = document.getElementById('count-recaudado');
+          const recaudadoDesc = document.getElementById('desc-recaudado');
+          
+          if (recaudadoEl) {
+            recaudadoEl.textContent = formatMX(parseAmount(paymentsData.totalPayments || 0));
+          }
+          if (recaudadoDesc) {
+            recaudadoDesc.textContent = `Balance disponible: ${formatMX(parseAmount(paymentsData.totalBalanceAvailable || 0))}`;
+          }
+          
+          availableBalance = parseAmount(paymentsData.totalBalanceAvailable || 0);
+          
+          // Almacenar datos de pagos para los gráficos
+          localStorage.setItem('dashboardPayments', JSON.stringify({
+            totalPayments: paymentsData.totalPayments,
+            totalBalancePending: paymentsData.totalBalancePending,
+            totalBalanceAvailable: paymentsData.totalBalanceAvailable,
+            paymentsBySemester: paymentsData.paymentsBySemester || {},
+            pendingPercentage: paymentsData.pendingPercentage || 0,
+            availablePercentage: paymentsData.availablePercentage || 0
+          }));
+          window.dispatchEvent(new Event('dashboardCardsUpdated'));
+          
+          // Disparar eventos para actualizar gráficos
+          const updateEvent = new Event('paymentsDataLoaded');
+          window.dispatchEvent(updateEvent);
+          
+          if (typeof (window as any).updateChartLine === 'function') {
+            console.log('🔄 Llamando updateChartLine desde loadPaymentsData');
+            (window as any).updateChartLine();
+          }
+          if (typeof (window as any).updateChartDonut === 'function') {
+            console.log('🔄 Llamando updateChartDonut desde loadPaymentsData');
+            (window as any).updateChartDonut();
+          }
+          
+          console.log('✅ Datos de pagos cargados - Pagos:', paymentsData.totalPayments, 'Balance:', paymentsData.totalBalanceAvailable);
+        }
+      } catch (error) {
+        console.error('❌ Error cargando datos de pagos:', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        if (errorMsg.includes('permisos') || errorMsg.includes('403')) {
+          showToast('error', 'No tienes permisos para ver datos de pagos');
+        }
+      }
+    };
+
+    // Cargar datos de estudiantes, pagos y pagos pendientes al iniciar
+    loadStudentsData();
+    loadPaymentsData();
+    loadPendingData();
+    loadBalancePendingData();
+    
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        try {
+          // Deshabilitar botón
+          refreshBtn.disabled = true;
+          refreshBtn.innerHTML = `
+            <svg class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="hidden sm:inline">Limpiando...</span>
+          `;
+
+          // Obtener token
+          const token = localStorage.getItem('access_token');
+          if (!token) {
+            showToast('error', 'No se encontró el token de autenticación. Por favor, inicia sesión nuevamente.');
+            return;
+          }
+
+          // Llamar a la API
+          const response = await DashboardAPI.refreshCache(token);
+          
+          if (response.success) {
+            showToast('success', response.message || 'Caché limpiado correctamente');
+            
+            // Recargar la página después de 1.5 segundos para mostrar datos actualizados
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } else {
+            showToast('error', response.message || 'Error al limpiar el caché');
+          }
+        } catch (error) {
+          console.error('Error al limpiar caché:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Error al limpiar el caché del dashboard';
+          showToast('error', errorMessage);
+        } finally {
+          // Restaurar botón
+          refreshBtn.disabled = false;
+          refreshBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+            <span class="hidden sm:inline">Limpiar Caché</span>
+          `;
+        }
+      });
+    }
+
+    // Event listener para crear payout
+    if (payoutBtn) {
+      payoutBtn.addEventListener('click', async () => {
+        try {
+          // Validar balance mínimo
+          if (availableBalance < 100) {
+            showToast('error', `Balance insuficiente. Se requiere un mínimo de $100.00 MXN. Balance actual: $${availableBalance.toFixed(2)} MXN`);
+            return;
+          }
+
+          // Confirmar acción
+          const formatMX = (n: unknown) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(parseFloat(String(n ?? 0)));
+          const confirmed = confirm(`¿Deseas crear un payout por ${formatMX(availableBalance)}?\n\nEsto transferirá todo el balance disponible a la cuenta bancaria registrada.`);
+          
+          if (!confirmed) return;
+
+          // Deshabilitar botón
+          payoutBtn.disabled = true;
+          payoutBtn.innerHTML = `
+            <svg class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="hidden sm:inline">Procesando...</span>
+          `;
+
+          // Obtener token
+          const token = localStorage.getItem('access_token');
+          if (!token) {
+            showToast('error', 'No se encontró el token de autenticación. Por favor, inicia sesión nuevamente.');
+            return;
+          }
+
+          // Llamar a la API
+          const response = await DashboardAPI.createPayout(token);
+          
+          if (response.success && response.data?.payout) {
+            const payout = response.data.payout;
+            showToast('success', `Payout creado exitosamente por ${formatMX(payout.amount)}. Estado: ${payout.status}. Fecha estimada de llegada: ${payout.arrival_date}`);
+            
+            // Recargar datos después de 2 segundos
+            setTimeout(() => {
+              loadPaymentsData();
+            }, 2000);
+          } else {
+            showToast('error', response.message || 'Error al crear el payout');
+          }
+        } catch (error) {
+          console.error('Error al crear payout:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Error al crear el payout';
+          showToast('error', errorMessage);
+        } finally {
+          // Restaurar botón
+          payoutBtn.disabled = false;
+          payoutBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span class="hidden sm:inline">Crear Payout</span>
+          `;
+        }
+      });
+    }
+  });
+
+  function showToast(type: 'success' | 'error', message: string) {
+    const toast = document.getElementById('toast');
+    const toastIcon = document.getElementById('toastIcon');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    if (!toast || !toastIcon || !toastMessage) return;
+    
+    const toastContainer = toast.querySelector('div > div');
+    if (!toastContainer) return;
+
+    if (type === 'success') {
+      toastContainer.classList.remove('border-red-500', 'border-yellow-500');
+      toastContainer.classList.add('border-green-500');
+      toastIcon.classList.remove('text-red-500', 'text-yellow-500');
+      toastIcon.classList.add('text-green-500');
+      toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>';
+    } else if (type === 'error') {
+      toastContainer.classList.remove('border-green-500', 'border-yellow-500');
+      toastContainer.classList.add('border-red-500');
+      toastIcon.classList.remove('text-green-500', 'text-yellow-500');
+      toastIcon.classList.add('text-red-500');
+      toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>';
+    }
+
+    toastMessage.textContent = message;
+    toast.classList.remove('hidden');
+
+    // Auto-ocultar después de 5 segundos
+    setTimeout(() => {
+      toast?.classList.add('hidden');
+    }, 5000);
+  }
+</script>

@@ -1,0 +1,271 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Gestión de Usuarios | CBTA 71">
+    <style is:global>
+        [x-cloak] { display: none !important; }
+        
+        .bg-institucional { background-color: #2E594D; }
+        .text-institucional { color: #2E594D; }
+        .border-institucional { border-color: #2E594D; }
+        .hover-institucional:hover { background-color: #234238; }
+    </style>
+
+    <div id="app-root" class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100"></div>
+
+    <script type="module">
+        import { createElement } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import UserManagementTable from '../components/UserManagementTable.jsx';
+        import UserFormModal from '../components/UserFormModal.jsx';
+        import AdminService from '../utils/adminService.js';
+
+        function App() {
+            const [showModal, setShowModal] = React.useState(false);
+            const [editingUser, setEditingUser] = React.useState(null);
+            const [refreshKey, setRefreshKey] = React.useState(0);
+            const [notification, setNotification] = React.useState({ show: false, message: '', type: 'success' });
+            const [showImportModal, setShowImportModal] = React.useState(false);
+            const [importType, setImportType] = React.useState('users'); // 'users' o 'students'
+
+            const showNotification = (message, type = 'success') => {
+                setNotification({ show: true, message, type });
+                setTimeout(() => {
+                    setNotification({ show: false, message: '', type: 'success' });
+                }, 3000);
+            };
+
+            const handleEdit = (user) => {
+                setEditingUser(user);
+                setShowModal(true);
+            };
+
+            const handleDelete = async (userId) => {
+                if (!confirm('¿Estás seguro de eliminar este usuario?')) {
+                    return;
+                }
+
+                try {
+                    const result = await AdminService.deleteUser(userId);
+                    const message = result?.message || 'Usuario eliminado correctamente';
+                    showNotification(message, 'success');
+                    setRefreshKey(prev => prev + 1);
+                } catch (error) {
+                    showNotification('Error al eliminar usuario: ' + error.message, 'error');
+                }
+            };
+
+            const handleModalClose = () => {
+                setShowModal(false);
+                setEditingUser(null);
+            };
+
+            const handleSuccess = () => {
+                showNotification(editingUser ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente', 'success');
+                setRefreshKey(prev => prev + 1);
+            };
+
+            const handlePromoteStudents = async () => {
+                if (!confirm('¿Estás seguro de promover a TODOS los estudiantes? Esta acción incrementará el semestre de todos los alumnos y dará de baja a quienes sobrepasan el semestre 12.')) {
+                    return;
+                }
+
+                try {
+                    const response = await AdminService.promoteStudents();
+                    if (response.success) {
+                        const affected = response.data?.affected;
+                        showNotification(
+                            `✅ Promoción completada: ${affected?.usuarios_promovidos || 0} promovidos, ${affected?.usuarios_baja || 0} dados de baja`,
+                            'success'
+                        );
+                        setRefreshKey(prev => prev + 1);
+                    }
+                } catch (error) {
+                    showNotification('Error al promover estudiantes: ' + error.message, 'error');
+                }
+            };
+
+            const handleFileImport = async (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (!confirm(`¿Estás seguro de importar ${importType === 'users' ? 'usuarios' : 'detalles de estudiantes'} desde este archivo?`)) {
+                    event.target.value = '';
+                    return;
+                }
+
+                try {
+                    let response;
+                    if (importType === 'users') {
+                        response = await AdminService.importUsers(file);
+                    } else {
+                        response = await AdminService.importStudents(file);
+                    }
+
+                    if (response.success) {
+                        const summary = response.data?.summary?.summary;
+                        showNotification(
+                            `✅ Importación completada: ${summary?.rows_inserted || 0} registros insertados, ${summary?.rows_failed || 0} fallidos`,
+                            'success'
+                        );
+                        setRefreshKey(prev => prev + 1);
+                    }
+                } catch (error) {
+                    showNotification('Error al importar: ' + error.message, 'error');
+                } finally {
+                    event.target.value = '';
+                    setShowImportModal(false);
+                }
+            };
+
+            return createElement('div', { className: 'min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8' },
+                // Notificación
+                notification.show && createElement('div', {
+                    className: `fixed top-5 right-5 z-[100] p-4 rounded-xl shadow-2xl text-white font-bold ${
+                        notification.type === 'success' ? 'bg-institucional' : 'bg-red-600'
+                    }`,
+                    style: { animation: 'slideInRight 0.3s ease-out' }
+                }, notification.message),
+
+                // Header
+                createElement('div', { className: 'mb-8' },
+                    createElement('div', { className: 'flex items-center justify-between gap-4 mb-4' },
+                        createElement('div', null,
+                            createElement('h1', { className: 'text-3xl font-bold text-slate-800 mb-1' }, 
+                                '👥 Gestión de Usuarios'
+                            ),
+                            createElement('p', { className: 'text-slate-500' }, 
+                                'Administración completa de usuarios, roles y permisos del sistema'
+                            )
+                        )
+                    ),
+
+                    // Botones de acción
+                    createElement('div', { className: 'flex flex-wrap gap-3' },
+                        createElement('button', {
+                            onClick: () => {
+                                setEditingUser(null);
+                                setShowModal(true);
+                            },
+                            className: 'px-4 py-2 bg-institucional text-white rounded-lg hover:bg-institucional/90 transition-colors font-medium flex items-center gap-2'
+                        }, '➕ Nuevo Usuario'),
+
+                        createElement('button', {
+                            onClick: () => {
+                                setImportType('users');
+                                setShowImportModal(true);
+                            },
+                            className: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2'
+                        }, '📥 Importar Usuarios (Excel)'),
+
+                        createElement('button', {
+                            onClick: () => {
+                                setImportType('students');
+                                setShowImportModal(true);
+                            },
+                            className: 'px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center gap-2'
+                        }, '📚 Importar Estudiantes (Excel)'),
+
+                        createElement('button', {
+                            onClick: handlePromoteStudents,
+                            className: 'px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium flex items-center gap-2'
+                        }, '🎓 Promover Estudiantes'),
+
+                        createElement('button', {
+                            onClick: () => setRefreshKey(prev => prev + 1),
+                            className: 'px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium flex items-center gap-2'
+                        }, '🔄 Actualizar')
+                    )
+                ),
+
+                // Tabla de usuarios
+                createElement(UserManagementTable, {
+                    key: refreshKey,
+                    onEdit: handleEdit,
+                    onDelete: handleDelete,
+                    onRefresh: refreshKey
+                }),
+
+                // Modal de formulario
+                createElement(UserFormModal, {
+                    isOpen: showModal,
+                    onClose: handleModalClose,
+                    user: editingUser,
+                    onSuccess: handleSuccess
+                }),
+
+                // Modal de importación
+                showImportModal && createElement('div', {
+                    className: 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4',
+                    onClick: () => setShowImportModal(false)
+                },
+                    createElement('div', {
+                        className: 'bg-white rounded-lg shadow-xl max-w-md w-full p-6',
+                        onClick: (e) => e.stopPropagation()
+                    },
+                        createElement('h2', { className: 'text-xl font-bold text-gray-900 mb-4' },
+                            importType === 'users' ? '📥 Importar Usuarios' : '📚 Importar Detalles de Estudiantes'
+                        ),
+                        createElement('div', { className: 'space-y-4' },
+                            createElement('div', { className: 'bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm' },
+                                createElement('p', { className: 'font-semibold text-blue-900 mb-2' }, 
+                                    'Formato del archivo Excel (.xlsx):'
+                                ),
+                                importType === 'users' ? (
+                                    createElement('ul', { className: 'list-disc list-inside text-blue-800 space-y-1' },
+                                        createElement('li', null, 'name, last_name, email, phone_number'),
+                                        createElement('li', null, 'birthdate (YYYY-MM-DD), gender, curp'),
+                                        createElement('li', null, 'street, city, state, zip_code'),
+                                        createElement('li', null, 'blood_type, career_id, n_control'),
+                                        createElement('li', null, 'semestre, group, workshop')
+                                    )
+                                ) : (
+                                    createElement('ul', { className: 'list-disc list-inside text-blue-800 space-y-1' },
+                                        createElement('li', null, 'curp (debe existir en BD)'),
+                                        createElement('li', null, 'career_id (requerido)'),
+                                        createElement('li', null, 'n_control (requerido)'),
+                                        createElement('li', null, 'semestre (requerido)'),
+                                        createElement('li', null, 'group, workshop (opcionales)')
+                                    )
+                                )
+                            ),
+                            createElement('input', {
+                                type: 'file',
+                                accept: '.xlsx',
+                                onChange: handleFileImport,
+                                className: 'block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-institucional file:text-white hover:file:bg-institucional/90'
+                            }),
+                            createElement('div', { className: 'flex justify-end gap-3' },
+                                createElement('button', {
+                                    onClick: () => setShowImportModal(false),
+                                    className: 'px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50'
+                                }, 'Cancelar')
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        // Render app
+        const rootElement = document.getElementById('app-root');
+        if (rootElement) {
+            const root = createRoot(rootElement);
+            root.render(createElement(App));
+        }
+    </script>
+</Layout>
+
+<style>
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+</style>

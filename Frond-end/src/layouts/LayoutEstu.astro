@@ -1,0 +1,554 @@
+---
+interface Props {
+    title: string;
+}
+const { title } = Astro.props;
+
+import '../styles/global.css';
+import '../styles/tailwind.css';
+const API_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? (() => { throw new Error('Falta PUBLIC_API_BASE_URL'); })()).replace(/\/$/, '');
+
+// COLORES PARA EL PORTAL ESTUDIANTE
+const PRIMARY_COLOR = '#2e594d';    // Sidebar: Verde Azulado Oscuro
+const ACCENT_COLOR = '#86efad';     // Acento: Verde claro
+const BACKGROUND_COLOR = '#d9dde2'; // Fondo de Página: Gris sutil
+const TEXT_COLOR_DARK = '#374151';  // Texto principal
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title} | Estudiante CBTA 71</title>
+    <link rel="icon" href="/Logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style define:vars={{ PRIMARY_COLOR, ACCENT_COLOR, BACKGROUND_COLOR, TEXT_COLOR_DARK }}>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--BACKGROUND_COLOR);
+            color: var(--TEXT_COLOR_DARK);
+            margin: 0;
+        }
+        .sidebar-closed { transform: translateX(-100%); }
+        .transition-transform-fast { transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        #sidebar-menu { scrollbar-width: none; }
+        #sidebar-menu::-webkit-scrollbar { width: 0; height: 0; }
+        .content-fade-in { animation: fadeIn 0.8s cubic-bezier(0.19, 1, 0.22, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ESTILO ACTIVO SEGÚN TU IMAGEN */
+        .nav-active {
+            background-color: white;
+            color: var(--PRIMARY_COLOR) !important;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--ACCENT_COLOR);
+            padding-left: 1rem;
+            border-radius: 12px; /* Redondeado para que parezca una pastilla */
+        }
+        .nav-inactive:hover { background-color: rgba(255, 255, 255, 0.1); }
+        
+        .logout-icon-circle {
+            background: var(--ACCENT_COLOR);
+            color: var(--PRIMARY_COLOR);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Alpine.js x-cloak */
+        [x-cloak] { display: none !important; }
+    </style>
+    <script is:inline define:vars={{ API_BASE_URL }}>
+        window.__API_BASE_URL__ = API_BASE_URL;
+    </script>
+    <script is:inline>
+        if (!window.__consoleMutedGlobal__) {
+            const silent = () => {};
+            ['log', 'info', 'warn', 'error', 'debug', 'trace'].forEach((method) => {
+                if (typeof console?.[method] === 'function') {
+                    console[method] = silent;
+                }
+            });
+            window.__consoleMutedGlobal__ = true;
+        }
+    </script>
+    <script is:inline>
+        (function () {
+            if (typeof window === 'undefined') return;
+            if (window.__authFetchPatched__) return;
+
+            const apiBase = String(window.__API_BASE_URL__ || '').replace(/\/$/, '');
+            if (!apiBase) return;
+
+            const originalFetch = window.fetch.bind(window);
+
+            const getRequestUrl = (input) => {
+                if (typeof input === 'string') return input;
+                if (input && typeof input.url === 'string') return input.url;
+                return '';
+            };
+
+            const shouldHandle = (url) => url.startsWith(`${apiBase}/`);
+            const isRefreshUrl = (url) => /\/v1\/refresh-token(?:\?|$)/.test(url);
+            const handleExpiredSession = () => {
+                if (window.__studentSessionExpiredHandled__) return;
+                window.__studentSessionExpiredHandled__ = true;
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+
+                if (window.location.pathname !== '/') {
+                    window.location.href = '/';
+                }
+            };
+
+            const buildHeaders = (headersInput) => {
+                if (headersInput instanceof Headers) return new Headers(headersInput);
+                return new Headers(headersInput || {});
+            };
+
+            const refreshAccessToken = async () => {
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (!refreshToken) return null;
+
+                const response = await originalFetch(`${apiBase}/v1/refresh-token`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ refresh_token: refreshToken })
+                });
+
+                if (!response.ok) return null;
+
+                const data = await response.json().catch(() => null);
+                const tokenBundle = data?.data?.user_tokens || data?.data || {};
+                const newAccessToken = tokenBundle.access_token || data?.access_token || '';
+                const newRefreshToken = tokenBundle.refresh_token || data?.refresh_token || '';
+
+                if (!newAccessToken) return null;
+
+                localStorage.setItem('access_token', newAccessToken);
+                if (newRefreshToken) {
+                    localStorage.setItem('refresh_token', newRefreshToken);
+                }
+
+                return newAccessToken;
+            };
+
+            window.fetch = async (input, init = {}) => {
+                const requestUrl = getRequestUrl(input);
+                if (!shouldHandle(requestUrl)) {
+                    return originalFetch(input, init);
+                }
+
+                const headersInput = init?.headers
+                    || ((typeof Request !== 'undefined' && input instanceof Request) ? input.headers : undefined);
+                const headers = buildHeaders(headersInput);
+
+                if (!headers.has('Authorization')) {
+                    const token = localStorage.getItem('access_token');
+                    if (token) headers.set('Authorization', `Bearer ${token}`);
+                }
+
+                if (!headers.has('Accept')) {
+                    headers.set('Accept', 'application/json');
+                }
+
+                const firstResponse = await originalFetch(input, { ...init, headers });
+
+                const alreadyRetried = Boolean(init?.__retriedByAuthPatch);
+                if (
+                    alreadyRetried
+                    || isRefreshUrl(requestUrl)
+                    || (firstResponse.status !== 401 && firstResponse.status !== 403)
+                ) {
+                    return firstResponse;
+                }
+
+                const newAccessToken = await refreshAccessToken();
+                if (!newAccessToken) {
+                    if (firstResponse.status === 401) {
+                        handleExpiredSession();
+                    }
+                    return firstResponse;
+                }
+
+                const retryHeaders = buildHeaders(headersInput);
+                retryHeaders.set('Authorization', `Bearer ${newAccessToken}`);
+                if (!retryHeaders.has('Accept')) {
+                    retryHeaders.set('Accept', 'application/json');
+                }
+
+                return originalFetch(input, {
+                    ...init,
+                    headers: retryHeaders,
+                    __retriedByAuthPatch: true
+                });
+            };
+
+            window.__authFetchPatched__ = true;
+        })();
+    </script>
+    
+    <!-- Alpine.js -->
+
+</head>
+
+<body class="flex min-h-screen antialiased relative">
+    <nav id="sidebar-menu"
+        class="bg-[#2e594d] text-white flex flex-col p-5 shadow-2xl z-50 overflow-y-auto
+        fixed inset-0 w-full max-w-[250px] h-full transition-transform-fast sidebar-closed
+        md:fixed md:top-0 md:flex md:h-screen md:w-[250px] md:shadow-lg md:rounded-r-xl">
+    
+        <button id="close-sidebar-button" class="md:hidden absolute top-3 right-3 p-2 rounded-full bg-white/20 text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path d="M18 6l-12 12M6 6l12 12"/></svg>
+        </button>
+        
+        <div class="flex items-center gap-4 mb-10 pt-3 border-b border-white/10 pb-4">
+            <div class="h-10 w-10">
+                <img src="/Logo.png" alt="Logo" class="w-full h-full object-contain">
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-wide">CBTA 71</h1>
+                <p class="text-[9px] opacity-80 uppercase font-bold">Portal Estudiante</p>
+            </div>
+        </div>
+
+        <div class="flex-grow overflow-y-auto pr-2">
+            <ul id="main-navigation" class="space-y-2">
+                <li>
+                    <a href="/Estudiante/PortalEstudiante" data-path="/Estudiante/PortalEstudiante" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="/Estudiante/Tarjetas" data-path="/Estudiante/Tarjetas" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        Mis Tarjetas
+                    </a>
+                </li>
+                <li>
+                    <a href="/Estudiante/Adeudos" data-path="/Estudiante/Adeudos" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Pagos Pendientes
+                    </a>
+                </li>
+                <li>
+                    <a href="/Estudiante/Historial" data-path="/Estudiante/Historial" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Historial
+                    </a>
+                </li>
+                <li>
+                    <a href="/Estudiante/Notificaciones" data-path="/Estudiante/Notificaciones" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        Notificaciones
+                        <span id="notif-badge" class="hidden absolute right-4 top-1/2 -translate-y-1/2 bg-[#86efad] text-[#2e594d] text-[10px] font-black px-2 py-0.5 rounded-full">3</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="mt-auto pt-4 border-t border-white/10">
+            <ul class="space-y-2">
+                <li>
+                    <a href="/Estudiante/Perfil" data-path="/Estudiante/Perfil" class="nav-link nav-inactive flex items-center gap-4 py-3 px-4 rounded-lg transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        Mi Perfil
+                    </a>
+                </li>
+                <li>
+                    <a href="/" onclick="localStorage.clear();" class="flex items-center gap-4 py-3 px-4 rounded-lg text-white hover:bg-white/10 transition-colors font-bold">
+                        <div class="logout-icon-circle">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        </div>
+                        Salir
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="flex-1 p-4 md:p-8 md:ml-[250px] relative">
+        <button id="open-sidebar-button" class="md:hidden fixed top-4 left-4 p-3 rounded-xl bg-[#2e594d] text-white shadow-xl z-40">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <div class="h-16 md:hidden"></div> 
+        <div class="bg-white p-6 md:p-10 rounded-[2rem] shadow-2xl content-fade-in min-h-[calc(100vh-4rem)]">
+            <slot />
+        </div>
+    </main>
+
+    <script is:inline define:vars={{ API_BASE_URL }}>
+        const sidebar = document.getElementById('sidebar-menu');
+        const openButton = document.getElementById('open-sidebar-button');
+        const closeButton = document.getElementById('close-sidebar-button');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const activeClass = 'nav-active';
+        const inactiveClass = 'nav-inactive';
+
+        function setActiveLink() {
+            // Normalizar la ruta actual quitando la barra final
+            let currentPath = window.location.pathname.replace(/\/$/, "");
+            
+            navLinks.forEach(link => {
+                const linkPath = link.getAttribute('data-path').replace(/\/$/, "");
+                link.classList.remove(activeClass, inactiveClass);
+                
+                if (linkPath === currentPath) {
+                    link.classList.add(activeClass);
+                } else {
+                    link.classList.add(inactiveClass);
+                }
+            });
+        }
+
+        function openSidebar() {
+            sidebar.classList.remove('sidebar-closed', 'hidden');
+            openButton.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+            if (window.innerWidth < 768) sidebar.classList.add('fixed', 'inset-0');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add('sidebar-closed');
+            setTimeout(() => {
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('hidden');
+                    openButton.style.display = 'block';
+                }
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        openButton?.addEventListener('click', openSidebar);
+        closeButton?.addEventListener('click', closeSidebar);
+        
+        navLinks.forEach(link => link.addEventListener('click', () => { 
+            if (window.innerWidth < 768) closeSidebar(); 
+        }));
+
+        const handleResize = () => {
+            if (window.innerWidth >= 768) {
+                sidebar.classList.remove('hidden', 'sidebar-closed', 'inset-0');
+                openButton.style.display = 'none';
+                document.body.style.overflow = '';
+            } else if (sidebar.classList.contains('sidebar-closed')) {
+                sidebar.classList.add('hidden');
+                openButton.style.display = 'block';
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('load', () => { 
+            handleResize(); 
+            setActiveLink();
+            updateNotificationBadge();
+        });
+        
+        // Importante para Astro con transiciones de página
+        document.addEventListener("astro:after-swap", () => {
+            setActiveLink();
+            updateNotificationBadge();
+        });
+
+        // Actualizar badge de notificaciones
+        async function updateNotificationBadge() {
+            const badge = document.getElementById('notif-badge');
+            if (!badge) return;
+
+            const normalizePortalRoleForBadge = (roleValue) => {
+                const role = String(roleValue || '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[._-]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (!role) return '';
+                if (role === 'parent' || role === 'padre' || role === 'madre' || role === 'tutor' || role === 'tutora') return 'parent';
+                if (role === 'applicant' || role === 'aspirante' || role === 'solicitante') return 'applicant';
+                if (role === 'student' || role === 'estudiante' || role === 'alumno') return 'student';
+                return role;
+            };
+
+            const detectPortalRoleFromStorageForBadge = () => {
+                const roleValues = [];
+                const rawUserCandidates = [
+                    localStorage.getItem('user_data'),
+                    localStorage.getItem('userData')
+                ].filter(Boolean);
+
+                rawUserCandidates.forEach((rawValue) => {
+                    try {
+                        const parsed = JSON.parse(rawValue);
+                        const userData = parsed?.data?.user || parsed?.user || parsed?.data || parsed || {};
+                        const roles = [];
+
+                        if (Array.isArray(userData?.roles)) roles.push(...userData.roles);
+                        if (userData?.role) roles.push(userData.role);
+                        if (userData?.role_name) roles.push(userData.role_name);
+                        if (userData?.type) roles.push(userData.type);
+
+                        roles.forEach((entry) => {
+                            if (!entry) return;
+                            if (typeof entry === 'string') {
+                                roleValues.push(entry);
+                                return;
+                            }
+                            roleValues.push(entry?.name || entry?.slug || entry?.role || entry?.role_name || '');
+                        });
+                    } catch (_) {}
+                });
+
+                const roleCandidates = [
+                    localStorage.getItem('userRole'),
+                    localStorage.getItem('role'),
+                    ...roleValues
+                ]
+                    .filter(Boolean)
+                    .map((value) => normalizePortalRoleForBadge(value))
+                    .filter(Boolean);
+
+                if (roleCandidates.includes('parent')) return 'parent';
+                if (roleCandidates.includes('applicant')) return 'applicant';
+                if (roleCandidates.includes('student')) return 'student';
+                return '';
+            };
+
+            if (!window.__notifBadgeState) {
+                window.__notifBadgeState = {
+                    inFlight: null,
+                    lastFetchAt: 0,
+                    minIntervalMs: 60000,
+                    staleAfterMs: 300000,
+                    rateLimitCooldownMs: 180000
+                };
+            }
+
+            const state = window.__notifBadgeState;
+
+            try {
+                // Intentar leer desde localStorage primero
+                const cachedCount = localStorage.getItem('unread_notifications_count');
+                
+                // Obtener token
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    badge.classList.add('hidden');
+                    return;
+                }
+
+                const portalRole = detectPortalRoleFromStorageForBadge();
+                if (portalRole === 'applicant') {
+                    badge.classList.add('hidden');
+                    localStorage.setItem('unread_notifications_count', '0');
+                    return;
+                }
+
+                // Si hay cache, mostrarlo inmediatamente
+                if (cachedCount !== null) {
+                    const count = parseInt(cachedCount);
+                    if (Number.isFinite(count) && count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+
+                const now = Date.now();
+                const persistedLastFetchAt = Number(localStorage.getItem('notif_badge_last_fetch_at') || '0');
+                if (Number.isFinite(persistedLastFetchAt) && persistedLastFetchAt > state.lastFetchAt) {
+                    state.lastFetchAt = persistedLastFetchAt;
+                }
+
+                const persistedLastSuccessAt = Number(localStorage.getItem('notif_badge_last_success_at') || '0');
+                const hasCachedCount = cachedCount !== null;
+                const isNotificationsPage = window.location.pathname.includes('/Estudiante/Notificaciones');
+                const shouldUseCacheOnly = hasCachedCount && !isNotificationsPage && persistedLastSuccessAt > 0 && (now - persistedLastSuccessAt) < state.staleAfterMs;
+                if (shouldUseCacheOnly) {
+                    return;
+                }
+
+                const nextRetryAt = Number(localStorage.getItem('notif_badge_next_retry_at') || '0');
+                if (Number.isFinite(nextRetryAt) && now < nextRetryAt) {
+                    return;
+                }
+
+                if (state.inFlight) {
+                    await state.inFlight;
+                    return;
+                }
+
+                if (now - state.lastFetchAt < state.minIntervalMs) {
+                    return;
+                }
+
+                // Hacer fetch al API para actualizar
+                const API_BASE = `${API_BASE_URL}/v1`;
+                state.inFlight = (async () => {
+                    try {
+                        const response = await fetch(`${API_BASE}/notifications/unread?page=1&per_page=1`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.status === 429) {
+                            localStorage.setItem('notif_badge_next_retry_at', String(Date.now() + state.rateLimitCooldownMs));
+                            return;
+                        }
+
+                        if (response.status === 401) {
+                            badge.classList.add('hidden');
+                            localStorage.setItem('notif_badge_next_retry_at', String(Date.now() + state.rateLimitCooldownMs));
+                            return;
+                        }
+
+                        if (!response.ok) {
+                            console.warn('Error fetching notifications:', response.status);
+                            localStorage.setItem('notif_badge_next_retry_at', String(Date.now() + 45000));
+                            return;
+                        }
+
+                        const data = await response.json();
+                        const unreadCount = data.data?.count || 0;
+
+                        // Actualizar UI y cache
+                        if (unreadCount > 0) {
+                            badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                            badge.classList.remove('hidden');
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+
+                        localStorage.setItem('unread_notifications_count', unreadCount.toString());
+                        localStorage.setItem('notif_badge_last_success_at', String(Date.now()));
+                        localStorage.removeItem('notif_badge_next_retry_at');
+                    } finally {
+                        state.lastFetchAt = Date.now();
+                        localStorage.setItem('notif_badge_last_fetch_at', String(state.lastFetchAt));
+                        state.inFlight = null;
+                    }
+                })();
+
+                await state.inFlight;
+
+            } catch (error) {
+                console.warn('Error updating notification badge:', error);
+                // Mantener el cache si hay error
+            }
+        }
+    </script>
+</body>
+</html>

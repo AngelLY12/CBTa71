@@ -1,0 +1,902 @@
+---
+import LayoutEstu from '../../layouts/LayoutEstu.astro';
+
+const pageTitle = "Notificaciones";
+---
+
+<LayoutEstu title={pageTitle}>
+  <div class="max-w-5xl mx-auto px-3 sm:px-0 overflow-x-hidden">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div class="min-w-0 w-full">
+        <h1 class="text-3xl md:text-4xl font-black text-[#2e594d] mb-2 flex items-center gap-2 md:gap-3 leading-tight min-w-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-10 md:w-10 text-[#86efad] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          <span class="break-words">Notificaciones</span>
+        </h1>
+        <p class="text-gray-600 text-sm flex items-start gap-2 min-w-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="break-words">Mantente al tanto de tus avisos y actualizaciones importantes</span>
+        </p>
+      </div>
+      
+      <button id="mark-all-read-btn" class="w-full md:w-auto px-4 md:px-6 py-3 bg-[#2e594d] hover:bg-[#86efad] hover:text-[#2e594d] text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        Marcar todas como leídas
+      </button>
+    </div>
+
+    <!-- Filtros de notificaciones -->
+    <div class="mb-6 flex flex-wrap gap-2 md:gap-3">
+      <button class="filter-btn active px-4 md:px-5 py-2 rounded-full font-bold text-sm transition-all" data-filter="all">
+        Todas
+      </button>
+      <button class="filter-btn px-4 md:px-5 py-2 rounded-full font-bold text-sm transition-all" data-filter="payment">
+        💰 Pagos
+      </button>
+      <button class="filter-btn px-4 md:px-5 py-2 rounded-full font-bold text-sm transition-all" data-filter="academic">
+        📚 Académicas
+      </button>
+      <button class="filter-btn px-4 md:px-5 py-2 rounded-full font-bold text-sm transition-all" data-filter="administrative">
+        📋 Administrativas
+      </button>
+      <button class="filter-btn px-4 md:px-5 py-2 rounded-full font-bold text-sm transition-all" data-filter="general">
+        📢 Generales
+      </button>
+    </div>
+
+    <!-- Lista de notificaciones -->
+    <div id="notifications-container" class="space-y-4">
+      <!-- Las notificaciones se cargarán dinámicamente aquí -->
+    </div>
+
+    <!-- Paginación -->
+    <div id="notifications-pagination" class="mt-6 flex items-center justify-center gap-2"></div>
+
+    <!-- Mensaje cuando no hay notificaciones -->
+    <div id="no-notifications" class="hidden text-center py-20">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+      </svg>
+      <h3 id="no-notifications-title" class="text-2xl font-bold text-gray-400 mb-2">No tienes notificaciones</h3>
+      <p id="no-notifications-message" class="text-gray-500">¡Estás al día con todo!</p>
+    </div>
+  </div>
+
+  <script>
+    // @ts-nocheck
+    const API_BASE_URL = String(window.__API_BASE_URL__ || '').replace(/\/$/, '');
+    const API_BASE = `${API_BASE_URL}/v1`;
+    let allNotifications = [];
+    let currentFilter = 'all';
+    let currentPage = 1;
+    const perPage = 20;
+    const paginationState = {
+      currentPage: 1,
+      lastPage: 1,
+      total: 0,
+      hasNext: false
+    };
+    const notificationsRequestState = {
+      inFlight: null,
+      nextRetryAt: 0,
+      pollIntervalMs: 60000
+    };
+
+    function normalizePortalRole(roleValue) {
+      const role = String(roleValue || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[._-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!role) return '';
+      if (role === 'parent' || role === 'padre' || role === 'madre' || role === 'tutor' || role === 'tutora') return 'parent';
+      if (role === 'applicant' || role === 'aspirante' || role === 'solicitante') return 'applicant';
+      if (role === 'student' || role === 'estudiante' || role === 'alumno') return 'student';
+      return role;
+    }
+
+    function detectPortalRoleFromStorage() {
+      const roleValues = [];
+      const rawUserCandidates = [
+        localStorage.getItem('user_data'),
+        localStorage.getItem('userData')
+      ].filter(Boolean);
+
+      rawUserCandidates.forEach((rawValue) => {
+        try {
+          const parsed = JSON.parse(rawValue);
+          const userData = parsed?.data?.user || parsed?.user || parsed?.data || parsed || {};
+          const roles = [];
+          if (Array.isArray(userData?.roles)) roles.push(...userData.roles);
+          if (userData?.role) roles.push(userData.role);
+          if (userData?.role_name) roles.push(userData.role_name);
+          if (userData?.type) roles.push(userData.type);
+
+          roles.forEach((entry) => {
+            if (!entry) return;
+            if (typeof entry === 'string') {
+              roleValues.push(entry);
+              return;
+            }
+            roleValues.push(entry?.name || entry?.slug || entry?.role || entry?.role_name || '');
+          });
+        } catch (_) {}
+      });
+
+      const roleCandidates = [
+        localStorage.getItem('userRole'),
+        localStorage.getItem('role'),
+        ...roleValues
+      ]
+        .filter(Boolean)
+        .map((value) => normalizePortalRole(value))
+        .filter(Boolean);
+
+      if (roleCandidates.includes('parent')) return 'parent';
+      if (roleCandidates.includes('applicant')) return 'applicant';
+      if (roleCandidates.includes('student')) return 'student';
+      return '';
+    }
+
+    // Obtener token
+    function getToken() {
+      return localStorage.getItem('access_token');
+    }
+
+    function isLikelyNotification(value) {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+      return Boolean(
+        value.id ||
+        value.type ||
+        value.data ||
+        value.created_at ||
+        value.title ||
+        value.message ||
+        value.body
+      );
+    }
+
+    function extractNotificationsFromResponse(payload) {
+      const root = payload?.data ?? payload ?? {};
+      const candidates = [
+        root.notifications,
+        root.items,
+        root.results,
+        root.data,
+        root
+      ];
+
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) {
+          return candidate.filter(isLikelyNotification);
+        }
+
+        if (candidate && typeof candidate === 'object') {
+          if (Array.isArray(candidate.data)) {
+            return candidate.data.filter(isLikelyNotification);
+          }
+          if (Array.isArray(candidate.items)) {
+            return candidate.items.filter(isLikelyNotification);
+          }
+          if (Array.isArray(candidate.notifications)) {
+            return candidate.notifications.filter(isLikelyNotification);
+          }
+
+          const values = Object.values(candidate);
+          if (values.length && values.every((item) => item && typeof item === 'object' && !Array.isArray(item))) {
+            const fromValues = values.filter(isLikelyNotification);
+            if (fromValues.length) return fromValues;
+          }
+        }
+      }
+
+      return [];
+    }
+
+    // Fetch notificaciones desde la API
+    async function fetchNotifications(options = {}) {
+      const force = Boolean(options?.force);
+      const token = getToken();
+      if (!token) {
+        console.error('No hay token de autenticación');
+        showNoNotifications();
+        return;
+      }
+
+      const portalRole = detectPortalRoleFromStorage();
+      if (portalRole === 'applicant') {
+        showNoNotifications('Notificaciones no disponibles', 'Tu cuenta aspirante está en proceso. Se habilitarán cuando se active tu perfil de estudiante.');
+        return;
+      }
+
+      const now = Date.now();
+      const persistedNextRetryAt = Number(localStorage.getItem('notifications_page_next_retry_at') || '0');
+      if (Number.isFinite(persistedNextRetryAt) && persistedNextRetryAt > notificationsRequestState.nextRetryAt) {
+        notificationsRequestState.nextRetryAt = persistedNextRetryAt;
+      }
+
+      if (!force && notificationsRequestState.nextRetryAt > now) {
+        return;
+      }
+
+      if (notificationsRequestState.inFlight) {
+        await notificationsRequestState.inFlight;
+        return;
+      }
+
+      notificationsRequestState.inFlight = (async () => {
+        try {
+          const readResponse = await fetch(`${API_BASE}/notifications?page=${currentPage}&per_page=${perPage}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (readResponse.status === 429) {
+            const retryAt = Date.now() + 120000;
+            notificationsRequestState.nextRetryAt = retryAt;
+            localStorage.setItem('notifications_page_next_retry_at', String(retryAt));
+            return;
+          }
+
+          if (!readResponse.ok) {
+            console.error('❌ Error al obtener notificaciones:', readResponse.status);
+            const retryAt = Date.now() + 45000;
+            notificationsRequestState.nextRetryAt = retryAt;
+            localStorage.setItem('notifications_page_next_retry_at', String(retryAt));
+            showNoNotifications();
+            return;
+          }
+
+          const readData = await readResponse.json();
+          console.log('✅ Notificaciones leídas:', readData);
+
+          const notificationsNode = readData.data?.notifications || {};
+          const notificationsList = extractNotificationsFromResponse(readData)
+            .sort((a, b) => new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime());
+
+          const unreadCount =
+            readData.data?.unread_count ??
+            notificationsNode?.unread_count ??
+            notificationsNode?.meta?.unread_count ??
+            notificationsList.filter(n => !(n?.read || n?.is_read || n?.read_at || n?.readAt)).length;
+
+          const meta = notificationsNode?.meta || notificationsNode?.pagination || {};
+          const apiCurrentPage = Number(meta.current_page ?? meta.currentPage ?? notificationsNode.current_page ?? currentPage) || currentPage;
+          const apiLastPage = Number(meta.last_page ?? meta.lastPage ?? notificationsNode.last_page ?? 1) || 1;
+          const apiTotal = Number(meta.total ?? notificationsNode.total ?? notificationsList.length ?? 0) || notificationsList.length;
+
+          paginationState.currentPage = apiCurrentPage;
+          paginationState.lastPage = Math.max(1, apiLastPage);
+          paginationState.total = apiTotal;
+          paginationState.hasNext = apiCurrentPage < paginationState.lastPage;
+          currentPage = paginationState.currentPage;
+
+          allNotifications = notificationsList.map(n => {
+            const inferredRead = Boolean(
+              n?.read ||
+              n?.is_read ||
+              n?.read_at ||
+              n?.readAt
+            );
+            return normalizeNotification(n, inferredRead);
+          });
+
+          updateBadgeCount(unreadCount);
+          renderNotifications(currentFilter);
+          renderPagination();
+
+          notificationsRequestState.nextRetryAt = 0;
+          localStorage.removeItem('notifications_page_next_retry_at');
+        } catch (error) {
+          console.error('❌ Error:', error);
+          const retryAt = Date.now() + 45000;
+          notificationsRequestState.nextRetryAt = retryAt;
+          localStorage.setItem('notifications_page_next_retry_at', String(retryAt));
+          showNoNotifications();
+        } finally {
+          notificationsRequestState.inFlight = null;
+        }
+      })();
+
+      await notificationsRequestState.inFlight;
+    }
+
+    function renderPagination() {
+      const container = document.getElementById('notifications-pagination');
+      if (!container) return;
+
+      if (!allNotifications.length && paginationState.currentPage <= 1) {
+        container.innerHTML = '';
+        return;
+      }
+
+      const canPrev = paginationState.currentPage > 1;
+      const canNext = paginationState.hasNext;
+      const totalText = paginationState.total > 0 ? ` · Total: ${paginationState.total}` : '';
+
+      container.innerHTML = `
+        <button
+          type="button"
+          onclick="changeNotificationsPage(${paginationState.currentPage - 1})"
+          ${canPrev ? '' : 'disabled'}
+          class="h-9 px-3 rounded-lg border ${canPrev ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50' : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'} text-xs font-bold transition-colors"
+        >Anterior</button>
+
+        <div class="h-9 px-3 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-semibold flex items-center">
+          Página ${paginationState.currentPage} de ${paginationState.lastPage}${totalText}
+        </div>
+
+        <button
+          type="button"
+          onclick="changeNotificationsPage(${paginationState.currentPage + 1})"
+          ${canNext ? '' : 'disabled'}
+          class="h-9 px-3 rounded-lg border ${canNext ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50' : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'} text-xs font-bold transition-colors"
+        >Siguiente</button>
+      `;
+    }
+
+    window.changeNotificationsPage = async function(page) {
+      const targetPage = Number(page) || 1;
+      if (targetPage < 1) return;
+      if (targetPage === currentPage) return;
+      currentPage = targetPage;
+      await fetchNotifications();
+    }
+
+    // Normalizar formato de notificación
+    function firstNonEmpty(...values) {
+      for (const value of values) {
+        if (value === null || value === undefined) continue;
+        if (Array.isArray(value)) {
+          const first = value.find((item) => item !== null && item !== undefined && String(item).trim().length > 0);
+          if (first !== undefined) return String(first).trim();
+          continue;
+        }
+        if (typeof value === 'object') continue;
+        const text = String(value).trim();
+        if (text.length > 0) return text;
+      }
+      return '';
+    }
+
+    function asObject(value) {
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+        } catch (_) {}
+      }
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function collectExtraFields(payload, rootNotif = {}) {
+      const data = asObject(payload);
+      const root = asObject(rootNotif);
+      const nested = [
+        asObject(root.data),
+        asObject(root.payload),
+        asObject(root.metadata),
+        asObject(root.meta),
+        asObject(root.extra),
+        asObject(root.extra_info),
+        asObject(root.additional_data),
+        asObject(root.details),
+        asObject(root.context),
+        asObject(data.data),
+        asObject(data.metadata),
+        asObject(data.meta),
+        asObject(data.extra),
+        asObject(data.extra_info),
+        asObject(data.additional_data),
+        asObject(data.details),
+        asObject(data.payload),
+        asObject(data.context)
+      ];
+
+      const allSources = [root, data, ...nested];
+
+      const pick = (...keys) => {
+        for (const source of allSources) {
+          for (const key of keys) {
+            const value = source[key];
+            const normalized = firstNonEmpty(value);
+            if (normalized) return normalized;
+          }
+        }
+        return '';
+      };
+
+      const amountValue = firstNonEmpty(
+        root.amount,
+        root.total,
+        root.total_amount,
+        root.monto,
+        data.amount,
+        data.total,
+        data.total_amount,
+        data.monto,
+        ...nested.map(n => n.amount),
+        ...nested.map(n => n.total),
+        ...nested.map(n => n.total_amount),
+        ...nested.map(n => n.monto)
+      );
+
+      const amount = amountValue && !Number.isNaN(Number(amountValue)) ? Number(amountValue) : null;
+
+      const info = {
+        amount,
+        conceptName: pick('concept_name', 'concept', 'concepto', 'title_concept'),
+        reference: pick('reference', 'folio', 'payment_reference', 'payment_intent_id', 'transaction_id'),
+        status: pick('status', 'payment_status', 'estado'),
+        dueDate: pick('due_date', 'fecha_limite', 'deadline', 'limit_date'),
+        period: pick('period', 'periodo', 'semester', 'semestre', 'month', 'mes'),
+        studentName: pick('student_name', 'alumno', 'student', 'user_name'),
+        group: pick('group', 'grupo', 'classroom'),
+        originalType: firstNonEmpty(root.type, payload?.type)
+      };
+
+      info.extraItems = [
+        { label: 'Concepto', value: info.conceptName },
+        { label: 'Referencia', value: info.reference },
+        { label: 'Estado', value: info.status },
+        { label: 'Vence', value: info.dueDate },
+        { label: 'Periodo', value: info.period },
+        { label: 'Alumno', value: info.studentName },
+        { label: 'Grupo', value: info.group }
+      ].filter(item => item.value);
+
+      if (info.extraItems.length === 0) {
+        const genericIgnore = new Set([
+          'id', 'title', 'subject', 'heading', 'message', 'body', 'description', 'type',
+          'created_at', 'updated_at', 'read_at', 'notifiable_id', 'notifiable_type'
+        ]);
+
+        const genericLabels = {
+          amount: 'Monto',
+          total: 'Total',
+          total_amount: 'Total',
+          monto: 'Monto',
+          details: 'Detalles',
+          detail: 'Detalle',
+          description: 'Descripción',
+          subject: 'Asunto',
+          category: 'Categoría',
+          source: 'Origen',
+          deadline: 'Vence',
+          created_at: 'Creado',
+          updated_at: 'Actualizado',
+          type: 'Tipo',
+          concept_name: 'Concepto',
+          concept: 'Concepto',
+          concepto: 'Concepto',
+          reference: 'Referencia',
+          folio: 'Folio',
+          status: 'Estado',
+          due_date: 'Vence',
+          period: 'Periodo',
+          student_name: 'Alumno',
+          group: 'Grupo'
+        };
+
+        const genericItems = [];
+        for (const source of allSources) {
+          for (const [key, rawValue] of Object.entries(source)) {
+            if (genericIgnore.has(key)) continue;
+            if (rawValue === null || rawValue === undefined) continue;
+            if (typeof rawValue === 'object') continue;
+            const value = String(rawValue).trim();
+            if (!value) continue;
+            genericItems.push({
+              label: genericLabels[key] || key.replace(/_/g, ' '),
+              value
+            });
+          }
+        }
+
+        const dedup = [];
+        const seen = new Set();
+        for (const item of genericItems) {
+          const sig = `${item.label}:${item.value}`;
+          if (seen.has(sig)) continue;
+          seen.add(sig);
+          dedup.push(item);
+          if (dedup.length >= 6) break;
+        }
+        info.extraItems = dedup;
+      }
+
+      return info;
+    }
+
+    function normalizeNotification(notif, isRead) {
+      const data = asObject(notif.data);
+      const type = getNotificationType(notif.type, data.type);
+      const extras = collectExtraFields(data, notif);
+      
+      return {
+        id: notif.id,
+        type: type.key,
+        title: firstNonEmpty(data.title, data.subject, data.heading, notif.title) || 'Notificación',
+        message: firstNonEmpty(data.message, data.body, data.description, notif.message),
+        date: new Date(notif.created_at),
+        read: isRead,
+        icon: type.icon,
+        color: type.color,
+        metadata: {
+          concept_id: firstNonEmpty(data.concept_id, data.conceptId),
+          concept_name: extras.conceptName,
+          amount: extras.amount,
+          reference: extras.reference,
+          status: extras.status,
+          due_date: extras.dueDate,
+          period: extras.period,
+          student_name: extras.studentName,
+          group: extras.group,
+          extra_items: extras.extraItems,
+          original_type: extras.originalType
+        }
+      };
+    }
+
+    // Determinar tipo de notificación
+    function getNotificationType(classType, dataType) {
+      const className = String(classType || '');
+      const dataKind = String(dataType || '').toLowerCase();
+
+      if (className.includes('Payment') || dataKind.includes('payment') || dataKind.includes('pago')) {
+        return { key: 'payment', icon: '💰', color: 'emerald' };
+      }
+      if (className.includes('Academic') || dataKind.includes('academic') || dataKind.includes('academ')) {
+        return { key: 'academic', icon: '📚', color: 'blue' };
+      }
+      if (className.includes('Administrative') || dataKind.includes('administrative') || dataKind.includes('admin')) {
+        return { key: 'administrative', icon: '📋', color: 'purple' };
+      }
+      return { key: 'general', icon: '📢', color: 'pink' };
+    }
+
+    // Marcar notificación como leída
+    async function markAsRead(notificationId) {
+      const token = getToken();
+      if (!token) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/notifications/mark-as-read/${notificationId}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Notificación marcada como leída:', notificationId);
+          
+          // Actualizar localmente
+          const notif = allNotifications.find(n => n.id === notificationId);
+          if (notif) {
+            notif.read = true;
+            
+            // Actualizar badge con el unread_count del API
+            updateBadgeCount(result.data?.unread_count || 0);
+            
+            // Re-renderizar
+            renderNotifications(currentFilter);
+          }
+
+          // Refrescar página para mantener consistencia con paginación
+          await fetchNotifications({ force: true });
+        } else if (response.status === 404) {
+          console.error('❌ Notificación no encontrada');
+        } else {
+          console.error('❌ Error al marcar como leída');
+        }
+      } catch (error) {
+        console.error('❌ Error:', error);
+      }
+    }
+
+    // Marcar todas como leídas
+    async function markAllAsRead() {
+      const token = getToken();
+      if (!token) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/notifications/mark-as-read`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Todas las notificaciones marcadas como leídas');
+          
+          // Actualizar localmente todas las notificaciones como leídas
+          allNotifications.forEach(n => n.read = true);
+          
+          // Actualizar badge con el unread_count del API (debería ser 0)
+          updateBadgeCount(result.data?.unread_count || 0);
+          
+          // Re-renderizar
+          renderNotifications(currentFilter);
+
+          // Refrescar página para mantener consistencia con paginación
+          await fetchNotifications({ force: true });
+        } else {
+          console.error('❌ Error al marcar todas como leídas');
+        }
+      } catch (error) {
+        console.error('❌ Error:', error);
+      }
+    }
+
+    // Eliminar notificación
+    async function deleteNotification(notificationId) {
+      const token = getToken();
+      if (!token) return;
+
+      if (!confirm('¿Estás seguro de que quieres eliminar esta notificación?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/notifications/${notificationId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          console.log('✅ Notificación eliminada:', notificationId);
+          
+          // Eliminar localmente
+          allNotifications = allNotifications.filter(n => n.id !== notificationId);
+          
+          // Re-renderizar
+          renderNotifications(currentFilter);
+          
+          // Recargar para actualizar conteo
+          await fetchNotifications({ force: true });
+        } else if (response.status === 404) {
+          console.error('❌ Notificación no encontrada');
+        } else {
+          console.error('❌ Error al eliminar notificación');
+        }
+      } catch (error) {
+        console.error('❌ Error:', error);
+      }
+    }
+
+    // Actualizar badge en sidebar
+    function updateBadgeCount(count) {
+      const badge = document.getElementById('notif-badge');
+      if (badge) {
+        if (count > 0) {
+          badge.textContent = count > 99 ? '99+' : count;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      // Guardar en localStorage para el layout
+      localStorage.setItem('unread_notifications_count', count);
+    }
+
+    // Formato de fecha relativa
+    function formatRelativeTime(date) {
+      const now = new Date();
+      const diff = now - date;
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 0) return `Hace ${days} día${days > 1 ? 's' : ''}`;
+      if (hours > 0) return `Hace ${hours} hora${hours > 1 ? 's' : ''}`;
+      if (minutes > 0) return `Hace ${minutes} minuto${minutes > 1 ? 's' : ''}`;
+      return 'Justo ahora';
+    }
+
+    // Obtener color según tipo
+    function getColorClasses(color, read) {
+      const opacity = read ? '50' : '100';
+      const colors = {
+        emerald: { bg: `bg-emerald-${opacity}`, border: 'border-emerald-300', text: 'text-emerald-700' },
+        blue: { bg: `bg-blue-${opacity}`, border: 'border-blue-300', text: 'text-blue-700' },
+        amber: { bg: `bg-amber-${opacity}`, border: 'border-amber-300', text: 'text-amber-700' },
+        purple: { bg: `bg-purple-${opacity}`, border: 'border-purple-300', text: 'text-purple-700' },
+        pink: { bg: `bg-pink-${opacity}`, border: 'border-pink-300', text: 'text-pink-700' },
+        red: { bg: `bg-red-${opacity}`, border: 'border-red-300', text: 'text-red-700' }
+      };
+      return colors[color] || colors.blue;
+    }
+
+    // Renderizar notificaciones
+    function renderNotifications(filter = 'all') {
+      const container = document.getElementById('notifications-container');
+      const noNotifications = document.getElementById('no-notifications');
+      
+      let filtered = filter === 'all' 
+        ? allNotifications 
+        : allNotifications.filter(n => n.type === filter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        noNotifications.classList.remove('hidden');
+        return;
+      }
+
+      noNotifications.classList.add('hidden');
+      
+      container.innerHTML = filtered.map(notif => {
+        const colors = getColorClasses(notif.color, notif.read);
+        const readBadge = notif.read ? '' : `
+          <span class="absolute top-4 right-4 w-3 h-3 bg-[#86efad] rounded-full animate-pulse"></span>
+        `;
+        const amountBlock = notif.metadata.amount !== null && !Number.isNaN(Number(notif.metadata.amount))
+          ? `<div class="text-xs font-bold text-emerald-600">💵 $${Number(notif.metadata.amount).toFixed(2)}</div>`
+          : '';
+        const extraInfoBlock = Array.isArray(notif.metadata.extra_items) && notif.metadata.extra_items.length
+          ? `
+            <div class="mt-3 grid sm:grid-cols-2 gap-2">
+              ${notif.metadata.extra_items.map(item => `
+                <div class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5">
+                  <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">${escapeHtml(item.label)}</p>
+                  <p class="text-xs font-medium text-slate-700 break-words">${escapeHtml(item.value)}</p>
+                </div>
+              `).join('')}
+            </div>
+          `
+          : '';
+        
+        return `
+          <div class="notification-item relative bg-white border-l-4 ${colors.border} rounded-xl p-4 md:p-5 shadow-md hover:shadow-xl transition-all overflow-hidden ${notif.read ? 'opacity-60' : ''}" data-id="${notif.id}">
+            ${readBadge}
+            <button class="delete-notif-btn absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 transition-colors" data-id="${notif.id}" title="Eliminar notificación">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div class="flex items-start gap-3 md:gap-4 min-w-0">
+              <div class="text-3xl">${notif.icon}</div>
+              <div class="flex-1 min-w-0">
+                <div class="mb-2 pr-6 min-w-0">
+                  <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 min-w-0">
+                    <h3 class="text-base md:text-lg font-bold text-gray-900 leading-tight break-words whitespace-normal flex-1 min-w-0">${escapeHtml(notif.title)}</h3>
+                    <span class="text-xs ${colors.text} font-semibold sm:shrink-0">${formatRelativeTime(notif.date)}</span>
+                  </div>
+                </div>
+                <p class="text-sm text-gray-600 mb-2 break-words">${escapeHtml(notif.message)}</p>
+                ${amountBlock}
+                ${extraInfoBlock}
+                <div class="flex gap-3 mt-2">
+                  ${!notif.read ? `
+                    <button class="mark-read-btn text-xs font-bold text-[#2e594d] hover:text-[#86efad] transition-colors" data-id="${notif.id}">
+                      ✓ Marcar como leída
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Event listeners para marcar como leída
+      document.querySelectorAll('.mark-read-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          markAsRead(id);
+        });
+      });
+
+      // Event listeners para eliminar
+      document.querySelectorAll('.delete-notif-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          deleteNotification(id);
+        });
+      });
+
+      // Click en la notificación completa (solo marcar como leída, no eliminar)
+      document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          // No hacer nada si se clickeó en el botón de eliminar
+          if (e.target.closest('.delete-notif-btn')) return;
+          
+          const id = item.dataset.id;
+          const notif = allNotifications.find(n => n.id === id);
+          if (notif && !notif.read) {
+            markAsRead(id);
+          }
+        });
+      });
+    }
+
+    function showNoNotifications(titleText = 'No tienes notificaciones', messageText = '¡Estás al día con todo!') {
+      const container = document.getElementById('notifications-container');
+      const noNotifications = document.getElementById('no-notifications');
+      const pagination = document.getElementById('notifications-pagination');
+      const title = document.getElementById('no-notifications-title');
+      const message = document.getElementById('no-notifications-message');
+      container.innerHTML = '';
+      if (title) title.textContent = titleText;
+      if (message) message.textContent = messageText;
+      noNotifications.classList.remove('hidden');
+      if (pagination) pagination.innerHTML = '';
+    }
+
+    // Filtros
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderNotifications(currentFilter);
+      });
+    });
+
+    // Marcar todas como leídas
+    document.getElementById('mark-all-read-btn').addEventListener('click', () => {
+      markAllAsRead();
+    });
+
+    // Cargar notificaciones al iniciar
+    fetchNotifications();
+
+    // Recargar cada 30 segundos
+    setInterval(() => {
+      if (document.hidden) return;
+      fetchNotifications();
+    }, notificationsRequestState.pollIntervalMs);
+  </script>
+
+  <style>
+    .filter-btn {
+      background: #f3f4f6;
+      color: #6b7280;
+      border: 2px solid transparent;
+    }
+    
+    .filter-btn.active {
+      background: #2e594d;
+      color: white;
+      border-color: #86efad;
+      box-shadow: 0 4px 12px rgba(46, 89, 77, 0.3);
+    }
+    
+    .filter-btn:hover {
+      background: #86efad;
+      color: #2e594d;
+      transform: translateY(-2px);
+    }
+  </style>
+</LayoutEstu>

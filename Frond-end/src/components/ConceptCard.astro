@@ -1,0 +1,57 @@
+---
+interface Props {
+  concept: {
+    id: number;
+    title: string;
+    amount: number;
+    description: string;
+    status: string;
+  };
+}
+const { concept } = Astro.props;
+const isFinalizado = concept.status === 'Finalizado';
+
+// Lógica del cliente para manejar el clic del botón Finalizar
+const handleFinalizar = async () => {
+    try {
+        const response = await fetch(`http://localhost:8000/api/concepts/${concept.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: 'Finalizado' }),
+        });
+
+        if (response.ok) {
+            // Recargar la página para ver el cambio
+            window.location.reload();
+        } else {
+            alert('Error al finalizar el concepto.');
+        }
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        alert('Error en la solicitud para finalizar el concepto.');
+    }
+};
+---
+
+<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+  <div class="flex items-center justify-between mb-2">
+    <h3 class="text-lg font-semibold text-gray-800">{concept.title}</h3>
+    <div class="flex gap-2">
+      {!isFinalizado && (
+        <button 
+          class="px-4 py-2 rounded-lg bg-[#2e594d] text-white font-semibold text-sm"
+          onclick={handleFinalizar}
+        >
+          Finalizar
+        </button>
+      )}
+      <a href={`/concepts/${concept.id}`} class="px-4 py-2 rounded-lg bg-white text-gray-700 border border-gray-300 font-semibold text-sm">
+        Editar
+      </a>
+    </div>
+  </div>
+  <p class="text-3xl font-bold text-gray-800 mb-2">{concept.amount}</p>
+  <p class="text-gray-500 text-sm">{concept.description}</p>
+</div>

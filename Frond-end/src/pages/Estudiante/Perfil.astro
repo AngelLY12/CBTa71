@@ -1,0 +1,1566 @@
+---
+import LayoutEstu from '../../layouts/LayoutEstu.astro';
+const API_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? (() => { throw new Error('Falta PUBLIC_API_BASE_URL'); })()).replace(/\/$/, '');
+---
+
+<LayoutEstu title="Mi Perfil">
+    <div x-data="perfilEstudianteData" x-cloak class="perfil-shell max-w-5xl mx-auto">
+        <!-- Encabezado -->
+        <div class="perfil-header flex items-center gap-3 md:gap-5 mb-5 md:mb-8">
+            <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-xl">
+                <svg class="w-9 h-9 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.5 0-7 1.8-7 4v1h14v-1c0-2.2-3.5-4-7-4Z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl md:text-4xl font-bold text-institucional mb-1" x-text="studentName || 'Cargando...'"></h1>
+                <div class="flex items-center gap-2 text-gray-600 text-base">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.5 0-7 1.8-7 4v1h14v-1c0-2.2-3.5-4-7-4Z" />
+                    </svg>
+                    <span>Estudiante</span>
+                </div>
+                <p class="text-gray-500 text-xs mt-1" x-text="'Correo: ' + (studentEmail || 'No disponible')"></p>
+            </div>
+            <div class="ml-auto hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-[11px] font-semibold shadow-md">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.5 0-7 1.8-7 4v1h14v-1c0-2.2-3.5-4-7-4Z" />
+                </svg>
+                Perfil
+            </div>
+        </div>
+
+        <!-- Tarjeta de Información Personal (siempre visible) -->
+        <div class="perfil-card bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="perfil-card__header bg-institucional text-white p-6 flex items-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17.25m20-11.002c5.5 0 10 4.748 10 11.002M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 class="text-2xl font-bold">Información Personal</h2>
+            </div>
+            
+            <div class="p-6 md:p-8">
+                <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+                    <!-- Información Personal -->
+                    <div>
+                        <h3 class="text-xl font-bold text-institucional mb-6">Datos Personales</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-purple-500 rounded-lg p-4 bg-gradient-to-r from-purple-50 to-pink-50">
+                                <label class="text-sm font-semibold text-purple-700">Nombre Completo</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="studentName || 'No disponible'"></p>
+                            </div>
+                            
+                            <div class="border-l-4 border-blue-500 rounded-lg p-4 bg-gradient-to-r from-blue-50 to-cyan-50">
+                                <label class="text-sm font-semibold text-blue-700">Correo Electrónico</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="studentEmail || 'No disponible'"></p>
+                            </div>
+                            
+                            <div class="border-l-4 border-indigo-500 rounded-lg p-4 bg-gradient-to-r from-indigo-50 to-purple-50">
+                                <label class="text-sm font-semibold text-indigo-700">Matrícula</label>
+                                <p class="text-lg mt-1 font-mono text-gray-700 font-semibold" x-text="n_control || studentId || nControl || 'No disponible'"></p>
+                            </div>
+
+                            <div class="border-l-4 border-cyan-500 rounded-lg p-4 bg-gradient-to-r from-cyan-50 to-sky-50">
+                                <label class="text-sm font-semibold text-cyan-700">CURP</label>
+                                <p class="text-lg mt-1 font-mono text-gray-700 font-semibold" x-text="curp || 'No disponible'"></p>
+                            </div>
+
+                            <div class="border-l-4 border-emerald-500 rounded-lg p-4 bg-gradient-to-r from-emerald-50 to-teal-50">
+                                <label class="text-sm font-semibold text-emerald-700">Teléfono</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="formData.phone_number || 'No disponible'"></p>
+                            </div>
+
+                            <div class="border-l-4 border-pink-500 rounded-lg p-4 bg-gradient-to-r from-pink-50 to-rose-50">
+                                <label class="text-sm font-semibold text-pink-700">Fecha de Nacimiento</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="formData.birthdate || 'No disponible'"></p>
+                            </div>
+
+                            <div class="border-l-4 border-violet-500 rounded-lg p-4 bg-gradient-to-r from-violet-50 to-purple-50">
+                                <label class="text-sm font-semibold text-violet-700">Género</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="formData.gender || 'No disponible'"></p>
+                            </div>
+
+                            <div class="border-l-4 border-red-500 rounded-lg p-4 bg-gradient-to-r from-red-50 to-orange-50">
+                                <label class="text-sm font-semibold text-red-700">Tipo de Sangre</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="formData.blood_type || 'No disponible'"></p>
+                            </div>
+
+                            <div class="border-l-4 border-amber-500 rounded-lg p-4 bg-gradient-to-r from-amber-50 to-yellow-50">
+                                <label class="text-sm font-semibold text-amber-700">Dirección</label>
+                                <p class="text-base mt-1 text-gray-800 font-medium" x-text="formData.address || 'No disponible'"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Estatus -->
+                    <div>
+                        <h3 class="text-xl font-bold text-institucional mb-6">Estatus de Cuenta</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-green-500 rounded-lg p-4 bg-gradient-to-r from-green-50 to-emerald-50">
+                                <label class="text-sm font-semibold text-green-700">Estado de Estudio</label>
+                                <div class="mt-1">
+                                    <span class="px-3 py-1 text-white rounded-full text-sm font-semibold shadow-md"
+                                          :class="accountStatusClass"
+                                          x-text="accountStatusLabel"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="border-l-4 border-orange-500 rounded-lg p-4 bg-gradient-to-r from-orange-50 to-amber-50">
+                                <label class="text-sm font-semibold text-orange-700">Último Acceso</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="lastLogin"></p>
+                            </div>
+                            
+                            <div class="border-l-4 border-teal-500 rounded-lg p-4 bg-gradient-to-r from-teal-50 to-cyan-50">
+                                <label class="text-sm font-semibold text-teal-700">Nivel de Verificación</label>
+                                <div class="mt-2 flex items-center gap-2">
+                                    <svg x-show="emailVerificationStatus === 'verified'" class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 013.066-3.066zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <svg x-show="emailVerificationStatus !== 'verified'" class="w-5 h-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10A8 8 0 11-16 0 8 8 0 0116 0zm-8-4a1 1 0 00-.894.553l-3 6A1 1 0 007 14h6a1 1 0 00.894-1.447l-3-6A1 1 0 0010 6zm0 2.618L11.382 12H8.618L10 8.618z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="font-medium"
+                                          :class="emailVerificationStatus === 'verified' ? 'text-green-700' : 'text-amber-700'"
+                                          x-text="verificationStatusLabel"></span>
+                                </div>
+                                <p x-show="emailVerificationStatus === 'verified' && emailVerifiedAtText" class="text-xs text-teal-700 mt-2" x-text="'Verificado el: ' + emailVerifiedAtText"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Información Académica (solo para estudiantes) -->
+        <div x-show="isStudent" class="perfil-card bg-white rounded-xl shadow-lg overflow-hidden mt-8">
+            <div class="perfil-card__header bg-institucional text-white p-6 flex items-center gap-3">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17.25m20-11.002c5.5 0 10 4.748 10 11.002M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 class="text-2xl font-bold">Información Académica</h2>
+            </div>
+            
+            <div class="p-6 md:p-8">
+                <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+                    <!-- Carrera y Grupo -->
+                    <div>
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-violet-500 rounded-lg p-4 bg-gradient-to-r from-violet-50 to-purple-50">
+                                <label class="text-sm font-semibold text-violet-700">Número de Control</label>
+                                <p class="text-lg mt-1 font-mono text-gray-700 font-semibold" x-text="nControl"></p>
+                            </div>
+                            
+                            <div class="border-l-4 border-fuchsia-500 rounded-lg p-4 bg-gradient-to-r from-fuchsia-50 to-pink-50">
+                                <label class="text-sm font-semibold text-fuchsia-700">Semestre</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="semestre"></p>
+                            </div>
+                            
+                            <div class="border-l-4 border-rose-500 rounded-lg p-4 bg-gradient-to-r from-rose-50 to-red-50">
+                                <label class="text-sm font-semibold text-rose-700">Grupo</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="group"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Taller y Carrera -->
+                    <div>
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-amber-500 rounded-lg p-4 bg-gradient-to-r from-amber-50 to-yellow-50">
+                                <label class="text-sm font-semibold text-amber-700">Taller</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="workshop"></p>
+                            </div>
+
+                            <div class="border-l-4 border-emerald-500 rounded-lg p-4 bg-gradient-to-r from-emerald-50 to-green-50">
+                                <label class="text-sm font-semibold text-emerald-700">Carrera</label>
+                                <p class="text-lg mt-1 text-gray-800 font-medium" x-text="careerName"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex-wrap gap-4 mt-8 mb-8">
+            <button @click="editProfile" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Editar Perfil
+            </button>
+            <button @click="changePassword" class="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                Cambiar Contraseña
+            </button>
+            <a href="/Estudiante/PortalEstudiante" class="perfil-back px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:opacity-90 transition-all flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Atrás
+            </a>
+        </div>
+
+        <!-- Modal de Edición de Perfil -->
+        <div x-show="showEditModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="z-index: 9999;">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                <!-- Overlay -->
+                <div x-show="showEditModal" 
+                     x-transition:enter="ease-out duration-300" 
+                     x-transition:enter-start="opacity-0" 
+                     x-transition:enter-end="opacity-100" 
+                     x-transition:leave="ease-in duration-200" 
+                     x-transition:leave-start="opacity-100" 
+                     x-transition:leave-end="opacity-0" 
+                     @click="showEditModal = false"
+                     class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" 
+                     style="z-index: 1;"
+                     aria-hidden="true"></div>
+
+                <!-- Modal Panel -->
+                <div x-show="showEditModal" 
+                     x-transition:enter="ease-out duration-300" 
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                     x-transition:leave="ease-in duration-200" 
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                     @click.stop
+                     class="relative inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+                     style="z-index: 10;">
+                    
+                    <!-- Header del Modal -->
+                    <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-6 py-5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white" id="modal-title">Editar Perfil</h3>
+                            </div>
+                            <button @click="showEditModal = false" class="text-white/80 hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Body del Modal -->
+                    <div class="bg-gradient-to-br from-slate-50 to-gray-100 px-6 py-6">
+                        <!-- Mensajes de éxito/error -->
+                        <div x-show="successMessage" class="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg">
+                            <p class="text-green-700 font-semibold" x-text="successMessage"></p>
+                        </div>
+                        <div x-show="errorMessage" class="mb-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 rounded-lg">
+                            <p class="text-red-700 font-semibold" x-text="errorMessage"></p>
+                        </div>
+
+                        <form @submit.prevent="updateProfile" class="space-y-5">
+                            <!-- Grid de campos -->
+                            <div class="grid md:grid-cols-2 gap-5">
+                                <!-- Nombre -->
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Nombre</label>
+                                    <input type="text" x-model="formData.name" 
+                                           class="w-full px-4 py-3 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white transition-all">
+                                    <p x-show="errors.name" x-text="errors.name && errors.name[0]" class="mt-1 text-sm text-red-600"></p>
+                                </div>
+
+                                <!-- Apellido -->
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Apellido</label>
+                                    <input type="text" x-model="formData.last_name" 
+                                           class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all">
+                                    <p x-show="errors.last_name" x-text="errors.last_name && errors.last_name[0]" class="mt-1 text-sm text-red-600"></p>
+                                </div>
+
+                                <!-- Email -->
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Correo Electrónico</label>
+                                    <input type="email" x-model="formData.email" 
+                                           class="w-full px-4 py-3 border-2 border-cyan-200 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white transition-all">
+                                    <p x-show="errors.email" x-text="errors.email && errors.email[0]" class="mt-1 text-sm text-red-600"></p>
+                                </div>
+
+                                <!-- Teléfono -->
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Teléfono</label>
+                                    <input type="tel" x-model="formData.phone_number" 
+                                           class="w-full px-4 py-3 border-2 border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white transition-all"
+                                           placeholder="+5215512345678">
+                                    <p x-show="errors.phone_number" x-text="errors.phone_number && errors.phone_number[0]" class="mt-1 text-sm text-red-600"></p>
+                                </div>
+
+                                <!-- Fecha de Nacimiento -->
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Fecha de Nacimiento</label>
+                                    <input type="date" x-model="formData.birthdate" 
+                                           class="w-full px-4 py-3 border-2 border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 bg-white transition-all">
+                                    <p x-show="errors.birthdate" x-text="errors.birthdate && errors.birthdate[0]" class="mt-1 text-sm text-red-600"></p>
+                                </div>
+
+                                <!-- Género -->
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Género</label>
+                                    <select x-model="formData.gender" 
+                                            class="w-full px-4 py-3 border-2 border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white transition-all">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="hombre">Hombre</option>
+                                        <option value="mujer">Mujer</option>
+                                        <option value="otro">Otro</option>
+                                    </select>
+                                    <p x-show="errors.gender" x-text="errors.gender && errors.gender[0]" class="mt-1 text-sm text-red-600"></p>
+                                </div>
+
+                                <!-- Tipo de Sangre -->
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Tipo de Sangre</label>
+                                    <select x-model="formData.blood_type" 
+                                            class="w-full px-4 py-3 border-2 border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white transition-all">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                    </select>
+                                    <p x-show="errors.blood_type" x-text="errors.blood_type && errors.blood_type[0]" class="mt-1 text-sm text-red-600"></p>
+                                </div>
+                            </div>
+
+                            <!-- Dirección (campo completo) -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Dirección</label>
+                                <textarea x-model="formData.address" rows="3"
+                                          class="w-full px-4 py-3 border-2 border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white transition-all"
+                                          placeholder="Calle, número, colonia, ciudad..."></textarea>
+                                <p x-show="errors.address" x-text="errors.address && errors.address[0]" class="mt-1 text-sm text-red-600"></p>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="flex flex-wrap gap-3 pt-4">
+                                <button type="submit" 
+                                        :disabled="isUpdating"
+                                        class="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                    <svg x-show="!isUpdating" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <svg x-show="isUpdating" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span x-text="isUpdating ? 'Guardando...' : 'Guardar Cambios'"></span>
+                                </button>
+                                <button type="button" @click="showEditModal = false"
+                                        class="px-6 py-3 bg-gray-200 text-gray-800 font-bold rounded-lg hover:bg-gray-300 transition-colors">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Cambio de Contraseña -->
+        <div x-show="showPasswordModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="password-modal-title" role="dialog" aria-modal="true" style="z-index: 9999;">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+                <!-- Overlay -->
+                <div x-show="showPasswordModal" 
+                     x-transition:enter="ease-out duration-300" 
+                     x-transition:enter-start="opacity-0" 
+                     x-transition:enter-end="opacity-100" 
+                     x-transition:leave="ease-in duration-200" 
+                     x-transition:leave-start="opacity-100" 
+                     x-transition:leave-end="opacity-0" 
+                     @click="showPasswordModal = false"
+                     class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" 
+                     style="z-index: 1;"
+                     aria-hidden="true"></div>
+
+                <!-- Modal Panel -->
+                <div x-show="showPasswordModal" 
+                     x-transition:enter="ease-out duration-300" 
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                     x-transition:leave="ease-in duration-200" 
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                     @click.stop
+                     class="relative inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+                     style="z-index: 10;">
+                    
+                    <!-- Header del Modal -->
+                    <div class="bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 px-6 py-5">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white" id="password-modal-title">Cambiar Contraseña</h3>
+                            </div>
+                            <button @click="showPasswordModal = false" class="text-white/80 hover:text-white transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Body del Modal -->
+                    <div class="bg-gradient-to-br from-slate-50 to-gray-100 px-6 py-6">
+                        <!-- Mensajes de éxito/error -->
+                        <div x-show="passwordSuccessMessage" class="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg">
+                            <p class="text-green-700 font-semibold" x-text="passwordSuccessMessage"></p>
+                        </div>
+                        <div x-show="passwordErrorMessage" class="mb-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 rounded-lg">
+                            <p class="text-red-700 font-semibold" x-text="passwordErrorMessage"></p>
+                        </div>
+
+                        <form @submit.prevent="submitChangePassword" class="space-y-5">
+                            <input type="text"
+                                   name="username"
+                                   autocomplete="username"
+                                   :value="studentEmail || formData.email || ''"
+                                   class="hidden"
+                                   tabindex="-1"
+                                   aria-hidden="true">
+                            <!-- Contraseña Actual -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Contraseña Actual</label>
+                                <input type="password" x-model="passwordData.currentPassword" 
+                                       class="w-full px-4 py-3 border-2 border-amber-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white transition-all"
+                                       placeholder="Ingresa tu contraseña actual"
+                                        autocomplete="current-password"
+                                       required>
+                                <p x-show="passwordErrors.currentPassword" x-text="passwordErrors.currentPassword && passwordErrors.currentPassword[0]" class="mt-1 text-sm text-red-600"></p>
+                            </div>
+
+                            <!-- Nueva Contraseña -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Nueva Contraseña</label>
+                                <input type="password" x-model="passwordData.newPassword" 
+                                       class="w-full px-4 py-3 border-2 border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white transition-all"
+                                       placeholder="Mínimo 8 caracteres"
+                                        autocomplete="new-password"
+                                       minlength="8"
+                                       required>
+                                <p x-show="passwordErrors.newPassword" x-text="passwordErrors.newPassword && passwordErrors.newPassword[0]" class="mt-1 text-sm text-red-600"></p>
+                                <p class="mt-1 text-xs text-gray-500">La contraseña debe tener al menos 8 caracteres</p>
+                            </div>
+
+                            <!-- Confirmar Nueva Contraseña -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Confirmar Nueva Contraseña</label>
+                                <input type="password" x-model="passwordData.confirmPassword" 
+                                       class="w-full px-4 py-3 border-2 border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white transition-all"
+                                       placeholder="Repite la nueva contraseña"
+                                        autocomplete="new-password"
+                                       minlength="8"
+                                       required>
+                                <p x-show="passwordErrors.confirmPassword" x-text="passwordErrors.confirmPassword && passwordErrors.confirmPassword[0]" class="mt-1 text-sm text-red-600"></p>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="flex flex-wrap gap-3 pt-4">
+                                <button type="submit" 
+                                        :disabled="isChangingPassword"
+                                        class="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-bold rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                    <svg x-show="!isChangingPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <svg x-show="isChangingPassword" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span x-text="isChangingPassword ? 'Cambiando...' : 'Cambiar Contraseña'"></span>
+                                </button>
+                                <button type="button" @click="showPasswordModal = false"
+                                        class="px-6 py-3 bg-gray-200 text-gray-800 font-bold rounded-lg hover:bg-gray-300 transition-colors">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script is:inline define:vars={{ API_BASE_URL }}>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('perfilEstudianteData', () => ({
+                studentName: '',
+                studentEmail: '',
+                studentId: '',
+                n_control: '',
+                lastLogin: '',
+                nControl: '',
+                semestre: '',
+                group: '',
+                workshop: '',
+                careerName: '',
+                rol: '',
+                curp: '',
+                accountStatus: 'unknown',
+                showEditModal: false,
+                showPasswordModal: false,
+                isUpdating: false,
+                successMessage: '',
+                errorMessage: '',
+                errors: {},
+                originalFormData: {
+                    name: '',
+                    last_name: '',
+                    email: '',
+                    phone_number: '',
+                    birthdate: '',
+                    gender: '',
+                    blood_type: '',
+                    address: ''
+                },
+                formData: {
+                    name: '',
+                    last_name: '',
+                    email: '',
+                    phone_number: '',
+                    birthdate: '',
+                    gender: '',
+                    blood_type: '',
+                    address: ''
+                },
+
+                passwordData: {
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmPassword: ''
+                },
+                passwordErrors: {},
+                isChangingPassword: false,
+                passwordSuccessMessage: '',
+                passwordErrorMessage: '',
+                isStudent: true,
+                isApplicant: false,
+                emailVerificationStatus: 'unknown',
+                emailVerifiedAtText: '',
+
+                async init() {
+                    this.detectRole();
+                    await this.loadStudentData();
+                    this.detectRole();
+
+                    await this.loadStudentDetails();
+
+                    if (!this.isStudent) {
+                        this.n_control = this.n_control || this.studentId || this.nControl || 'No disponible';
+                        this.studentId = this.studentId || this.n_control || this.nControl || 'No disponible';
+                        this.nControl = this.nControl || 'No disponible';
+                        this.semestre = this.semestre || 'No disponible';
+                        this.group = this.group || 'No disponible';
+                        this.workshop = this.workshop || 'No disponible';
+                        this.careerName = this.careerName || 'No disponible';
+                    }
+                },
+
+                detectRole() {
+                    try {
+                        const roleValues = [];
+                        const rawUserCandidates = [
+                            localStorage.getItem('user_data'),
+                            localStorage.getItem('userData')
+                        ].filter(Boolean);
+
+                        rawUserCandidates.forEach((rawValue) => {
+                            try {
+                                const parsed = JSON.parse(rawValue);
+                                const user = parsed?.data?.user || parsed?.user || parsed?.data || parsed || {};
+                                const roles = [];
+
+                                if (Array.isArray(user?.roles)) roles.push(...user.roles);
+                                if (user?.role) roles.push(user.role);
+                                if (user?.role_name) roles.push(user.role_name);
+                                if (user?.type) roles.push(user.type);
+
+                                roles.forEach((entry) => {
+                                    if (!entry) return;
+                                    if (typeof entry === 'string') {
+                                        roleValues.push(entry);
+                                        return;
+                                    }
+                                    roleValues.push(entry?.name || entry?.slug || entry?.role || entry?.role_name || '');
+                                });
+                            } catch (_) {}
+                        });
+
+                        const roleNames = [
+                            localStorage.getItem('userRole'),
+                            localStorage.getItem('role'),
+                            ...roleValues
+                        ]
+                            .filter(Boolean)
+                            .map(role => String(role).toLowerCase().trim())
+                            .filter(Boolean);
+
+                        this.rol = roleNames[0] || '';
+
+                        const hasApplicantRole = roleNames.some(role =>
+                            role.includes('applicant') ||
+                            role.includes('aspirante') ||
+                            role.includes('solicitante')
+                        );
+
+                        const hasStudentRole = roleNames.some(role =>
+                            role === 'student' ||
+                            role.includes('estudiante') ||
+                            role.includes('alumno')
+                        );
+
+                        const hasAdminRole = roleNames.some(role =>
+                            role.includes('admin') ||
+                            role.includes('administrador') ||
+                            role.includes('financiero') ||
+                            role.includes('financial-staff')
+                        );
+
+                        this.isApplicant = hasApplicantRole;
+                        this.isStudent = hasStudentRole && !hasAdminRole && !hasApplicantRole;
+                    } catch (e) {
+                        console.error('Error detecting role:', e);
+                        this.rol = '';
+                        this.isApplicant = false;
+                        this.isStudent = true;
+                    }
+                },
+
+                getFirstValue(source, keys, fallback = '') {
+                    if (!source || typeof source !== 'object') return fallback;
+                    for (const key of keys) {
+                        const value = source[key];
+                        if (value !== undefined && value !== null && value !== '') {
+                            return value;
+                        }
+                    }
+                    return fallback;
+                },
+
+                getFirstValueFromSources(sources, keys, fallback = '') {
+                    if (!Array.isArray(sources)) return fallback;
+                    for (const source of sources) {
+                        const value = this.getFirstValue(source, keys, '__empty__');
+                        if (value !== '__empty__') return value;
+                    }
+                    return fallback;
+                },
+
+                normalizeVerificationStatus(value) {
+                    if (value === true || value === 1 || value === '1') return 'verified';
+                    if (value === false || value === 0 || value === '0') return 'unverified';
+                    if (value === null || value === undefined || value === '') return 'unverified';
+
+                    if (typeof value === 'string') {
+                        const normalized = value.toLowerCase().trim();
+                        if (!normalized || normalized === 'null') return 'unverified';
+                        if (normalized === 'verified' || normalized === 'true' || normalized === 'yes' || normalized === 'verificado' || normalized === 'verificada' || normalized === 'confirmado' || normalized === 'confirmed') return 'verified';
+                        if (normalized === 'unverified' || normalized === 'false' || normalized === 'no' || normalized === 'pending' || normalized === 'pendiente' || normalized === 'sin verificar' || normalized === 'unconfirmed') return 'unverified';
+                        if (/\d{4}-\d{2}-\d{2}/.test(normalized)) return 'verified';
+                    }
+
+                    return 'unknown';
+                },
+
+                updateEmailVerificationStatus(...sources) {
+                    const candidates = [];
+                    const roleCandidates = [this.rol];
+
+                    sources.forEach((source) => {
+                        if (!source || typeof source !== 'object') return;
+
+                        roleCandidates.push(
+                            source.role,
+                            source.role_name,
+                            source.type,
+                            source.verification_status,
+                            source.verificationStatus,
+                            source.status_verification,
+                            source.statusVerification,
+                            source.verified,
+                            source.is_verified
+                        );
+
+                        candidates.push(
+                            source.email_verified_at,
+                            source.emailVerifiedAt,
+                            source.verified_at,
+                            source.verifiedAt,
+                            source.verification_status,
+                            source.verificationStatus,
+                            source.status_verification,
+                            source.statusVerification,
+                            source.verified,
+                            source.email_verification_status,
+                            source.emailVerificationStatus,
+                            source.email_status,
+                            source.emailStatus,
+                            source.email_verified,
+                            source.emailVerified,
+                            source.is_email_verified,
+                            source.isEmailVerified,
+                            source.is_verified,
+                            source.isVerified
+                        );
+
+                        if (source.user && typeof source.user === 'object') {
+                            roleCandidates.push(
+                                source.user.role,
+                                source.user.role_name,
+                                source.user.type,
+                                source.user.verification_status,
+                                source.user.verificationStatus,
+                                source.user.status_verification,
+                                source.user.statusVerification,
+                                source.user.verified,
+                                source.user.is_verified
+                            );
+
+                            candidates.push(
+                                source.user.email_verified_at,
+                                source.user.emailVerifiedAt,
+                                source.user.verification_status,
+                                source.user.verificationStatus,
+                                source.user.status_verification,
+                                source.user.statusVerification,
+                                source.user.verified,
+                                source.user.email_verification_status,
+                                source.user.emailVerificationStatus,
+                                source.user.email_verified,
+                                source.user.is_email_verified,
+                                source.user.is_verified
+                            );
+                        }
+
+                        if (source.data && typeof source.data === 'object') {
+                            roleCandidates.push(
+                                source.data.role,
+                                source.data.role_name,
+                                source.data.type,
+                                source.data.verification_status,
+                                source.data.verificationStatus,
+                                source.data.status_verification,
+                                source.data.statusVerification,
+                                source.data.verified,
+                                source.data.is_verified
+                            );
+
+                            candidates.push(
+                                source.data.email_verified_at,
+                                source.data.emailVerifiedAt,
+                                source.data.verification_status,
+                                source.data.verificationStatus,
+                                source.data.status_verification,
+                                source.data.statusVerification,
+                                source.data.verified,
+                                source.data.email_verification_status,
+                                source.data.emailVerificationStatus,
+                                source.data.email_verified,
+                                source.data.is_email_verified,
+                                source.data.is_verified
+                            );
+
+                            if (source.data.user && typeof source.data.user === 'object') {
+                                roleCandidates.push(
+                                    source.data.user.role,
+                                    source.data.user.role_name,
+                                    source.data.user.type,
+                                    source.data.user.verification_status,
+                                    source.data.user.verificationStatus,
+                                    source.data.user.status_verification,
+                                    source.data.user.statusVerification,
+                                    source.data.user.verified,
+                                    source.data.user.is_verified
+                                );
+
+                                candidates.push(
+                                    source.data.user.email_verified_at,
+                                    source.data.user.emailVerifiedAt,
+                                    source.data.user.verification_status,
+                                    source.data.user.verificationStatus,
+                                    source.data.user.status_verification,
+                                    source.data.user.statusVerification,
+                                    source.data.user.verified,
+                                    source.data.user.email_verification_status,
+                                    source.data.user.emailVerificationStatus,
+                                    source.data.user.email_verified,
+                                    source.data.user.is_email_verified,
+                                    source.data.user.is_verified
+                                );
+                            }
+                        }
+                    });
+
+                    let resolvedStatus = 'unknown';
+                    let verifiedAtRaw = '';
+
+                    for (const candidate of candidates) {
+                        if (candidate === undefined) continue;
+                        const status = this.normalizeVerificationStatus(candidate);
+                        if (status === 'verified') {
+                            resolvedStatus = 'verified';
+                            verifiedAtRaw = String(candidate || '').trim();
+                            break;
+                        }
+                        if (status === 'unverified' && resolvedStatus !== 'verified') {
+                            resolvedStatus = 'unverified';
+                        }
+                    }
+
+                    if (resolvedStatus !== 'verified') {
+                        const normalizedRoleCandidates = roleCandidates
+                            .filter(Boolean)
+                            .map(value => String(value).toLowerCase().trim());
+
+                        const hasExplicitUnverified = normalizedRoleCandidates.some(value =>
+                            value.includes('unverified') ||
+                            value.includes('sin verificar') ||
+                            value.includes('pendiente') ||
+                            value.includes('applicant') ||
+                            value.includes('aspirante')
+                        );
+
+                        const hasVerifiedRole = normalizedRoleCandidates.some(value =>
+                            value === 'student' ||
+                            value.includes('estudiante') ||
+                            value.includes('alumno') ||
+                            value.includes('verified') ||
+                            value.includes('verificado')
+                        );
+
+                        if (hasVerifiedRole && !hasExplicitUnverified) {
+                            resolvedStatus = 'verified';
+                        }
+                    }
+
+                    this.emailVerificationStatus = resolvedStatus;
+
+                    if (resolvedStatus === 'verified' && verifiedAtRaw && /\d{4}-\d{2}-\d{2}/.test(verifiedAtRaw)) {
+                        const parsedDate = new Date(verifiedAtRaw);
+                        this.emailVerifiedAtText = Number.isNaN(parsedDate.getTime())
+                            ? verifiedAtRaw
+                            : parsedDate.toLocaleString('es-MX', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                    } else {
+                        this.emailVerifiedAtText = '';
+                    }
+                },
+
+                get verificationStatusLabel() {
+                    if (this.emailVerificationStatus === 'verified') return 'Verificado';
+                    if (this.emailVerificationStatus === 'unverified') return 'Pendiente de verificación';
+                    return 'Sin información de verificación';
+                },
+
+                normalizeAccountStatus(value) {
+                    const normalized = String(value || '').toLowerCase().trim();
+                    if (!normalized) return 'unknown';
+                    if (normalized === 'activo' || normalized === 'active') return 'active';
+                    if (normalized === 'baja-temporal' || normalized === 'baja temporal' || normalized === 'temporary_disabled') return 'temporary';
+                    if (normalized === 'baja' || normalized === 'inactive' || normalized === 'disabled') return 'inactive';
+                    if (normalized === 'eliminado' || normalized === 'deleted') return 'deleted';
+                    return 'unknown';
+                },
+
+                get accountStatusLabel() {
+                    if (this.accountStatus === 'active') return 'Activo';
+                    if (this.accountStatus === 'temporary') return 'Baja temporal';
+                    if (this.accountStatus === 'inactive') return 'Baja';
+                    if (this.accountStatus === 'deleted') return 'Eliminado';
+                    return 'Sin información';
+                },
+
+                get accountStatusClass() {
+                    if (this.accountStatus === 'active') return 'bg-gradient-to-r from-green-500 to-emerald-600';
+                    if (this.accountStatus === 'temporary') return 'bg-gradient-to-r from-amber-500 to-orange-600';
+                    if (this.accountStatus === 'inactive') return 'bg-gradient-to-r from-red-500 to-rose-600';
+                    if (this.accountStatus === 'deleted') return 'bg-gradient-to-r from-slate-500 to-gray-700';
+                    return 'bg-gradient-to-r from-gray-500 to-slate-600';
+                },
+
+                normalizeAddress(addressValue) {
+                    if (Array.isArray(addressValue)) {
+                        return addressValue.filter(Boolean).join(', ');
+                    }
+                    if (typeof addressValue === 'string') {
+                        return addressValue;
+                    }
+                    if (addressValue && typeof addressValue === 'object') {
+                        const parts = [
+                            addressValue.street,
+                            addressValue.number,
+                            addressValue.neighborhood,
+                            addressValue.colony,
+                            addressValue.city,
+                            addressValue.state,
+                            addressValue.zip_code
+                        ].filter(Boolean);
+                        return parts.join(', ');
+                    }
+                    return '';
+                },
+
+                normalizeDateForInput(value) {
+                    if (!value) return '';
+                    const raw = String(value).trim();
+                    if (!raw) return '';
+                    const match = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+                    if (match) return match[1];
+                    const parsed = new Date(raw);
+                    if (Number.isNaN(parsed.getTime())) return '';
+                    const year = parsed.getFullYear();
+                    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+                    const day = String(parsed.getDate()).padStart(2, '0');
+                    return year + '-' + month + '-' + day;
+                },
+
+                normalizeGenderValue(value) {
+                    const normalized = String(value || '').toLowerCase().trim();
+                    if (!normalized) return '';
+                    if (normalized === 'male' || normalized === 'masculino' || normalized === 'hombre') return 'hombre';
+                    if (normalized === 'female' || normalized === 'femenino' || normalized === 'mujer') return 'mujer';
+                    if (normalized === 'other' || normalized === 'otro' || normalized === 'otro/a') return 'otro';
+                    return value;
+                },
+
+                async loadStudentData() {
+                    const token = localStorage.getItem('access_token');
+
+                    if (this.isApplicant) {
+                        this.loadStudentDataFromStorage();
+                        return;
+                    }
+                    
+                    if (!token) {
+                        this.loadStudentDataFromStorage();
+                        return;
+                    }
+
+                    try {
+                        if (window.StudentAPI?.getAuthenticatedUser) {
+                            const data = await window.StudentAPI.getAuthenticatedUser(token);
+                            console.log('Respuesta completa de /v1/users/user:', data);
+
+                            const student = data?.data?.user || data?.user || data?.data;
+                            if ((data?.success || student) && student) {
+                                console.log('Objeto user recibido:', student);
+                                localStorage.setItem('user_data', JSON.stringify(student));
+                                this.populateStudentData(student, data);
+                                return;
+                            }
+
+                            console.warn('Respuesta no válida, cargando desde localStorage');
+                            this.loadStudentDataFromStorage();
+                        } else {
+                            const response = await fetch(API_BASE_URL + '/v1/users/user', {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': 'Bearer ' + token,
+                                    'Accept': 'application/json'
+                                }
+                            });
+
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log('Respuesta completa de /v1/users/user:', data);
+
+                                const student = data?.data?.user || data?.user || data?.data;
+                                if ((data.success || student) && student) {
+                                    console.log('Objeto user recibido:', student);
+                                    
+                                    localStorage.setItem('user_data', JSON.stringify(student));
+                                    this.populateStudentData(student, data);
+                                } else {
+                                    console.warn('Respuesta no válida, cargando desde localStorage');
+                                    this.loadStudentDataFromStorage();
+                                }
+                            } else if (response.status === 401 || response.status === 403 || response.status === 429) {
+                                this.loadStudentDataFromStorage();
+                            } else {
+                                console.warn('Error en respuesta:', response.status);
+                                this.loadStudentDataFromStorage();
+                            }
+                        }
+                    } catch (err) {
+                        const errorText = String(err?.message || err || '').toLowerCase();
+                        const isRateLimited = errorText.includes('429') || errorText.includes('límite de solicitudes') || errorText.includes('limite de solicitudes') || errorText.includes('too many requests');
+                        if (!isRateLimited) {
+                            console.error('Error fetching student data:', err);
+                        }
+                        this.loadStudentDataFromStorage();
+                    }
+                },
+
+                loadStudentDataFromStorage() {
+                    const userData = localStorage.getItem('user_data');
+                    
+                    if (!userData) {
+                        return;
+                    }
+
+                    try {
+                        const student = JSON.parse(userData);
+                        this.populateStudentData(student);
+                    } catch (e) {
+                        console.error('Error parsing student data:', e);
+                    }
+                },
+
+                async loadStudentDetails() {
+                    console.log('=== loadStudentDetails ejecutándose ===');
+                    
+                    const token = localStorage.getItem('access_token');
+                    
+                    if (!token) {
+                        console.warn('No hay token, intentando cargar desde localStorage');
+                        this.loadStudentDetailsFromStorage();
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(API_BASE_URL + '/v1/users/student-details', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Respuesta de /v1/users/student-details:', data);
+
+                            const details = data?.data?.student_details || data?.student_details || data?.data?.user?.student_details || data?.data?.studentDetail || data?.studentDetail || data?.data;
+                            if ((data.success || details) && details) {
+                                console.log('student_details recibido:', details);
+                                
+                                localStorage.setItem('student_details', JSON.stringify(details));
+                                this.populateStudentDetails(details);
+                            } else {
+                                console.warn('Respuesta sin student_details, cargando desde localStorage');
+                                this.loadStudentDetailsFromStorage();
+                            }
+                        } else {
+                            console.warn('Error en respuesta student-details:', response.status);
+                            this.loadStudentDetailsFromStorage();
+                        }
+                    } catch (err) {
+                        console.error('Error fetching student details:', err);
+                        this.loadStudentDetailsFromStorage();
+                    }
+                },
+
+                loadStudentDetailsFromStorage() {
+                    const detailsData = localStorage.getItem('student_details');
+                    
+                    if (!detailsData) {
+                        return;
+                    }
+
+                    try {
+                        const details = JSON.parse(detailsData);
+                        this.populateStudentDetails(details);
+                    } catch (e) {
+                        console.error('Error parsing student details:', e);
+                    }
+                },
+
+                populateStudentDetails(details) {
+                    console.log('=== populateStudentDetails ejecutándose ===');
+                    console.log('Detalles recibidos:', details);
+
+                    const detailSources = [
+                        details,
+                        details?.data,
+                        details?.student_details,
+                        details?.studentDetail,
+                        details?.student,
+                        details?.user,
+                        details?.profile,
+                        details?.academic,
+                        details?.academic_info,
+                        details?.career,
+                        details?.careerData,
+                        details?.career_data
+                    ].filter(Boolean);
+
+                    const nControlValue = this.getFirstValueFromSources(detailSources, ['matricula', 'matrícula', 'numero_control', 'numeroControl', 'no_control', 'noControl', 'nControl', 'n_control', 'control', 'student_control', 'num_control', 'numControl']);
+                    const semestreValue = this.getFirstValueFromSources(detailSources, ['semestre', 'semester', 'semester_number', 'semesterNumber']);
+                    const groupValue = this.getFirstValueFromSources(detailSources, ['group', 'grupo']);
+                    const workshopValue = this.getFirstValueFromSources(detailSources, ['workshop', 'taller']);
+                    const careerNameValue = this.getFirstValueFromSources(detailSources, ['careerName', 'career_name', 'career', 'career_label', 'careerLabel']);
+                    const careerObjectName = details?.career?.name || details?.career?.career_name || details?.careerData?.name || details?.career_data?.name;
+                    const detailsPhone = this.getFirstValueFromSources(detailSources, ['phone_number', 'phone', 'phoneNumber', 'cellphone', 'telefono']);
+                    const detailsBirthdate = this.normalizeDateForInput(this.getFirstValueFromSources(detailSources, ['birthdate', 'birth_date', 'date_of_birth', 'fecha_nacimiento']));
+                    const detailsGender = this.normalizeGenderValue(this.getFirstValueFromSources(detailSources, ['gender', 'sex', 'genero']));
+                    const detailsBloodType = this.getFirstValueFromSources(detailSources, ['blood_type', 'bloodType', 'tipo_sangre']);
+                    const detailsAddress = this.normalizeAddress(this.getFirstValueFromSources(detailSources, ['address', 'direccion', 'domicilio'], ''));
+
+                    this.nControl = nControlValue || this.nControl || 'No disponible';
+                    this.n_control = nControlValue || this.n_control || this.nControl || 'No disponible';
+                    this.studentId = nControlValue || this.studentId || 'No disponible';
+                    this.semestre = semestreValue ? 'Semestre ' + semestreValue : (this.semestre || 'No disponible');
+                    this.group = groupValue || this.group || 'No disponible';
+                    this.workshop = workshopValue || this.workshop || 'No disponible';
+                    this.careerName = careerNameValue || careerObjectName || this.careerName || 'No disponible';
+
+                    this.formData.phone_number = detailsPhone || this.formData.phone_number || '';
+                    this.formData.birthdate = detailsBirthdate || this.formData.birthdate || '';
+                    this.formData.gender = detailsGender || this.formData.gender || '';
+                    this.formData.blood_type = detailsBloodType || this.formData.blood_type || '';
+                    this.formData.address = detailsAddress || this.formData.address || '';
+                    this.originalFormData = { ...this.formData };
+                    
+                    console.log('Valores asignados:');
+                    console.log('  nControl:', this.nControl);
+                    console.log('  semestre:', this.semestre);
+                    console.log('  group:', this.group);
+                    console.log('  workshop:', this.workshop);
+                    console.log('  careerName:', this.careerName);
+                },
+
+                populateStudentData(student, fullResponse = null) {
+                    console.log('=== populateStudentData ejecutándose ===');
+                    console.log('Objeto student completo:', student);
+
+                    const sources = [
+                        student,
+                        student?.data,
+                        student?.user,
+                        student?.basicInfo,
+                        student?.profile,
+                        student?.student_details,
+                        student?.studentDetail,
+                        fullResponse,
+                        fullResponse?.data,
+                        fullResponse?.user,
+                        fullResponse?.data?.user,
+                        fullResponse?.data?.student,
+                        fullResponse?.data?.student_details,
+                        fullResponse?.student_details,
+                        fullResponse?.studentDetail
+                    ].filter(Boolean);
+
+                    const firstName = this.getFirstValueFromSources(sources, ['name', 'first_name', 'firstName', 'nombre']);
+                    const lastName = this.getFirstValueFromSources(sources, ['last_name', 'lastName', 'apellido', 'apellido_paterno']);
+                    const secondLastName = this.getFirstValueFromSources(sources, ['apellido_materno', 'middle_last_name', 'second_last_name']);
+                    const fullName = this.getFirstValueFromSources(sources, ['fullName', 'full_name', 'nombre_completo']);
+                    const composedName = [firstName, lastName].filter(Boolean).join(' ').trim();
+                    const composedNameWithSecondLastName = [firstName, lastName, secondLastName].filter(Boolean).join(' ').trim();
+
+                    this.studentName = fullName || composedNameWithSecondLastName || composedName || this.getFirstValueFromSources(sources, ['username', 'user_name'], 'Sin nombre');
+                    this.studentEmail = this.getFirstValueFromSources(sources, ['email', 'mail', 'correo'], 'No disponible');
+                    const controlValueForId = this.getFirstValueFromSources(sources, ['matricula', 'matrícula', 'numero_control', 'numeroControl', 'no_control', 'noControl', 'n_control', 'nControl', 'control', 'num_control', 'numControl'], '');
+                    this.n_control = controlValueForId || this.n_control || '';
+                    this.studentId = controlValueForId || this.studentId || 'No disponible';
+                    this.curp = this.getFirstValueFromSources(sources, ['curp', 'CURP'], this.curp || '');
+                    this.accountStatus = this.normalizeAccountStatus(this.getFirstValueFromSources(sources, ['status', 'estado', 'account_status', 'accountStatus'], this.accountStatus));
+
+                    const detailsControl = this.getFirstValueFromSources(sources, ['matricula', 'matrícula', 'numero_control', 'numeroControl', 'no_control', 'noControl', 'n_control', 'nControl', 'control', 'num_control', 'numControl']);
+                    if (detailsControl) {
+                        this.n_control = detailsControl;
+                        this.nControl = detailsControl;
+                        this.studentId = detailsControl;
+                    }
+                    const detailsSemester = this.getFirstValueFromSources(sources, ['semestre', 'semester', 'semester_number', 'semesterNumber']);
+                    if (detailsSemester) {
+                        this.semestre = 'Semestre ' + detailsSemester;
+                    }
+                    const detailsGroup = this.getFirstValueFromSources(sources, ['group', 'grupo']);
+                    if (detailsGroup) {
+                        this.group = detailsGroup;
+                    }
+                    const detailsWorkshop = this.getFirstValueFromSources(sources, ['workshop', 'taller']);
+                    if (detailsWorkshop) {
+                        this.workshop = detailsWorkshop;
+                    }
+                    const detailsCareer = this.getFirstValueFromSources(sources, ['careerName', 'career_name', 'career', 'career_label', 'careerLabel']) || student?.career?.name;
+                    if (detailsCareer) {
+                        this.careerName = detailsCareer;
+                    }
+                    
+                    this.lastLogin = new Date().toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // Populate form data
+                    this.formData.name = firstName || '';
+                    this.formData.last_name = lastName || '';
+                    this.formData.email = this.getFirstValueFromSources(sources, ['email', 'mail', 'correo'], '');
+                    this.formData.phone_number = this.getFirstValueFromSources(sources, ['phone_number', 'phone', 'phoneNumber', 'cellphone', 'telefono'], '');
+                    this.formData.birthdate = this.normalizeDateForInput(this.getFirstValueFromSources(sources, ['birthdate', 'birth_date', 'date_of_birth', 'fecha_nacimiento'], ''));
+                    this.formData.gender = this.normalizeGenderValue(this.getFirstValueFromSources(sources, ['gender', 'sex', 'genero'], ''));
+                    this.formData.blood_type = this.getFirstValueFromSources(sources, ['blood_type', 'bloodType', 'tipo_sangre'], '');
+                    
+                    this.formData.address = this.normalizeAddress(this.getFirstValueFromSources(sources, ['address', 'direccion', 'domicilio'], ''));
+
+                    this.updateEmailVerificationStatus(student, fullResponse);
+
+                    this.originalFormData = { ...this.formData };
+                },
+
+                closeAllModals() {
+                    this.showEditModal = false;
+                    this.showPasswordModal = false;
+                },
+
+                editProfile() {
+                    this.successMessage = '';
+                    this.errorMessage = '';
+                    this.errors = {};
+                    this.closeAllModals();
+                    this.showEditModal = true;
+                },
+
+                changePassword() {
+                    this.closeAllModals();
+                    this.showPasswordModal = true;
+                    this.passwordData = { currentPassword: '', newPassword: '', confirmPassword: '' };
+                    this.passwordErrors = {};
+                    this.passwordSuccessMessage = '';
+                    this.passwordErrorMessage = '';
+                },
+
+                async submitChangePassword() {
+                    this.isChangingPassword = true;
+                    this.passwordSuccessMessage = '';
+                    this.passwordErrorMessage = '';
+                    this.passwordErrors = {};
+
+                    // Validación del lado del cliente
+                    if (!this.passwordData.currentPassword) {
+                        this.passwordErrorMessage = 'La contraseña actual es requerida';
+                        this.isChangingPassword = false;
+                        return;
+                    }
+
+                    if (!this.passwordData.newPassword) {
+                        this.passwordErrorMessage = 'La nueva contraseña es requerida';
+                        this.isChangingPassword = false;
+                        return;
+                    }
+
+                    if (this.passwordData.newPassword.length < 8) {
+                        this.passwordErrorMessage = 'La contraseña debe tener al menos 8 caracteres';
+                        this.isChangingPassword = false;
+                        return;
+                    }
+
+                    if (this.passwordData.newPassword !== this.passwordData.confirmPassword) {
+                        this.passwordErrorMessage = 'Las contraseñas no coinciden';
+                        this.isChangingPassword = false;
+                        return;
+                    }
+
+                    const token = localStorage.getItem('access_token');
+                    if (!token) {
+                        this.passwordErrorMessage = 'No estás autenticado. Por favor inicia sesión.';
+                        this.isChangingPassword = false;
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(API_BASE_URL + '/v1/users/update/password', {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                currentPassword: this.passwordData.currentPassword,
+                                newPassword: this.passwordData.newPassword
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            this.passwordSuccessMessage = data.message || 'Contraseña actualizada correctamente';
+                            
+                            setTimeout(() => {
+                                this.showPasswordModal = false;
+                                this.passwordData = { currentPassword: '', newPassword: '', confirmPassword: '' };
+                                this.passwordSuccessMessage = '';
+                            }, 2000);
+                        } else {
+                            if (data.errors) {
+                                this.passwordErrors = data.errors;
+                                const firstErrorKey = Object.keys(data.errors)[0];
+                                const firstError = data.errors[firstErrorKey];
+                                this.passwordErrorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+                            } else if (response.status === 400) {
+                                this.passwordErrorMessage = 'La contraseña actual es incorrecta';
+                            } else {
+                                this.passwordErrorMessage = data.message || 'Error al cambiar la contraseña';
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error changing password:', err);
+                        this.passwordErrorMessage = 'Error de conexión con el servidor';
+                    } finally {
+                        this.isChangingPassword = false;
+                    }
+                },
+
+                async updateProfile() {
+                    this.isUpdating = true;
+                    this.successMessage = '';
+                    this.errorMessage = '';
+                    this.errors = {};
+
+                    const token = localStorage.getItem('access_token');
+                    if (!token) {
+                        this.errorMessage = 'No estás autenticado. Por favor inicia sesión.';
+                        this.isUpdating = false;
+                        return;
+                    }
+
+                    const normalize = (value) => {
+                        if (value === null || value === undefined) return '';
+                        return typeof value === 'string' ? value.trim() : value;
+                    };
+
+                    const current = {
+                        name: normalize(this.formData.name),
+                        last_name: normalize(this.formData.last_name),
+                        email: normalize(this.formData.email),
+                        phone_number: normalize(this.formData.phone_number),
+                        birthdate: normalize(this.formData.birthdate),
+                        gender: normalize(this.formData.gender),
+                        blood_type: normalize(this.formData.blood_type),
+                        address: normalize(this.formData.address)
+                    };
+
+                    const original = {
+                        name: normalize(this.originalFormData.name),
+                        last_name: normalize(this.originalFormData.last_name),
+                        email: normalize(this.originalFormData.email),
+                        phone_number: normalize(this.originalFormData.phone_number),
+                        birthdate: normalize(this.originalFormData.birthdate),
+                        gender: normalize(this.originalFormData.gender),
+                        blood_type: normalize(this.originalFormData.blood_type),
+                        address: normalize(this.originalFormData.address)
+                    };
+
+                    const hasChanges =
+                        current.name !== original.name ||
+                        current.last_name !== original.last_name ||
+                        current.email !== original.email ||
+                        current.phone_number !== original.phone_number ||
+                        current.birthdate !== original.birthdate ||
+                        current.gender !== original.gender ||
+                        current.blood_type !== original.blood_type ||
+                        current.address !== original.address;
+
+                    if (!hasChanges) {
+                        this.errorMessage = 'No hay cambios para guardar';
+                        this.isUpdating = false;
+                        return;
+                    }
+
+                    const requestData = {
+                        name: current.name || original.name,
+                        last_name: current.last_name || original.last_name,
+                        phone_number: current.phone_number || original.phone_number
+                    };
+
+                    if (!requestData.name || !requestData.last_name || !requestData.phone_number) {
+                        this.errorMessage = 'Nombre, apellido y telefono son obligatorios.';
+                        this.isUpdating = false;
+                        return;
+                    }
+
+                    if (current.email && current.email !== original.email) {
+                        requestData.email = current.email;
+                    }
+
+                    if (current.birthdate && current.birthdate !== original.birthdate) {
+                        requestData.birthdate = current.birthdate;
+                    }
+
+                    if (current.gender && current.gender !== original.gender) {
+                        requestData.gender = current.gender;
+                    }
+
+                    if (current.blood_type && current.blood_type !== original.blood_type) {
+                        requestData.blood_type = current.blood_type;
+                    }
+
+                    if (current.address && current.address !== original.address) {
+                        const addressLines = current.address.split(/[\n,]+/).map(line => line.trim()).filter(line => line.length > 0);
+                        if (addressLines.length > 0) {
+                            requestData.address = addressLines;
+                        }
+                    }
+
+                    console.log('=== ENVIANDO ACTUALIZACIÓN DE PERFIL ===');
+                    console.log('Objeto requestData:', requestData);
+                    console.log('JSON a enviar:', JSON.stringify(requestData));
+                    console.log('Cantidad de campos:', Object.keys(requestData).length);
+
+                    try {
+                        const response = await fetch(API_BASE_URL + '/v1/users/update', {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify(requestData)
+                        });
+
+                        const data = await response.json();
+                        console.log('=== RESPUESTA DEL SERVIDOR ===');
+                        console.log('Status HTTP:', response.status);
+                        console.log('Respuesta completa:', data);
+                        console.log('Success:', data.success);
+                        console.log('Message:', data.message);
+                        console.log('Errors:', data.errors);
+
+                        if (response.ok && data.success) {
+                            this.successMessage = data.message || 'Perfil actualizado correctamente';
+                            const updatedUser = data.data.user;
+                            localStorage.setItem('user_data', JSON.stringify(updatedUser));
+                            
+                            this.studentName = updatedUser.name || updatedUser.username || 'Sin nombre';
+                            this.studentEmail = updatedUser.email || 'No disponible';
+                            
+                            setTimeout(() => {
+                                this.showEditModal = false;
+                                this.successMessage = '';
+                                window.location.reload();
+                            }, 2000);
+                        } else {
+                            // Mostrar errores específicos de validación
+                            if (data.errors) {
+                                console.error('Errores de validación detallados:', data.errors);
+                                this.errors = data.errors;
+                                // Concatenar todos los errores
+                                let errorMessages = [];
+                                for (const [field, messages] of Object.entries(data.errors)) {
+                                    const fieldName = {
+                                        'name': 'Nombre',
+                                        'last_name': 'Apellido',
+                                        'email': 'Correo',
+                                        'phone_number': 'Teléfono',
+                                        'birthdate': 'Fecha de nacimiento',
+                                        'gender': 'Género',
+                                        'blood_type': 'Tipo de sangre',
+                                        'address': 'Dirección'
+                                    }[field] || field;
+                                    
+                                    const fieldErrors = Array.isArray(messages) ? messages : [messages];
+                                    errorMessages.push(fieldName + ': ' + fieldErrors.join(', '));
+                                }
+                                this.errorMessage = errorMessages.join(' | ');
+                            } else {
+                                this.errorMessage = data.message || 'Error al actualizar el perfil. Verifica que todos los campos sean válidos.';
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error updating profile:', err);
+                        this.errorMessage = 'Error de conexión con el servidor';
+                    } finally {
+                        this.isUpdating = false;
+                    }
+                }
+            }));
+        });
+    </script>
+
+    <style is:global>
+        :root {
+            --perfil-ink: #0f172a;
+            --perfil-muted: #5b6b6a;
+            --perfil-surface: #ffffff;
+            --perfil-border: #e6ecea;
+            --perfil-accent: #2d584c;
+            --perfil-accent-deep: #1f4037;
+            --perfil-wash: #f4f7f5;
+        }
+
+        body {
+            font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+            background: radial-gradient(1200px 600px at 10% -10%, #e9f2ef 0%, #f7f9f8 40%, #f3f5f7 100%);
+            color: var(--perfil-ink);
+        }
+
+        [x-cloak] { display: none !important; }
+
+        .perfil-shell {
+            padding: 1.75rem 1rem 2.5rem;
+        }
+
+        .perfil-header {
+            background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 50%, #ddd6fe 100%);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15), 0 0 0 1px rgba(168, 85, 247, 0.1);
+            border-radius: 1.25rem;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .perfil-header .text-gray-600,
+        .perfil-header .text-gray-500 {
+            color: var(--perfil-muted);
+        }
+
+        .perfil-card {
+            border: 1px solid var(--perfil-border);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+            background: var(--perfil-surface);
+        }
+
+        .perfil-card__header {
+            background: linear-gradient(135deg, var(--perfil-accent), var(--perfil-accent-deep));
+        }
+
+        .perfil-card h3 {
+            letter-spacing: -0.01em;
+        }
+
+        .perfil-card .bg-gray-50 {
+            background: var(--perfil-wash);
+            border-color: var(--perfil-border);
+        }
+
+        .perfil-back {
+            background: linear-gradient(135deg, #4b5563, #1f2937);
+            border: 1px solid #111827;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
+        }
+
+        @media (min-width: 768px) {
+            .perfil-shell {
+                padding: 3rem 1.5rem 4rem;
+            }
+        }
+    </style>
+</LayoutEstu>

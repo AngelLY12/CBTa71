@@ -1,0 +1,920 @@
+---
+// src/pages/concepts.astro
+import Layout from '../layouts/Layout.astro'; 
+const pageTitle = "Conceptos de Cobro"; 
+
+const PRIMARY_ACCENT_COLOR = 'bg-[#2E584C]'; 
+const PRIMARY_HOVER = 'hover:bg-[#274D43]'; 
+const PRIMARY_TEXT_COLOR = 'text-[#2E584C]'; 
+const API_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? (() => { throw new Error('Falta PUBLIC_API_BASE_URL'); })()).replace(/\/$/, '');
+---
+
+<style>
+  :root {
+    --primary-color: #2E594D;
+    --primary-dark: #1e3d35;
+    --emerald: #10b981;
+    --teal: #14b8a6;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(to bottom right, #f8fafc, #ffffff, rgba(16, 185, 129, 0.05));
+    color: #1f2937;
+  }
+
+  /* Animaciones personalizadas */
+  @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-in {
+    animation: slideInDown 0.5s ease-out;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .grid {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .card {
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card:hover {
+    transform: translateY(-6px) scale(1.02);
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Ensure proper text rendering */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 900;
+  }
+
+  /* Tailwind fixes */
+  .text-transparent {
+    color: transparent;
+  }
+
+  .bg-clip-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+  }
+</style>
+
+<Layout title={pageTitle}>  
+  <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 md:py-12 bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 min-h-screen">
+
+    <!-- Header mejorado con animación -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-10 lg:mb-12 bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 border border-gray-100/50 relative overflow-visible hover:shadow-3xl transition-all duration-500">
+      <!-- Decoración de fondo animada -->
+      <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#2E594D]/5 to-emerald-500/5 rounded-full blur-3xl -z-0 animate-float"></div>
+      <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-500/5 to-transparent rounded-full blur-2xl -z-0"></div>
+      
+      <div class="flex items-center gap-3 sm:gap-5 relative z-10 w-full sm:w-auto">
+        <div class="p-2.5 sm:p-3 lg:p-4 bg-gradient-to-br from-[#2E594D] via-emerald-700 to-[#1e3d35] rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl flex-shrink-0 transform hover:rotate-6 hover:scale-110 transition-all duration-500 relative overflow-hidden group">
+          <div class="absolute inset-0 shimmer opacity-0 group-hover:opacity-100"></div>
+          <i class="fas fa-file-invoice-dollar text-2xl sm:text-3xl lg:text-4xl text-white relative z-10"></i>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <h1 class="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#2E594D] via-emerald-700 to-teal-700 tracking-tight flex flex-wrap items-center gap-2 sm:gap-3">
+            <span class="truncate">Gestión de Conceptos</span>
+            <span class="text-[9px] sm:text-[10px] bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-white px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 rounded-full font-bold shadow-lg animate-pulse relative overflow-hidden flex-shrink-0">
+              <span class="absolute inset-0 shimmer"></span>
+              <span class="relative z-10">ACTIVO</span>
+            </span>
+          </h1>
+          <p class="text-xs sm:text-sm text-gray-600 mt-1.5 sm:mt-2 lg:mt-3 flex items-center gap-2 font-medium hover:text-gray-800 transition-colors">
+            <i class="fas fa-lightbulb text-amber-500 animate-pulse flex-shrink-0"></i>
+            <span class="line-clamp-1 sm:line-clamp-none">Administra conceptos de cobro</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-4 sm:mt-0 w-full sm:w-auto flex flex-wrap items-end justify-end gap-2 sm:gap-2.5 relative z-20">
+        <div>
+          <label for="filter-status" class="block text-xs font-semibold text-gray-700 mb-1">Estado</label>
+          <select id="filter-status" class="h-9 min-w-[140px] px-2 rounded-lg border-2 border-gray-400 bg-white text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-600">
+            <option value="">Todos</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="finalizado">Finalizado</option>
+            <option value="expirado">Expirado</option>
+            <option value="eliminado">Eliminado</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="filter-scope" class="block text-xs font-semibold text-gray-700 mb-1">Relación</label>
+          <select id="filter-scope" class="h-9 min-w-[170px] px-2 rounded-lg border border-gray-300 bg-white text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-600">
+            <option value="">Todas</option>
+            <option value="todos">Todos</option>
+            <option value="carrera">Por carrera</option>
+            <option value="semestre">Por semestre</option>
+            <option value="carrera_semestre">Carrera + semestre</option>
+            <option value="estudiantes">Estudiantes específicos</option>
+            <option value="tag">Tags especiales</option>
+          </select>
+        </div>
+
+        <a href="/new"
+           class="h-9 px-4 sm:px-5 bg-gradient-to-r from-[#2E594D] via-emerald-700 to-teal-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-xs sm:text-sm flex items-center justify-center gap-2 relative group overflow-hidden whitespace-nowrap">
+          <div class="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div class="absolute inset-0 shimmer opacity-0 group-hover:opacity-100"></div>
+          <i class="fas fa-plus-circle text-sm relative z-10 group-hover:rotate-90 transition-transform duration-300"></i>
+          <span class="relative z-10">Crear Concepto</span>
+        </a>
+      </div>
+    </header>
+
+    <div id="concepts-grid"
+         class="grid gap-4 sm:gap-6 lg:gap-8"
+         style="grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));">
+    </div>
+
+        <div id="concepts-pagination" class="mt-6 flex items-center justify-center gap-2"></div>
+
+  </div>
+
+<script type="module" define:vars={{ API_BASE_URL }}>
+const PRIMARY_TEXT_COLOR_HEX = '#2E584C';
+const API_BASE = API_BASE_URL;
+
+function escapeHtml(str=''){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[m]));
+}
+
+function formatCurrency(amount){
+  return new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN', minimumFractionDigits:2 }).format(amount);
+}
+
+function formatVigencia(text) {
+  if (!text) return 'No definida';
+  
+  // Si contiene "días" con decimales, convertir a formato legible
+  const daysMatch = text.match(/(Vence en|Expirado hace)\s+([0-9.]+)\s+días?/);
+  if (daysMatch) {
+    const prefix = daysMatch[1];
+    const totalDays = parseFloat(daysMatch[2]);
+    
+    if (totalDays < 1) {
+      const hours = Math.round(totalDays * 24);
+      return `${prefix} ${hours} hora${hours !== 1 ? 's' : ''}`;
+    } else if (totalDays < 30) {
+      const days = Math.floor(totalDays);
+      return `${prefix} ${days} día${days !== 1 ? 's' : ''}`;
+    } else if (totalDays < 365) {
+      const months = Math.floor(totalDays / 30);
+      const days = Math.floor(totalDays % 30);
+      if (days === 0) {
+        return `${prefix} ${months} mes${months !== 1 ? 'es' : ''}`;
+      }
+      return `${prefix} ${months} mes${months !== 1 ? 'es' : ''} y ${days} día${days !== 1 ? 's' : ''}`;
+    } else {
+      const years = Math.floor(totalDays / 365);
+      const months = Math.floor((totalDays % 365) / 30);
+      if (months === 0) {
+        return `${prefix} ${years} año${years !== 1 ? 's' : ''}`;
+      }
+      return `${prefix} ${years} año${years !== 1 ? 's' : ''} y ${months} mes${months !== 1 ? 'es' : ''}`;
+    }
+  }
+  
+  // Si tiene formato de fecha DD/MM/YYYY → DD/MM/YYYY, hacerlo más compacto
+  if (text.includes('→')) {
+    const dates = text.split('→').map(d => d.trim());
+    if (dates.length === 2) {
+      return `${dates[0]} a ${dates[1]}`;
+    }
+  }
+  
+  return text;
+}
+
+function getStatusBadge(status){
+  const s = (status || '').toLowerCase();
+  if (s === 'finalizado' || s === 'finalized') return '<span class="inline-flex items-center gap-1.5 mt-1 text-[10px] bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 px-3 py-1.5 rounded-full font-black uppercase shadow-md border border-amber-300 hover:scale-105 transition-transform"><i class="fas fa-flag-checkered"></i> Finalizado</span>';
+  if (s === 'inactivo' || s === 'inactive') return '<span class="inline-flex items-center gap-1.5 mt-1 text-[10px] bg-gradient-to-r from-gray-100 to-slate-100 text-gray-700 px-3 py-1.5 rounded-full font-black uppercase shadow-md border border-gray-300 hover:scale-105 transition-transform"><i class="fas fa-pause-circle"></i> Inactivo</span>';
+  return '<span class="inline-flex items-center gap-1.5 mt-1 text-[10px] bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800 px-3 py-1.5 rounded-full font-black uppercase shadow-md border border-emerald-300 animate-pulse hover:scale-105 hover:shadow-lg transition-all relative overflow-hidden group"><div class="absolute inset-0 shimmer opacity-0 group-hover:opacity-50"></div><i class="fas fa-check-circle relative z-10"></i> <span class="relative z-10">Vigente</span></span>';
+}
+
+function normalizeStatus(status) {
+  const raw = String(status || '').toLowerCase().trim();
+  if (!raw) return '';
+  if (['active', 'enabled', 'vigente', 'activo'].includes(raw)) return 'activo';
+  if (['inactive', 'disabled', 'paused', 'inactivo'].includes(raw)) return 'inactivo';
+  if (['finalized', 'finished', 'finalizado'].includes(raw)) return 'finalizado';
+  if (['expired', 'expirado', 'vencido'].includes(raw)) return 'expirado';
+  if (['deleted', 'removed', 'eliminado'].includes(raw)) return 'eliminado';
+  if (raw === 'vigente') return 'activo';
+  return raw;
+}
+
+function normalizeAppliesTo(value) {
+  const raw = String(value || '').toLowerCase().trim();
+  const map = {
+    'todos': 'todos',
+    'all': 'todos',
+    'all_students': 'todos',
+    'all-students': 'todos',
+    'carrera': 'carrera',
+    'career': 'carrera',
+    'careers': 'carrera',
+    'semestre': 'semestre',
+    'semester': 'semestre',
+    'semesters': 'semestre',
+    'carrera_semestre': 'carrera_semestre',
+    'carrera-semestre': 'carrera_semestre',
+    'career_semester': 'carrera_semestre',
+    'career-semester': 'carrera_semestre',
+    'career_and_semester': 'carrera_semestre',
+    'career-semester-scope': 'carrera_semestre',
+    'estudiantes': 'estudiantes',
+    'students': 'estudiantes',
+    'specific_students': 'estudiantes',
+    'specific-students': 'estudiantes',
+    'tag': 'tag',
+    'tags': 'tag',
+    'special_tags': 'tag',
+    'special-tags': 'tag'
+  };
+  return map[raw] || raw;
+}
+
+function getConceptStatus(concept) {
+  return normalizeStatus(
+    concept?.status ||
+    concept?.state ||
+    concept?.concept_status ||
+    concept?.conceptStatus ||
+    concept?.current_status
+  ) || 'activo';
+}
+
+function getConceptScope(concept) {
+  return normalizeAppliesTo(
+    concept?.applies_to ||
+    concept?.appliesTo ||
+    concept?.scope_type ||
+    concept?.scopeType ||
+    concept?.relation_type ||
+    concept?.relationType ||
+    concept?.target_type ||
+    concept?.targetType
+  );
+}
+
+function toArray(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (value == null || value === '') return [];
+  if (typeof value === 'string') {
+    return value.split(',').map(v => v.trim()).filter(Boolean);
+  }
+  return [value];
+}
+
+function relationSummary(concept, appliesTo) {
+  const careers = toArray(concept.careerIds || concept.career_ids || concept.careers || concept.target_career_id)
+    .map(item => (typeof item === 'object' ? (item.career_name || item.name || item.id) : item));
+  const semesters = toArray(concept.semesters || concept.target_semester || concept.semester)
+    .map(item => (typeof item === 'object' ? (item.semestre || item.name || item.id) : item));
+  const students = toArray(concept.userIds || concept.user_ids || concept.specific_students);
+  const tags = toArray(concept.applicantTags || concept.applicant_tags);
+
+  if (appliesTo === 'todos') return 'Todos los estudiantes';
+  if (appliesTo === 'carrera') return careers.length ? `Carreras: ${careers.join(', ')}` : 'Carreras: Sin especificar';
+  if (appliesTo === 'semestre') return semesters.length ? `Semestres: ${semesters.join(', ')}` : 'Semestres: Sin especificar';
+  if (appliesTo === 'carrera_semestre') {
+    const carreraTxt = careers.length ? careers.join(', ') : 'Sin carrera';
+    const semestreTxt = semesters.length ? semesters.join(', ') : 'Sin semestre';
+    return `Carreras: ${carreraTxt} | Semestres: ${semestreTxt}`;
+  }
+  if (appliesTo === 'estudiantes') return `Estudiantes específicos: ${students.length || 0}`;
+  if (appliesTo === 'tag') return tags.length ? `Tags: ${tags.join(', ')}` : 'Tags: Sin especificar';
+  return 'Relación no definida';
+}
+
+async function apiFetch(url, options = {}) {
+  const parseJsonSafe = (text) => {
+    if (!text) return {};
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {};
+    }
+  };
+
+  const refreshAccessToken = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) return null;
+
+    const response = await fetch(`${API_BASE}/v1/refresh-token`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+
+    const payload = parseJsonSafe(await response.text());
+    if (!response.ok) return null;
+
+    const tokenBundle = payload?.data?.user_tokens || payload?.data || {};
+    const newAccessToken = tokenBundle?.access_token || payload?.access_token;
+    const newRefreshToken = tokenBundle?.refresh_token || payload?.refresh_token;
+    const userDataArray = tokenBundle?.user_data || payload?.user_data;
+    const userData = Array.isArray(userDataArray) ? userDataArray[0] : userDataArray;
+
+    if (!newAccessToken) return null;
+
+    localStorage.setItem('access_token', newAccessToken);
+    if (newRefreshToken) {
+      localStorage.setItem('refresh_token', newRefreshToken);
+    }
+    if (userData) {
+      localStorage.setItem('user_data', JSON.stringify(userData));
+    }
+
+    return newAccessToken;
+  };
+
+  const executeRequest = async (token) => {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      }
+    });
+
+    if (response.status === 204) {
+      return { ok: true, data: { success: true }, status: 204 };
+    }
+
+    const payload = parseJsonSafe(await response.text());
+    return { ok: response.ok, data: payload, status: response.status };
+  };
+
+  let accessToken = localStorage.getItem('access_token');
+  if (!accessToken) {
+    accessToken = await refreshAccessToken();
+  }
+  if (!accessToken) {
+    throw new Error('No hay token, inicia sesión');
+  }
+
+  let result = await executeRequest(accessToken);
+
+  if (result.status === 401) {
+    const refreshedToken = await refreshAccessToken();
+    if (!refreshedToken) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_data');
+      throw new Error('Sesión expirada. Inicia sesión nuevamente.');
+    }
+    result = await executeRequest(refreshedToken);
+  }
+
+  if (!result.ok) {
+    throw new Error(result.data?.message || 'Error de API');
+  }
+
+  return result.data;
+}
+
+let conceptsCache = [];
+const conceptsPagination = {
+  page: 1,
+  perPage: 15,
+  lastPage: 1,
+  total: 0,
+  hasNext: false
+};
+
+function renderPagination() {
+  const container = document.getElementById('concepts-pagination');
+  if (!container) return;
+
+  const canPrev = conceptsPagination.page > 1;
+  const canNext = conceptsPagination.hasNext || conceptsPagination.page < conceptsPagination.lastPage;
+  const totalText = Number.isFinite(conceptsPagination.total) && conceptsPagination.total > 0
+    ? ` · Total: ${conceptsPagination.total}`
+    : '';
+
+  container.innerHTML = `
+    <button
+      type="button"
+      onclick="window.changeConceptsPage(${conceptsPagination.page - 1})"
+      ${canPrev ? '' : 'disabled'}
+      class="h-9 px-3 rounded-lg border ${canPrev ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50' : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'} text-xs font-bold transition-colors"
+    >Anterior</button>
+
+    <div class="h-9 px-3 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-semibold flex items-center">
+      Página ${conceptsPagination.page}${Number.isFinite(conceptsPagination.lastPage) && conceptsPagination.lastPage > 0 ? ` de ${conceptsPagination.lastPage}` : ''}${totalText}
+    </div>
+
+    <button
+      type="button"
+      onclick="window.changeConceptsPage(${conceptsPagination.page + 1})"
+      ${canNext ? '' : 'disabled'}
+      class="h-9 px-3 rounded-lg border ${canNext ? 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50' : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'} text-xs font-bold transition-colors"
+    >Siguiente</button>
+  `;
+}
+
+async function loadConcepts(page = 1){
+  const grid = document.getElementById('concepts-grid');
+  const paginationContainer = document.getElementById('concepts-pagination');
+  if(!grid) return;
+  const targetPage = Math.max(1, Number(page) || 1);
+
+  grid.innerHTML = `
+    <div class="col-span-full text-center py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-white via-emerald-50/20 to-teal-50/10 rounded-2xl sm:rounded-3xl border-2 border-emerald-200/50 shadow-xl sm:shadow-2xl">
+      <div class="flex flex-col items-center gap-3 sm:gap-4 lg:gap-5">
+        <div class="relative">
+          <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full blur-xl sm:blur-2xl opacity-30 animate-pulse"></div>
+          <i class="fas fa-spinner fa-spin text-4xl sm:text-5xl lg:text-6xl text-emerald-700 relative z-10"></i>
+        </div>
+        <div class="space-y-1 sm:space-y-2 px-4">
+          <p class="text-[#2E594D] font-black text-base sm:text-lg lg:text-xl">Cargando conceptos...</p>
+          <p class="text-gray-600 text-xs sm:text-sm font-medium">Por favor espera un momento</p>
+        </div>
+      </div>
+    </div>
+  `;
+  if (paginationContainer) paginationContainer.innerHTML = '';
+
+  try {
+    const statusFilter = normalizeStatus(document.getElementById('filter-status')?.value || '');
+    const params = new URLSearchParams({
+      perPage: String(conceptsPagination.perPage),
+      page: String(targetPage),
+      forceRefresh: 'false'
+    });
+    if (statusFilter) {
+      params.set('status', statusFilter);
+    }
+
+    const data = await apiFetch(`${API_BASE}/v1/concepts?${params.toString()}`, {
+      headers: {
+        'X-User-Role': 'financial-staff',
+        'X-User-Permission': 'view.concepts'
+      }
+    });
+
+    const conceptsNode = data?.data?.concepts || {};
+    conceptsCache = conceptsNode?.items || conceptsNode?.data || [];
+
+    const meta = conceptsNode?.meta || conceptsNode?.pagination || data?.data?.meta || {};
+    const currentPage = Number(meta?.current_page ?? meta?.currentPage ?? conceptsNode?.current_page ?? conceptsNode?.page ?? targetPage) || targetPage;
+    const perPage = Number(meta?.per_page ?? meta?.perPage ?? conceptsNode?.per_page ?? conceptsNode?.perPage ?? conceptsPagination.perPage) || conceptsPagination.perPage;
+    const total = Number(meta?.total ?? conceptsNode?.total ?? 0) || 0;
+    const explicitLastPage = Number(meta?.last_page ?? meta?.lastPage ?? conceptsNode?.last_page ?? conceptsNode?.lastPage ?? 0) || 0;
+    const calculatedLastPage = total > 0 ? Math.ceil(total / perPage) : 0;
+    const lastPage = explicitLastPage || calculatedLastPage || currentPage;
+    const hasNextByLink = Boolean(meta?.next_page_url ?? meta?.nextPageUrl ?? conceptsNode?.next_page_url ?? conceptsNode?.nextPageUrl);
+    const hasNext = hasNextByLink || currentPage < lastPage || conceptsCache.length >= perPage;
+
+    conceptsPagination.page = currentPage;
+    conceptsPagination.perPage = perPage;
+    conceptsPagination.total = total;
+    conceptsPagination.lastPage = Math.max(1, lastPage);
+    conceptsPagination.hasNext = hasNext;
+
+    if (conceptsCache.length === 0 && targetPage > 1) {
+      await loadConcepts(targetPage - 1);
+      return;
+    }
+
+    renderConcepts();
+    renderPagination();
+  } catch(err){
+    console.error(err);
+    grid.innerHTML = `
+      <div class="col-span-full text-center py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-red-50 via-rose-50 to-white rounded-2xl sm:rounded-3xl border-2 border-red-300 shadow-xl sm:shadow-2xl">
+        <div class="flex flex-col items-center gap-3 sm:gap-4 lg:gap-5 px-4">
+          <div class="p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-red-100 to-rose-100 rounded-full shadow-lg sm:shadow-xl">
+            <i class="fas fa-exclamation-triangle text-4xl sm:text-5xl lg:text-6xl text-red-600"></i>
+          </div>
+          <div class="space-y-1 sm:space-y-2">
+            <p class="text-red-800 font-black text-base sm:text-lg lg:text-xl">Error al cargar conceptos</p>
+            <p class="text-red-600 text-xs sm:text-sm font-medium max-w-md break-words">${escapeHtml(err.message || 'Error desconocido')}</p>
+          </div>
+          <button onclick="loadConcepts(${targetPage})" class="mt-2 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-xs sm:text-sm">
+            <i class="fas fa-redo mr-2"></i> Reintentar
+          </button>
+        </div>
+      </div>
+    `;
+    if (paginationContainer) paginationContainer.innerHTML = '';
+  }
+}
+
+function renderConcepts(){
+  const grid = document.getElementById('concepts-grid');
+  if(!grid) return;
+  const statusFilter = normalizeStatus(document.getElementById('filter-status')?.value || '');
+  const scopeFilter = normalizeAppliesTo(document.getElementById('filter-scope')?.value || '');
+
+  const list = [...conceptsCache].filter(c => {
+    const conceptStatus = getConceptStatus(c);
+    const conceptScope = getConceptScope(c);
+    const matchesStatus = !statusFilter || conceptStatus === statusFilter;
+    const matchesScope = !scopeFilter || conceptScope === scopeFilter;
+    return matchesStatus && matchesScope;
+  });
+
+  if(!list.length){
+    grid.innerHTML = `
+      <div class="col-span-full text-center py-12 sm:py-16 lg:py-24 bg-gradient-to-br from-white via-emerald-50/30 to-teal-50/20 rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border-2 border-emerald-200/50">
+        <div class="flex flex-col items-center gap-4 sm:gap-5 lg:gap-6 px-4">
+          <div class="p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full shadow-lg sm:shadow-xl">
+            <i class="fas fa-inbox text-5xl sm:text-6xl lg:text-7xl text-emerald-700"></i>
+          </div>
+          <div class="space-y-1 sm:space-y-2">
+            <p class="text-[#2E594D] font-black text-lg sm:text-xl lg:text-2xl">No hay conceptos registrados</p>
+            <p class="text-gray-600 text-sm sm:text-base font-medium px-4">Comienza creando tu primer concepto</p>
+          </div>
+          <a href="/new" class="mt-2 sm:mt-4 px-5 sm:px-6 lg:px-8 py-3 sm:py-3.5 lg:py-4 bg-gradient-to-r from-[#2E594D] via-emerald-700 to-teal-700 text-white font-bold rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl hover:shadow-2xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 flex items-center gap-2 sm:gap-3 group relative overflow-hidden text-xs sm:text-sm lg:text-base">
+            <div class="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div class="absolute inset-0 shimmer opacity-0 group-hover:opacity-100"></div>
+            <i class="fas fa-plus-circle text-base sm:text-lg relative z-10 group-hover:rotate-90 transition-transform duration-300"></i>
+            <span class="relative z-10 whitespace-nowrap">Crear Mi Primer Concepto</span>
+          </a>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = list.map(c=>{
+    const amount = Number(c.amount)||0;
+    const normalizedStatus = getConceptStatus(c);
+    const isInactive = normalizedStatus !== 'activo';
+    
+    // Determinar y mostrar el tipo de alcance
+    const appliesTo = getConceptScope(c);
+    let scopeTypeLabel = '';
+    let scopeTypeColor = '';
+    let showScopeType = true;
+    
+    if (appliesTo === 'carrera') {
+      scopeTypeLabel = 'Por carrera';
+      scopeTypeColor = 'bg-purple-100 text-purple-800 border-purple-300';
+    } else if (appliesTo === 'semestre') {
+      scopeTypeLabel = 'Por semestre';
+      scopeTypeColor = 'bg-indigo-100 text-indigo-800 border-indigo-300';
+    } else if (appliesTo === 'carrera_semestre') {
+      scopeTypeLabel = 'Por carrera + semestre';
+      scopeTypeColor = 'bg-violet-100 text-violet-800 border-violet-300';
+    } else if (appliesTo === 'estudiantes') {
+      scopeTypeLabel = 'Estudiantes específicos';
+      scopeTypeColor = 'bg-orange-100 text-orange-800 border-orange-300';
+    } else if (appliesTo === 'tag') {
+      scopeTypeLabel = 'Por tags especiales';
+      scopeTypeColor = 'bg-pink-100 text-pink-800 border-pink-300';
+    } else if (appliesTo === 'todos') {
+      scopeTypeLabel = 'Todos';
+      scopeTypeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+    } else {
+      showScopeType = false;
+    }
+
+    const appliesSummary = relationSummary(c, appliesTo);
+    
+    // Usar expiration_human del API si está disponible, o construir desde fechas
+    const vigenciaRaw = c.expiration_human || c.expirationHuman || (() => {
+      const startDate = c.start_date || c.startDate || '';
+      const endDate = c.end_date || c.endDate || '';
+      if (startDate && endDate) {
+        return `${String(startDate).substring(0, 10)} → ${String(endDate).substring(0, 10)}`;
+      }
+      return 'No definida';
+    })();
+    
+    const vigenciaText = formatVigencia(vigenciaRaw);
+
+    return `
+      <div class="group bg-gradient-to-br ${isInactive ? 'from-amber-50/90 via-orange-50/80 to-amber-50/90 border-amber-300/50' : 'from-white/95 via-emerald-50/30 to-teal-50/20 border-gray-200/80'} backdrop-blur-xl rounded-xl shadow-lg border-2 p-3 sm:p-4 flex flex-col justify-between transition-all hover:shadow-xl hover:scale-[1.01] hover:-translate-y-1 duration-500 relative overflow-hidden card">
+        <!-- Decoración de fondo con animación -->
+        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${isInactive ? 'from-amber-400/10' : 'from-emerald-400/10'} to-transparent rounded-full blur-2xl -z-0 group-hover:scale-150 transition-transform duration-700"></div>
+        <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr ${isInactive ? 'from-orange-400/10' : 'from-teal-400/10'} to-transparent rounded-full blur-xl -z-0 group-hover:scale-125 transition-transform duration-700"></div>
+        
+        <!-- Header con título y monto -->
+        <div class="flex items-start justify-between gap-2 mb-2 relative z-10">
+          <div class="flex items-start gap-2 flex-1 min-w-0">
+            <div class="p-2 bg-gradient-to-br ${isInactive ? 'from-amber-100 to-orange-100' : 'from-emerald-100 to-teal-100'} rounded-lg shadow-md flex-shrink-0">
+              <i class="fas fa-receipt ${isInactive ? 'text-amber-700' : 'text-emerald-700'} text-base"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-black text-base sm:text-lg text-gray-900 leading-snug line-clamp-2 group-hover:text-[#2E594D] transition-colors">${escapeHtml(c.concept_name || c.conceptName || c.title || '')}</h3>
+              <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                ${getStatusBadge(c.status)}
+                ${showScopeType ? `<span class="inline-flex items-center gap-1 text-[7px] border ${scopeTypeColor} px-2 py-0.5 rounded-full font-bold uppercase shadow-sm hover:scale-105 transition-transform whitespace-nowrap">
+                  <i class="fas fa-bullseye text-[6px]"></i> ${escapeHtml(scopeTypeLabel)}
+                </span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col items-center bg-gradient-to-br from-[#2E594D] via-emerald-700 to-teal-700 px-5 py-3 rounded-xl shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+            <span class="text-base text-white/90 font-bold">💰</span>
+            <span class="text-2xl font-black text-white leading-tight">${formatCurrency(amount)}</span>
+          </div>
+        </div>
+
+        <!-- Vigencia -->
+        <div class="text-xs py-1.5 rounded px-2.5 mb-2.5 shadow-sm backdrop-blur-sm relative z-10 ${isInactive ? 'bg-amber-50/70 border border-amber-200' : 'bg-blue-50/70 border border-blue-200'}">
+          <div class="flex items-center justify-between gap-1.5">
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              <i class="fas fa-calendar-alt ${isInactive ? 'text-amber-600' : 'text-blue-600'} text-xs"></i>
+              <span class="text-gray-700 font-bold text-[8px] uppercase">Vigencia</span>
+            </div>
+            <span class="font-bold text-gray-800 text-xs">${escapeHtml(vigenciaText)}</span>
+          </div>
+        </div>
+
+        <div class="text-[11px] py-2 rounded px-2.5 mb-2.5 border border-emerald-200 bg-emerald-50/70 text-emerald-900 font-semibold relative z-10">
+          <span class="uppercase text-[9px] font-black tracking-wide text-emerald-700">Aplica a:</span>
+          <div class="mt-1 leading-snug break-words">${escapeHtml(appliesSummary)}</div>
+        </div>
+
+        <!-- Descripción y Acciones -->
+        <div class="space-y-2 relative z-10">
+          <!-- Descripción expandible -->
+          <div class="hidden text-xs text-gray-700 bg-gradient-to-br from-blue-50 via-indigo-50/50 to-white p-2.5 rounded-lg border border-blue-200 shadow-md backdrop-blur-sm" id="details-${c.id}">
+            <div class="flex items-start gap-2">
+              <i class="fas fa-info-circle text-blue-600 text-sm flex-shrink-0"></i>
+              <div class="flex-1">
+                <p class="font-bold text-blue-900 mb-1">Descripción</p>
+                <p class="text-gray-700 leading-relaxed">${escapeHtml(c.description || 'Sin descripción disponible.')}</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Botones de acciones -->
+          <div class="grid grid-cols-4 gap-1.5">
+            <button onclick="window.editConcept('${c.id}')" class="group/btn py-2 px-2 text-[10px] font-bold bg-gradient-to-br from-[#2E594D] via-emerald-700 to-teal-700 text-white rounded hover:shadow-lg hover:scale-105 transition-all duration-300 relative overflow-hidden flex flex-col items-center gap-0.5">
+              <i class="fas fa-edit text-sm group-hover/btn:rotate-12 transition-transform"></i>
+              <span>Editar</span>
+            </button>
+
+            ${!isInactive ? `
+              <button onclick="window.finalizeConcept('${c.id}')" class="group/btn py-2 px-2 text-[10px] font-bold bg-gradient-to-br from-amber-100 to-orange-100 text-amber-800 rounded hover:shadow-lg hover:scale-105 border border-amber-300 transition-all duration-300 relative overflow-hidden flex flex-col items-center gap-0.5">
+                <i class="fas fa-check-double text-sm group-hover/btn:scale-110 transition-transform"></i>
+                <span>Finalizar</span>
+              </button>
+            ` : `
+              <button onclick="window.activateConcept('${c.id}')" class="group/btn py-2 px-2 text-[10px] font-bold bg-gradient-to-br from-emerald-100 to-teal-100 text-emerald-800 rounded hover:shadow-lg hover:scale-105 border border-emerald-300 transition-all duration-300 relative overflow-hidden flex flex-col items-center gap-0.5">
+                <i class="fas fa-play text-sm group-hover/btn:translate-x-1 transition-transform"></i>
+                <span>Activar</span>
+              </button>
+            `}
+
+            <button onclick="window.deleteConcept('${c.id}')" class="group/btn py-2 px-2 text-[10px] font-bold bg-gradient-to-br from-red-100 to-rose-100 text-red-800 rounded hover:shadow-lg hover:scale-105 border border-red-300 transition-all duration-300 relative overflow-hidden flex flex-col items-center gap-0.5">
+              <i class="fas fa-trash-alt text-sm group-hover/btn:rotate-12 transition-transform"></i>
+              <span>Borrar</span>
+            </button>
+
+            <button onclick="document.getElementById('details-${c.id}').classList.toggle('hidden')" class="py-2 px-2 text-[10px] text-[#2E594D] hover:text-white font-bold bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-[#2E594D] hover:to-emerald-700 rounded border border-emerald-200 hover:border-emerald-600 shadow-sm hover:shadow-lg transition-all relative z-10 group/info flex flex-col items-center gap-0.5">
+              <i class="fas fa-info-circle group-hover/info:rotate-180 transition-transform duration-500"></i>
+              <span>Info</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function initConceptFilters() {
+  const statusSelect = document.getElementById('filter-status');
+  const scopeSelect = document.getElementById('filter-scope');
+  const clearButton = document.getElementById('clear-concept-filters');
+
+  if (statusSelect && !statusSelect.dataset.bound) {
+    statusSelect.addEventListener('change', () => loadConcepts(1));
+    statusSelect.dataset.bound = 'true';
+  }
+
+  if (scopeSelect && !scopeSelect.dataset.bound) {
+    scopeSelect.addEventListener('change', renderConcepts);
+    scopeSelect.dataset.bound = 'true';
+  }
+
+  if (clearButton && !clearButton.dataset.bound) {
+    clearButton.addEventListener('click', () => {
+      if (statusSelect) statusSelect.value = '';
+      if (scopeSelect) scopeSelect.value = '';
+      renderConcepts();
+    });
+    clearButton.dataset.bound = 'true';
+  }
+}
+
+async function mutateConcept(id, action){
+  const endpoints = {
+    finalize: `${API_BASE}/v1/concepts/${id}/finalize`,
+    activate: `${API_BASE}/v1/concepts/${id}/activate`,
+    disable: `${API_BASE}/v1/concepts/${id}/disable`,
+    delete: `${API_BASE}/v1/concepts/${id}/eliminateLogical`
+  };
+  const perms = {
+    finalize: 'finalize.concepts',
+    activate: 'activate.concepts',
+    disable: 'disable.concepts',
+    delete: 'eliminate.concepts'
+  };
+  const methods = {
+    finalize: 'POST',
+    activate: 'POST',
+    disable: 'POST',
+    delete: 'POST'
+  };
+  
+  try {
+    await apiFetch(endpoints[action], {
+      method: methods[action],
+      headers: {
+        'X-User-Role': 'financial-staff',
+        'X-User-Permission': perms[action]
+      }
+    });
+    
+    // Mostrar mensaje de éxito
+    const successMessages = {
+      finalize: 'Concepto finalizado exitosamente',
+      activate: 'Concepto activado exitosamente',
+      disable: 'Concepto deshabilitado exitosamente',
+      delete: 'Concepto marcado como eliminado'
+    };
+    alert(`✓ ${successMessages[action]}`);
+    
+    await loadConcepts();
+    return true;
+  } catch (err) {
+    console.error(`Error en ${action}:`, err);
+    
+    // Manejo especial para conflictos 409 o mensajes de estado ya existente
+    if (err.message.includes('ya está') || 
+        err.message.includes('ya fue') || 
+        err.message.includes('elimina')) {
+      alert(`⚠️ ${err.message}\n\nActualizando lista...`);
+      await loadConcepts(); // Recargar para mostrar estado actualizado
+      return false;
+    } else {
+      alert(`❌ Error: ${err.message}`);
+      return false;
+    }
+  }
+}
+
+/* --- EXPOSICIÓN GLOBAL --- */
+window.editConcept = (id) => {
+  const c = conceptsCache.find(x=>String(x.id)===String(id));
+  
+  // Determinar el tipo de scope basado en applies_to
+  const appliesTo = getConceptScope(c);
+  let scopeType = appliesTo === 'todos' ? 'all' : 'carrera';
+  
+  // Mapeo explícito de applies_to a scopeType
+  const scopeTypeMap = {
+    'todos': 'all',
+    'carrera': 'carrera',
+    'semestre': 'semestre',
+    'carrera_semestre': 'carrera_semestre',
+    'estudiantes': 'estudiantes',
+    'tag': 'tags',
+    'tags': 'tags',
+    'special_tags': 'tags'
+  };
+  
+  scopeType = scopeTypeMap[appliesTo] || 'all';
+  
+  // Si appliesTo está vacío pero el nombre sugiere algo específico
+  if (!appliesTo && c.concept_name) {
+    const name = (c.concept_name || '').toLowerCase();
+    if (name.includes('estudiante')) scopeType = 'estudiantes';
+    else if (name.includes('carrera') && name.includes('semestre')) scopeType = 'carrera_semestre';
+    else if (name.includes('carrera')) scopeType = 'carrera';
+    else if (name.includes('semestre')) scopeType = 'semestre';
+    else if (name.includes('tag') || name.includes('especial')) scopeType = 'tags';
+  }
+  
+  console.log('🔍 Concepto a editar:', {
+    id: c.id,
+    título: c.concept_name,
+    applies_to_raw: appliesTo,
+    scopeType_final: scopeType,
+    careers: c.careerIds || c.careers,
+    semesters: c.semesters,
+    students: c.userIds || c.user_ids,
+    exceptions: c.exceptionStudents || c.exception_students,
+    applicantTags: c.applicantTags || c.applicant_tags
+  });
+  
+  localStorage.setItem('editingConcept', JSON.stringify({
+    id: c.id,
+    title: c.concept_name || c.conceptName,
+    amount: c.amount,
+    description: c.description,
+    status: c.status,
+    start_date: c.start_date,
+    end_date: c.end_date,
+    applies_to: appliesTo,  // aplicación especifica del backend
+    scopeType: scopeType,   // tipo de ámbito normalizado
+    scopeRules: {
+      allStudents: appliesTo === 'todos',
+      careers: c.careerIds || c.careers || c.carreras || c.career_ids || [],
+      semesters: c.semesters || c.semestres || c.target_semester || c.semester || c.semestre || [],
+      specificStudents: c.userIds || c.user_ids || c.students || [],
+      exceptionStudents: c.exceptionStudents || c.exception_students || [],
+      applicantTags: (() => {
+        const tags = c.applicantTags || c.applicant_tags;
+        return Array.isArray(tags) ? tags : (tags ? [tags] : []);
+      })()
+    }
+  }));
+  window.location.href = '/new?edit='+encodeURIComponent(id);
+};
+window.finalizeConcept = (id) => mutateConcept(id, 'finalize');
+window.activateConcept = (id) => mutateConcept(id, 'activate');
+window.deleteConcept = (id) => {
+  if(!confirm('⚠️ ¿Marcar concepto como eliminado (borrado lógico)?')) return;
+  mutateConcept(id, 'delete');
+};
+window.changeConceptsPage = (page) => {
+  const target = Number(page) || 1;
+  if (target < 1) return;
+  if (target === conceptsPagination.page) return;
+  loadConcepts(target);
+};
+
+initConceptFilters();
+loadConcepts();
+</script>
+
+<style>
+.hidden { display:none; }
+.line-clamp-1 { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:1; }
+.line-clamp-2 { overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.col-span-full { grid-column: 1 / -1; }
+
+/* Optimizaciones adicionales para móvil */
+@media (max-width: 640px) {
+  .card:hover {
+    transform: translateY(-3px) scale(1.01);
+  }
+  
+  .animate-float {
+    animation: none; /* Desactivar animaciones complejas en móvil para mejor rendimiento */
+  }
+}
+</style>
+</Layout>

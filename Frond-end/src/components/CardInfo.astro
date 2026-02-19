@@ -1,0 +1,188 @@
+---
+// src/components/CardInfo.astro
+const { title, value, description, icon, href } = Astro.props;
+
+let displayValue = value || '0';
+
+// Ajuste inicial para tarjetas de dinero
+if ((icon === 'pending' || icon === 'recaudado' || icon === 'balance') && !value) {
+    displayValue = '$0.00';
+}
+
+const iconColors = {
+    students: 'text-[#3b7666]',
+    pending: 'text-orange-600', 
+    recaudado: 'text-blue-600',
+    balance: 'text-yellow-600',
+    concepts: 'text-purple-600', 
+};
+
+const getIconSvg = (iconName, sizeClass) => {
+    switch (iconName) {
+        case 'students':
+            return `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
+        case 'concepts':
+            return `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>`;
+        case 'pending':
+            return `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+        case 'recaudado':
+            return `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
+        case 'balance':
+            return `<svg xmlns="http://www.w3.org/2000/svg" class="${sizeClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>`;
+        default: return '';
+    }
+};
+---
+
+{href ? (
+    <a href={href} class="bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-lg flex flex-col items-center justify-between h-auto w-full text-center transition-all duration-200 hover:shadow-xl focus:outline-none cursor-pointer">
+        <div class="flex justify-between items-start w-full mb-1">
+            <h3 class="text-sm font-medium text-gray-700">{title}</h3>
+            <span class="flex-shrink-0" class:list={[iconColors[icon]]} set:html={getIconSvg(icon, 'w-5 h-5')}></span>
+        </div>
+        
+        <div class="flex flex-col items-center justify-center w-full my-2">
+            <p class:list={['text-2xl md:text-3xl font-bold', iconColors[icon]]} id={`count-${icon}`}>
+                {displayValue}
+            </p> 
+            <p class="text-xs text-gray-500 mt-1" id={`desc-${icon}`}>
+               {description}
+            </p> 
+        </div>
+    </a>
+) : (
+    <div class="bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-lg flex flex-col items-center justify-between h-auto w-full text-center transition-all duration-200 hover:shadow-xl focus:outline-none cursor-default">
+        <div class="flex justify-between items-start w-full mb-1">
+            <h3 class="text-sm font-medium text-gray-700">{title}</h3>
+            <span class="flex-shrink-0" class:list={[iconColors[icon]]} set:html={getIconSvg(icon, 'w-5 h-5')}></span>
+        </div>
+        
+        <div class="flex flex-col items-center justify-center w-full my-2">
+            <p class:list={['text-2xl md:text-3xl font-bold', iconColors[icon]]} id={`count-${icon}`}>
+                {displayValue}
+            </p> 
+            <p class="text-xs text-gray-500 mt-1" id={`desc-${icon}`}>
+               {description}
+            </p> 
+        </div>
+    </div>
+)}
+
+<script define:vars={{ icon }}>
+    const updateCard = () => {
+        const elVal = document.getElementById(`count-${icon}`);
+        const elDesc = document.getElementById(`desc-${icon}`);
+        if (!elVal) return;
+
+        const formatMX = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
+        const parseAmount = (value) => {
+            if (value == null) return 0;
+            const parsed = parseFloat(String(value).replace(/,/g, '').trim());
+            return Number.isFinite(parsed) ? parsed : 0;
+        };
+
+        const dashboardPayments = JSON.parse(localStorage.getItem('dashboardPayments') || 'null');
+        const dashboardPending = JSON.parse(localStorage.getItem('dashboardPendingPayments') || 'null');
+        const dashboardStudents = JSON.parse(localStorage.getItem('dashboardStudents') || 'null');
+
+        if (icon === 'concepts') {
+            const list = JSON.parse(localStorage.getItem('conceptsList') || '[]');
+            elVal.textContent = String(list.length);
+            if (elDesc) elDesc.textContent = list.length === 1 ? "1 Concepto" : `${list.length} Conceptos`;
+        }
+
+        if (icon === 'pending' || icon === 'recaudado') {
+            if (icon === 'pending' && dashboardPending && dashboardPending.totalAmount != null) {
+                const totalAmount = parseAmount(dashboardPending.totalAmount);
+                const totalCount = Number(dashboardPending.totalCount || 0);
+                elVal.textContent = formatMX(totalAmount);
+                if (elDesc) elDesc.textContent = totalCount === 1 ? '1 Adeudo' : `${totalCount} Adeudos`;
+                return;
+            }
+
+            if (icon === 'recaudado' && dashboardPayments && dashboardPayments.totalPayments != null) {
+                const totalPayments = parseAmount(dashboardPayments.totalPayments);
+                const totalAvailable = parseAmount(dashboardPayments.totalBalanceAvailable || 0);
+                elVal.textContent = formatMX(totalPayments);
+                if (elDesc) elDesc.textContent = `Balance disponible: ${formatMX(totalAvailable)}`;
+                return;
+            }
+
+            const charges = JSON.parse(localStorage.getItem('chargesList') || '[]');
+            if (icon === 'recaudado') {
+                const paid = charges.filter(c => ['paid', 'pagado'].includes(String(c.status).toLowerCase()));
+                elVal.textContent = formatMX(paid.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0));
+                if (elDesc) elDesc.textContent = `${paid.length} Pagos`;
+            } else {
+                const pending = charges.filter(c => !['paid', 'pagado'].includes(String(c.status).toLowerCase()));
+                elVal.textContent = formatMX(pending.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0));
+                if (elDesc) elDesc.textContent = `${pending.length} Adeudos`;
+            }
+        }
+
+        if (icon === 'balance') {
+            if (dashboardPayments && dashboardPayments.totalBalancePending != null) {
+                const balancePending = parseAmount(dashboardPayments.totalBalancePending);
+                const percentage = parseAmount(dashboardPayments.pendingPercentage || 0);
+                elVal.textContent = formatMX(balancePending);
+                if (elDesc) elDesc.textContent = `${percentage}% del total`;
+                return;
+            }
+        }
+
+        if (icon === 'students') {
+            if (dashboardStudents && dashboardStudents.totalStudents != null) {
+                const totalStudents = Number(dashboardStudents.totalStudents || 0);
+                const studentCount = Number(dashboardStudents.studentCount || 0);
+                const applicantCount = Number(dashboardStudents.applicantCount || 0);
+                const description = applicantCount > 0
+                    ? `${studentCount} Estudiantes, ${applicantCount} Aspirantes`
+                    : `Actualizado: ${new Date().toLocaleDateString('es-MX')}`;
+                elVal.textContent = String(totalStudents);
+                if (elDesc) elDesc.textContent = description;
+                return;
+            }
+
+            // Intentar obtener estudiantes de localStorage
+            let studentsList = JSON.parse(localStorage.getItem('studentsList') || '[]');
+            let studentCount = 0;
+            
+            // Si es un objeto (no un array)
+            if (studentsList && typeof studentsList === 'object' && !Array.isArray(studentsList)) {
+                // Si tiene propiedad 'total' (formato del Dashboard)
+                if (studentsList.total !== undefined) {
+                    studentCount = studentsList.total;
+                } else if (studentsList.students !== undefined) {
+                    // Si tiene un array 'students'
+                    studentCount = Array.isArray(studentsList.students) ? studentsList.students.length : 0;
+                } else if (studentsList.data?.students !== undefined) {
+                    // Si está en data.students
+                    studentCount = Array.isArray(studentsList.data.students) ? studentsList.data.students.length : 0;
+                } else if (studentsList.data !== undefined && !Array.isArray(studentsList.data)) {
+                    // Si data es un objeto
+                    studentCount = 0;
+                } else if (Array.isArray(studentsList.data)) {
+                    // Si data es un array
+                    studentCount = studentsList.data.length;
+                } else if (studentsList.items !== undefined) {
+                    studentCount = Array.isArray(studentsList.items) ? studentsList.items.length : 0;
+                }
+            } else if (Array.isArray(studentsList)) {
+                // Si es un array directo
+                studentCount = studentsList.length;
+            }
+            
+            elVal.textContent = String(studentCount);
+            
+            const hoy = new Date();
+            if (elDesc) elDesc.textContent = hoy.toLocaleDateString('es-MX');
+        }
+    };
+
+    updateCard();
+    window.addEventListener('storage', updateCard);
+    window.addEventListener('conceptsUpdated', updateCard);
+    window.addEventListener('chargesUpdated', updateCard);
+    window.addEventListener('studentsUpdated', updateCard);
+    window.addEventListener('dashboardCardsUpdated', updateCard);
+</script>
