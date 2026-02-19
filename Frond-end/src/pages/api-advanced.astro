@@ -1,0 +1,239 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { API_ENDPOINTS } from '../config/api.js';
+import { fetchAPI, fetchMultiple, paginate, filterData, sortData } from '../utils/apiHelpers.js';
+
+// === EJEMPLO 1: Usar fetchAPI helper ===
+const studentsResult = await fetchAPI(API_ENDPOINTS.students.list);
+
+// === EJEMPLO 2: Consumir múltiples endpoints en paralelo ===
+const multipleResults = await fetchMultiple({
+  students: API_ENDPOINTS.students.list,
+  payments: API_ENDPOINTS.payments.list,
+  debts: API_ENDPOINTS.debts.list,
+  concepts: API_ENDPOINTS.concepts.list
+});
+
+// === EJEMPLO 3: Paginación ===
+const allStudents = studentsResult.data || [];
+const paginatedStudents = paginate(allStudents, 1, 10); // Página 1, 10 por página
+
+// === EJEMPLO 4: Filtrado ===
+const searchTerm = ''; // Puedes cambiarlo por cualquier término
+const filteredStudents = filterData(allStudents, searchTerm, ['nombre', 'apellidoP', 'correo']);
+
+// === EJEMPLO 5: Ordenamiento ===
+const sortedStudents = sortData(allStudents, 'nombre', 'asc');
+
+const pageTitle = "Ejemplos Avanzados de API";
+---
+
+<Layout title={pageTitle}>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-gray-800">🚀 Ejemplos Avanzados de Consumo de API</h1>
+
+    <!-- EJEMPLO 1: Usando fetchAPI helper -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-[#2E594D]">1️⃣ Usando fetchAPI Helper</h2>
+      
+      {studentsResult.error ? (
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          ⚠️ Error: {studentsResult.error}
+        </div>
+      ) : (
+        <div class="bg-white rounded-lg shadow p-6">
+          <p class="text-green-600 font-semibold mb-2">✅ Datos cargados correctamente</p>
+          <p class="text-gray-600">Total de estudiantes: <strong>{studentsResult.data?.length || 0}</strong></p>
+        </div>
+      )}
+
+      <div class="mt-4 bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto">
+        <pre class="text-sm"><code>{`const { data, error } = await fetchAPI(API_ENDPOINTS.students.list);
+
+if (error) {
+  console.error(error);
+} else {
+  console.log('Estudiantes:', data);
+}`}</code></pre>
+      </div>
+    </section>
+
+    <!-- EJEMPLO 2: Múltiples endpoints en paralelo -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-[#2E594D]">2️⃣ Consumir Múltiples Endpoints en Paralelo</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+          <h3 class="font-semibold text-blue-900 mb-2">Estudiantes</h3>
+          {multipleResults.students.error ? (
+            <p class="text-sm text-red-600">❌ Error</p>
+          ) : (
+            <p class="text-2xl font-bold text-blue-600">{multipleResults.students.data?.length || 0}</p>
+          )}
+        </div>
+
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+          <h3 class="font-semibold text-green-900 mb-2">Pagos</h3>
+          {multipleResults.payments.error ? (
+            <p class="text-sm text-red-600">❌ Error</p>
+          ) : (
+            <p class="text-2xl font-bold text-green-600">{multipleResults.payments.data?.length || 0}</p>
+          )}
+        </div>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
+          <h3 class="font-semibold text-yellow-900 mb-2">Adeudos</h3>
+          {multipleResults.debts.error ? (
+            <p class="text-sm text-red-600">❌ Error</p>
+          ) : (
+            <p class="text-2xl font-bold text-yellow-600">{multipleResults.debts.data?.length || 0}</p>
+          )}
+        </div>
+
+        <div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded">
+          <h3 class="font-semibold text-purple-900 mb-2">Conceptos</h3>
+          {multipleResults.concepts.error ? (
+            <p class="text-sm text-red-600">❌ Error</p>
+          ) : (
+            <p class="text-2xl font-bold text-purple-600">{multipleResults.concepts.data?.length || 0}</p>
+          )}
+        </div>
+      </div>
+
+      <div class="mt-4 bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto">
+        <pre class="text-sm"><code>{`const results = await fetchMultiple({
+  students: API_ENDPOINTS.students.list,
+  payments: API_ENDPOINTS.payments.list,
+  debts: API_ENDPOINTS.debts.list
+});
+
+console.log(results.students.data);
+console.log(results.payments.data);`}</code></pre>
+      </div>
+    </section>
+
+    <!-- EJEMPLO 3: Paginación -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-[#2E594D]">3️⃣ Paginación de Resultados</h2>
+      
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+          <p class="text-gray-600">
+            Mostrando <strong>{paginatedStudents.data.length}</strong> de <strong>{paginatedStudents.total}</strong> estudiantes
+          </p>
+          <p class="text-gray-600">
+            Página <strong>{paginatedStudents.page}</strong> de <strong>{paginatedStudents.totalPages}</strong>
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          {paginatedStudents.data.map((student) => (
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100">
+              <span class="font-medium">{student.nombre} {student.apellidoP}</span>
+              <span class="text-sm text-gray-500">{student.correo || 'Sin email'}</span>
+            </div>
+          ))}
+        </div>
+
+        <div class="flex justify-between items-center mt-4 pt-4 border-t">
+          <button disabled={!paginatedStudents.hasPrev} class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50">
+            ← Anterior
+          </button>
+          <button disabled={!paginatedStudents.hasNext} class="px-4 py-2 bg-[#2E594D] text-white rounded disabled:opacity-50">
+            Siguiente →
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4 bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto">
+        <pre class="text-sm"><code>{`const paginated = paginate(data, 1, 10); // Página 1, 10 por página
+
+console.log(paginated.data);       // Datos de la página
+console.log(paginated.totalPages); // Total de páginas
+console.log(paginated.hasNext);    // ¿Hay siguiente página?`}</code></pre>
+      </div>
+    </section>
+
+    <!-- EJEMPLO 4: Filtrado -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-[#2E594D]">4️⃣ Filtrado de Datos</h2>
+      
+      <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-gray-600 mb-4">
+          Estudiantes filtrados: <strong>{filteredStudents.length}</strong>
+        </p>
+        <div class="text-sm text-gray-500">
+          <p>Filtra por nombre, apellido o correo</p>
+        </div>
+      </div>
+
+      <div class="mt-4 bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto">
+        <pre class="text-sm"><code>{`// Filtrar por cualquier campo
+const filtered = filterData(data, 'juan');
+
+// Filtrar solo en campos específicos
+const filtered2 = filterData(data, 'juan', ['nombre', 'apellidoP']);`}</code></pre>
+      </div>
+    </section>
+
+    <!-- EJEMPLO 5: Ordenamiento -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-[#2E594D]">5️⃣ Ordenamiento de Datos</h2>
+      
+      <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-gray-600 mb-4">Primeros 5 estudiantes ordenados alfabéticamente:</p>
+        <ul class="space-y-2">
+          {sortedStudents.slice(0, 5).map((student, index) => (
+            <li class="flex items-center gap-3">
+              <span class="w-6 h-6 flex items-center justify-center bg-[#2E594D] text-white rounded-full text-xs font-bold">
+                {index + 1}
+              </span>
+              <span>{student.nombre} {student.apellidoP} {student.apellidoM}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="mt-4 bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto">
+        <pre class="text-sm"><code>{`// Ordenar ascendente
+const sorted = sortData(data, 'nombre', 'asc');
+
+// Ordenar descendente
+const sorted2 = sortData(data, 'semestre', 'desc');`}</code></pre>
+      </div>
+    </section>
+
+    <!-- Resumen de funciones disponibles -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-[#2E594D]">📚 Funciones Disponibles</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+          <h3 class="font-semibold mb-2">fetchAPI(endpoint, options)</h3>
+          <p class="text-sm text-gray-600">Consume un endpoint y retorna {`{ data, error, status }`}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+          <h3 class="font-semibold mb-2">fetchMultiple(endpoints)</h3>
+          <p class="text-sm text-gray-600">Consume múltiples endpoints en paralelo</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
+          <h3 class="font-semibold mb-2">paginate(data, page, perPage)</h3>
+          <p class="text-sm text-gray-600">Divide datos en páginas</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
+          <h3 class="font-semibold mb-2">filterData(data, term, fields)</h3>
+          <p class="text-sm text-gray-600">Filtra datos por término de búsqueda</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+          <h3 class="font-semibold mb-2">sortData(data, field, order)</h3>
+          <p class="text-sm text-gray-600">Ordena datos por campo (asc/desc)</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</Layout>

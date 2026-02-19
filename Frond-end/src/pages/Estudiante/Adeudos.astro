@@ -1,0 +1,1607 @@
+﻿---
+import StudentLayout from '../../layouts/LayoutEstu.astro';
+
+const title = "Finanzas Estudiantiles";
+const resultParam = typeof Astro !== 'undefined' && Astro.url ? Astro.url.searchParams.get('result') : null;
+// Todo el manejo de datos se hará del lado del cliente
+---
+
+<StudentLayout title={title}>
+  <!-- Load StudentAPI globally before Alpine initializes -->
+  <script src="/studentAPI.js?v=20260218r32" is:inline></script>
+  
+  <div 
+    class="page-wrapper"
+    x-data={`{ 
+      showModal: false,
+      step: 'select-method', 
+      loading: false,
+      loadingTab: false,
+      selectedItem: null,
+      selectedCard: null,
+      adeudos: [],
+      overdueAdeudos: [],
+      tarjetas: [],
+      alumnoNombre: 'Usuario',
+      showOverdueAlert: false,
+      activeTab: 'pending',
+      userId: null,
+      portalRole: 'student',
+      roleNotice: '',
+      showResultModal: false,
+      resultType: '${resultParam || ''}',
+      autoRefreshEnabled: true,
+      autoRefreshIntervalMs: 180000,
+      autoRefreshTimerId: null,
+      autoRefreshFocusHandler: null,
+      autoRefreshVisibilityHandler: null,
+
+      detectPortalRole() {
+        const userDataCandidates = [
+          localStorage.getItem('user_data'),
+          localStorage.getItem('userData')
+        ].filter(Boolean);
+
+        const roleValues = [];
+
+        userDataCandidates.forEach((userDataRaw) => {
+          try {
+            const parsed = JSON.parse(userDataRaw);
+            const userData = parsed?.data?.user || parsed?.user || parsed?.data || parsed || {};
+
+            const roles = [];
+            if (Array.isArray(userData?.roles)) roles.push(...userData.roles);
+            if (userData?.role) roles.push(userData.role);
+            if (userData?.role_name) roles.push(userData.role_name);
+            if (userData?.type) roles.push(userData.type);
+
+            roles.forEach((entry) => {
+              if (!entry) return;
+              if (typeof entry === 'string') {
+                roleValues.push(entry);
+                return;
+              }
+              roleValues.push(entry?.name || entry?.slug || entry?.role || '');
+            });
+          } catch (_) {}
+        });
+
+        const roleCandidates = [
+          localStorage.getItem('userRole'),
+          localStorage.getItem('role'),
+          ...roleValues
+        ]
+          .filter(Boolean)
+          .map(function(roleValue) {
+            return String(roleValue).toLowerCase().trim();
+          });
+
+        const hasParentRole = roleCandidates.some(function(roleValue) {
+          return roleValue === 'parent' || roleValue === 'padre';
+        });
+
+        const hasApplicantRole = roleCandidates.some(function(roleValue) {
+          return roleValue === 'applicant' || roleValue === 'aspirante' || roleValue === 'solicitante';
+        });
+
+        const hasStudentRole = roleCandidates.some(function(roleValue) {
+          return roleValue === 'student' || roleValue === 'estudiante' || roleValue === 'alumno';
+        });
+
+        if (hasParentRole) return 'parent';
+        if (hasApplicantRole) return 'applicant';
+        if (hasStudentRole) return 'student';
+        return '';
+      },
+
+      async ensureStudentAPI() {
+        if (window.StudentAPI) return true;
+
+        const existing = document.querySelector('script[data-student-api]');
+        if (!existing) {
+          const script = document.createElement('script');
+          script.src = '/studentAPI.js?v=20260218r32';
+          script.async = true;
+          script.dataset.studentApi = 'true';
+          document.head.appendChild(script);
+        }
+
+        return new Promise((resolve) => {
+          const start = Date.now();
+          const timer = setInterval(() => {
+            if (window.StudentAPI) {
+              clearInterval(timer);
+              resolve(true);
+              return;
+            }
+            if (Date.now() - start > 4000) {
+              clearInterval(timer);
+              resolve(false);
+            }
+          }, 100);
+        });
+      },
+
+      async syncPortalRoleFromApi(token) {
+        if (!token || !window.StudentAPI?.getAuthenticatedUser) return;
+        if (this.portalRole === 'applicant') return;
+
+        const now = Date.now();
+        const nextAllowedSyncAt = Number(localStorage.getItem('adeudos_role_sync_next_at') || '0');
+        if (Number.isFinite(nextAllowedSyncAt) && now < nextAllowedSyncAt) {
+          return;
+        }
+
+        try {
+          const response = await window.StudentAPI.getAuthenticatedUser(token);
+          const user = response?.data?.user || response?.user || response?.data || {};
+
+          const rawRoles = [];
+          if (Array.isArray(user?.roles)) rawRoles.push(...user.roles);
+          if (user?.role) rawRoles.push(user.role);
+          if (user?.role_name) rawRoles.push(user.role_name);
+          if (user?.type) rawRoles.push(user.type);
+
+          const normalizedRoles = rawRoles
+            .map((entry) => {
+              if (!entry) return '';
+              if (typeof entry === 'string') return entry;
+              return entry?.name || entry?.slug || entry?.role || '';
+            })
+            .map((value) => String(value).toLowerCase().trim())
+            .filter(Boolean);
+
+          if (!normalizedRoles.length) return;
+
+          const hasParentRole = normalizedRoles.some((roleValue) => roleValue === 'parent' || roleValue === 'padre');
+          const hasApplicantRole = normalizedRoles.some((roleValue) => roleValue === 'applicant' || roleValue === 'aspirante' || roleValue === 'solicitante');
+          const hasStudentRole = normalizedRoles.some((roleValue) => roleValue === 'student' || roleValue === 'estudiante' || roleValue === 'alumno');
+
+          const resolvedRole = hasParentRole
+            ? 'parent'
+            : hasApplicantRole
+              ? 'applicant'
+              : hasStudentRole
+                ? 'student'
+                : '';
+
+          if (!resolvedRole) return;
+
+          this.portalRole = resolvedRole;
+          localStorage.setItem('userRole', resolvedRole);
+          localStorage.setItem('role', resolvedRole);
+          localStorage.setItem('adeudos_role_sync_next_at', String(now + (15 * 60 * 1000)));
+          console.log('ðŸ” [Adeudos] Rol sincronizado desde API:', resolvedRole);
+        } catch (error) {
+          const errorMessage = String(error?.message || error || '').toLowerCase();
+          const isRateLimited = errorMessage.includes('429') || errorMessage.includes('límite de solicitudes') || errorMessage.includes('limite de solicitudes') || errorMessage.includes('too many requests');
+          if (isRateLimited) {
+            localStorage.setItem('adeudos_role_sync_next_at', String(now + (5 * 60 * 1000)));
+          }
+          console.warn('š ï¸ [Adeudos] No se pudo sincronizar rol desde API:', error?.message || error);
+        }
+      },
+
+      closeResultModal() {
+        this.showResultModal = false;
+      },
+
+      async init() {
+        // Mostrar modal si hay parámetro result=canceled
+        if (this.resultType === 'canceled') {
+          this.showResultModal = true;
+          // Limpiar URL después de 3 segundos
+          setTimeout(() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('result');
+            window.history.replaceState({}, '', url);
+          }, 3000);
+        }
+
+        // Obtener datos del usuario desde localStorage de forma más robusta
+        const userName = localStorage.getItem('userName');
+        const userDataStr = localStorage.getItem('userData');
+        
+        if (userName && userName !== 'Usuario' && userName !== 'Estudiante') {
+          this.alumnoNombre = userName;
+        } else if (userDataStr) {
+          try {
+            const userData = JSON.parse(userDataStr);
+            this.alumnoNombre = userData.fullName || userData.name || 'Usuario';
+          } catch (e) {
+            this.alumnoNombre = 'Usuario';
+          }
+        } else {
+          this.alumnoNombre = 'Usuario';
+        }
+        
+        const token = localStorage.getItem('access_token');
+        const userId = localStorage.getItem('userId');
+        this.userId = userId;  // Guardar en el estado
+        this.portalRole = this.detectPortalRole();
+        this.roleNotice = '';
+        
+        console.log('ðŸ” [Adeudos] Usuario cargado:', this.alumnoNombre);
+        console.log('ðŸ” [Adeudos] Token disponible:', !!token);
+        console.log('ðŸ” [Adeudos] UserId:', userId);
+        console.log('ðŸ” [Adeudos] Rol detectado:', this.portalRole);
+        const apiReady = await this.ensureStudentAPI();
+        console.log('ðŸ” [Adeudos] StudentAPI disponible:', apiReady);
+
+        if (token && apiReady && !this.portalRole) {
+          await this.syncPortalRoleFromApi(token);
+        }
+        
+        if (token && apiReady) {
+          await Promise.all([
+            this.loadPendingPayments(),
+            this.loadOverduePayments()
+          ]);
+
+          this.setupAutoRefresh();
+        }
+
+        if (token && apiReady) {
+          // Cargar tarjetas desde API usando StudentAPI
+          try {
+            console.log('ðŸ“¥ Cargando tarjetas desde StudentAPI...');
+            // Pasar null para obtener m©todos de pago del usuario autenticado
+            const cardsData = await window.StudentAPI.getPaymentMethods(null, token, false, this.portalRole);
+            const cardsArray = Array.isArray(cardsData.data) ? cardsData.data : 
+                               Array.isArray(cardsData) ? cardsData : [];
+            
+            this.tarjetas = cardsArray.map(card => ({
+              id: card.id,
+              tipo: card.brand || 'Tarjeta',
+              terminacion: card.last4 || card.terminacion || '****',
+              logo: card.brand === 'visa' ? 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg' : 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg'
+            }));
+            console.log('… Tarjetas cargadas:', this.tarjetas.length);
+          } catch (err) {
+            console.error(' Error al cargar tarjetas:', err);
+            this.tarjetas = [];
+          }
+        }
+        
+        // Fallback a localStorage si no hay datos de API
+        if (this.adeudos.length === 0) {
+          console.log('š ï¸ Usando fallback de localStorage para adeudos');
+          const adeudosGuardados = localStorage.getItem('mis_adeudos');
+          if (adeudosGuardados) {
+            this.adeudos = JSON.parse(adeudosGuardados);
+          }
+        }
+        
+        if (this.tarjetas.length === 0) {
+          console.log('š ï¸ Usando fallback de localStorage para tarjetas');
+          const guardadas = localStorage.getItem('mis_tarjetas');
+          if (guardadas) {
+            this.tarjetas = JSON.parse(guardadas);
+          }
+        }
+      },
+
+      setupAutoRefresh() {
+        if (!this.autoRefreshEnabled) return;
+
+        const runAutoRefresh = async () => {
+          if (document.hidden) return;
+          if (this.loading || this.loadingTab || this.showModal) return;
+          try {
+            await Promise.all([
+              this.loadPendingPayments(true),
+              this.loadOverduePayments(true)
+            ]);
+          } catch (error) {
+            console.warn('⚠️ [Adeudos] Auto-refresh omitido por error:', error?.message || error);
+          }
+        };
+
+        if (this.autoRefreshTimerId) {
+          clearInterval(this.autoRefreshTimerId);
+          this.autoRefreshTimerId = null;
+        }
+
+        this.autoRefreshTimerId = setInterval(() => {
+          void runAutoRefresh();
+        }, this.autoRefreshIntervalMs);
+
+        if (!this.autoRefreshFocusHandler) {
+          this.autoRefreshFocusHandler = () => {
+            void runAutoRefresh();
+          };
+          window.addEventListener('focus', this.autoRefreshFocusHandler);
+        }
+
+        if (!this.autoRefreshVisibilityHandler) {
+          this.autoRefreshVisibilityHandler = () => {
+            if (!document.hidden) {
+              void runAutoRefresh();
+            }
+          };
+          document.addEventListener('visibilitychange', this.autoRefreshVisibilityHandler);
+        }
+
+        window.addEventListener('beforeunload', () => {
+          if (this.autoRefreshTimerId) {
+            clearInterval(this.autoRefreshTimerId);
+            this.autoRefreshTimerId = null;
+          }
+        }, { once: true });
+      },
+
+      async loadPendingPayments(forceRefresh = false) {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        this.loadingTab = true;
+        try {
+          console.log('ðŸ“¥ Cargando adeudos desde StudentAPI...');
+          console.log('ðŸ” UserId:', this.userId);
+          
+          // Pasar el userId para que se construya el endpoint correcto
+          const paymentsData = await window.StudentAPI.getPendingPayments(this.userId, token, forceRefresh, this.portalRole);
+          
+          console.log('ðŸ“Š [Adeudos] Response structure:', { success: paymentsData?.success, dataType: typeof paymentsData?.data, isArray: Array.isArray(paymentsData?.data) });
+
+          const paymentsArray = this.extractPaymentsArray(paymentsData);
+          
+          console.log('ðŸ“Š [Adeudos] Payments array length:', paymentsArray.length, 'Sample:', paymentsArray[0]);
+
+          this.adeudos = paymentsArray.map((payment, index) => this.mapPaymentItem(payment, index));
+          console.log('… Adeudos cargados:', this.adeudos.length);
+        } catch (err) {
+          console.error(' Error al cargar adeudos:', err);
+          this.adeudos = [];
+        } finally {
+          this.loadingTab = false;
+        }
+      },
+
+      async loadOverduePayments(forceRefresh = false) {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          console.warn('š ï¸ No token available for overdue payments');
+          return;
+        }
+
+        this.loadingTab = true;
+        try {
+          console.log('ðŸ“¥ Cargando pagos vencidos desde StudentAPI...');
+          console.log('ðŸ” Token disponible:', token.substring(0, 10) + '...');
+          console.log('ðŸ” UserId:', this.userId);
+          
+          // Verificar que window.StudentAPI existe
+          if (!window.StudentAPI) {
+            throw new Error('window.StudentAPI no est¡ disponible');
+          }
+          
+          console.log('… window.StudentAPI disponible');
+          
+          // Pasar el userId para que se construya el endpoint correcto
+          const overdueData = await window.StudentAPI.getOverduePayments(this.userId, token, forceRefresh, this.portalRole);
+          
+          console.log('ðŸ“Š [Adeudos] Respuesta completa del servidor:', overdueData);
+          console.log('ðŸ“Š [Adeudos] Overdue Response structure:', { success: overdueData?.success, dataType: typeof overdueData?.data, isArray: Array.isArray(overdueData?.data) });
+
+          const overdueArray = this.extractPaymentsArray(overdueData);
+
+          if (!overdueArray.length) {
+            console.log('š ï¸ Estructura de respuesta sin lista mapeable:', {
+              tieneData: !!overdueData?.data,
+              clavesData: Object.keys(overdueData?.data || {}),
+              clavesRaiz: Object.keys(overdueData || {})
+            });
+          }
+          
+          console.log('ðŸ“Š [Adeudos] Overdue array length:', overdueArray.length, 'Sample:', overdueArray[0]);
+
+          this.overdueAdeudos = overdueArray.map((payment, index) => this.mapPaymentItem(payment, index));
+          
+          this.showOverdueAlert = this.overdueAdeudos.length > 0;
+          console.log('… Pagos vencidos cargados:', this.overdueAdeudos.length);
+        } catch (err) {
+          console.error('š ï¸  Error al cargar pagos vencidos:', err);
+          this.overdueAdeudos = [];
+        } finally {
+          this.loadingTab = false;
+        }
+      },
+
+      switchTab(tab) {
+        this.activeTab = tab;
+        if (tab === 'pending' && this.adeudos.length === 0) {
+          this.loadPendingPayments();
+        } else if (tab === 'overdue' && this.overdueAdeudos.length === 0) {
+          this.loadOverduePayments();
+        }
+      },
+
+      openPayment(item) {
+        this.selectedItem = item;
+        this.step = 'select-method';
+        this.showModal = true;
+      },
+
+      async processPayment(isReference = false) {
+        this.loading = true;
+        const token = localStorage.getItem('access_token');
+        
+        try {
+          console.log('ðŸ”„ Creando intento de pago para concepto ID:', this.selectedItem.id);
+          
+          // Usar StudentAPI para crear el intento de pago
+          const response = await window.StudentAPI.createPaymentIntent(
+            this.selectedItem.id,
+            token
+          );
+          
+          console.log('… Respuesta del servidor:', response);
+          
+          if (response.success && response.data?.url_checkout) {
+            // Redirigir al checkout de Stripe
+            console.log('ðŸ”— Redirigiendo a checkout:', response.data.url_checkout);
+            window.open(response.data.url_checkout, '_blank');
+            this.loading = false;
+          } else {
+            throw new Error(response.message || 'No se recibió URL de checkout');
+          }
+        } catch (err) {
+          console.error(' Error al procesar el pago:', err);
+          alert('Error al procesar el pago: ' + (err.message || 'Error desconocido'));
+          this.loading = false;
+        }
+      },
+
+      extractPaymentsArray(apiResponse) {
+        const data = apiResponse?.data ?? apiResponse ?? {};
+        const candidates = [
+          data,
+          data?.pending_payments,
+          data?.pending_payments?.items,
+          data?.overdue_payments,
+          data?.overdue_payments?.items,
+          data?.payments,
+          data?.payments?.items,
+          apiResponse?.pending_payments,
+          apiResponse?.pending_payments?.items,
+          apiResponse?.overdue_payments,
+          apiResponse?.overdue_payments?.items,
+          apiResponse?.items
+        ];
+
+        const firstArray = candidates.find(item => Array.isArray(item));
+        return firstArray || [];
+      },
+
+      mapPaymentItem(payment, index = 0) {
+        return {
+          id: payment?.id || payment?.concept_id || payment?.payment_id || ('payment-' + String(index)),
+          concepto: payment?.concept_name || payment?.concepto || payment?.concept || payment?.name || 'Pago',
+          monto: payment?.amount?.toString() || payment?.monto || payment?.total_amount?.toString() || '0.00',
+          fecha: payment?.end_date || payment?.due_date || payment?.fecha_fin || payment?.fecha || payment?.date || new Date().toLocaleDateString('es-MX'),
+          status: payment?.status || 'Pendiente',
+          description: payment?.description || payment?.descripcion || ''
+        };
+      },
+
+      getInitials() {
+        if (!this.alumnoNombre) return 'PG';
+        const names = this.alumnoNombre.trim().split(' ');
+        if (names.length === 1) return names[0].substring(0, 2).toUpperCase();
+        return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+      }
+    }`}
+  >
+    <header class="main-header">
+      <template x-if="showOverdueAlert && overdueAdeudos.length > 0 && activeTab === 'overdue'">
+        <div class="overdue-alert-banner">
+          <div class="alert-icon" aria-hidden="true">&#9888;</div>
+          <div class="alert-content">
+            <h3>¡Tienes pagos vencidos!</h3>
+            <p x-text="'Tienes ' + overdueAdeudos.length + ' pago(s) vencido(s) que requieren atención inmediata.'"></p>
+          </div>
+          <button @click="showOverdueAlert = false" class="alert-close" aria-label="Cerrar alerta">&times;</button>
+        </div>
+      </template>
+      
+      <div class="header-content">
+        <div class="user-profile">
+          <div class="avatar" x-text="getInitials()"></div>
+          <div class="welcome-text">
+            <span class="greeting">Estado de Cuenta</span>
+            <h1 x-text="'Hola, ' + alumnoNombre.split(' ')[0]"></h1>
+          </div>
+        </div>
+        <div class="balance-summary">
+          <span class="label">Total por Pagar</span>
+          <span class="amount" x-text="'$' + [...adeudos, ...overdueAdeudos].reduce((acc, item) => acc + parseFloat(String(item.monto || '0').replace(/,/g, '')), 0).toLocaleString('en-US', { minimumFractionDigits: 2 })"></span>
+        </div>
+      </div>
+
+      <template x-if="roleNotice">
+        <div class="overdue-alert-banner">
+          <div class="alert-icon" aria-hidden="true">&#8505;</div>
+          <div class="alert-content">
+            <h3>Información de cuenta</h3>
+            <p x-text="roleNotice"></p>
+          </div>
+        </div>
+      </template>
+    </header>
+
+
+
+    <main class="content-grid">
+      <div class="tabs-navigation">
+        <button @click="switchTab('pending')" class="tab-btn" x-bind:class="activeTab === 'pending' && 'active'">
+          <span>Pendientes</span>
+          <span class="tab-count" x-text="adeudos.length"></span>
+        </button>
+        <button @click="switchTab('overdue')" class="tab-btn" x-bind:class="activeTab === 'overdue' && 'active'">
+          <span>Vencidos</span>
+          <span class="tab-count danger" x-text="overdueAdeudos.length"></span>
+        </button>
+      </div>
+
+      <!-- Alerta de pagos vencidos -->
+      <template x-if="showOverdueAlert && overdueAdeudos.length > 0 && activeTab === 'overdue'">
+        <div class="overdue-alert-banner overdue-alert-banner--compact" x-transition>
+          <div class="alert-content">
+            <p x-text="'Tienes ' + overdueAdeudos.length + ' pago(s) vencido(s). Estos pagos no se pueden realizar; comunícate con la escuela.'"></p>
+          </div>
+          <button class="alert-close" @click="showOverdueAlert = false" aria-label="Cerrar alerta">&times;</button>
+        </div>
+      </template>
+
+      <!-- SECCI“N: PAGOS VENCIDOS -->
+      <section class="section-container overdue-section" x-show="activeTab === 'overdue'">
+        <div class="section-header">
+          <h2 class="section-title">🔴 Pagos Vencidos</h2>
+          <span class="badge-danger" x-text="overdueAdeudos.length"></span>
+        </div>
+        
+        <template x-if="overdueAdeudos.length === 0">
+          <div class="empty-state">
+            <div class="empty-icon">³</div>
+            <h3>No hay pagos vencidos</h3>
+            <p>Estás al corriente. Excelente.</p>
+          </div>
+        </template>
+
+        <div class="cards-stack" x-show="overdueAdeudos.length > 0">
+          <template x-for="item in overdueAdeudos" :key="item.id">
+            <div class="payment-card overdue-card">
+              <div class="card-left">
+                <div class="status-dot red"></div>
+                <div class="card-info">
+                  <h3 x-text="item.concepto"></h3>
+                  <p class="card-description" x-text="item.description"></p>
+                  <div class="payment-meta">
+                    <span class="meta-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      <span>Vencido desde el <strong x-text="item.fecha"></strong></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-right">
+                <div class="amount-block">
+                  <span class="currency">$</span>
+                  <span class="amount" x-text="item.monto"></span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- SECCI“N: PAGOS PENDIENTES -->
+      <section class="section-container" x-show="activeTab === 'pending'">
+        <div class="section-header">
+          <h2 class="section-title">Pagos Pendientes</h2>
+          <span class="badge-info" x-text="adeudos.length"></span>
+        </div>
+        
+        <template x-if="adeudos.length === 0">
+          <div class="empty-state">
+            <div class="empty-icon">✨</div>
+            <h3>No tienes pagos pendientes</h3>
+            <p>Todos tus pagos están al día.</p>
+          </div>
+        </template>
+
+        <div class="cards-stack" x-show="adeudos.length > 0">
+          <template x-for="item in adeudos" :key="item.id">
+            <div class="payment-card pending-card">
+              <div class="card-left">
+                <div class="status-dot yellow"></div>
+                <div class="card-info">
+                  <h3 x-text="item.concepto"></h3>
+                  <p class="card-description" x-text="item.description"></p>
+                  <div class="payment-meta">
+                    <span class="meta-item">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      <span>Vence el <strong x-text="item.fecha"></strong></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-right">
+                <div class="amount-block">
+                  <span class="currency">$</span>
+                  <span class="amount" x-text="item.monto"></span>
+                </div>
+                <button @click="openPayment(item)" class="action-btn secondary">Pagar</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+    </main>
+
+    <div x-show="showModal" x-cloak class="modal-overlay">
+      <div class="modal-backdrop" @click="!loading && (showModal = false)" x-show="showModal" x-transition.opacity></div>
+      <div class="modal-sheet" x-show="showModal" x-transition:enter="modal-anim-enter" x-transition:enter-start="modal-anim-start" x-transition:enter-end="modal-anim-end">
+        <div class="sheet-handle"></div>
+        <div class="sheet-body">
+          
+          <template x-if="loading">
+            <div style="padding: 2rem 0;">
+              <div class="custom-loader"></div>
+              <p><strong>Generando pago seguro...</strong></p>
+              <p style="font-size: 0.9rem; color: var(--text-muted);">Serás redirigido a Stripe Checkout</p>
+            </div>
+          </template>
+          
+          <template x-if="!loading">
+            <div class="confirm-payment-ui">
+              <div class="payment-icon-circle">💳</div>
+              <h2 style="margin: 1rem 0 0.5rem; color: var(--primary);">Confirmar Pago</h2>
+              <p style="color: var(--text-muted); margin-bottom: 2rem;">Serás redirigido a Stripe para completar el pago de forma segura</p>
+              
+              <div class="payment-details-card">
+                <div class="detail-row">
+                  <span style="color: var(--text-muted);">Concepto:</span>
+                  <strong x-text="selectedItem?.concepto" style="color: var(--primary);"></strong>
+                </div>
+                <div class="detail-row">
+                  <span style="color: var(--text-muted);">Vencimiento:</span>
+                  <strong x-text="selectedItem?.fecha"></strong>
+                </div>
+                <div class="detail-row total-row">
+                  <span>Total a Pagar:</span>
+                  <strong x-text="'$' + selectedItem?.monto" style="font-size: 1.5rem; color: var(--primary);"></strong>
+                </div>
+              </div>
+              
+              <button @click="processPayment()" class="btn-primary-action">
+                <span>Proceder al Pago</span>
+                <span style="margin-left: 8px;">→</span>
+              </button>
+              <button @click="showModal = false" class="btn-link-action">Cancelar</button>
+            </div>
+          </template>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Resultado -->
+    <template x-if="showResultModal && resultType === 'canceled'">
+      <div class="modal-overlay" @click="closeResultModal()">
+        <div class="modal-content canceled" @click.stop>
+          <div class="modal-icon canceled">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <h3 class="modal-title">Pago Cancelado</h3>
+          <p class="modal-message">Has cancelado el proceso de pago. No se realizó ningún cargo. Puedes intentar nuevamente cuando desees.</p>
+          <button @click="closeResultModal()" class="modal-btn canceled">Cerrar</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</StudentLayout>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  
+  :root {
+    --primary: #0f2a24;
+    --accent: #d6b37a;
+    --accent-2: #8fd3c8;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f1f5f3;
+    --border: #e6ece8;
+    --text-muted: #5f6f6b;
+    --card-shadow: 0 10px 30px rgba(10, 20, 18, 0.08);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+  }
+
+  .page-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: none;
+    pointer-events: none;
+  }
+
+  .main-header {
+    background: radial-gradient(120% 160% at 10% 0%, rgba(214, 179, 122, 0.25), transparent 45%),
+      linear-gradient(135deg, var(--primary) 0%, rgba(15, 42, 36, 0.9) 100%);
+    border-radius: 24px;
+    padding: 2.5rem;
+    color: white;
+    margin-bottom: 2.5rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .avatar {
+    width: 55px;
+    height: 55px;
+    background: linear-gradient(135deg, var(--accent), #f2d7a3);
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 1.2rem;
+    box-shadow: 0 10px 20px rgba(214, 179, 122, 0.25);
+  }
+
+  .welcome-text .greeting {
+    display: inline-block;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 600;
+  }
+
+  .welcome-text h1 {
+    margin: 0.35rem 0 0;
+    font-family: 'Fraunces', serif;
+    font-size: 2.1rem;
+    font-weight: 700;
+  }
+
+  .header-text h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: white;
+  }
+
+  .header-text p {
+    margin: 4px 0 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
+  }
+
+  .balance-summary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .balance-summary .label {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .balance-summary .amount {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin-top: 4px;
+    text-shadow: 0 8px 24px rgba(214, 179, 122, 0.35);
+  }
+
+  .content-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .tabs-navigation {
+    display: flex;
+    gap: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0.35rem;
+    box-shadow: 0 8px 18px rgba(10, 20, 18, 0.08);
+  }
+
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .tab-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 10px 20px rgba(15, 42, 36, 0.2);
+  }
+
+  .tab-count {
+    min-width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: rgba(15, 42, 36, 0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .tab-btn.active .tab-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+
+  .tab-count.danger {
+    color: #7f1d1d;
+    background: rgba(239, 68, 68, 0.15);
+  }
+
+  .tab-btn.active .tab-count.danger {
+    color: #fff1f2;
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .section-container {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(6px);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: 'Fraunces', serif;
+  }
+
+  .badge-info,
+  .badge-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .badge-info {
+    background: #dbeafe;
+    color: #0c4a6e;
+  }
+
+  .badge-danger {
+    background: #fee2e2;
+    color: #7f1d1d;
+  }
+
+  .overdue-section {
+    border-left: 4px solid var(--danger);
+  }
+
+  .cards-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .payment-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--surface);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    transition: all 0.3s ease;
+  }
+
+  .payment-card:hover {
+    border-color: rgba(15, 42, 36, 0.18);
+    box-shadow: 0 16px 32px rgba(10, 20, 18, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .payment-card.overdue-card {
+    border-left: 4px solid var(--danger);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.04) 0%, transparent 100%);
+  }
+
+  .payment-card.pending-card {
+    border-left: 4px solid var(--warning);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.04) 0%, transparent 100%);
+  }
+
+  .card-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex: 1;
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  .status-dot.red {
+    background: var(--danger);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  }
+
+  .status-dot.yellow {
+    background: var(--warning);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  }
+
+  .card-info {
+    flex: 1;
+  }
+
+  .card-info h3 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .card-description {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .payment-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .meta-item svg {
+    color: var(--accent);
+  }
+
+  .meta-item strong {
+    color: var(--primary);
+  }
+
+  .card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    margin-left: 1.5rem;
+  }
+
+  .amount-block {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+
+  .currency {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .amount {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  .action-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .action-btn.primary {
+    background: linear-gradient(135deg, var(--primary) 0%, rgba(15, 42, 36, 0.9) 100%);
+    color: white;
+    box-shadow: 0 10px 20px rgba(15, 42, 36, 0.2);
+  }
+
+  .action-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(17, 45, 38, 0.3);
+  }
+
+  .action-btn.secondary {
+    background: var(--surface-2);
+    color: var(--primary);
+    border: 1px solid var(--border);
+  }
+
+  .action-btn.secondary:hover {
+    background: #e2e8f0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #f8faf6 0%, #edf2ef 100%);
+    border-radius: 16px;
+    border: 2px dashed rgba(15, 42, 36, 0.18);
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state h3 {
+    margin: 0.5rem 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .empty-state p {
+    margin: 0.5rem 0 0;
+    color: var(--text-muted);
+  }
+
+  /* SUMMARY SECTION */
+  .summary-section {
+    margin-top: 2rem;
+  }
+
+  .summary-card {
+    background: radial-gradient(120% 150% at 0% 0%, rgba(214, 179, 122, 0.25), transparent 45%),
+      linear-gradient(135deg, var(--primary) 0%, rgba(15, 42, 36, 0.85) 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    color: white;
+    box-shadow: var(--card-shadow);
+  }
+
+  .summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .summary-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .summary-amount {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .summary-count {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+  }
+
+  .summary-count.danger {
+    color: #fecaca;
+  }
+
+  .summary-divider {
+    width: 1px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* ALERT BANNER */
+  .overdue-alert-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, #fdecec 0%, #fecfcf 100%);
+    border-left: 4px solid var(--danger);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 18px rgba(239, 68, 68, 0.12);
+  }
+
+  .overdue-alert-banner--compact {
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    border-left-width: 3px;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    background: #fff4f4;
+    box-shadow: none;
+  }
+
+  .alert-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+  }
+
+  .alert-content {
+    flex: 1;
+  }
+
+  .alert-content h3 {
+    margin: 0 0 0.5rem;
+    color: #7f1d1d;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .alert-content p {
+    margin: 0;
+    color: #991b1b;
+    font-size: 0.95rem;
+  }
+
+  .overdue-alert-banner--compact .alert-content p {
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: #7f1d1d;
+  }
+
+  .alert-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #991b1b;
+    flex-shrink: 0;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    transition: opacity 0.2s;
+  }
+
+  .alert-close:hover {
+    opacity: 0.7;
+  }
+
+  .overdue-alert-banner--compact .alert-close {
+    width: 24px;
+    height: 24px;
+    font-size: 1.1rem;
+    color: #b91c1c;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(17, 45, 38, 0.6);
+    backdrop-filter: blur(8px);
+  }
+
+  .modal-sheet {
+    position: relative;
+    background: white;
+    width: 100%;
+    max-width: 450px;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  .sheet-handle {
+    height: 4px;
+    width: 50px;
+    background: #cbd5e1;
+    border-radius: 2px;
+    margin: 12px auto;
+  }
+
+  .sheet-body {
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .custom-loader {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  .payment-icon-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary) 0%, rgba(17, 45, 38, 0.9) 100%);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 2.5rem;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 4px 12px rgba(17, 45, 38, 0.2);
+  }
+
+  .confirm-payment-ui h2 {
+    margin: 0 0 0.5rem;
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  .confirm-payment-ui > p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+  }
+
+  .payment-details-card {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: left;
+    border: 1px solid #e2e8f0;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+  }
+
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+
+  .detail-row.total-row {
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    border-top: 2px solid var(--primary);
+    border-bottom: none;
+  }
+
+  .detail-row strong {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .detail-row.total-row strong {
+    font-size: 1.8rem;
+  }
+
+  .btn-primary-action {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary) 0%, rgba(17, 45, 38, 0.9) 100%);
+    color: white;
+    padding: 1.1rem;
+    border-radius: 12px;
+    border: none;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(17, 45, 38, 0.2);
+  }
+
+  .btn-primary-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(17, 45, 38, 0.3);
+  }
+
+  .btn-link-action {
+    width: 100%;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 12px;
+    padding: 0.75rem;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+
+  .btn-link-action:hover {
+    color: var(--primary);
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  [x-cloak] {
+    display: none !important;
+  }
+
+  @media (max-width: 768px) {
+    .page-wrapper {
+      padding: 1.5rem 1rem;
+    }
+
+    .main-header {
+      padding: 1.5rem;
+    }
+
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .balance-summary {
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .section-container {
+      padding: 1.5rem;
+    }
+
+    .payment-card {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .card-right {
+      width: 100%;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      margin-left: 0;
+    }
+
+    .summary-card {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .summary-divider {
+      width: 100%;
+      height: 1px;
+    }
+
+    .modal-overlay {
+      align-items: flex-end;
+    }
+
+    .modal-sheet {
+      border-radius: 28px 28px 0 0;
+      max-width: 100%;
+    }
+
+    .overdue-alert-banner {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .overdue-alert-banner--compact {
+      flex-direction: row;
+      text-align: left;
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-wrapper { padding: 1.25rem 0.75rem; }
+    .main-header { padding: 1.25rem; }
+    .welcome-text h1 { font-size: 1.6rem; }
+    .balance-summary .amount { font-size: 2rem; }
+    .tabs-navigation { flex-direction: column; }
+    .tab-btn { padding: 0.7rem 0.9rem; }
+    .section-container { padding: 1.25rem; }
+    .payment-card { padding: 1rem; }
+    .card-right { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+  }
+
+  /* Estilos del Modal de Resultado */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { 
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to { 
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .modal-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+  }
+
+  .modal-icon.canceled {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+  }
+
+  .modal-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0 0 0.75rem;
+  }
+
+  .modal-message {
+    font-size: 1rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 2rem;
+  }
+
+  .modal-btn {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .modal-btn.canceled {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+  }
+
+  .modal-btn.canceled:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+  }
+
+  .modal-btn:active {
+    transform: translateY(0);
+  }</style>
+

@@ -1,0 +1,365 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const pageTitle = "Estado de Adeudos - CBTA 71";
+
+// Note: Data will be loaded client-side with authentication
+const debtsJSON = '[]';
+const studentsJSON = '[]';
+const API_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? (() => { throw new Error('Falta PUBLIC_API_BASE_URL'); })()).replace(/\/$/, '');
+
+const CAREER_MAP = {
+  'TAG-E': 'Técnico Agropecuario',
+  'TOF': 'Técnico en Ofimática',
+  'TEM': 'Técnico en Admón. de Emprendimiento',
+  'TAG-M': 'Técnico Agropecuario (Mixta)',
+  'TRH': 'Técnico en Admón. de Recursos Humanos (Mixta)',
+  '': 'Sin Carrera'
+};
+
+const careerMapJSON = JSON.stringify(CAREER_MAP);
+---
+<Layout title={pageTitle}>
+  <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 bg-gradient-to-br from-gray-50 via-white to-[#2E594D]/5 min-h-screen overflow-x-hidden">
+    
+    <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6 mb-8 sm:mb-10 bg-white rounded-2xl shadow-lg px-4 sm:px-6 py-4 sm:py-5 overflow-hidden">
+      <div class="flex items-start sm:items-center gap-3 sm:gap-4 w-full justify-start min-w-0">
+        <div class="p-3 sm:p-4 bg-gradient-to-br from-[#2D584C] to-[#1e3d35] rounded-2xl shadow-xl shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 sm:h-8 sm:w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 4v2m0 2v2m0 0V4m-7 8a7 7 0 1114 0 7 7 0 01-14 0z" />
+          </svg>
+        </div>
+        <div class="text-left min-w-0 flex-1">
+          <h1 class="text-2xl sm:text-3xl font-black text-[#2D584C] tracking-tight leading-tight text-left flex flex-wrap items-center gap-2 sm:gap-3">
+            <span class="break-words">Estado de Adeudos</span>
+            <span class="text-[10px] sm:text-xs bg-[#2D584C]/10 text-[#2D584C] px-2 sm:px-3 py-1 rounded-full font-semibold whitespace-nowrap">Gestión Financiera</span>
+          </h1>
+          <p class="text-xs sm:text-sm text-gray-600 mt-2 font-medium text-left flex items-center gap-2 break-words">
+            <i class="fas fa-info-circle text-[#2D584C]"></i>
+            Cargos pendientes por cobrar y gestión de pagos
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-row items-center gap-2 sm:gap-3 w-full lg:w-auto justify-start lg:justify-end">
+        <div class="relative flex-1 min-w-0 lg:w-[320px]">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          <input type="text" id="search-input" placeholder="Buscar alumno..." class="w-full pl-11 pr-4 h-[42px] sm:h-[48px] border-2 border-gray-200 rounded-xl text-sm outline-none focus:border-[#2D584C] focus:ring-4 focus:ring-[#2D584C]/10 bg-white shadow-sm transition-all" />
+        </div>
+        <button id="refresh-debts-btn" class="h-[42px] sm:h-[48px] px-3 sm:px-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center text-xs font-bold gap-2 shrink-0 whitespace-nowrap">
+          <i class="fas fa-sync-alt"></i>
+          <span class="hidden sm:inline">Actualizar</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="bg-gradient-to-br from-white via-[#2D584C]/5 to-white rounded-xl sm:rounded-2xl shadow-2xl border-2 border-[#2D584C]/20 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full border-collapse">
+          <thead class="bg-gradient-to-r from-[#2D584C] to-[#1e3d35]">
+            <tr>
+              <th class="px-3 sm:px-8 py-3 sm:py-5 text-left text-[10px] sm:text-xs font-black text-white uppercase tracking-wider">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-user-graduate"></i>
+                  <span>Estudiante</span>
+                </div>
+              </th>
+              <th class="px-3 sm:px-8 py-3 sm:py-5 text-left text-[10px] sm:text-xs font-black text-white uppercase tracking-wider">
+                <div class="flex items-center gap-2">
+                  <i class="fas fa-file-invoice"></i>
+                  <span>Concepto</span>
+                </div>
+              </th>
+              <th class="px-3 sm:px-8 py-3 sm:py-5 text-right text-[10px] sm:text-xs font-black text-white uppercase tracking-wider">
+                <div class="flex items-center justify-end gap-2">
+                  <i class="fas fa-dollar-sign"></i>
+                  <span>Monto</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="payments-table-body" class="bg-white divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+
+      <div class="px-3 sm:px-8 py-4 sm:py-5 bg-gradient-to-r from-gray-50 to-gray-100 border-t-2 border-[#2D584C]/10 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <span id="pagination-info" class="text-xs font-bold text-[#2D584C] flex items-center gap-2">
+          <i class="fas fa-list"></i>
+          <span>Mostrando 0 de 0 adeudos</span>
+        </span>
+        <div class="flex items-center gap-2" id="pagination-buttons"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+
+  <script is:inline define:vars={{ careerMapJSON, debtsJSON, studentsJSON, API_BASE_URL }}>
+    window.__CAREER_MAP = JSON.parse(careerMapJSON);
+    window.__DEBTS_DATA = JSON.parse(debtsJSON);
+    window.__STUDENTS_DATA = JSON.parse(studentsJSON);
+    window.__API_DEBTS = `${API_BASE_URL}/debts`;
+    window.__API_PAYMENTS = `${API_BASE_URL}/payments`;
+  </script>
+
+  <!-- Load StudentAPI global -->
+  <script is:inline src="/studentAPI.js"></script>
+
+  <script type="module">
+    const StudentAPI = window.StudentAPI;
+    const ITEMS_PER_PAGE = 50;
+    let currentPage = 1;
+    let pendingPayments = [];
+    let isLoading = false;
+
+    // Cargar datos de la API o fallback a localStorage
+    const getCharges = () => pendingPayments.length > 0 ? pendingPayments : JSON.parse(localStorage.getItem('chargesList') || '[]');
+    const getStudents = () => window.__STUDENTS_DATA.length > 0 ? window.__STUDENTS_DATA : JSON.parse(localStorage.getItem('studentsList') || '[]');
+    const getConcepts = () => JSON.parse(localStorage.getItem('conceptsList') || '[]');
+    const saveCharges = (data) => localStorage.setItem('chargesList', JSON.stringify(data));
+    const fmt = n => '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+
+    const normalizePendingPayment = (payment) => {
+      const normalized = {
+        id: payment.id || `debt-${Date.now()}`,
+        userId: payment.userId || payment.user_id || payment.student_id || payment.studentId || null,
+        studentId: payment.student_id || payment.studentId || payment.userId || payment.user_id || null,
+        conceptId: payment.concept_id || payment.conceptId || null,
+        userName: payment.user_name || payment.student_name || payment.fullName || 'N/A',
+        nControl: payment.n_control || payment.nControl || '',
+        concept: payment.concept_name || payment.concept || payment.conceptTitle || 'CARGO',
+        conceptTitle: payment.concept_name || payment.conceptTitle || payment.concept || 'CARGO',
+        amount: payment.amount || payment.amount_total || 0,
+        status: payment.status || 'pending'
+      };
+      
+      // Debug: mostrar los primeros 3 pagos normalizados
+      if (!window.__debugCount) window.__debugCount = 0;
+      if (window.__debugCount < 3) {
+        console.log('📋 Payment normalizado #' + (window.__debugCount + 1) + ':', {
+          original: payment,
+          normalized: normalized
+        });
+        window.__debugCount++;
+      }
+      
+      return normalized;
+    };
+
+    const tableBody = document.getElementById('payments-table-body');
+    const searchInput = document.getElementById('search-input');
+    const paginationInfo = document.getElementById('pagination-info');
+    const paginationButtons = document.getElementById('pagination-buttons');
+    const refreshBtn = document.getElementById('refresh-debts-btn');
+    const AUTO_REFRESH_INTERVAL_MS = 180000;
+    let autoRefreshTimer = null;
+    let autoRefreshFocusHandler = null;
+    let autoRefreshVisibilityHandler = null;
+
+    // Cargar pagos pendientes desde la API
+    async function loadPendingPayments(forceRefresh = false) {
+      if (isLoading) return;
+      
+      try {
+        isLoading = true;
+        if (refreshBtn) {
+          refreshBtn.disabled = true;
+          refreshBtn.innerHTML = `
+            <svg class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Cargando...
+          `;
+        }
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          console.warn('⚠️ No hay token de autenticación');
+          renderTable();
+          return;
+        }
+
+        try {
+          // Usar GET /api/v1/debts (máximo 200 items por página)
+          const response = await StudentAPI.getAllPendingDebts(token, {
+            search: searchInput.value.trim(),
+            page: 1,
+            perPage: 200,
+            forceRefresh: forceRefresh
+          });
+          
+          if (response.success && response.data?.pending_payments?.items) {
+            pendingPayments = response.data.pending_payments.items.map(normalizePendingPayment);
+            
+            console.log('✅ Pagos pendientes cargados (GET /api/v1/debts):', pendingPayments.length);
+            console.log('📊 Paginación:', {
+              currentPage: response.data.pending_payments.currentPage,
+              lastPage: response.data.pending_payments.lastPage,
+              total: response.data.pending_payments.total
+            });
+            renderTable();
+            return;
+          } else {
+            console.warn('⚠️ Respuesta vacía del endpoint /api/v1/debts');
+          }
+        } catch (error) {
+          console.error('❌ Error al cargar adeudos:', error.message);
+          console.error('Detalles:', error);
+        }
+      } catch (error) {
+        console.error('❌ Error al cargar pagos pendientes:', error);
+        renderTable();
+      } finally {
+        isLoading = false;
+        if (refreshBtn) {
+          refreshBtn.disabled = false;
+          refreshBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+            Actualizar
+          `;
+        }
+      }
+    }
+
+    function renderTable() {
+        const term = searchInput.value.toLowerCase().trim();
+        const allPending = getCharges().filter(c => !['paid', 'pagado'].includes(String(c.status).toLowerCase()));
+        
+        console.log('🔍 Búsqueda:', term || '(vacío)');
+        console.log('📦 Total de adeudos pendientes:', allPending.length);
+        
+        // Filtrar por nombre de estudiante, número de control o concepto
+        const filtered = allPending.filter(ch => {
+            const fullName = (ch.userName || '').toLowerCase();
+            const nControl = String(ch.nControl || '').toLowerCase();
+            const concept = (ch.concept || '').toLowerCase();
+            
+            const matches = !term || fullName.includes(term) || nControl.includes(term) || concept.includes(term);
+            
+            if (term && matches) {
+              console.log('✅ Coincidencia:', { 
+                nombre: ch.userName, 
+                nControl: ch.nControl, 
+                concepto: ch.concept,
+                term: term
+              });
+            }
+            
+            return matches;
+        });
+
+        console.log('✨ Adeudos filtrados:', filtered.length);
+
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+        if (currentPage > totalPages) currentPage = totalPages || 1;
+        
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const pageData = filtered.slice(start, start + ITEMS_PER_PAGE);
+
+        tableBody.innerHTML = pageData.map((ch) => {
+            return `
+              <tr class="hover:bg-gray-50 transition-all border-l-4 border-transparent hover:border-[#2D584C]">
+                <td class="px-3 sm:px-8 py-3 sm:py-5 align-top">
+                  <div class="text-[11px] sm:text-[12px] font-black text-gray-900 uppercase leading-snug">${ch.userName || 'N/A'}</div>
+                  ${ch.nControl ? `<div class="text-[10px] text-gray-400 font-mono">${ch.nControl}</div>` : ''}
+                </td>
+                <td class="px-3 sm:px-8 py-3 sm:py-5 text-[10px] sm:text-[11px] text-gray-500 font-bold uppercase align-top leading-snug">${ch.concept || 'CARGO'}</td>
+                <td class="px-3 sm:px-8 py-3 sm:py-5 text-right text-xs sm:text-sm font-black text-red-600 font-mono align-top whitespace-nowrap">${fmt(ch.amount)}</td>
+              </tr>
+            `;
+        }).join('');
+
+        updatePaginationControls(totalItems, totalPages);
+    }
+
+    function updatePaginationControls(totalItems, totalPages) {
+        const startItem = totalItems === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+        const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
+        paginationInfo.innerText = `Mostrando ${startItem}-${endItem} de ${totalItems} registros`;
+        paginationButtons.innerHTML = '';
+        if (totalPages <= 1) return;
+        
+        const createBtn = (text, targetPage, active = false, disabled = false) => {
+            const btn = document.createElement('button');
+            btn.innerText = text;
+            btn.className = `min-w-[32px] h-8 px-2 rounded-lg text-xs font-black ${active ? 'bg-[#2D584C] text-white' : disabled ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-200'}`;
+            if (!disabled) btn.onclick = () => { currentPage = targetPage; renderTable(); window.scrollTo(0,0); };
+            return btn;
+        };
+        paginationButtons.appendChild(createBtn('←', currentPage - 1, false, currentPage === 1));
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                paginationButtons.appendChild(createBtn(i, i, currentPage === i));
+            }
+        }
+        paginationButtons.appendChild(createBtn('→', currentPage + 1, false, currentPage === totalPages));
+    }
+
+    // --- LÓGICA DE EXPORTACIÓN EXCEL ---
+    const exportBtn = document.getElementById('export-xlsx');
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        const charges = getCharges().filter(c => !['paid', 'pagado'].includes(String(c.status).toLowerCase()));
+
+        const data = charges.map((ch, idx) => {
+            return {
+                'No.': idx + 1,
+                'Estudiante': ch.userName || 'N/A',
+                'Concepto': ch.concept || 'CARGO',
+                'Monto': ch.amount,
+                'Estado': 'PENDIENTE'
+            };
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Adeudos");
+        XLSX.writeFile(workbook, `Adeudos_CBTA71_${new Date().toLocaleDateString()}.xlsx`);
+      };
+    }
+
+    searchInput.addEventListener('input', () => { currentPage = 1; renderTable(); });
+    
+    // Event listener para el botón de actualizar
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => loadPendingPayments(true));
+    }
+
+    const triggerAutoRefresh = () => {
+      if (isLoading || document.hidden) return;
+      loadPendingPayments(true).catch((err) => console.warn('⚠️ Auto-refresh debts:', err?.message || err));
+    };
+
+    const setupAutoRefresh = () => {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(triggerAutoRefresh, AUTO_REFRESH_INTERVAL_MS);
+
+      if (!autoRefreshFocusHandler) {
+        autoRefreshFocusHandler = () => triggerAutoRefresh();
+        window.addEventListener('focus', autoRefreshFocusHandler);
+      }
+
+      if (!autoRefreshVisibilityHandler) {
+        autoRefreshVisibilityHandler = () => {
+          if (!document.hidden) triggerAutoRefresh();
+        };
+        document.addEventListener('visibilitychange', autoRefreshVisibilityHandler);
+      }
+    };
+
+    // Cargar datos inicialmente
+    setupAutoRefresh();
+    loadPendingPayments();
+
+    window.addEventListener('beforeunload', () => {
+      if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+      }
+    }, { once: true });
+  </script>
+</Layout>

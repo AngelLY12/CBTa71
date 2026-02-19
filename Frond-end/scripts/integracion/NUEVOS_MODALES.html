@@ -1,0 +1,304 @@
+<!-- ==============================================
+     MODAL: ASOCIAR/EDITAR ESTUDIANTE  
+     Agregar después del modal de eliminación
+     ============================================== -->
+<template x-teleport="body">
+    <div x-show="isStudentPanelOpen" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div @click="isStudentPanelOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
+        <div x-show="isStudentPanelOpen" 
+             x-transition:enter="transition ease-out duration-300" 
+             class="relative bg-white rounded-2xl p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <button @click="isStudentPanelOpen = false" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-blue-600 mb-6">🎓 Asociar Detalles de Estudiante</h2>
+            
+            <form @submit.prevent="saveStudentDetails()" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Usuario (ID)</label>
+                    <input x-model.number="studentForm.user_id" type="number" required 
+                           class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                           placeholder="ID del usuario">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Carrera (ID)</label>
+                        <input x-model.number="studentForm.career_id" type="number" required 
+                               class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">N° de Control</label>
+                        <input x-model="studentForm.n_control" type="text" required 
+                               class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Semestre</label>
+                        <input x-model.number="studentForm.semestre" type="number" min="1" max="12" required 
+                               class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Grupo</label>
+                        <input x-model="studentForm.group" type="text" 
+                               class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               placeholder="Ej: A">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Taller</label>
+                        <input x-model="studentForm.workshop" type="text" 
+                               class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="button" @click="isStudentPanelOpen = false" 
+                            class="flex-1 py-3 border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50">
+                        Cancelar
+                    </button>
+                    <button type="submit" :disabled="isSaving"
+                            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50">
+                        <span x-show="!isSaving">Guardar</span>
+                        <span x-show="isSaving">Guardando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+
+<!-- ==============================================
+     MODAL: GESTIONAR ROLES MASIVAMENTE
+     ============================================== -->
+<template x-teleport="body">
+    <div x-show="isRolesPanelOpen" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div @click="isRolesPanelOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
+        <div x-show="isRolesPanelOpen" 
+             x-transition:enter="transition ease-out duration-300" 
+             class="relative bg-white rounded-2xl p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <button @click="isRolesPanelOpen = false" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-purple-600 mb-2">🔐 Gestionar Roles</h2>
+            <p class="text-sm text-slate-600 mb-6">
+                <span x-text="selectedUsers.length"></span> usuario(s) seleccionado(s)
+            </p>
+            
+            <form @submit.prevent="updateRoles()" class="space-y-6">
+                <div class="p-4 bg-purple-50 rounded-lg">
+                    <h3 class="font-semibold text-purple-900 mb-3">Roles Disponibles:</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="role in availableRoles" :key="role.id">
+                            <span class="px-3 py-1 bg-white border border-purple-200 rounded-full text-sm" 
+                                  x-text="role.name"></span>
+                        </template>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Agregar Roles</label>
+                    <input x-model="rolesForm.rolesToAdd" type="text" 
+                           class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                           placeholder="Separados por coma: admin,editor">
+                    <p class="text-xs text-slate-500 mt-1">Escribe los nombres de roles separados por comas</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Remover Roles</label>
+                    <input x-model="rolesForm.rolesToRemove" type="text" 
+                           class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                           placeholder="Separados por coma: guest,viewer">
+                    <p class="text-xs text-slate-500 mt-1">Escribe los nombres de roles separados por comas</p>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="button" @click="isRolesPanelOpen = false" 
+                            class="flex-1 py-3 border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50">
+                        Cancelar
+                    </button>
+                    <button type="submit" :disabled="isSaving || selectedUsers.length === 0"
+                            class="flex-1 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50">
+                        <span x-show="!isSaving">Actualizar Roles</span>
+                        <span x-show="isSaving">Actualizando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+
+<!-- ==============================================
+     MODAL: GESTIONAR PERMISOS MASIVAMENTE
+     ============================================== -->
+<template x-teleport="body">
+    <div x-show="isPermissionsPanelOpen" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div @click="isPermissionsPanelOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
+        <div x-show="isPermissionsPanelOpen" 
+             x-transition:enter="transition ease-out duration-300" 
+             class="relative bg-white rounded-2xl p-6 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <button @click="isPermissionsPanelOpen = false" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-indigo-600 mb-2">🔑 Gestionar Permisos</h2>
+            <p class="text-sm text-slate-600 mb-6">
+                Usuarios seleccionados: <span x-text="selectedUsers.length"></span>
+            </p>
+            
+            <form @submit.prevent="updatePermissions()" class="space-y-6">
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p class="text-sm text-amber-800">
+                        💡 Puedes aplicar permisos a usuarios individuales (seleccionados) o a todos los usuarios de un rol específico.
+                    </p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">O aplicar a Rol específico</label>
+                    <input x-model="permissionsForm.role" type="text" 
+                           class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                           placeholder="Nombre del rol: admin, student, etc.">
+                    <p class="text-xs text-slate-500 mt-1">Deja vacío para aplicar solo a usuarios seleccionados</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Agregar Permisos</label>
+                    <textarea x-model="permissionsForm.permissionsToAdd" rows="3"
+                           class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                           placeholder="users.create, reports.view, settings.update"></textarea>
+                    <p class="text-xs text-slate-500 mt-1">Separados por comas</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Remover Permisos</label>
+                    <textarea x-model="permissionsForm.permissionsToRemove" rows="3"
+                           class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                           placeholder="users.delete, settings.update"></textarea>
+                    <p class="text-xs text-slate-500 mt-1">Separados por comas</p>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="button" @click="isPermissionsPanelOpen = false" 
+                            class="flex-1 py-3 border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50">
+                        Cancelar
+                    </button>
+                    <button type="submit" :disabled="isSaving"
+                            class="flex-1 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-50">
+                        <span x-show="!isSaving">Actualizar Permisos</span>
+                        <span x-show="isSaving">Actualizando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
+
+<!-- ==============================================
+     MODAL: IMPORTACIÓN COMPLETA
+     ============================================== -->
+<template x-teleport="body">
+    <div x-show="isImportPanelOpen" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div @click="isImportPanelOpen = false" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"></div>
+        <div x-show="isImportPanelOpen" 
+             x-transition:enter="transition ease-out duration-300" 
+             class="relative bg-white rounded-2xl p-6 md:p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <button @click="isImportPanelOpen = false" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-emerald-600 mb-6">📥 Importar Datos desde Excel</h2>
+            
+            <!-- Selector de tipo -->
+            <div class="flex gap-2 mb-6">
+                <button @click="importType = 'users'" 
+                        :class="importType === 'users' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'"
+                        class="flex-1 py-3 rounded-lg font-semibold transition-colors">
+                    👥 Usuarios Completos
+                </button>
+                <button @click="importType = 'students'" 
+                        :class="importType === 'students' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'"
+                        class="flex-1 py-3 rounded-lg font-semibold transition-colors">
+                    🎓 Detalles Estudiantes
+                </button>
+            </div>
+            
+            <!-- Zona de drop -->
+            <div @dragover.prevent="isDragging = true" 
+                 @dragleave.prevent="isDragging = false"
+                 @drop.prevent="handleFileDrop($event)"
+                 :class="isDragging ? 'border-emerald-600 bg-emerald-50' : 'border-slate-300'"
+                 class="border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer"
+                 @click="$refs.importFileInput.click()">
+                <input type="file" x-ref="importFileInput" @change="handleFileSelect($event)" 
+                       accept=".xlsx,.xls" class="hidden">
+                <svg class="w-16 h-16 mx-auto text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <p class="text-slate-700 font-semibold mb-2">Arrastra tu archivo Excel aquí</p>
+                <p class="text-slate-500 text-sm">o haz clic para seleccionar (.xlsx, .xls)</p>
+            </div>
+            
+            <!-- Archivo seleccionado -->
+            <div x-show="selectedFile" class="mt-4 p-4 bg-slate-50 rounded-lg flex items-center gap-3">
+                <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <div class="flex-1">
+                    <p class="font-semibold text-slate-800" x-text="selectedFile?.name"></p>
+                    <p class="text-xs text-slate-500" x-text="selectedFile ? `${(selectedFile.size / 1024).toFixed(2)} KB` : ''"></p>
+                </div>
+                <button @click="selectedFile = null" class="p-2 text-slate-400 hover:text-red-500">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Información de formato -->
+            <div x-show="importType === 'users'" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p class="font-semibold text-blue-900 mb-2">📋 Formato requerido (21 columnas):</p>
+                <p class="text-xs text-blue-700 font-mono leading-relaxed">
+                    name | last_name | email | password | phone_number | birthdate | gender | curp | 
+                    street | city | state | zip_code | stripe_customer_id | blood_type | 
+                    registration_date | status | career_id | n_control | semestre | group | workshop
+                </p>
+            </div>
+            
+            <div x-show="importType === 'students'" class="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <p class="font-semibold text-purple-900 mb-2">📋 Formato requerido (6 columnas):</p>
+                <p class="text-xs text-purple-700 font-mono">
+                    curp | career_id | n_control | semestre | group | workshop
+                </p>
+                <p class="text-xs text-purple-800 mt-2">⚠️ Solo se insertarán filas con CURP existente en BD</p>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button @click="isImportPanelOpen = false" 
+                        class="flex-1 py-3 border-2 border-slate-300 rounded-lg font-semibold hover:bg-slate-50">
+                    Cancelar
+                </button>
+                <button @click="processFullImport()" :disabled="!selectedFile || isSaving"
+                        class="flex-1 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 disabled:opacity-50">
+                    <span x-show="!isSaving">Importar Archivo</span>
+                    <span x-show="isSaving">Importando...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>

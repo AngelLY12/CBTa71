@@ -1,0 +1,247 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { API_ENDPOINTS } from '../config/api.js';
+
+// NOTE: Data loading moved to client-side to avoid authentication errors during static build
+// During static site generation, there's no valid auth token, so API calls fail with 401
+// The component will load data on the client using Alpine.js with user's token
+
+const pageTitle = "Ejemplos de Consumo de API";
+---
+
+<Layout title={pageTitle}>
+  <div class="max-w-7xl mx-auto px-4 py-8" x-data="apiExampleData()" x-init="loadAllData()">
+    <h1 class="text-3xl font-bold mb-8 text-gray-800">Ejemplos de Consumo de API</h1>
+    <p class="text-sm text-blue-600 mb-8 bg-blue-50 p-4 rounded">
+      ℹ️ Los datos se cargan automáticamente al abrir esta página usando tu token de autenticación.
+    </p>
+
+    <!-- EJEMPLO 1: Lista de Estudiantes -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-gray-700">📚 Lista de Estudiantes</h2>
+      <p class="text-sm text-gray-500 mb-4">Endpoint: <code class="bg-gray-100 px-2 py-1 rounded">{API_ENDPOINTS.students.list}</code></p>
+      
+      <div x-show="loadingStudents" class="flex items-center gap-2 text-blue-600">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+        Cargando estudiantes...
+      </div>
+
+      <div x-show="studentsError && !loadingStudents" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        ⚠️ Error: <span x-text="studentsError"></span>
+      </div>
+
+      <div x-show="!loadingStudents && !studentsError" class="bg-white rounded-lg shadow overflow-hidden">
+        <div x-show="students.length === 0" class="text-center py-8 text-gray-500">
+          No hay estudiantes disponibles
+        </div>
+        <table x-show="students.length > 0" class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Carrera</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Semestre</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <template x-for="student in students.slice(0, 10)" :key="student.id">
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600" x-text="student.id"></td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-800" x-text="student.name || 'N/A'"></td>
+                <td class="px-6 py-4 text-sm text-gray-600" x-text="student.email || 'N/A'"></td>
+                <td class="px-6 py-4 text-sm text-gray-600" x-text="student.career_name || 'N/A'"></td>
+                <td class="px-6 py-4 text-sm text-gray-600" x-text="student.semestre || 'N/A'"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- EJEMPLO 2: Lista de Pagos -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-gray-700">💰 Lista de Pagos</h2>
+      <p class="text-sm text-gray-500 mb-4">Endpoint: <code class="bg-gray-100 px-2 py-1 rounded">{API_ENDPOINTS.payments.list}</code></p>
+      
+      <div x-show="loadingPayments" class="flex items-center gap-2 text-blue-600">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+        Cargando pagos...
+      </div>
+
+      <div x-show="paymentsError && !loadingPayments" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        ⚠️ Error: <span x-text="paymentsError"></span>
+      </div>
+
+      <div x-show="!loadingPayments && !paymentsError" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div x-show="payments.length === 0" class="col-span-full text-center py-8 text-gray-500">
+          No hay pagos disponibles
+        </div>
+        <template x-for="payment in payments.slice(0, 6)" :key="payment.id">
+          <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="font-semibold text-gray-800">Pago #<span x-text="payment.id"></span></h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full" x-text="payment.status || 'Completado'"></span>
+            </div>
+            <p class="text-sm text-gray-600 mb-1">
+              Monto: <span class="font-bold text-green-600">$<span x-text="payment.amount || '0.00'"></span></span>
+            </p>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- EJEMPLO 3: Conceptos de Pago -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-gray-700">📋 Conceptos de Pago</h2>
+      <p class="text-sm text-gray-500 mb-4">Endpoint: <code class="bg-gray-100 px-2 py-1 rounded">{API_ENDPOINTS.concepts.list}</code></p>
+      
+      <div x-show="loadingConcepts" class="flex items-center gap-2 text-blue-600">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+        Cargando conceptos...
+      </div>
+
+      <div x-show="conceptsError && !loadingConcepts" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        ⚠️ Error: <span x-text="conceptsError"></span>
+      </div>
+
+      <div x-show="!loadingConcepts && !conceptsError" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div x-show="concepts.length === 0" class="col-span-full text-center py-8 text-gray-500">
+          No hay conceptos disponibles
+        </div>
+        <template x-for="concept in concepts" :key="concept.id">
+          <div class="bg-white rounded-lg shadow p-4 border border-gray-200">
+            <h3 class="font-semibold text-gray-800 mb-2" x-text="concept.name || 'Sin nombre'"></h3>
+            <p class="text-sm text-gray-600 mb-2" x-text="concept.description || 'Sin descripción'"></p>
+            <div class="flex justify-between items-center">
+              <span class="text-lg font-bold text-blue-600">$<span x-text="concept.amount || '0.00'"></span></span>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- Código de ejemplo -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold mb-4 text-gray-700">💻 Código de Ejemplo</h2>
+      <div class="bg-gray-900 text-gray-100 rounded-lg p-6 overflow-x-auto">
+        <pre class="text-sm"><code>{`// En un componente Astro con x-data (Client-Side)
+async function loadData() {
+  try {
+    const token = localStorage.getItem('access_token');
+    const response = await fetch('API_URL', {
+      headers: {
+        'Authorization': \`Bearer \${token}\`,
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(\`Error: \${response.status}\`);
+    }
+    
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data.data || []);
+  } catch (error) {
+    console.error('Error:', error);
+    return [];
+  }
+}`}</code></pre>
+      </div>
+    </section>
+
+  </div>
+</Layout>
+
+<script is:inline>
+Alpine.data('apiExampleData', () => ({
+  apiBase: window.__API_BASE_URL__ || '',
+  students: [],
+  payments: [],
+  concepts: [],
+  loadingStudents: false,
+  loadingPayments: false,
+  loadingConcepts: false,
+  studentsError: null,
+  paymentsError: null,
+  conceptsError: null,
+
+  async authenticatedFetch(url, options = {}) {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No hay token de autenticación');
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  async loadAllData() {
+    await Promise.all([
+      this.loadStudents(),
+      this.loadPayments(),
+      this.loadConcepts()
+    ]);
+  },
+
+  async loadStudents() {
+    this.loadingStudents = true;
+    this.studentsError = null;
+    try {
+      const data = await this.authenticatedFetch(`${this.apiBase}/v1/students`);
+      this.students = Array.isArray(data) ? data : (data.data || []);
+    } catch (error) {
+      this.studentsError = error.message;
+      console.error('Error cargando estudiantes:', error);
+    } finally {
+      this.loadingStudents = false;
+    }
+  },
+
+  async loadPayments() {
+    this.loadingPayments = true;
+    this.paymentsError = null;
+    try {
+      const data = await this.authenticatedFetch(`${this.apiBase}/v1/payments`);
+      this.payments = Array.isArray(data) ? data : (data.data || []);
+    } catch (error) {
+      this.paymentsError = error.message;
+      console.error('Error cargando pagos:', error);
+    } finally {
+      this.loadingPayments = false;
+    }
+  },
+
+  async loadConcepts() {
+    this.loadingConcepts = true;
+    this.conceptsError = null;
+    try {
+      const data = await this.authenticatedFetch(`${this.apiBase}/v1/concepts`);
+      this.concepts = Array.isArray(data) ? data : (data.data || []);
+    } catch (error) {
+      this.conceptsError = error.message;
+      console.error('Error cargando conceptos:', error);
+    } finally {
+      this.loadingConcepts = false;
+    }
+  }
+}));
+</script>
+
+<style>
+  code {
+    font-family: 'Courier New', monospace;
+  }
+</style>

@@ -1,0 +1,745 @@
+---
+import '../styles/global.css';
+import '../styles/tailwind.css';
+
+const pageTitle = "Acceso al Sistema - SIGE";
+const API_BASE_URL = (import.meta.env.PUBLIC_API_BASE_URL ?? (() => { throw new Error('Falta PUBLIC_API_BASE_URL'); })()).replace(/\/$/, '');
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{pageTitle}</title>
+
+    <link rel="icon" href="/Logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/Logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
+    <script is:inline define:vars={{ API_BASE_URL }}>
+        // AuthService inline para evitar problemas de importación dinámica
+        window.AuthService = {
+            TOKEN_KEY: 'access_token',
+            REFRESH_TOKEN_KEY: 'refresh_token',
+            USER_DATA_KEY: 'user_data',
+            API_BASE_URL,
+            apiStatus: null,
+            
+            async testConnection() {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    
+                    const response = await fetch(`${this.API_BASE_URL}/v1/login`, {
+                        method: 'OPTIONS',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    this.apiStatus = 'online';
+                    return true;
+                } catch (error) {
+                    console.error('API Connection Test Failed:', error);
+                    this.apiStatus = 'offline';
+                    return false;
+                }
+            },
+            
+            async login(email, password) {
+                try {
+                    const requestBody = {
+                        "email": email,
+                        "password": password
+                    };
+
+                    const LOGIN_TIMEOUT_MS = 30000;
+
+                    const doLoginRequest = async () => {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), LOGIN_TIMEOUT_MS);
+
+                        try {
+                            return await fetch(`${this.API_BASE_URL}/v1/login`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify(requestBody),
+                                signal: controller.signal
+                            });
+                        } finally {
+                            clearTimeout(timeoutId);
+                        }
+                    };
+                    
+                    console.log('📤 REQUEST BODY:', JSON.stringify(requestBody, null, 2));
+                    console.log('📤 REQUEST URL:', `${this.API_BASE_URL}/v1/login`);
+                    console.log('📤 REQUEST HEADERS:', {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    });
+                    
+                    let response;
+                    try {
+                        response = await doLoginRequest();
+                    } catch (firstError) {
+                        const isTimeout = firstError?.name === 'AbortError' || firstError?.name === 'TimeoutError';
+                        if (!isTimeout) throw firstError;
+
+                        console.warn(`⚠️ Login timeout al primer intento (${LOGIN_TIMEOUT_MS}ms). Reintentando una vez...`);
+                        response = await doLoginRequest();
+                    }
+                    
+                    console.log('📊 Response Status:', response.status);
+                    console.log('📊 Response OK:', response.ok);
+                    console.log('📊 Response Headers:', [...response.headers.entries()]);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error('🔴 Server Error Response:', errorData);
+                        console.error('🔴 Full Error Object:', JSON.stringify(errorData, null, 2));
+                        console.error('🔴 Status:', response.status, response.statusText);
+                        
+                        // Extraer mensaje de error del servidor
+                        let errorMessage = errorData.message || errorData.error || response.statusText;
+                        
+                        // Si hay errores de validación
+                        if (errorData.errors) {
+                            const validationErrors = Object.values(errorData.errors).flat().join(', ');
+                            errorMessage = `${errorMessage}: ${validationErrors}`;
+                        }
+                        
+                        throw new Error(errorMessage || `Error ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    console.log('📦 Response data completo:', data);
+                    
+                    // Extraer tokens de la ubicación correcta: data.data.user_tokens
+                    const accessToken = data.data?.user_tokens?.access_token;
+                    const refreshToken = data.data?.user_tokens?.refresh_token;
+                    // user_data es un ARRAY, tomar el primer elemento
+                    const userDataArray = data.data?.user_tokens?.user_data;
+                    const userData = Array.isArray(userDataArray) ? userDataArray[0] : userDataArray;
+                    
+                    console.log('🔍 Access Token:', accessToken ? 'ENCONTRADO' : 'NO ENCONTRADO');
+                    console.log('🔍 Refresh Token:', refreshToken ? 'ENCONTRADO' : 'NO ENCONTRADO');
+                    console.log('🔍 User Data Array:', userDataArray);
+                    console.log('🔍 User Data (primer elemento):', userData);
+                    
+                    if (accessToken) {
+                        localStorage.setItem(this.TOKEN_KEY, accessToken);
+                        console.log('✅ Token guardado en localStorage');
+                        console.log('🔑 Token (primeros 20 chars):', accessToken.substring(0, 20) + '...');
+                    } else {
+                        console.error('❌ NO SE ENCONTRÓ EL TOKEN en data.data.user_tokens.access_token');
+                    }
+                    
+                    if (refreshToken) {
+                        localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+                        console.log('✅ Refresh token guardado');
+                    }
+                    
+                    if (userData) {
+                        localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
+                        // Guardar también valores individuales para fácil acceso
+                        localStorage.setItem('userId', userData.id);
+                        
+                        // Obtener el nombre de múltiples fuentes posibles
+                        const userFullName = userData.fullName || userData.full_name || 
+                                            (userData.name && userData.last_name ? userData.name + ' ' + userData.last_name : null) ||
+                                            userData.name || 
+                                            'Usuario';
+                        
+                        localStorage.setItem('userName', userFullName);
+                        localStorage.setItem('userEmail', userData.email || '');
+                        
+                        console.log('✅ User data guardado:', userData);
+                        console.log('✅ ID:', userData.id);
+                        console.log('✅ Nombre guardado como:', userFullName);
+                        console.log('✅ Roles:', userData.roles);
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error('❌ Login error:', error);
+                    console.log('📍 API URL:', this.API_BASE_URL);
+                    console.log('📧 Email intentado:', email);
+                    
+                    // Mejorar mensajes de error
+                    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+                        throw new Error('⏱️ La solicitud tardó demasiado (>30s). Verifica tu conexión o intenta más tarde.');
+                    }
+                    if (error instanceof TypeError && error.message.includes('fetch')) {
+                        // Verificar si es error de CORS
+                        throw new Error('🚫 Error de CORS: El servidor no permite conexiones desde este dominio. El administrador debe configurar CORS en el backend.');
+                    }
+                    
+                    throw error;
+                }
+            },
+            
+            async register(userData) {
+                try {
+                    const formPayload = new URLSearchParams();
+                    Object.entries(userData || {}).forEach(([key, value]) => {
+                        if (value === undefined || value === null) return;
+                        formPayload.append(key, String(value));
+                    });
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+                    
+                    const response = await fetch(`${this.API_BASE_URL}/v1/register`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                            'Accept': 'application/json',
+                        },
+                        body: formPayload.toString(),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error('🔴 Register Error Response:', errorData);
+                        console.error('🔴 Status:', response.status, response.statusText);
+                        
+                        let errorMessage = errorData.message || errorData.error || response.statusText;
+                        if (errorData.errors) {
+                            const validationErrors = Object.values(errorData.errors).flat().join(', ');
+                            errorMessage = `${errorMessage}: ${validationErrors}`;
+                        }
+                        
+                        throw new Error(errorMessage || `Error ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Register error:', error);
+                    
+                    if (error.name === 'AbortError') {
+                        throw new Error('La solicitud tardó demasiado. Por favor, verifica tu conexión.');
+                    }
+                    if (error instanceof TypeError && error.message.includes('fetch')) {
+                        throw new Error('No se pudo conectar al servidor. Verifica tu conexión a internet.');
+                    }
+                    
+                    throw error;
+                }
+            },
+
+            async forgotPassword(email) {
+                try {
+                    const normalizedEmail = String(email || '').trim().toLowerCase();
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+                    const response = await fetch(`${this.API_BASE_URL}/v1/forgot-password`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ email: normalizedEmail }),
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        let errorMessage = errorData.message || errorData.error || response.statusText;
+                        if (errorData.errors) {
+                            const validationErrors = Object.values(errorData.errors).flat().join(', ');
+                            errorMessage = `${errorMessage}: ${validationErrors}`;
+                        }
+                        throw new Error(errorMessage || `Error ${response.status}: ${response.statusText}`);
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    console.error('Forgot password error:', error);
+
+                    if (error.name === 'AbortError') {
+                        throw new Error('La solicitud tardó demasiado. Por favor, verifica tu conexión.');
+                    }
+                    if (error instanceof TypeError && error.message.includes('fetch')) {
+                        throw new Error('No se pudo conectar al servidor. Verifica tu conexión a internet.');
+                    }
+
+                    throw error;
+                }
+            },
+            
+            getUserRole() {
+                const userData = localStorage.getItem(this.USER_DATA_KEY);
+                if (!userData) return null;
+                try {
+                    const parsed = JSON.parse(userData);
+                    if (parsed.roles && Array.isArray(parsed.roles) && parsed.roles.length > 0) {
+                        const firstRole = parsed.roles[0];
+                        if (typeof firstRole === 'string') return firstRole;
+                        if (firstRole && typeof firstRole === 'object') {
+                            return firstRole.slug || firstRole.name || firstRole.role || null;
+                        }
+                    }
+                    return parsed.role || parsed.type || null;
+                } catch {
+                    return null;
+                }
+            },
+
+            normalizeRole(roleValue) {
+                const key = String(roleValue || '')
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[._-]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                if (!key || key === 'sin rol' || key === 'none' || key === 'no role') return '';
+                if (key === 'admin' || key === 'administrador' || key === 'super admin' || key === 'superadmin') return 'admin';
+                if (
+                    key === 'financial staff' ||
+                    key === 'caja' ||
+                    key === 'cajero' ||
+                    key === 'tesoreria' ||
+                    key === 'finanzas' ||
+                    key === 'personal de pago' ||
+                    key === 'personal de pagos' ||
+                    key === 'cobranza'
+                ) return 'financial-staff';
+                if (key === 'teacher' || key === 'maestro' || key === 'docente' || key === 'profesor' || key === 'profesora') return 'teacher';
+                if (key === 'student' || key === 'estudiante' || key === 'alumno' || key === 'alumna') return 'student';
+                if (key === 'parent' || key === 'padre' || key === 'madre' || key === 'tutor' || key === 'tutora' || key === 'tutor legal') return 'parent';
+                if (key === 'applicant' || key === 'solicitante' || key === 'aspirante' || key === 'preinscrito' || key === 'pre inscrito') return 'applicant';
+                if (
+                    key === 'unverified' ||
+                    key === 'nverified' ||
+                    key === 'not verified' ||
+                    key === 'sin verificar' ||
+                    key === 'no verificado' ||
+                    key === 'pendiente verificacion' ||
+                    key === 'pendiente de verificacion'
+                ) return 'unverified';
+                if (key === 'supervisor' || key === 'coordinador' || key === 'coordinadora') return 'supervisor';
+
+                return key;
+            },
+            
+            logout() {
+                localStorage.removeItem(this.TOKEN_KEY);
+                localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+                localStorage.removeItem(this.USER_DATA_KEY);
+            }
+        };
+    </script>
+
+    <style>
+        /* Forzar rebuild v3 */
+        body {
+            background-color: #17202A;
+            background-image: radial-gradient(#2c3947 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+        .input-inset-shadow {
+            background-color: #f4f7fa;
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px rgba(255, 255, 255, 0.7);
+        }
+        .input-inset-shadow input,
+        .input-inset-shadow select {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent;
+        }
+        .input-inset-shadow input:focus,
+        .input-inset-shadow select:focus,
+        .input-inset-shadow input:focus-visible,
+        .input-inset-shadow select:focus-visible {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        .btn-hover-green:hover {
+            background-color: #43A047;
+            transform: scale(1.01);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.7);
+        }
+        .input-inset-shadow input:-webkit-autofill,
+        .input-inset-shadow input:-webkit-autofill:hover,
+        .input-inset-shadow input:-webkit-autofill:focus,
+        .input-inset-shadow input:autofill {
+            -webkit-box-shadow: 0 0 0 1000px #f4f7fa inset !important;
+            box-shadow: 0 0 0 1000px #f4f7fa inset !important;
+            -webkit-text-fill-color: #111827 !important;
+            caret-color: #111827;
+        }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+
+<body class="min-h-screen antialiased font-inter relative">
+
+<section class="min-h-screen flex items-center justify-center p-4 relative z-20"
+    @alpine="init"
+    x-data="window.__authFormData || {}"
+>
+    <script is:inline>
+        window.__authFormData = {
+            mode: 'login',
+            name: '',
+            lastName: '',
+            email: '',
+            password: '',
+            showPassword: false,
+            showRegisterPassword: false,
+            confirmPassword: '',
+            showRegisterConfirmPassword: false,
+            phoneNumber: '+52',
+            birthdate: '',
+            curp: '',
+            error: '',
+            message: '',
+            isLoading: false,
+
+            init() {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const verified = params.get('verified');
+                    const reset = params.get('reset');
+
+                    if (verified === '1') {
+                        this.message = '✅ Correo verificado correctamente. Ya puedes iniciar sesión.';
+                    } else if (verified === '0') {
+                        this.error = '❌ No se pudo verificar el correo. Intenta reenviar el enlace.';
+                    }
+
+                    if (reset === '1') {
+                        this.message = '✅ Contraseña actualizada. Ya puedes iniciar sesión.';
+                    }
+                } catch (e) {
+                    console.warn('URL params parse error:', e);
+                }
+            },
+
+        async handleLogin() {
+            this.error = '';
+            this.isLoading = true;
+
+            if (!this.email || !this.password) {
+                this.error = '⚠️ Por favor completa todos los campos.';
+                this.isLoading = false;
+                return;
+            }
+
+            try {
+                console.log('🔐 Intentando login con:', this.email);
+                console.log('🌐 API Base URL:', window.AuthService.API_BASE_URL);
+                
+                // Usar AuthService global
+                const response = await window.AuthService.login(this.email, this.password);
+                
+                console.log('📥 Respuesta del servidor:', response);
+                
+                if (response.success) {
+                    // VERIFICAR QUE EL TOKEN SE GUARDÓ
+                    const savedToken = localStorage.getItem('access_token');
+                    console.log('✅ Token guardado verificado:', savedToken ? 'SÍ' : 'NO');
+                    
+                    if (!savedToken) {
+                        console.error('⚠️ ADVERTENCIA: El token no se guardó correctamente');
+                        this.error = '⚠️ Error al guardar sesión. Intenta de nuevo.';
+                        this.isLoading = false;
+                        return;
+                    }
+                    
+                    this.error = '✅ Inicio de sesión exitoso....';
+                    
+                    // Determinar redirect según el rol del usuario
+                    const userRole = window.AuthService.getUserRole();
+                    let redirectUrl = '/Dashboard'; // Default
+                    
+                    const normalizedRole = window.AuthService.normalizeRole(userRole);
+                    
+                    if (normalizedRole === 'student' || normalizedRole === 'parent' || normalizedRole === 'applicant' || normalizedRole === 'unverified') {
+                        redirectUrl = '/Estudiante/PortalEstudiante';
+                    } else if (normalizedRole === 'admin') {
+                        redirectUrl = '/roles';
+                    } else if (normalizedRole === 'financial-staff' || normalizedRole === 'teacher' || normalizedRole === 'supervisor') {
+                        redirectUrl = '/Dashboard';
+                    }
+                    
+                    console.log('👤 Rol del usuario:', userRole);
+                    console.log('🧭 Rol normalizado:', normalizedRole);
+                    console.log('🚀 Redirigiendo a:', redirectUrl);
+                    setTimeout(() => window.location.href = redirectUrl, 800);
+                } else {
+                    this.error = '❌ ' + (response.message || 'Credenciales incorrectas.');
+                    this.isLoading = false;
+                }
+            } catch (error) {
+                console.error('❌ Login error completo:', error);
+                console.error('📋 Stack trace:', error.stack);
+                
+                // Mensaje de error más detallado
+                let errorMsg = error.message || 'Error desconocido';
+                
+                // Si es error de CORS
+                if (errorMsg.includes('CORS') || errorMsg.includes('Access-Control')) {
+                    errorMsg = '🚫 ERROR DE CORS: El backend no permite conexiones desde este dominio. El administrador debe configurar CORS en backend/config/cors.php para permitir https://cbta-eight.vercel.app';
+                } else if (errorMsg.includes('500') || errorMsg.includes('Internal Server Error')) {
+                    errorMsg = '🔧 Error del servidor (500): ' + errorMsg + '. Revisa los logs del backend o contacta al administrador.';
+                } else if (errorMsg.includes('401') || errorMsg.includes('403') || errorMsg.includes('Unauthorized')) {
+                    errorMsg = '🔒 Credenciales incorrectas. Verifica tu email y contraseña.';
+                } else if (errorMsg.includes('404')) {
+                    errorMsg = '❓ Endpoint no encontrado. Verifica la configuración de la API.';
+                } else if (errorMsg.includes('Network') || errorMsg.includes('conectar') || errorMsg.includes('fetch')) {
+                    errorMsg = '🌐 No se puede conectar al servidor. Posibles causas: Error de CORS, API no disponible, o problemas de red.';
+                }
+                
+                this.error = '❌ ' + errorMsg;
+                this.isLoading = false;
+            }
+        },
+
+        async handleRegister() {
+            this.error = '';
+            this.message = '';
+            this.isLoading = true;
+
+            if (!this.name || !this.lastName || !this.email || !this.password || !this.confirmPassword || !this.phoneNumber || !this.birthdate || !this.curp) {
+                this.error = '⚠️ Por favor, completa todos los campos de registro.';
+                this.isLoading = false;
+                return;
+            }
+
+            if (this.password !== this.confirmPassword) {
+                this.error = '⚠️ Las contraseñas no coinciden.';
+                this.isLoading = false;
+                return;
+            }
+
+            if (this.password.length < 8) {
+                this.error = '⚠️ La contraseña debe tener al menos 8 caracteres.';
+                this.isLoading = false;
+                return;
+            }
+
+            if (this.curp.length !== 18) {
+                this.error = '⚠️ La CURP debe tener exactamente 18 caracteres.';
+                this.isLoading = false;
+                return;
+            }
+
+            // Validar formato de teléfono mexicano
+            const phoneRegex = /^\+52\d{10}$/;
+            if (!phoneRegex.test(this.phoneNumber)) {
+                this.error = '⚠️ El teléfono debe ser un número mexicano válido (+521234567890).';
+                this.isLoading = false;
+                return;
+            }
+
+            // Validar fecha de nacimiento
+            const birthDate = new Date(this.birthdate);
+            const today = new Date();
+            const age = today.getFullYear() - birthDate.getFullYear();
+            if (age < 13 || isNaN(birthDate.getTime())) {
+                this.error = '⚠️ Debes tener al menos 13 años para registrarte.';
+                this.isLoading = false;
+                return;
+            }
+
+            try {
+                const userData = {
+                    name: this.name,
+                    last_name: this.lastName,
+                    email: this.email,
+                    password: this.password,
+                    password_confirmation: this.confirmPassword,
+                    phone_number: this.phoneNumber,
+                    birthdate: this.birthdate,
+                    curp: this.curp,
+                    status: 'activo',
+                };
+                
+                const response = await window.AuthService.register(userData);
+                
+                if (response.success) {
+                    this.message = '✅ Registro exitoso. Ya puedes iniciar sesión.';
+                    this.mode = 'login';
+                    this.name = '';
+                    this.lastName = '';
+                    this.email = '';
+                    this.password = '';
+                    this.confirmPassword = '';
+                    this.phoneNumber = '+52';
+                    this.birthdate = '';
+                    this.curp = '';
+                } else {
+                    this.error = '❌ ' + (response.message || 'Error en el registro.');
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                this.error = '❌ ' + (error.message || 'Error al registrar. Intenta con otro correo.');
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        async handleRecovery() {
+            this.message = '';
+            this.isLoading = true;
+            const normalizedEmail = String(this.email || '').trim().toLowerCase();
+            
+            if (!normalizedEmail) {
+                this.message = '⚠️ Ingresa un correo válido.';
+                this.isLoading = false;
+                return;
+            }
+
+            this.email = normalizedEmail;
+
+            try {
+                const response = await window.AuthService.forgotPassword(normalizedEmail);
+                const backendMessage = String(response?.message || '').trim();
+                const emailSentFlag = response?.data?.email_sent ?? response?.data?.sent ?? response?.data?.queued;
+                console.log('Forgot-password response:', response);
+                
+                if (response.success) {
+                    if (emailSentFlag === false) {
+                        this.message = '⚠️ La solicitud fue recibida, pero el servidor reportó que no pudo enviar el correo.';
+                    } else {
+                        this.message = `📩 ${backendMessage || 'Si el correo existe en el sistema, recibirás un enlace de recuperación. Revisa spam/promociones.'}`;
+                    }
+                } else {
+                    this.message = '⚠️ ' + (backendMessage || 'No se pudo enviar el correo.');
+                }
+            } catch (error) {
+                console.error('Recovery error:', error);
+                this.message = '❌ ' + (error.message || 'Error al enviar el correo de recuperación.');
+            } finally {
+                this.isLoading = false;
+            }
+        }
+    };
+    </script>
+
+
+    <div class="absolute top-8 left-1/2 transform -translate-x-1/2 translate-y-3 z-30">
+        <img src="/Logo.png" alt="Logotipo SIGE" class="w-32 h-auto select-none pointer-events-none">
+    </div>
+    
+    <div class="w-full max-w-md bg-white p-0 rounded-3xl overflow-hidden shadow-xl mt-28">
+
+        <header class="space-y-4 pt-14 pb-6 border-b border-gray-100 text-center">
+            <h1 class="text-3xl font-black text-gray-800 uppercase tracking-widest" 
+                x-text="mode === 'login' ? 'SIGE' : (mode === 'register' ? 'Registro' : 'Recuperar')">
+            </h1>
+            <p class="text-sm text-gray-500 font-medium mt-1">Sistema Educativo</p>
+        </header>
+
+        <div class="p-8 space-y-7">
+            <div x-show="error" :class="error.includes('✅') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'" class="p-3 border rounded-xl text-xs font-medium shadow-inner" x-cloak>
+                <span x-text="error"></span>
+            </div>
+            <div x-show="message" :class="message.includes('📩') || message.includes('✅') || message.includes('Si el correo existe') ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'" class="p-3 border rounded-xl text-xs font-medium shadow-inner" x-cloak>
+                <span x-text="message"></span>
+            </div>
+
+            <form class="space-y-6" x-show="mode === 'login'" @submit.prevent="handleLogin">
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="email" x-model="email" placeholder="Correo Electrónico" autocomplete="email" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow gap-2">
+                    <input :type="showPassword ? 'text' : 'password'" x-model="password" placeholder="Contraseña" autocomplete="current-password" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                    <button type="button" @click="showPassword = !showPassword" class="text-xs font-semibold text-blue-600 hover:text-blue-800 whitespace-nowrap">
+                        <span x-text="showPassword ? 'Ocultar' : 'Mostrar'"></span>
+                    </button>
+                </div>
+                <button type="submit" :disabled="isLoading" class="w-full py-3 px-4 mt-6 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
+                    <span x-text="isLoading ? 'Cargando...' : 'Entrar'"></span>
+                </button>
+                
+                <div class="text-center mt-4 text-xs space-y-3">
+                    <button type="button" @click="mode = 'recover'; error = ''; message = '';" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                        ¿Olvidaste tu contraseña?
+                    </button>
+                    <p class="text-gray-400">¿No tienes cuenta? <button type="button" @click="mode = 'register'; error = ''; message = '';" class="text-blue-600 font-bold hover:underline">Regístrate</button></p>
+                </div>
+            </form>
+
+            <form class="space-y-5" x-show="mode === 'register'" @submit.prevent="handleRegister" x-cloak>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="text" x-model="name" placeholder="Nombre" autocomplete="given-name" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0" required>
+                </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="text" x-model="lastName" placeholder="Apellido" autocomplete="family-name" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0" required>
+                </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="email" x-model="email" placeholder="Correo Electrónico" autocomplete="email" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0" required>
+                </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="tel" x-model="phoneNumber" placeholder="+521234567890" autocomplete="tel" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0" required>
+                </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="date" x-model="birthdate" placeholder="Fecha de Nacimiento" autocomplete="bday" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0" required>
+                </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="text" x-model="curp" placeholder="CURP (18 caracteres)" autocomplete="username" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0 uppercase" maxlength="18" required>
+                </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input :type="showRegisterPassword ? 'text' : 'password'" x-model="password" placeholder="Nueva Contraseña" autocomplete="new-password" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0" required>
+                    <button type="button" @click="showRegisterPassword = !showRegisterPassword" class="text-xs font-semibold text-blue-600 hover:text-blue-800 whitespace-nowrap">
+                        <span x-text="showRegisterPassword ? 'Ocultar' : 'Mostrar'"></span>
+                    </button>
+                </div>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input :type="showRegisterConfirmPassword ? 'text' : 'password'" x-model="confirmPassword" placeholder="Confirmar Contraseña" autocomplete="new-password" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0" required>
+                    <button type="button" @click="showRegisterConfirmPassword = !showRegisterConfirmPassword" class="text-xs font-semibold text-blue-600 hover:text-blue-800 whitespace-nowrap">
+                        <span x-text="showRegisterConfirmPassword ? 'Ocultar' : 'Mostrar'"></span>
+                    </button>
+                </div>
+                <button type="submit" :disabled="isLoading" class="w-full py-3 px-4 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
+                    <span x-text="isLoading ? 'Creando cuenta...' : 'Registrarme'"></span>
+                </button>
+                <div class="text-center mt-4">
+                    <button type="button" @click="mode = 'login'; error = ''; message = '';" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                        ← Ya tengo cuenta, volver
+                    </button>
+                </div>
+            </form>
+
+            <form class="space-y-6" x-show="mode === 'recover'" @submit.prevent="handleRecovery" x-cloak>
+                <div class="flex items-center rounded-xl p-3 input-inset-shadow">
+                    <input type="email" x-model="email" placeholder="Ingresa tu correo" autocomplete="email" class="w-full bg-transparent placeholder-gray-500 text-sm border-none focus:ring-0">
+                </div>
+                <button type="submit" :disabled="isLoading" class="w-full py-3 px-4 rounded-full shadow-xl text-base font-bold text-white bg-green-600 uppercase btn-hover-green disabled:opacity-50">
+                    <span x-text="isLoading ? 'Enviando...' : 'Enviar Enlace'"></span>
+                </button>
+                <div class="text-center mt-4">
+                    <button type="button" @click="mode = 'login'; error = ''; message = '';" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                        ← Volver al inicio de sesión
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <footer class="text-center p-3 bg-gray-100 text-xs text-gray-500 border-t border-gray-200">
+            <p>2026 © SIGE</p>
+        </footer>
+    </div>
+</section>
+
+</body>
+</html>

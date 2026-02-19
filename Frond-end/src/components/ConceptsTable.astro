@@ -1,0 +1,240 @@
+---
+// src/components/ConceptsTable.astro
+---
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+  <div class="flex justify-between items-center px-4 sm:px-6 py-3 bg-gray-50 border-b border-gray-200 gap-3">
+    <p class="text-xs sm:text-sm text-gray-600">Mostrando primeros <span id="showing-count">5</span> conceptos</p>
+    <a href="/concepts" class="text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors whitespace-nowrap">Ver todos →</a>
+  </div>
+
+  <div class="concepts-mobile p-3" id="dashboard-concepts-mobile">
+    <div class="py-8 text-center text-gray-400">
+      <div class="flex flex-col items-center gap-2">
+        <svg class="animate-spin h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-sm">Cargando conceptos...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="concepts-desktop overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-[#2E594D]">
+        <tr>
+          <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Concepto</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Monto</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Estado</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha Inicio</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha Fin</th>
+        </tr>
+      </thead>
+      <tbody id="dashboard-concepts-body" class="bg-white divide-y divide-gray-100">
+        <tr>
+          <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+            <div class="flex flex-col items-center gap-2">
+              <svg class="animate-spin h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p class="text-sm">Cargando conceptos...</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+  .concepts-mobile { display: block; }
+  .concepts-desktop { display: none; }
+
+  @media (min-width: 640px) {
+    .concepts-mobile { display: none; }
+    .concepts-desktop { display: block; }
+  }
+</style>
+
+<script>
+  // @ts-nocheck
+  import { DashboardAPI } from '../utils/dashboardAPI.js';
+
+  async function loadDashboardConcepts() {
+    const tbody = document.getElementById('dashboard-concepts-body');
+    const mobileContainer = document.getElementById('dashboard-concepts-mobile');
+    const showingCount = document.getElementById('showing-count');
+    
+    if (!tbody && !mobileContainer) return;
+
+    try {
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-orange-500">
+                <p class="text-sm">Por favor, inicia sesión para ver los conceptos</p>
+              </td>
+            </tr>
+          `;
+        }
+        if (mobileContainer) {
+          mobileContainer.innerHTML = `
+            <div class="py-8 text-center text-orange-500">
+              <p class="text-sm">Por favor, inicia sesión para ver los conceptos</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      // Obtener solo 5 conceptos para el dashboard
+      const response = await DashboardAPI.getConcepts(token, true, 1, 5, false);
+      
+      if (!response.success || !response.data?.concepts?.items) {
+        throw new Error('No se pudieron cargar los conceptos');
+      }
+
+      const concepts = response.data.concepts.items;
+      
+      if (showingCount) {
+        showingCount.textContent = concepts.length.toString();
+      }
+
+      if (concepts.length === 0) {
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                <p class="text-sm">No hay conceptos registrados</p>
+              </td>
+            </tr>
+          `;
+        }
+        if (mobileContainer) {
+          mobileContainer.innerHTML = `
+            <div class="py-8 text-center text-gray-400">
+              <p class="text-sm">No hay conceptos registrados</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      const formatCurrency = (n: number | string) => new Intl.NumberFormat('es-MX', { 
+        style: 'currency', 
+        currency: 'MXN' 
+      }).format(Number(n));
+
+      const formatDate = (dateStr: string) => {
+        if (!dateStr || dateStr === '---') return 'N/A';
+        return dateStr.split('T')[0];
+      };
+
+      if (tbody) {
+        tbody.innerHTML = concepts.map((concept: any) => {
+          const isInactive = concept.status !== 'activo';
+          const badgeClass = isInactive 
+            ? 'bg-red-50 text-red-600 border border-red-100' 
+            : 'bg-green-50 text-green-600 border border-green-100';
+          
+          return `
+            <tr class="hover:bg-gray-50/50 transition-colors">
+              <td class="px-6 py-4 text-sm font-bold text-[#2E594D] uppercase">
+                ${concept.concept_name || 'Sin nombre'}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">
+                ${formatCurrency(parseFloat(concept.amount || 0))}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-3 py-1 text-[10px] font-extrabold rounded-full ${badgeClass}">
+                  ${(concept.status || 'inactivo').toUpperCase()}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${formatDate(concept.start_date)}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${formatDate(concept.end_date)}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      if (mobileContainer) {
+        mobileContainer.innerHTML = concepts.map((concept: any) => {
+          const isInactive = concept.status !== 'activo';
+          const badgeClass = isInactive
+            ? 'bg-red-50 text-red-600 border border-red-100'
+            : 'bg-green-50 text-green-600 border border-green-100';
+
+          return `
+            <article class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm mb-3 last:mb-0">
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <h3 class="text-sm font-bold text-[#2E594D] uppercase leading-tight">${concept.concept_name || 'Sin nombre'}</h3>
+                <span class="px-2 py-1 text-[10px] font-extrabold rounded-full ${badgeClass}">${(concept.status || 'inactivo').toUpperCase()}</span>
+              </div>
+              <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                <p class="text-gray-500">Monto</p>
+                <p class="text-right font-semibold text-gray-700">${formatCurrency(parseFloat(concept.amount || 0))}</p>
+                <p class="text-gray-500">Inicio</p>
+                <p class="text-right text-gray-700">${formatDate(concept.start_date)}</p>
+                <p class="text-gray-500">Fin</p>
+                <p class="text-right text-gray-700">${formatDate(concept.end_date)}</p>
+              </div>
+            </article>
+          `;
+        }).join('');
+      }
+
+    } catch (error) {
+      console.error('Error loading dashboard concepts:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const isPermissionError = errorMsg.includes('permisos') || errorMsg.includes('403');
+      
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-6 py-8 text-center text-red-500">
+              <div class="flex flex-col items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-sm font-medium">${isPermissionError ? 'No tienes permisos para ver conceptos' : 'Error al cargar conceptos'}</p>
+                <p class="text-xs text-gray-500 mt-1">${isPermissionError ? 'Se requiere el rol "financial staff"' : errorMsg}</p>
+                ${!isPermissionError ? '<button onclick="window.location.reload()" class="text-xs text-blue-600 hover:text-blue-800 underline mt-2">Reintentar</button>' : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+      if (mobileContainer) {
+        mobileContainer.innerHTML = `
+          <div class="py-8 text-center text-red-500">
+            <div class="flex flex-col items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm font-medium">${isPermissionError ? 'No tienes permisos para ver conceptos' : 'Error al cargar conceptos'}</p>
+              <p class="text-xs text-gray-500 mt-1">${isPermissionError ? 'Se requiere el rol "financial staff"' : errorMsg}</p>
+              ${!isPermissionError ? '<button onclick="window.location.reload()" class="text-xs text-blue-600 hover:text-blue-800 underline mt-2">Reintentar</button>' : ''}
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadDashboardConcepts);
+  } else {
+    loadDashboardConcepts();
+  }
+  document.addEventListener('astro:page-load', loadDashboardConcepts);
+  window.addEventListener('conceptsUpdated', loadDashboardConcepts);
+</script>
