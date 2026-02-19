@@ -44,7 +44,7 @@ class ReceiptService
     {
         $payload = json_encode([
             'folio' => $receipt->folio,
-            'hash' => hash_hmac('sha256', $receipt->folio, config('app.key'))
+            'hash' => hash_hmac('sha256', $receipt->folio, config('receipt.key'))
         ]);
 
         $token = base64_encode($payload);
