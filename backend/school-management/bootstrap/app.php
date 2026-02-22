@@ -31,8 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
+        $middleware->append(\App\Http\Middleware\SecureHeadersMiddleware::class);
+
         $middleware->api(prepend: [
-            \App\Http\Middleware\SecureHeadersMiddleware::class
             //\Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
         $middleware->redirectGuestsTo(function ($request){
