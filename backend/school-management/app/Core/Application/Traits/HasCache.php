@@ -7,16 +7,17 @@ use App\Core\Domain\Enum\Cache\CachePrefix;
 use App\Core\Infraestructure\Cache\CacheService;
 use App\Exceptions\Conflict\IdempotencyExistsException;
 use App\Exceptions\Conflict\IdempotencyTimeoutException;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 trait HasCache
 {
     private CacheService $cacheService;
-    const CACHE_SHORT = 30;    // 30 minutos
-    const CACHE_MEDIUM = 120;  // 2 horas
-    const CACHE_LONG = 1440;   // 24 horas
-    const CACHE_WEEK = 10080;
+    const CACHE_SHORT = 30 * 60;    // 30 minutos
+    const CACHE_MEDIUM = 120 * 60;  // 2 horas
+    const CACHE_LONG = 1440 * 60;   // 24 horas
+    const CACHE_WEEK = 10080 * 60;
 
     public function setCacheService(CacheService $cacheService): void
     {
@@ -89,7 +90,6 @@ trait HasCache
 
     protected function idempotent(string $operation, array $attributes, callable $callback, ?int $ttlSeconds = 120)
     {
-        $ttl= now()->addSeconds($ttlSeconds);
         $attributes['_actor'] = auth()->id();
 
         $normalized = $this->normalizeAttributes($attributes);
@@ -99,43 +99,40 @@ trait HasCache
             json_encode($normalized, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION)
         );
 
-        $cacheKey = "idempotent:{$operation}:$hash";
-        $lockKey  = "lock:$cacheKey";
+        $cacheKey = "idempotent:{$operation}:{$hash}";
+        $lockKey  = "lock:{$cacheKey}";
 
-        if ($this->cacheService->has($cacheKey)) {
-            return $this->cacheService->get($cacheKey);
-        }
+        $lockSeconds = 40;
 
-        if ($this->cacheService->add($lockKey, 1, $ttl)) {
+        $lock = $this->cacheService->lock($lockKey, $lockSeconds);
 
-            try {
+        try {
+            return $lock->block($lockSeconds, function () use ($cacheKey, $ttlSeconds, $callback) {
+
+                if (!is_null($result = $this->cacheService->get($cacheKey))) {
+                    return $result;
+                }
+
                 $result = $callback();
 
-                $this->cacheService->put($cacheKey, $result, $ttl);
-                $this->cacheService->forget($lockKey);
+                $this->cacheService->put(
+                    $cacheKey,
+                    $result,
+                    $ttlSeconds
+                );
 
                 return $result;
+            });
 
-            } catch (\Throwable $e) {
-                $this->cacheService->forget($lockKey);
-                throw $e;
-            }
-        }
-
-        $waitTime = 0;
-        $maxWait  = 10;
-
-        while ($waitTime < $maxWait) {
-
-            if ($this->cacheService->has($cacheKey)) {
-                return $this->cacheService->get($cacheKey);
+        }catch (LockTimeoutException $e)
+        {
+            if (!is_null($result = $this->cacheService->get($cacheKey))) {
+                return $result;
             }
 
-            usleep(200000);
-            $waitTime += 0.2;
+            throw new IdempotencyTimeoutException($operation);
         }
 
-        throw new IdempotencyTimeoutException($operation);
     }
 
 

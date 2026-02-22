@@ -16,6 +16,11 @@ class CacheService
         return Cache::get($key, $default);
     }
 
+    public function lock(string $lockKey, $ttl = null)
+    {
+        return Cache::lock($lockKey, $ttl);
+    }
+
     public function getMany(array $keys, $default = null)
     {
         return Cache::getMultiple($keys, $default);
