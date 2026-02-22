@@ -60,6 +60,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('users:dispatch-delete-users')->weekly()->at('01:45')->withoutOverlapping(30)->onOneServer();
         $schedule->command('concepts:dispatch-delete-concepts')->weekly()->at('02:10')->withoutOverlapping(30)->onOneServer();
         $schedule->command('invites:dispatch-clean-expired-invites-job')->weekly()->at('02:35');
+        $schedule->command('activitylog:clean --days=90 --force')
+            ->weekly()
+            ->at('01:00')
+            ->withoutOverlapping();
         $schedule->command('app:dispatch-promote-students-job')
         ->dailyAt('22:50')
         ->when(function () {
