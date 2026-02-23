@@ -9,6 +9,7 @@ use App\Core\Domain\Utils\Validators\StripeValidator;
 use App\Exceptions\ServerError\StripeGatewayException;
 use App\Exceptions\Validation\ValidationException;
 use Stripe\Balance;
+use Stripe\BalanceTransaction;
 use Stripe\Charge;
 use Stripe\Checkout\Session;
 use Stripe\Exception\ApiErrorException;
@@ -205,7 +206,6 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
     {
         $params = [
             'limit' => 100,
-            'expand' => ['data.balance_transaction']
         ];
 
         if ($onlyThisYear) {
@@ -234,23 +234,14 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
                 $amount = Money::from((string) $payout->amount)->divide('100');
                 $month = date('Y-m', $payout->arrival_date);
 
-                $fee = Money::from('0');
-                if (isset($payout->balance_transaction)) {
-                    $fee = Money::from((string) $payout->balance_transaction->fee)->divide('100');
-                }
-
                 $totalPayouts = $totalPayouts->add($amount);
-                $totalFees = $totalFees->add($fee);
 
                 if (!isset($byMonth[$month])) {
-                    $byMonth[$month] = [
-                        'amount' => Money::from('0'),
-                        'fee' => Money::from('0'),
-                    ];
+                    $byMonth[$month] = Money::from('0');
+
                 }
 
-                $byMonth[$month]['amount'] = $byMonth[$month]['amount']->add($amount);
-                $byMonth[$month]['fee'] = $byMonth[$month]['fee']->add($fee);
+                $byMonth[$month] = $byMonth[$month]->add($amount);
             }
 
             $hasMore = $payouts->has_more;
@@ -259,14 +250,59 @@ class StripeGatewayQuery implements StripeGatewayQueryInterface
 
         return [
             'total' => $totalPayouts->finalize(),
-            'total_fee' => $totalFees->finalize(),
             'by_month' => array_map(
-                fn ($data) => [
-                    'amount' => $data['amount']->finalize(),
-                    'fee' => $data['fee']->finalize(),
-                ],
+                fn($m) => $m->finalize(),
                 $byMonth
             ),
+        ];
+    }
+
+    public function getFeesFromStripe(bool $onlyThisYear = false): array
+    {
+        $params = [
+            'limit' => 250,
+        ];
+
+        if ($onlyThisYear) {
+            $currentYear = date('Y');
+            $params['created'] = [
+                'gte' => strtotime("$currentYear-01-01"),
+                'lte' => strtotime("$currentYear-12-31 23:59:59")
+            ];
+        }
+
+        $totalFees = Money::from('0');
+        $byMonth = [];
+        $hasMore = true;
+        $lastId = null;
+
+        while ($hasMore) {
+            if ($lastId) {
+                $params['starting_after'] = $lastId;
+            }
+
+            $transactions = BalanceTransaction::all($params);
+
+            foreach ($transactions->data as $transaction) {
+                $fee = Money::from((string) abs($transaction->fee))->divide('100');
+                $month = date('Y-m', $transaction->created);
+
+                $totalFees = $totalFees->add($fee);
+
+                if (!isset($byMonth[$month])) {
+                    $byMonth[$month] = Money::from('0');
+                }
+
+                $byMonth[$month] = $byMonth[$month]->add($fee);
+            }
+
+            $hasMore = $transactions->has_more;
+            $lastId = !empty($transactions->data) ? end($transactions->data)->id : null;
+        }
+
+        return [
+            'total_fees' => $totalFees->finalize(),
+            'by_month' => array_map(fn($m) => $m->finalize(), $byMonth)
         ];
     }
 

@@ -131,20 +131,25 @@ class PaymentMapper{
         $totalPayments, $paymentsBySemester, $totalPayouts,
         $totalFees, $payoutsBySemester, $totalAvailable, $totalPending,
         $availableBySource, $pendingBySource, $availablePercentage,
-        $pendingPercentage, $netReceivedPercentage, $feePercentage): FinancialSummaryResponse
+        $pendingPercentage, $netReceivedPercentage, $feePercentage, $netAfterFeesPercentage,$totalNetReceived, $totalNetAfterFees,
+        $feesBySemester): FinancialSummaryResponse
     {
         return new FinancialSummaryResponse(
             totalPayments: $totalPayments,
             totalPayouts: $totalPayouts,
             totalFees: $totalFees,
+            totalNetReceived: $totalNetReceived,
+            totalNetAfterFees: $totalNetAfterFees,
             paymentsBySemester: $paymentsBySemester,
             payoutsBySemester: $payoutsBySemester,
+            feesBySemester: $feesBySemester,
             totalBalanceAvailable: $totalAvailable,
             totalBalancePending: $totalPending,
             availablePercentage: $availablePercentage,
             pendingPercentage: $pendingPercentage,
             netReceivedPercentage: $netReceivedPercentage,
             feePercentage: $feePercentage,
+            netAfterFeesPercentage: $netAfterFeesPercentage,
             totalBalanceAvailableBySource: $availableBySource,
             totalBalancePendingBySource: $pendingBySource,
         );

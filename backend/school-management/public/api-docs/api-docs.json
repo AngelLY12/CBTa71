@@ -12919,9 +12919,19 @@
                         "example": "230000.00"
                     },
                     "totalFees": {
-                        "description": "Monto total de comisiones cobradas",
+                        "description": "Monto total de comisiones cobradas por Stripe",
                         "type": "string",
                         "example": "20000.00"
+                    },
+                    "totalNetReceived": {
+                        "description": "Monto total actual en Stripe (available + pending)",
+                        "type": "string",
+                        "example": "50000.00"
+                    },
+                    "totalNetAfterFees": {
+                        "description": "Monto total después de comisiones (payments - fees)",
+                        "type": "string",
+                        "example": "230000.00"
                     },
                     "paymentsBySemester": {
                         "description": "Pagos brutos agrupados por semestre",
@@ -12929,10 +12939,12 @@
                         "additionalProperties": {
                             "properties": {
                                 "total": {
+                                    "description": "Total del semestre",
                                     "type": "string",
                                     "example": "45000.00"
                                 },
                                 "months": {
+                                    "description": "Meses del semestre",
                                     "type": "array",
                                     "items": {
                                         "type": "string",
@@ -12945,32 +12957,44 @@
                         }
                     },
                     "payoutsBySemester": {
-                        "description": "Payouts agrupados por semestre",
+                        "description": "Payouts (retiros) agrupados por semestre",
                         "type": "object",
                         "additionalProperties": {
                             "properties": {
                                 "total": {
+                                    "description": "Total de payouts del semestre",
                                     "type": "string",
                                     "example": "38000.00"
                                 },
-                                "total_fee": {
-                                    "type": "string",
-                                    "example": "2500.00"
-                                },
                                 "months": {
+                                    "description": "Meses del semestre con sus montos",
                                     "type": "array",
                                     "items": {
-                                        "properties": {
-                                            "amount": {
-                                                "type": "string",
-                                                "example": "18000.00"
-                                            },
-                                            "fee": {
-                                                "type": "string",
-                                                "example": "1200.00"
-                                            }
-                                        },
-                                        "type": "object"
+                                        "type": "string",
+                                        "example": "18000.00"
+                                    }
+                                }
+                            },
+                            "type": "object",
+                            "property": null
+                        }
+                    },
+                    "feesBySemester": {
+                        "description": "Comisiones de Stripe agrupadas por semestre",
+                        "type": "object",
+                        "additionalProperties": {
+                            "properties": {
+                                "total": {
+                                    "description": "Total de comisiones del semestre",
+                                    "type": "string",
+                                    "example": "3200.00"
+                                },
+                                "months": {
+                                    "description": "Meses del semestre con sus comisiones",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "example": "1066.67"
                                     }
                                 }
                             },
@@ -12979,12 +13003,12 @@
                         }
                     },
                     "totalBalanceAvailable": {
-                        "description": "Balance total disponible actualmente",
+                        "description": "Balance total disponible actualmente para retirar",
                         "type": "string",
                         "example": "35000.00"
                     },
                     "totalBalancePending": {
-                        "description": "Balance total pendiente actualmente",
+                        "description": "Balance total pendiente (en proceso de liquidación)",
                         "type": "string",
                         "example": "15000.00"
                     },
@@ -12999,14 +13023,19 @@
                         "example": "6.00"
                     },
                     "netReceivedPercentage": {
-                        "description": "Porcentaje neto recibido respecto al total de pagos",
+                        "description": "Porcentaje del dinero en Stripe (available + pending) respecto al total de pagos",
                         "type": "string",
-                        "example": "92.00"
+                        "example": "20.00"
                     },
                     "feePercentage": {
                         "description": "Porcentaje total de comisión respecto al total de pagos",
                         "type": "string",
                         "example": "8.00"
+                    },
+                    "netAfterFeesPercentage": {
+                        "description": "Porcentaje de ingresos después de comisiones respecto al total de pagos",
+                        "type": "string",
+                        "example": "92.00"
                     },
                     "totalBalanceAvailableBySource": {
                         "description": "Balance disponible agrupado por método de pago",
