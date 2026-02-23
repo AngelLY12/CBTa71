@@ -44,7 +44,7 @@ trait HasPaymentStripe
 
         if ($type === 'card' && isset($details->card)) {
             return [
-                'type' => $details->type,
+                'type' => 'tarjeta',
                 'brand' => $details->card->brand,
                 'last4' => $details->card->last4,
                 'funding' => $details->card->funding,
