@@ -14,6 +14,7 @@ interface StripeGatewayQueryInterface
     public function getPaymentIntentFromSession(string $sessionId): PaymentIntent;
     public function getBalanceFromStripe(): array;
     public function getPayoutsFromStripe(bool $onlyThisYear = false): array;
+    public function getFeesFromStripe(bool $onlyThisYear = false): array;
     public function getIntentsAndChargesBatch(array $paymentIntentIds): array;
     public function countSessionsByMetadata(array $metadata, string $status): int;
     public function getSessionsByMetadata(array $metadataFilters, string $status,int $limit = 100): array;

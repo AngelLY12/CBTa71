@@ -20,31 +20,44 @@ class PaymentsMadeUseCase{
         $grossData= $this->pqRepo->getAllPaymentsMade($onlyThisYear);
         $balanceData= $this->stripeGateway->getBalanceFromStripe();
         $payoutsData= $this->stripeGateway->getPayoutsFromStripe($onlyThisYear);
+        $feesData = $this->stripeGateway->getFeesFromStripe($onlyThisYear);
 
         $totalPayments = $grossData['total'];
         $paymentsBySemester = $this->groupBySemester($grossData['by_month']);
 
         $totalPayouts = $payoutsData['total'];
-        $totalFees    = $payoutsData['total_fee'];
+        $totalFees    = $feesData['total_fees'];
         $payoutsBySemester = $this->groupPayoutsBySemester($payoutsData['by_month']);
-
+        $feesBySemester = $this->groupFeesBySemester($feesData['by_month']);
         [$totalAvailable,$totalPending, $availableBySource, $pendingBySource]=$this->formattBalance($balanceData);
-        [$availablePercentage, $pendingPercentage, $netReceivedPercentage, $feePercentage]=$this->calculatePercentages($totalPayments, $totalAvailable, $totalPending, $totalPayouts, $totalFees);
+        $totalNetReceived = Money::from($totalAvailable)
+            ->add(Money::from($totalPending))
+            ->finalize();
+
+        $totalAfterFees  = Money::from($totalPayments)
+            ->sub(Money::from($totalFees))
+            ->finalize();
+
+        [$availablePercentage, $pendingPercentage, $netReceivedPercentage, $feePercentage, $netAfterFeesPercentage]=$this->calculatePercentages($totalPayments, $totalAvailable, $totalPending, $totalNetReceived, $totalFees, $totalAfterFees);
 
         return PaymentMapper::toFinancialSummaryResponse(
-            $totalPayments,
-            $paymentsBySemester,
-            $totalPayouts,
-            $totalFees,
-            $payoutsBySemester,
-            $totalAvailable,
-            $totalPending,
-            $availableBySource,
-            $pendingBySource,
-            $availablePercentage,
-            $pendingPercentage,
-            $netReceivedPercentage,
-            $feePercentage
+            totalPayments: $totalPayments,
+            paymentsBySemester: $paymentsBySemester,
+            totalPayouts: $totalPayouts,
+            totalFees: $totalFees,
+            payoutsBySemester: $payoutsBySemester,
+            totalAvailable: $totalAvailable,
+            totalPending: $totalPending,
+            availableBySource: $availableBySource,
+            pendingBySource: $pendingBySource,
+            availablePercentage: $availablePercentage,
+            pendingPercentage: $pendingPercentage,
+            netReceivedPercentage: $netReceivedPercentage,
+            feePercentage: $feePercentage,
+            netAfterFeesPercentage: $netAfterFeesPercentage,
+            totalNetReceived: $totalNetReceived,
+            totalNetAfterFees: $totalAfterFees,
+            feesBySemester: $feesBySemester
         );
 
 
@@ -81,24 +94,43 @@ class PaymentsMadeUseCase{
     {
         ksort($payoutsByMonth);
         $result = [];
-        foreach ($payoutsByMonth as $month => $data) {
+        foreach ($payoutsByMonth as $month => $amount) {
             $key = $this->getSemesterKey($month);
             if(!isset($result[$key])) {
                 $result[$key] = [
                     'total' => '0.00',
-                    'total_fee' => '0.00',
                     'months' =>[]
                 ];
             }
-            $result[$key]['months'][] = [
-                'amount' => Money::from($data['amount'])->finalize(),
-                'fee'    => Money::from($data['fee'])->finalize(),
-            ];
+            $result[$key]['months'][] = Money::from($amount)->finalize();
 
-            $result[$key]['total'] = Money::from($result[$key]['total'])->add($data['amount'])->finalize();
-            $result[$key]['total_fee'] = Money::from($result[$key]['total_fee'])->add($data['fee'])->finalize();
+            $result[$key]['total'] = Money::from($result[$key]['total'])->add($amount)->finalize();
 
         }
+        return $result;
+    }
+
+    private function groupFeesBySemester(array $feesByMonth): array
+    {
+        ksort($feesByMonth);
+        $result = [];
+
+        foreach ($feesByMonth as $month => $amount) {
+            $key = $this->getSemesterKey($month);
+
+            if (!isset($result[$key])) {
+                $result[$key] = [
+                    'total' => '0.00',
+                    'months' => []
+                ];
+            }
+
+            $result[$key]['months'][] = Money::from($amount)->finalize();
+            $result[$key]['total'] = Money::from($result[$key]['total'])
+                ->add($amount)
+                ->finalize();
+        }
+
         return $result;
     }
 
@@ -134,18 +166,19 @@ class PaymentsMadeUseCase{
 
     private function calculatePercentages(
         string $totalPayments, string $totalAvailable,
-        string $totalPending, string $totalPayouts,
-        string $totalFees): array
+        string $totalPending, string $totalNetReceived,
+        string $totalFees, string $totalAfterFees): array
     {
         if ($totalPayments === '0.00') {
-            return ['0.00', '0.00', '0.00', '0.00'];
+            return ['0.00', '0.00', '0.00', '0.00', '0.00'];
         }
 
         return [
             $this->calculatePercentage($totalAvailable, $totalPayments),
             $this->calculatePercentage($totalPending, $totalPayments),
-            $this->calculatePercentage($totalPayouts, $totalPayments),
+            $this->calculatePercentage($totalNetReceived, $totalPayments),
             $this->calculatePercentage($totalFees, $totalPayments),
+            $this->calculatePercentage($totalAfterFees, $totalPayments)
         ];
     }
     private function calculatePercentage(string $part, string $total): string
