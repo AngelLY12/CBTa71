@@ -61,7 +61,7 @@ trait HasPaymentConcept
             foreach ($chunk as $user) {
 
                 $data = [
-                    'recipientName' => $user->name,
+                    'recipientName' => $user->fullName,
                     'recipientEmail' => $user->email,
                     'concept_name' => $concept->concept_name,
                     'amount' => $concept->amount,
