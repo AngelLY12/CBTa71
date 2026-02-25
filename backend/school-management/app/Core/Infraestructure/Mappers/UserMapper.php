@@ -34,7 +34,8 @@ class UserMapper{
             gender: $user->gender,
             address: $addressData,
             blood_type: $user->blood_type,
-            stripe_customer_id: $user->stripe_customer_id
+            stripe_customer_id: $user->stripe_customer_id,
+            created_at: $user->created_at
         );
         if ($user->relationLoaded('studentDetail') && $user->studentDetail !== null) {
             $domainUser->setStudentDetail(StudentDetailMapper::toDomain($user->studentDetail));

@@ -29,6 +29,7 @@ trait HasPendingQuery
             ->where('users.status', UserStatus::ACTIVO->value)
             ->select(
                 'users.id as user_id',
+                'users.created_at as user_created_at',
                 'student_details.career_id',
                 'student_details.semestre',
                 DB::raw("
@@ -65,7 +66,10 @@ trait HasPendingQuery
         $pending = DB::query()
             ->fromSub($usersContext, 'u')
             ->joinSub($baseConcepts, 'payment_concepts', fn () => true)
-
+            ->where(function($q) {
+                $q->whereNull('payment_concepts.end_date')
+                    ->orWhere('payment_concepts.end_date', '>=', DB::raw('DATE(u.user_created_at)'));
+            })
             ->leftJoin('payments', function ($q) {
                 $q->on('payments.payment_concept_id', '=', 'payment_concepts.id')
                     ->on('payments.user_id', '=', 'u.user_id');
