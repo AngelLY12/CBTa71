@@ -26,7 +26,7 @@
         }
 
         .header {
-            background: linear-gradient(90deg, #4CA771, #013237);
+            background-color:#2e7d5b;
             color: #fff;
             text-align: center;
             padding: 30px 20px;
