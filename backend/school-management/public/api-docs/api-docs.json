@@ -14736,6 +14736,12 @@
                             }
                         ],
                         "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-01",
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -15981,6 +15987,10 @@
                     "amount": {
                         "type": "string",
                         "example": "1,500.00"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Pago de inscripción para todos los estudiantes"
                     },
                     "status": {
                         "type": "string",

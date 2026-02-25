@@ -79,6 +79,7 @@ use App\Listeners\SendParentInvitationFailedNotification;
 use App\Listeners\SendParentStudentDeleteNotification;
 use App\Listeners\SendPromotionNotification;
 use App\Listeners\SendStudentsPromotionFailedNotification;
+use Carbon\Carbon;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Event;
@@ -144,6 +145,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         bcscale(8);
+        Carbon::setLocale('es');
 
         if (config('app.env') === 'production') {
             URL::forceScheme('https');

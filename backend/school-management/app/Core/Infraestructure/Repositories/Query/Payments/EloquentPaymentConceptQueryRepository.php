@@ -145,7 +145,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     public function findAllConcepts(string $status, int $perPage, int $page): LengthAwarePaginator
     {
         $query = EloquentPaymentConcept::query()
-            ->select(['id','concept_name','status', 'applies_to','end_date','amount', 'mark_as_deleted_at'])
+            ->select(['id','concept_name','status', 'description' ,'applies_to','end_date','amount', 'mark_as_deleted_at'])
             ->latest('created_at');
 
         if ($status !== 'todos') {
@@ -159,6 +159,7 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
                 'id' => $concept->id,
                 'concept_name' => $concept->concept_name,
                 'amount' => $concept->amount,
+                'description' => $concept->description,
                 'status' => $concept->status->value,
                 'applies_to' => $concept->applies_to->value,
                 'expiration_human' => $concept->end_date
