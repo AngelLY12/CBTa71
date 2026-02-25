@@ -374,8 +374,8 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
     {
 
         $query = EloquentPaymentConcept::query();
+        $now = now();
         if ($onlyActive) {
-            $now = now();
             $query->whereDate('payment_concepts.start_date', '<=', $now)
                 ->where(fn($q) => $q->whereNull('payment_concepts.end_date')->orWhereDate('payment_concepts.end_date', '>=', $now));
         }
@@ -390,6 +390,12 @@ class EloquentPaymentConceptQueryRepository implements PaymentConceptQueryRepInt
             $semester = $user->studentDetail?->semestre;
             $isApplicant = $user->isApplicant();
             $isNewStudent = $user->isNewStudent();
+            $userCreatedAt = $user->created_at;
+
+            $query->where(function($q) use ($userCreatedAt) {
+                $q->whereNull('payment_concepts.end_date')
+                ->orWhere('payment_concepts.end_date', '>=', $userCreatedAt);
+            });
 
             $query->whereNotExists(function ($sub) use ($userId) {
                 $sub->select(DB::raw(1))

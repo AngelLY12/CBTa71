@@ -31,6 +31,7 @@ use Carbon\Carbon;
  *     @OA\Property(property="stripe_customer_id", type="string", nullable=true, example="cus_ABC123XYZ"),
  *     @OA\Property(property="blood_type", ref="#/components/schemas/UserBloodType", nullable=true, example="O+"),
  *     @OA\Property(property="studentDetail", ref="#/components/schemas/DomainStudentDetail", nullable=true),
+ *     @OA\Property(property="created_at", nullable=true ,type="string", format="date", example="2025-09-01"),
  * )
  */
 class User
@@ -58,6 +59,7 @@ class User
         public ?string $stripe_customer_id = null,
         /** @var StudentDetail */
         public ?StudentDetail $studentDetail=null,
+        public ?Carbon $created_at = null,
 
     )
     {
