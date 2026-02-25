@@ -9,6 +9,7 @@ if [ "$APP_ROLE" = "app" ]; then
   php artisan optimize:clear || true
   php artisan config:clear || true
   php artisan config:cache || true
+  php artisan storage:link || true
 
   ATTEMPTS=0
   MAX_ATTEMPTS=10
