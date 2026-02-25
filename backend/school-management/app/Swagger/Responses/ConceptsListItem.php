@@ -10,6 +10,7 @@ namespace App\Swagger\Responses;
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="concept_name", type="string", example="Pago de inscripción"),
  *     @OA\Property(property="amount", type="string", example="1,500.00"),
+ *     @OA\Property(property="description", type="string", example="Pago de inscripción para todos los estudiantes"),
  *     @OA\Property(property="status", type="string", example="active"),
  *     @OA\Property(property="applies_to", type="string", example="todos"),
  *     @OA\Property(
