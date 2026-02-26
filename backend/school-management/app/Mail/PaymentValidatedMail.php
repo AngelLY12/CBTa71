@@ -40,6 +40,8 @@ class PaymentValidatedMail extends Mailable
      */
     public function content(): Content
     {
+        $isOxxo = ($this->data->payment_method_detail['type'] ?? '') === 'oxxo';
+        $isSpei = ($this->data->payment_method_detail['type'] ?? '') === 'spei';
         return new Content(
             view: 'emails.payments.validated',
             with: [
@@ -47,10 +49,9 @@ class PaymentValidatedMail extends Mailable
                 'conceptName' => $this->data->concept_name,
                 'amount' => $this->data->amount,
                 'amountReceived' => $this->data->amount_received,
-                'paymentMethodType' => $this->data->payment_method_detail['type'],
+                'paymentMethodType' => $this->data->payment_method_detail['type'] ?? 'No especificado',
                 'paymentIntentId' => $this->data->payment_intent_id,
-                'voucherNumber' => $this->data->payment_method_detail['oxxo']['number'],
-                'speiReference' => $this->data->payment_method_detail['spei']['reference'],
+                'reference' => $this->data->payment_method_detail['reference'],
                 'url' => $this->data->url,
                 'paymentLegend' => $this->buildPaymentLegend(),
             ]

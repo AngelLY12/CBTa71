@@ -22,7 +22,7 @@
     <p>
         <strong>URL de la sesión:</strong>
         <a href="{{ $url }}" target="_blank">
-            {{ $url }}
+            Ver sesión
         </a>
     </p>
 @endsection

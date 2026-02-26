@@ -22,13 +22,13 @@
     <p><strong>Método de pago:</strong> {{ $paymentMethodType ?? 'Desconocido' }}</p>
     <p><strong>Código de referencia:</strong> {{ $paymentIntentId }}</p>
 
-    <p><strong>Voucher OXXO:</strong> {{ $voucherNumber ?? 'No aplica' }}</p>
-    <p><strong>Referencia SPEI:</strong> {{ $speiReference ?? 'No aplica' }}</p>
-
-    <p>
-        <strong>URL comprobante:</strong>
-        <a href="{{ $url }}" target="_blank">{{ $url }}</a>
-    </p>
+    @if($reference)
+        <p>
+            <strong>Referencia de pago:</strong> {{ $reference }}
+            <br>
+            <small style="color: #2e7d5b">({{ $paymentMethodType }})</small>
+        </p>
+    @endif
 
     @if(!empty($paymentLegend))
         {!! $paymentLegend !!}
@@ -36,5 +36,5 @@
 @endsection
 
 @section('message_footer')
-    Gracias por realizar tu pago a tiempo.
+    Gracias por realizar tu pago a tiempo. Podrás ver tu comprobante escolar en el historial de pagos, en detalles del pago
 @endsection
