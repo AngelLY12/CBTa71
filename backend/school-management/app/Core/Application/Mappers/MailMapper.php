@@ -35,7 +35,9 @@ class MailMapper
             recipientEmail:$data['recipientEmail'],
             concept_name:$data['concept_name'],
             amount:$data['amount'],
-            end_date:$data['end_date']
+            end_date:$data['end_date'],
+            start_date:$data['start_date'],
+            isDisable: $data['isDisable'],
         );
     }
 

@@ -65,7 +65,9 @@ trait HasPaymentConcept
                     'recipientEmail' => $user->email,
                     'concept_name' => $concept->concept_name,
                     'amount' => $concept->amount,
-                    'end_date' => $concept->end_date
+                    'end_date' => $concept->end_date ? $concept->end_date->format('d-m-Y') : 'Sin fecha límite',
+                    'start_date' => $concept->start_date->format('d-m-Y'),
+                    'isDisable' => $concept->isDisable(),
                 ];
 
                 $mailables[] = new NewConceptMail(

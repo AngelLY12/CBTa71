@@ -45,7 +45,9 @@ class NewConceptMail extends Mailable
                 'name'        => $this->data->recipientName,
                 'conceptName' => $this->data->concept_name,
                 'amount'      => Money::from($this->data->amount)->finalize(),
-                'endDate'     => $this->data->end_date ?? 'Sin fecha límite',
+                'startDate'    => $this->data->start_date,
+                'endDate'     => $this->data->end_date,
+                'isDisable'    => $this->data->isDisable
             ]
         );
     }

@@ -17,7 +17,12 @@
 @section('message_details')
     <p><strong>Concepto:</strong> {{ $conceptName }}</p>
     <p><strong>Monto:</strong> ${{ $amount }}</p>
+    <p><strong>Fecha de inicio:</strong> {{ $startDate }}</p>
     <p><strong>Fecha límite:</strong> {{ $endDate }}</p>
+    @if($isDisable)
+        <p><strong>Nota:</strong> Este concepto está actualmente inactivo.
+            Recibirás una notificación cuando sea activado por los administradores.</p>
+    @endif
 @endsection
 
 @section('message_footer')
