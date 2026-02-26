@@ -79,7 +79,7 @@
 
 <body>
 <div class="container">
-    <div class="header" style="background: linear-gradient(90deg, #4CA771, #013237); text-align: center; padding: 30px 20px; color: #fff;">
+    <div class="header" style="background: #2e7d5b; text-align: center; padding: 30px 20px; color: #fff;">
         <div style="margin:0 auto 18px auto; text-align:center;">
 
             <div style="

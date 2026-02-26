@@ -73,7 +73,7 @@ class UpdatePaymentConceptFieldsUseCase
         if ($this->shouldNotifyForChanges($changes)) {
             event(new PaymentConceptUpdatedFields($newPaymentConcept->id, $changes));
         }
-        if(bccomp($newPaymentConcept->amount, config('concepts.amount.notifications.threshold')) === 1)
+        if(config('concepts.amount.notifications.enabled') && bccomp($newPaymentConcept->amount, config('concepts.amount.notifications.threshold')) === 1)
         {
             event(new AdministrationEvent(
                 amount: $newPaymentConcept->amount,
