@@ -4,7 +4,7 @@ import ButtonPrimary from './ButtonPrimary';
 function SelectInput({ className, notSelectDefault = false, options = [], setOption = null, setValue, titleEnter = true, title = "Buscar por", titleMovil, children, topTitle = false, filtre = true, upperCase = false, widthText }) {
     const [opentOption, setOpenOptions] = useState(false)
     const [openMovilSelect, setOpenMovilSelect] = useState(false);
-    const [indexSelect, setIndexSelect] = useState(!notSelectDefault ? options[0] : -1)
+    const [indexSelect, setIndexSelect] = useState(!notSelectDefault ? 0 : -1)
     const [valueSelect, setValueSelect] = useState(!notSelectDefault ? options[0] : "")
     const [isMovil, setIsMovil] = useState(false);
     const wrapperRef = useRef(null);
@@ -137,7 +137,7 @@ function SelectInput({ className, notSelectDefault = false, options = [], setOpt
                     <div className={`flex-grow w-full h-full md:visible md:block hidden`}>
                         <button ref={buttonRef} className="flex h-full w-full cursor-pointer hover:bg-green-100/60 outline-0 group" onClick={showOption}>
                             <div className='flex h-full w-full items-center px-2 border-[1px] rounded-s group-focus:border-[0.1rem] overflow-hidden'>
-                                <p className={`text-start w-full whitespace-nowrap overflow-hidden overflow-ellipsis text-sm xl:text-lg ${widthText}`}>{titleEnter ? <>{title}: <span className={`font-semibold ${upperCase && "uppercase"}`}>{valueSelect ? valueSelect : titleMovil}</span></> : valueSelect > 0 ? valueSelect : titleMovil}</p>
+                                <p className={`text-start w-full whitespace-nowrap overflow-hidden overflow-ellipsis text-sm xl:text-lg ${widthText}`}>{titleEnter && title + ": "}<span className={`${upperCase && "uppercase"}`}>{valueSelect ? valueSelect : titleMovil}</span></p>
                             </div>
                             <div className='flex h-full w-12 justify-center items-center -ml-[1px] border-[1px] rounded-e group-focus:border-[0.1rem]'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
@@ -158,7 +158,7 @@ function SelectInput({ className, notSelectDefault = false, options = [], setOpt
                 </div >
                 {
                     (opentOption || openMovilSelect) &&
-                    <div className='md:right-0 md:absolute md:max-h-40 p-2 w-full bg-white md:shadow-lg overflow-y-auto z-10'>
+                    <div className='md:right-0 md:absolute md:max-h-40 md:min-w-full p-2 bg-white md:shadow-lg overflow-y-auto z-10'>
                         {options.map((option, i) => (
                             <button value={option} onClick={() => optionClick(i)} className={`flex p-2 rounded-lg w-full items-center gap-1 active:bg-neutral-600/15 hover:bg-neutral-600/15 ${indexSelect == i && "bg-neutral-600/15 font-bold"}`} key={i}>
                                 <div className={`visible block md:hidden w-5 h-5 rounded-full border-2 ${indexSelect == i ? "bg-green-500 border-green-500" : "border-neutral-950"}`}>

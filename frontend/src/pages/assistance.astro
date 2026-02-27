@@ -1,0 +1,17 @@
+---
+import Layout from "../layouts/Layout.astro";
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import StaffAssistance from "../view/assistance/staff/StaffAssistance";
+import StudentAssistance from "../view/assistance/student/StudentAssistance";
+---
+
+<Layout title={"Inicio"}>
+    <DivWithNavbar title={"Inicio"}>
+        <div class="alumno hidden">
+            <StudentAssistance client:load/>
+        </div>
+        <div class="personal hidden">
+            <StaffAssistance client:load/>
+        </div>
+    </DivWithNavbar>
+</Layout>

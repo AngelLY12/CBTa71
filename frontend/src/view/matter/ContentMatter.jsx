@@ -41,7 +41,6 @@ const ContentMatter = () => {
 
     const onClickeditMatter = (matter) => {
         setInfoEditMatter(matter);
-        console.log(`La materia a editar es ${matter.nombre}`)
     }
 
     const deletePersonal = async () => {
