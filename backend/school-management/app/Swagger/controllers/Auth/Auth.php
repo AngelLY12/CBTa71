@@ -186,14 +186,7 @@ public function emailVerification(){}
  *              allOf={
  *                  @OA\Schema(ref="#/components/schemas/SuccessResponse"),
  *                  @OA\Schema(
- *                      @OA\Property(
- *                          property="data",
- *                          type="object",
- *                          @OA\Property(
- *                              property="user",
- *                              ref="#/components/schemas/DomainUser"
- *                          )
- *                      ),
+ *
  *                      @OA\Property(
  *                          property="message",
  *                          type="string",

@@ -1857,14 +1857,6 @@
                                         },
                                         {
                                             "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "user": {
-                                                            "$ref": "#/components/schemas/DomainUser"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
                                                 "message": {
                                                     "type": "string",
                                                     "example": "El usuario ha sido creado con éxito."
@@ -3127,14 +3119,6 @@
                                         },
                                         {
                                             "properties": {
-                                                "data": {
-                                                    "properties": {
-                                                        "user": {
-                                                            "$ref": "#/components/schemas/DomainUser"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                },
                                                 "message": {
                                                     "type": "string",
                                                     "example": "El usuario ha sido creado con éxito."
