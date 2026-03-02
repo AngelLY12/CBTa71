@@ -43,7 +43,7 @@ class AdminUsersController extends Controller
 
         $user = $this->service->registerUser($createUser, $password);
 
-        return Response::success(['user' => $user], 'El usuario ha sido creado con éxito.',201);
+        return Response::success(null, 'El usuario ha sido creado con éxito.',201);
 
     }
 

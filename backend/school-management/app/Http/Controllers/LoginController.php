@@ -33,7 +33,7 @@ class LoginController extends Controller
 
         $user = $this->loginService->register($createUser);
 
-        return Response::success(['user' => $user], 'El usuario ha sido creado con éxito.', 201);
+        return Response::success(null, 'El usuario ha sido creado con éxito.', 201);
 
 
     }
