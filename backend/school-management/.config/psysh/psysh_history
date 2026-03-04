@@ -1,0 +1,73 @@
+$user = new \App\Models\User;
+use App\Models\User;
+$user = User::factory()->create();
+$user->sendEmailVerificationNotification();
+exit
+use App\Models\User;
+$user = User::factory()->create();
+echo "Métodos:\n";
+echo "hasVerifiedEmail: " . (method_exists($user, 'hasVerifiedEmail') ? 'SI' : 'NO') . "\n";
+echo "sendEmailVerificationNotification: " . (method_exists($user, 'sendEmailVerificationNotification') ? 'SI' : 'NO') . "\n";
+echo "Instance of MustVerifyEmail: " . ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail ? 'SI' : 'NO') . "\n";
+echo "\nLlamando método directamente...\n";
+$user->sendEmailVerificationNotification();
+exit
+use App\Models\User;
+$user = User::factory()->create();
+$user->sendEmailVerificationNotification();
+use Illuminate\Auth\Events\Registered;
+event(new Registered($user));
+exit
+use Illuminate\Auth\Events\Registered;
+use App\Models\User;
+$user = User::find(1);
+event(new Registered($user));
+exit
+use Illuminate\Auth\Events\Registered;
+use App\Models\User;
+$user = User::find(1);
+event(new Registered($user));
+$user->sendEmailVerificationNotification();
+exit
+$user = App\Models\User::first();
+$user->sendEmailVerificationNotification();
+tail -f storage/logs/laravel.log
+exot
+exiit
+exit
+$user = App\Models\User::first();
+$user->sendEmailVerificationNotification();
+exit
+$user = App\Models\User::first();
+$user->sendEmailVerificationNotification();
+exit
+$user = App\Models\User::first();
+use Illuminate\Auth\Events\Registered;
+event(new Registered($user));
+exit
+$user = App\Models\User::first();
+use Illuminate\Auth\Events\Registered;
+event(new Registered($user));
+exit
+use Spatie\Permission\Models\Permission;
+$p = Permission::first();
+$p instanceof Spatie\Permission\Models\Permission;
+exit
+use Spatie\Permission\Models\Permission;
+$p = Permission::first();
+$p instanceof Spatie\Permission\Models\Permission;
+$p = app(\Spatie\Permission\Models\Permission::class)->first();
+use Spatie\Permission\PermissionFacade as Permission;
+use App\Models\Permission as ModelPermission;
+$p = ModelPermission::first();
+exit
+$adapter = Storage::disk('google')->getAdapter();
+$service = $adapter->getService();
+$client = $service->getClient();
+$token = $client->getAccessToken();
+if (isset($token['created'])) {
+...     $expiresAt = $token['created'] + $token['expires_in'];
+...     echo "Expira en: " . date('Y-m-d H:i:s', $expiresAt);
+...     echo "\nTiempo restante: " . ($expiresAt - time()) . " segundos";
+... }
+exit
