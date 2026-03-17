@@ -1,0 +1,62 @@
+<div class="dashboard-layout">
+
+  <app-sidebar
+    [menuItems]="menuItems"
+    [role]="userRole"
+    [userName]="userName"
+    [userAvatar]="userAvatar"
+    [collapsed]="collapsed"
+    (collapsedChange)="onCollapsedChange($event)"
+  ></app-sidebar>
+
+  <main class="dashboard-content" [class.sidebar-collapsed] ="collapsed">
+    <div class="main-content">
+      <ng-container *ngIf="headerContent; else defaultHeader">
+        <ng-container *ngTemplateOutlet="headerContent"></ng-container>
+      </ng-container>
+
+      <ng-template #defaultHeader>
+        <app-dashboard-header
+          [title]="title"
+          [icon]="icon"
+          [iconSize]="iconSize"
+          [welcomeMessage]="welcomeMessage"
+          [date]="fechaActual"
+          [showAlertBadge]="showAlertBadge"
+          [alertCount]="alertCount">
+          <ng-container actions *ngIf="headerActions">
+            <ng-container *ngTemplateOutlet="headerActions"></ng-container>
+          </ng-container>
+
+          <ng-container *ngIf="headerBottom">
+            <ng-container *ngTemplateOutlet="headerBottom"></ng-container>
+          </ng-container>
+        </app-dashboard-header>
+      </ng-template>
+
+
+      <div *ngIf="isLoading" class="loading-container">
+        <app-spinner [loading]="true" size="xl" color="primary"></app-spinner>
+        <p> {{ loadingMessage }}...</p>
+      </div>
+
+      <div *ngIf="state === 'error'" class="error-container">
+        <span class="material-icons">error_outline</span>
+        <p>Error al cargar los datos. Intenta de nuevo.</p>
+        <app-button (click)="onRetry()">Reintentar</app-button>
+      </div>
+      <div *ngIf="state === 'success'" class="content-wrapper">
+        <ng-content></ng-content>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<app-role-selector
+  [show]="showRoleSelector"
+  [roles]="userRoles"
+  [userName]="userName"
+  (roleSelected)="onRoleSelected($event)"
+  (close)="onSelectorClose()">
+</app-role-selector>

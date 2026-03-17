@@ -1,0 +1,238 @@
+.profile {
+  padding: 1.5rem;
+
+  // Tablet (768px y menor)
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+
+  // Móvil (480px y menor)
+  @media (max-width: 480px) {
+    padding: 0.75rem;
+  }
+
+  // Móvil muy pequeño (360px y menor)
+  @media (max-width: 360px) {
+    padding: 0.5rem;
+  }
+
+  .loading-container, .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    background: var(--card-bg-primary);
+    border-radius: 1.5rem;
+    border: 1px solid var(--card-border-default);
+    padding: 2rem;
+    text-align: center;
+
+    @media (max-width: 768px) {
+      min-height: 300px;
+      padding: 1.5rem;
+      border-radius: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      min-height: 250px;
+      padding: 1.25rem;
+    }
+
+    p {
+      margin: 1rem 0 1.5rem;
+      color: var(--card-text-tertiary);
+
+      @media (max-width: 480px) {
+        font-size: 0.9rem;
+        margin: 0.75rem 0 1rem;
+      }
+    }
+
+    .material-icons {
+      font-size: 3rem;
+      color: var(--card-text-tertiary);
+
+      @media (max-width: 480px) {
+        font-size: 2.5rem;
+      }
+    }
+  }
+
+  .profile-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+.profile-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    gap: 0.75rem;
+  }
+}
+
+.profile-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+
+  .badge {
+    padding: 0.35rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: var(--card-stat-bg);
+    color: var(--card-text-secondary);
+    white-space: nowrap;
+
+    &.active {
+      background: var(--color-info);
+      font-weight: 600;
+      color: var(--color-white);
+    }
+
+    @media (max-width: 480px) {
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+    }
+  }
+
+  .badge-button {
+    padding: 0;
+
+    ::ng-deep button {
+      padding: 0.35rem !important;
+      border-radius: 2rem !important;
+
+      .material-icons {
+        font-size: 1.2rem;
+        margin: 0 !important;
+      }
+
+      @media (max-width: 480px) {
+        padding: 0.25rem !important;
+
+        .material-icons {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+}
+
+.profile-actions-header {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .icon-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--card-stat-bg);
+    color: var(--card-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--card-accent-primary);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .material-icons {
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 480px) {
+      width: 36px;
+      height: 36px;
+
+      .material-icons {
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+  // Grid de 2 columnas
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+
+    // Desktop pequeño / Tablet grande
+    @media (max-width: 1024px) {
+      gap: 1.25rem;
+    }
+
+    // Tablet
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    // Móvil
+    @media (max-width: 480px) {
+      gap: 0.875rem;
+    }
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .profile {
+    .profile-header-content {
+      flex-direction: row;
+      text-align: left;
+
+      .profile-badges {
+        justify-content: flex-start;
+      }
+    }
+
+    .profile-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}
+
+@media (min-width: 2000px) {
+  .profile {
+    .profile-content {
+      max-width: 1800px;
+    }
+
+    .profile-header-content {
+      padding: 2.5rem;
+
+      h1 {
+        font-size: 2.5rem;
+      }
+    }
+  }
+}

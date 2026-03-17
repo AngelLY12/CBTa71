@@ -1,0 +1,360 @@
+.dashboard {
+
+  padding: 1rem;
+
+  .loading-container,
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 400px;
+
+    background: var(--card-bg-primary);
+    border-radius: 1rem;
+    border: 1px solid var(--card-border-default);
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+
+
+  .secondary-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+}
+
+
+@media (max-width: 1024px) {
+
+  .dashboard {
+
+    padding: 0.9rem;
+
+    .kpi-grid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .info-grid {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .dashboard {
+
+    padding: 0.75rem;
+
+    .kpi-grid,
+    .charts-grid,
+    .info-grid,
+    .secondary-kpi-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+  }
+
+}
+
+.chart-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--card-text-secondary);
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+
+      &.active { background: var(--card-accent-success); }
+      &.inactive { background: var(--card-accent-warning); }
+      &.danger { background: var(--card-accent-danger);}
+    }
+  }
+}
+
+.role-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  .role-stat-item {
+    text-align: center;
+    padding: 0.5rem;
+    background: var(--card-stat-bg);
+    border-radius: 0.5rem;
+
+    .role-name {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--card-text-tertiary);
+      margin-bottom: 0.25rem;
+    }
+
+    .role-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--card-accent-primary);
+    }
+  }
+}
+
+.chart-period {
+  display: flex;
+  gap: 0.5rem;
+
+  .period {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: var(--card-text-tertiary);
+
+    &.active {
+      background: var(--card-accent-primary);
+      color: white;
+    }
+  }
+}
+
+.kpi-breakdown {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  .badge {
+    padding: 0.2rem 0.5rem;
+    border-radius: 1rem;
+    background: var(--card-bg-tertiary);
+
+    &.warning { color: var(--card-accent-warning); }
+  }
+}
+
+.role-mini-stats {
+  margin-top: 0.5rem;
+
+  .role-mini-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+
+    .role-mini-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+
+      &.admin { background: var(--card-accent-primary); }
+      &.student { background: var(--card-accent-success); }
+      &.teacher { background: var(--card-accent-warning); }
+    }
+  }
+}
+
+.academic-mini-stats {
+  margin-top: 0.5rem;
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    .value.warning {
+      color: var(--card-accent-warning);
+      font-weight: 600;
+    }
+  }
+}
+
+.dashboard-section {
+  margin-bottom: 2.5rem;
+
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--card-text-primary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--card-border-light);
+  }
+}
+
+.role-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+
+  .role-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 420px) {
+
+  .role-stats {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+.role-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  .role-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background: var(--card-stat-bg);
+    border-radius: 0.5rem;
+
+    .role-summary-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .role-summary-name {
+      flex: 1;
+      font-size: 0.9rem;
+      color: var(--card-text-secondary);
+    }
+
+    .role-summary-value {
+      font-weight: 600;
+      color: var(--card-accent-primary);
+    }
+  }
+}
+
+.activity-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+
+  .activity-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 900px) {
+
+  .activity-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+.academic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.academic-details {
+  .detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--card-border-light);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      color: var(--card-text-tertiary);
+    }
+
+    .detail-value {
+      font-weight: 600;
+      &.warning { color: var(--card-accent-warning); }
+    }
+  }
+}
+
+.alerts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.section-divider {
+  margin: 1.5rem 0;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--card-border-default);
+  }
+
+  .section-title {
+    position: relative;
+    display: inline-block;
+    padding: 0 1rem;
+    margin-left: 1rem;
+    background: var(--card-bg-primary);
+    color: var(--card-text-primary);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    font-weight: 600;
+    z-index: 1;
+  }
+}
+
+.individual-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}

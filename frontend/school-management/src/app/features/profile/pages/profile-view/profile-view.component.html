@@ -1,0 +1,192 @@
+<div class="profile">
+  <app-dashboard-header
+    [title]="currentName || 'Usuario'"
+    icon="account_circle"
+    [date]="fechaActual"
+    [showAlertBadge]="false"
+    iconSize="lg">
+
+    <div class="profile-header-content">
+      <div class="profile-badges">
+        <span class="badge" [class.active]="profile?.status === 'activo'">
+          {{ profile?.status?.toUpperCase() }}
+        </span>
+        <span class="badge" *ngIf="profile?.emailVerifiedAt">
+          Email verificado
+        </span>
+        <app-button
+          *ngIf="!profile?.emailVerifiedAt"
+          class="badge-button"
+          variant="danger"
+          iconLeft="warning"
+          [loading]="isLoading"
+          >
+          Verifica tu correo
+        </app-button>
+      </div>
+
+      <div class="profile-actions-header">
+        <button class="icon-button" (click)="editProfile()" matTooltip="Editar perfil">
+          <span class="material-icons">edit</span>
+        </button>
+        <button class="icon-button" (click)="changePassword()" matTooltip="Cambiar contraseña">
+          <span class="material-icons">lock</span>
+        </button>
+      </div>
+    </div>
+
+  </app-dashboard-header>
+
+
+  <div *ngIf="isLoading" class="loading-container">
+    <app-spinner [loading]="true" size="xl" color="primary"></app-spinner>
+    <p>Cargando perfil...</p>
+  </div>
+
+  <div *ngIf="error" class="error-container">
+    <span class="material-icons">error_outline</span>
+    <p>Error al cargar los datos. Intenta de nuevo.</p>
+    <app-button (click)="loadProfile()">Reintentar</app-button>
+  </div>
+
+  <div *ngIf="profile && !isLoading" class="profile-content">
+
+    <div class="profile-grid">
+
+      <div class="profile-left-column">
+       <app-info-card icon="contact_mail" title="Contacto">
+        <app-info-card-item
+        icon="contact_mail"
+        title="Contacto"
+        label="Correo electronico"
+        [value]="profile.email"
+        >
+
+        </app-info-card-item>
+
+       </app-info-card>
+        <div class="info-card">
+          <div class="card-header">
+            <span class="material-icons">contact_mail</span>
+            <h3>Contacto</h3>
+          </div>
+          <div class="card-content">
+            <div class="contact-item">
+              <span class="contact-icon material-icons">email</span>
+              <div class="contact-info">
+                <span class="contact-label">Correo electrónico</span>
+                <span class="contact-value">{{ profile.email }}</span>
+              </div>
+              <span class="verification-badge" *ngIf="profile.emailVerifiedAt">
+                <span class="material-icons">check_circle</span>
+              </span>
+            </div>
+
+            <div class="contact-item">
+              <span class="contact-icon material-icons">phone</span>
+              <div class="contact-info">
+                <span class="contact-label">Teléfono</span>
+                <span class="contact-value">{{ profile.phone_number || 'No registrado' }}</span>
+              </div>
+            </div>
+
+            <div class="contact-item" *ngIf="profile.birthdate">
+              <span class="contact-icon material-icons">cake</span>
+              <div class="contact-info">
+                <span class="contact-label">Fecha de nacimiento</span>
+                <span class="contact-value">{{ profile.birthdate | date:'dd MMMM yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta de información personal adicional -->
+        <div class="info-card">
+          <div class="card-header">
+            <span class="material-icons">badge</span>
+            <h3>Información personal</h3>
+          </div>
+          <div class="card-content">
+            <div class="detail-grid">
+              <div class="detail-item" *ngIf="profile.curp">
+                <span class="detail-label">CURP</span>
+                <span class="detail-value">{{ profile.curp }}</span>
+              </div>
+              <div class="detail-item" *ngIf="profile.gender">
+                <span class="detail-label">Género</span>
+                <span class="detail-value">{{ profile.gender }}</span>
+              </div>
+              <div class="detail-item" *ngIf="profile.blood_type">
+                <span class="detail-label">Tipo de sangre</span>
+                <span class="detail-value">{{ profile.blood_type }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- Fin columna izquierda -->
+
+      <!-- Columna derecha -->
+      <div class="profile-right-column">
+
+        <!-- Tarjeta de direcciones -->
+        <div class="info-card" *ngIf="profile.address && profile.address.length > 0">
+          <div class="card-header">
+            <span class="material-icons">home</span>
+            <h3>Direcciones</h3>
+          </div>
+          <div class="card-content">
+            <div class="address-list">
+              <div class="address-card" *ngFor="let address of profile.address; let i = index">
+                <div class="address-header">
+                  <span class="material-icons">location_on</span>
+                  <span class="address-title">Dirección {{ i + 1 }}</span>
+                </div>
+                <p class="address-text">{{ address }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta de actividad -->
+        <div class="info-card">
+          <div class="card-header">
+            <span class="material-icons">history</span>
+            <h3>Actividad</h3>
+          </div>
+          <div class="card-content">
+            <div class="activity-item">
+              <span class="activity-icon material-icons">event</span>
+              <div class="activity-info">
+                <span class="activity-label">Fecha de registro</span>
+                <span class="activity-value">{{ profile.registration_date | date:'dd MMMM yyyy' }}</span>
+              </div>
+            </div>
+            <div class="activity-item" *ngIf="profile.emailVerifiedAt">
+              <span class="activity-icon material-icons">verified</span>
+              <div class="activity-info">
+                <span class="activity-label">Verificado el</span>
+                <span class="activity-value">{{ profile.emailVerifiedAt | date:'dd MMMM yyyy' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta de Stripe (si existe) -->
+        <div class="info-card" *ngIf="profile.stripe_customer_id">
+          <div class="card-header">
+            <span class="material-icons">payment</span>
+            <h3>Información de pago</h3>
+          </div>
+          <div class="card-content">
+            <div class="stripe-info">
+              <span class="stripe-label">ID de cliente Stripe:</span>
+              <code class="stripe-id">{{ profile.stripe_customer_id }}</code>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

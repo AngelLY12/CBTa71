@@ -1,0 +1,25 @@
+<div class="select-container">
+  <label *ngIf="label">{{ label }}</label>
+
+  <div class="select-wrapper">
+    <select
+      [value]="value"
+      (change)="handleChange($event)"
+      [disabled]="disabled"
+    >
+      <option [ngValue]="null" disabled>
+          {{ placeholder }}
+      </option>
+
+      <option
+        *ngFor="let option of options"
+        [ngValue]="option.value">
+        {{ option.label }}
+      </option>
+    </select>
+
+    <span *ngIf="iconRight" class="material-icons icon">
+      {{ iconRight }}
+    </span>
+  </div>
+</div>

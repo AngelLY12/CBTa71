@@ -1,0 +1,54 @@
+<div class="avatar-container" (click)="toggleMenu()">
+  <div class="user" *ngIf="!collapsed" [class.menu-open]="isMenuOpen">
+    <div class="avatar">
+      <ng-container *ngIf="userAvatar; else initials">
+        <img [src]="userAvatar" [alt]="userName">
+      </ng-container>
+      <ng-template #initials>
+        {{ userName ? userName.charAt(0) : '?' }}
+      </ng-template>
+    </div>
+
+    <div class="user-info" *ngIf="showUserInfo">
+      <div class="name">{{ userName || 'Usuario' }}</div>
+      <div class="role">{{ role || 'Sin rol' }}</div>
+    </div>
+
+    <span class="material-icons arrow">
+      {{ isMenuOpen ? 'expand_less' : 'expand_more' }}
+    </span>
+  </div>
+
+  <div class="avatar-collapsed" *ngIf="collapsed" [attr.data-tooltip]="userName">
+    {{ userName ? userName.charAt(0) : '?' }}
+    </div>
+    <div class="user-menu" *ngIf="isMenuOpen" (click)="$event.stopPropagation()">
+      <div class="menu-item" (click)="onProfileClick()">
+        <span class="material-icons">person</span>
+        <span>Mi Perfil</span>
+      </div>
+      <div class="menu-item theme-item">
+        <app-theme-button
+          [fullWidth]="true"
+          [iconOnly]="false"
+          class="theme-button-in-menu"
+          textButton="Cambiar tema"
+          >
+        </app-theme-button>
+      </div>
+      <div class="divider"></div>
+      <div class="menu-item logout-item" (click)="logout()">
+        <span class="material-icons">logout</span>
+        <ng-container *ngIf="!isLoading; else spinnerTemplate">
+          <span>Cerrar sesión</span>
+        </ng-container>
+
+        <ng-template #spinnerTemplate>
+          <app-spinner [loading]="true" size="sm"></app-spinner>
+        </ng-template>
+      </div>
+  </div>
+</div>
+
+<div class="menu-overlay" *ngIf="isMenuOpen" (click)="closeMenu()"></div>
+

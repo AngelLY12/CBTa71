@@ -1,0 +1,11 @@
+<app-button
+    [variant]="variant"
+    [iconOnly]="iconOnly"
+    [size]="size"
+    [fullWidth]="fullWidth"
+    [iconLeft]="(theme$ | async) === 'light' ? 'dark_mode' : 'light_mode'"
+    type="button"
+    (click)="toggleTheme()"
+    >
+    {{ fullWidth === true && textButton !== '' ? textButton : '' }}
+</app-button>
