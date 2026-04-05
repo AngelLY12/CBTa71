@@ -2,7 +2,7 @@ import React from 'react'
 import CardInfoMovil from './CardInfoMovil'
 import Modal from './Modal'
 
-function Table({ Heads = [], textModal = "¿Estas seguro de eliminar este elemento?", values = [], dates = [], datesCard = ["correo", "status"], showModalDelete, indexDelete, deleteAprob, deleteValue, clickEdit, closeModalDelete, showDelete, svgDeleteButton = [], svgAcceptButton = [], id = "id" }) {
+function Table({ Heads = [], textModal = "¿Estas seguro de eliminar este elemento?", values = [], dates = [], datesCard = ["roles", "status"], showModalDelete, indexDelete, deleteAprob, deleteValue, clickEdit, clickCard, closeModalDelete, showDelete, svgDeleteButton = [], svgAcceptButton = [], id = "id" }) {
     return (
         <div className='w-full mt-6 overflow-auto'>
             {
@@ -13,7 +13,7 @@ function Table({ Heads = [], textModal = "¿Estas seguro de eliminar este elemen
                             <thead>
                                 <tr>
                                     {Heads.map((head, i) => (
-                                        <th key={i} className={head.className ? head.className : ""}>{head}</th>
+                                        <th key={i}>{head}</th>
                                     ))}
                                 </tr>
                             </thead>
@@ -23,11 +23,26 @@ function Table({ Heads = [], textModal = "¿Estas seguro de eliminar este elemen
                                         {dates.length > 0
                                             ?
                                             dates.map((date, i) => (
-                                                <td key={i}>{option[date]}</td>
+                                                <td key={i}>
+                                                    {!date.includes(".") ?
+                                                        Array.isArray(option[date])
+                                                            ? option[date].join(', ')   // aquí se separan con comas
+                                                            : option[date]
+                                                        :
+                                                        date
+                                                            .split(".") // separa la cadena en partes
+                                                            .reduce((acc, key) => acc?.[key], option) // navega dentro del objeto
+                                                    }
+                                                </td>
                                             ))
                                             :
                                             Object.values(option).map((value, i) => (
-                                                <td key={i}>{value}</td>
+                                                <td key={i}>
+                                                    {Array.isArray(value)
+                                                        ? value.join(', ')   // aquí se separan con comas
+                                                        : value
+                                                    }
+                                                </td>
                                             ))
                                         }
                                         <td className='flex items-end justify-center'>
@@ -75,7 +90,7 @@ function Table({ Heads = [], textModal = "¿Estas seguro de eliminar este elemen
                         <div className='flex flex-col visible md:hidden'>
                             {
                                 values.map((option) => (
-                                    <CardInfoMovil info={[datesCard[0], datesCard[1]]} key={option[id]} item={option} index={option[id]} onClickDelete={showModalDelete} indexDelete={indexDelete} deleteAprob={deleteAprob} />
+                                    <CardInfoMovil info={[datesCard[0], datesCard[1], datesCard[2]]} key={option[id]} item={option} index={option[id]} onClickCard={() => clickCard(option)} onClickEdit={() => clickEdit(option)} onClickDelete={showModalDelete} indexDelete={indexDelete} deleteAprob={deleteAprob} />
                                 ))
                             }
                         </div>

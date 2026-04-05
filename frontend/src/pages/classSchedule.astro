@@ -1,28 +1,11 @@
 ---
 import DivWithNavbar from "../components/DivWithNavbar.astro";
-import { routes } from "../data/routes";
 import Layout from "../layouts/Layout.astro";
-import StaffClassShedule from "../view/clasShedule/staff/StaffClassShedule.jsx";
-import StudentClassShedule from "../view/clasShedule/student/StudentClassShedule";
-
-const linksSubNavbar = [
-    { tab: "", value: "Alumnos" },
-    { tab: "classShedule-teacher", value: "Maestros" },
-];
+import ContentClassShedule from "../view/clasShedule/ClassSheduleContent.jsx";
 ---
 
 <Layout title="Horario">
     <DivWithNavbar title="Horario">
-        <div class="alumno hidden">
-            <StudentClassShedule client:load />
-        </div>
-
-        <div class="personal hidden">
-            <StaffClassShedule
-                opcionTab={linksSubNavbar}
-                routePrimary={routes.classSchedule.url}
-                client:load
-            />
-        </div>
+        <ContentClassShedule client:only />
     </DivWithNavbar>
 </Layout>

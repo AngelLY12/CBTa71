@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 
-function CardInfoMovil({ item, index, indexDelete, deleteAprob, onClickDelete, onClickEdit, info = [], cardClick = false, onClickCard, deleteItem = true }) {
+function CardInfoMovil({ item, index, indexDelete, deleteAprob, onClickDelete, onClickEdit, info = [], cardClick = false, onClickCard, deleteItem = true, textFuction = [] }) {
     const [showOption, setShowOption] = useState(false);
-    const nameComplete = `${item.nombre ?? item.name} ${item.apellidos ?? item.lastName}`
+    const nameComplete = `${item?.nombre ?? item?.name ?? ""} ${item?.apellidos ?? item?.last_name ?? ""}`
 
     const openOption = (e) => {
         e.stopPropagation();
@@ -37,21 +37,21 @@ function CardInfoMovil({ item, index, indexDelete, deleteAprob, onClickDelete, o
         <div className={`w-full bg-white border-b-[1px] border-green-200 text-sm relative transition-opacity duration-300 ease-out ${(index === indexDelete && deleteAprob) && 'opacity-0'}`}>
             <div onClick={clickCard} className={`flex items-center justify-between px-0.5 pt-1 ${cardClick && "hover:bg-gray-500/20 active:bg-gray-500/20"}`}>
                 <div className='flex flex-col w-5/12'>
-                    <p className='max-w-full overflow-hidden font-semibold'>{nameComplete.length >= 10 ? `${nameComplete.slice(0, 14)}` + "..." : `${item.nombre} ${item.apellidos}`}</p>
-                    <p>{info.length > 0 ? item[info[0]] : item.rol}</p>
+                    <p className='max-w-full overflow-hidden font-semibold'>{nameComplete.length >= 10 ? `${nameComplete.slice(0, 14)}` + "..." : `${item.name ?? !info[0].includes(".") ? item[info[0]] : info[0].split(".").reduce((acc, key) => acc?.[key], item)}`}</p>
+                    <p>{info.length > 0 ? !info[1].includes(".") ? item[info[1]] : info[1].split(".").reduce((acc, key) => acc?.[key], item) : item.roles}</p>
                 </div>
                 {
-                    (!item.estatus)
+                    (info[2])
                         ?
-                        <div className={`w-4/12 font-semibold `}>
+                        <div className={`w-4/12 font-semibold`}>
                             {
-                                item[info[1]]
+                                !info[2].includes(".") ? item[info[2]] : info[2].split(".").reduce((acc, key) => acc?.[key], item)
                             }
                         </div>
                         :
-                        <div className={`w-4/12 font-semibold ${(item.estatus == "Activo" || item.estatus == "Aprobado") ? "text-green-500" : "text-red-500"}`}>
+                        <div className={`w-4/12 font-semibold ${(item.status == "activo" || "active" || "aprobado") ? "text-green-500" : "text-red-500"}`}>
                             {
-                                item.estatus
+                                item.status
                             }
                         </div>
                 }
@@ -68,11 +68,11 @@ function CardInfoMovil({ item, index, indexDelete, deleteAprob, onClickDelete, o
                 <div className='flex items-end z-50 fixed inset-0'>
                     <div className='bg-white w-full h-auto pb-12 px-2 pt-2 z-50'>
                         <button onClick={editClick} className='flex w-full h-9 justify-center items-center active:bg-gray-300/50'>
-                            Editar
+                            {textFuction[0] ?? "Editar"}
                         </button>
                         {deleteItem &&
                             <button onClick={deleteClick} className='flex w-full h-9 justify-center items-center active:bg-gray-300/50'>
-                                Eliminar
+                                {textFuction[1] ?? "Eliminar"}
                             </button>
                         }
                     </div>

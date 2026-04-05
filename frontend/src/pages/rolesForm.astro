@@ -1,0 +1,17 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import { routes } from "../data/routes";
+import Layout from "../layouts/Layout.astro";
+import ContentAddRole from "../view/roles/ContentAddRole";
+
+// Astro te da acceso a la URL completa
+const url = new URL(Astro.request.url);
+const id = Astro.url.searchParams.get("id");
+const mode = id ? "Editar" : "Agregar";
+---
+
+<Layout title="Formulario personal">
+    <DivWithNavbar title={mode} routesMiddle={[routes.roles]}>
+        <ContentAddRole client:load />
+    </DivWithNavbar>
+</Layout>

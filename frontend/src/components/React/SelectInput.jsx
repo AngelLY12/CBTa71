@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ButtonPrimary from './ButtonPrimary';
 
-function SelectInput({ className, notSelectDefault = false, options = [], setOption = null, setValue, titleEnter = true, title = "Buscar por", titleMovil, children, topTitle = false, filtre = true, upperCase = false, widthText }) {
+function SelectInput({ valueOption = "", className = "", classNameMovil = "", notSelectDefault = false, options = [], setOption = null, setValue, titleEnter = true, title = "Buscar por", titleMovil, children, topTitle = false, filtre = true, upperCase = false, widthText }) {
     const [opentOption, setOpenOptions] = useState(false)
     const [openMovilSelect, setOpenMovilSelect] = useState(false);
     const [indexSelect, setIndexSelect] = useState(!notSelectDefault ? 0 : -1)
-    const [valueSelect, setValueSelect] = useState(!notSelectDefault ? options[0] : "")
+    const [valueSelect, setValueSelect] = useState(!notSelectDefault ? (valueOption ? options[0][valueOption] : options[0]) : "")
     const [isMovil, setIsMovil] = useState(false);
     const wrapperRef = useRef(null);
     const buttonRef = useRef(null)
@@ -32,10 +32,10 @@ function SelectInput({ className, notSelectDefault = false, options = [], setOpt
 
     const optionClick = (i) => {
         const value = options[i]
-        setValue(value)
-        setValueSelect(value)
-        setIndexSelect(i)
-        closeOption()
+        setValue(value);
+        setValueSelect(valueOption ? value[valueOption] : value);
+        setIndexSelect(i);
+        closeOption();
     }
 
     function handleClickOutside(e) {
@@ -97,15 +97,16 @@ function SelectInput({ className, notSelectDefault = false, options = [], setOpt
     }, [])
 
     useEffect(() => {
-        if (!filtre) return;
-        if (indexSelect != -1) {
-            setOption()
+        if (setOption != null) {
+            if (indexSelect != -1) {
+                setOption()
+            }
         }
     }, [valueSelect])
 
     return (
         <>
-            <div className="md:hidden h-auto visible block">
+            <div className={`md:hidden h-auto visible block ${classNameMovil}`}>
                 {!filtre
                     &&
                     <p onClick={focusButton} className='font-semibold text-sm'>{title}</p>
@@ -113,7 +114,7 @@ function SelectInput({ className, notSelectDefault = false, options = [], setOpt
                 <ButtonPrimary className={`${topTitle && "w-full justify-center"}`} title={!filtre ? "" : title} onClick={showOptionMovil}>
                     {!filtre
                         ?
-                        <p className={`max-w-32 ${upperCase && "uppercase"}`}>{`${valueSelect}`}</p>
+                        <p className={`max-w-32 ${upperCase && "uppercase"}`}>{`${valueSelect ?? "..."}`}</p>
                         :
                         children != null ? children :
                             <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="size-6 bi bi-filter" viewBox="0 0 16 16">
@@ -130,14 +131,14 @@ function SelectInput({ className, notSelectDefault = false, options = [], setOpt
             }
 
             <div ref={wrapperRef} className={`md:relative ${className} ${openMovilSelect && isMovil ? "flex flex-col pt-2 active overflow-hidden fixed bottom-0 inset-x-0 h-1/2 bg-white z-50" : "relative bg-transparent hidden md:block md:visible"}`}>
-                <div className={`flex w-full md:h-full items-center gap-3 ${topTitle && "flex-col items-stretch"}`}>
+                <div className={`flex w-full md:h-full items-center gap-x-3 ${topTitle && "flex-col items-stretch"}`}>
                     {!titleEnter &&
                         <p onClick={focusButton} className='lg:text-lg font-semibold hidden md:block md:visible'>{title}</p>
                     }
                     <div className={`flex-grow w-full h-full md:visible md:block hidden`}>
                         <button ref={buttonRef} className="flex h-full w-full cursor-pointer hover:bg-green-100/60 outline-0 group" onClick={showOption}>
                             <div className='flex h-full w-full items-center px-2 border-[1px] rounded-s group-focus:border-[0.1rem] overflow-hidden'>
-                                <p className={`text-start w-full whitespace-nowrap overflow-hidden overflow-ellipsis text-sm xl:text-lg ${widthText}`}>{titleEnter && title + ": "}<span className={`${upperCase && "uppercase"}`}>{valueSelect ? valueSelect : titleMovil}</span></p>
+                                <p className={`text-start w-full whitespace-nowrap overflow-hidden overflow-ellipsis text-sm xl:text-lg ${widthText}`}>{titleEnter && title + ": "}<span className={`${upperCase && "uppercase"}`}>{valueSelect ? valueSelect : titleMovil ?? "..."}</span></p>
                             </div>
                             <div className='flex h-full w-12 justify-center items-center -ml-[1px] border-[1px] rounded-e group-focus:border-[0.1rem]'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
@@ -160,10 +161,10 @@ function SelectInput({ className, notSelectDefault = false, options = [], setOpt
                     (opentOption || openMovilSelect) &&
                     <div className='md:right-0 md:absolute md:max-h-40 md:min-w-full p-2 bg-white md:shadow-lg overflow-y-auto z-10'>
                         {options.map((option, i) => (
-                            <button value={option} onClick={() => optionClick(i)} className={`flex p-2 rounded-lg w-full items-center gap-1 active:bg-neutral-600/15 hover:bg-neutral-600/15 ${indexSelect == i && "bg-neutral-600/15 font-bold"}`} key={i}>
+                            <button value={valueOption ? option[valueOption] : option} onClick={() => optionClick(i)} className={`flex p-2 rounded-lg w-full items-center gap-1 active:bg-neutral-600/15 hover:bg-neutral-600/15 ${indexSelect == i && "bg-neutral-600/15 font-bold"}`} key={i}>
                                 <div className={`visible block md:hidden w-5 h-5 rounded-full border-2 ${indexSelect == i ? "bg-green-500 border-green-500" : "border-neutral-950"}`}>
                                 </div>
-                                <p className={`text-start md:w-full ${indexSelect == i && "text-green-600 md:text-black"} ${upperCase && "uppercase"}`}>{option}</p>
+                                <p className={`text-start md:w-full ${indexSelect == i && "text-green-600 md:text-black"} ${upperCase && "uppercase"}`}>{valueOption ? option[valueOption] : option}</p>
                             </button>
                         ))}
                     </div>

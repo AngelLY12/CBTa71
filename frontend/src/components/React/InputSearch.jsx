@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import ButtonPrimary from './ButtonPrimary';
 
-function InputSearch({ className, value, setValue, title = "Buscar", options = [], getOptions, valueSearch }) {
+function InputSearch({ className, value, setValue, title = "Buscar", options = [], getOptions, valueSearch, type = "text", clickOption = null }) {
     const [openOption, setOpenOption] = useState(false);
     const [openMovilSearch, setOpenMovilSearch] = useState(false);
     const [isMovil, setIsMovil] = useState(false);
@@ -26,6 +26,9 @@ function InputSearch({ className, value, setValue, title = "Buscar", options = [
 
     const selectOption = (value) => {
         setValue(value)
+        if (clickOption) {
+            clickOption();
+        }
         closeOption()
     }
 
@@ -88,9 +91,7 @@ function InputSearch({ className, value, setValue, title = "Buscar", options = [
     }, [closeOption]);
 
     useEffect(() => {
-        if (value != "") {
-            getOptions()
-        }
+        getOptions()
     }, [value]);
 
     return (
@@ -117,7 +118,7 @@ function InputSearch({ className, value, setValue, title = "Buscar", options = [
                         <div className="w-full h-full relative">
                             <input
                                 id={"searh-" + title}
-                                type="text"
+                                type={type}
                                 className="bg-white w-full h-full md:rounded-md py-2 px-8 outline-2 outline-gray-400 rounded-xl md:outline-1 md:outline-gray-600 md:focus:outline-indigo-600"
                                 value={value}
                                 ref={inputRef}

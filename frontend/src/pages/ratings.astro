@@ -1,28 +1,11 @@
 ---
 import DivWithNavbar from "../components/DivWithNavbar.astro";
-import { routes } from "../data/routes";
 import Layout from "../layouts/Layout.astro";
-import StaffRating from "../view/rating/staff/StaffRating";
-import StudentRating from "../view/rating/student/StudentRating.astro";
-
-const linksSubNavbar = [
-    { tab: "", value: "Buscar" },
-    { tab: "rating-capture", value: "Capturar" },
-];
+import ContentRating from "../view/rating/ContentRating";
 ---
 
 <Layout title="Calificaciones">
     <DivWithNavbar title="Calificaciones">
-        <div class="personal hidden">
-            <StaffRating
-                opcionTab={linksSubNavbar}
-                routePrimary={routes.ratings.url}
-                client:load
-            />
-        </div>
-
-        <div class="alumno hidden">
-            <StudentRating />
-        </div>
+        <ContentRating client:only />
     </DivWithNavbar>
 </Layout>

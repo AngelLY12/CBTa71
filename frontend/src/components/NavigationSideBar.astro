@@ -1,6 +1,6 @@
 ---
 import LinksNavbar from "./LinkNavbar.astro";
-import { routeForRole } from "../data/routes";
+import { routeForRole, routes } from "../data/routes";
 
 interface Props {
     isMovil?: boolean;
@@ -63,108 +63,120 @@ const { isMovil = false } = Astro.props;
         }
 
         <!-- Inicio -->
+        <div>
+            <div class="staff w-full h-auto hidden">
+                {
+                    routeForRole.personal.map((route) => (
+                        <LinksNavbar
+                            url={route.url}
+                            title={route.name}
+                            isMovil={isMovil}
+                        >
+                            <svg
+                                slot="iconFilled"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                class="size-6"
+                                set:html={route.svg.filled}
+                            />
+                            <svg
+                                slot="iconOutline"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-6"
+                                set:html={route.svg.outline}
+                            />
+                        </LinksNavbar>
+                    ))
+                }
+            </div>
 
-        <div class="personal w-full h-full hidden">
-            {
-                routeForRole.personal.map((route) => (
-                    <LinksNavbar
-                        url={route.url}
-                        title={route.name}
-                        isMovil={isMovil}
-                    >
-                        <svg
-                            slot="iconFilled"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            class="size-6"
-                            set:html={route.svg.filled}
-                        />
-                        <svg
-                            slot="iconOutline"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                            class="size-6"
-                            set:html={route.svg.outline}
-                        />
-                    </LinksNavbar>
-                ))
-            }
-        </div>
+            <div class="aspirantes w-full h-auto hidden">
+                {
+                    routeForRole.aspirantes.map((route) => (
+                        <LinksNavbar
+                            url={route.url}
+                            title={route.name}
+                            isMovil={isMovil}
+                        >
+                            <svg
+                                slot="iconFilled"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                class="size-6"
+                                set:html={route.svg.filled}
+                            />
+                            <svg
+                                slot="iconOutline"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-6"
+                                set:html={route.svg.outline}
+                            />
+                        </LinksNavbar>
+                    ))
+                }
+            </div>
 
-        <div class="aspirantes w-full h-full hidden">
-            {
-                routeForRole.aspirantes.map((route) => (
-                    <LinksNavbar
-                        url={route.url}
-                        title={route.name}
-                        isMovil={isMovil}
-                    >
-                        <svg
-                            slot="iconFilled"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            class="size-6"
-                            set:html={route.svg.filled}
-                        />
-                        <svg
-                            slot="iconOutline"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                            class="size-6"
-                            set:html={route.svg.outline}
-                        />
-                    </LinksNavbar>
-                ))
-            }
-        </div>
+            <div class="student w-full h-auto hidden">
+                {
+                    routeForRole.student.map((route) => (
+                        <LinksNavbar
+                            url={route.url}
+                            title={route.name}
+                            isMovil={isMovil}
+                        >
+                            <svg
+                                slot="iconFilled"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                class="size-6"
+                                set:html={route.svg.filled}
+                            />
+                            <svg
+                                slot="iconOutline"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                                class="size-6"
+                                set:html={route.svg.outline}
+                            />
+                        </LinksNavbar>
+                    ))
+                }
+            </div>
 
-        <div class="alumno w-full h-full hidden">
-            {
-                routeForRole.alumno.map((route) => (
-                    <LinksNavbar
-                        url={route.url}
-                        title={route.name}
-                        isMovil={isMovil}
-                    >
-                        <svg
-                            slot="iconFilled"
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                            class="size-6"
-                            set:html={route.svg.filled}
-                        />
-                        <svg
-                            slot="iconOutline"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                            class="size-6"
-                            set:html={route.svg.outline}
-                        />
-                    </LinksNavbar>
-                ))
-            }
+            <button
+                id="logoutBtn"
+                title="Salir"
+                class={`${!isMovil ? "links-navbar" : ""} w-full cursor-pointer flex gap-2 items-center font-normal py-2 pl-2 rounded-md hover:bg-white/35 active:bg-white/35`}
+            >
+                <span set:html={routes.exit.svg.filled} />
+                <p class={`${!isMovil ? "showText" : ""}`}>Salir</p>
+            </button>
         </div>
     </nav>
     <div id="bg-navbar" class="absolute inset-0 bg-black/25 hidden -z-10"></div>
 </div>
 
 <script>
+    import { urlGlobal } from "../data/global";
+    import { getRoles, userStore } from "../data/userStore";
+
     document.addEventListener("DOMContentLoaded", () => {
         const collapsed = localStorage.getItem("navbarCollapsed") === "true";
-        const getCookie = document.cookie.split("=");
-        const role = getCookie[1].toLowerCase();
+        const role = getRoles();
 
         const button = document.getElementById(
             "toggleText",
@@ -189,17 +201,47 @@ const { isMovil = false } = Astro.props;
 
         // Busca en todo el DOM, no importa si es móvil o escritorio
         const divsRoles: Record<string, NodeListOf<HTMLDivElement>> = {
-            alumno: document.querySelectorAll(".alumno"),
+            student: document.querySelectorAll(".student"),
             aspirantes: document.querySelectorAll(".aspirantes"),
-            personal: document.querySelectorAll(".personal"),
+            staff: document.querySelectorAll(".staff"),
         };
 
-        if (role != "") {
+        if (role[0] != "") {
             // Muestra solo el que corresponde
-            divsRoles[role]?.forEach((e: HTMLDivElement) =>
+            divsRoles[role[0]]?.forEach((e: HTMLDivElement) =>
                 e.classList.remove("hidden"),
             );
         }
+
+        document.querySelectorAll("#logoutBtn")?.forEach((e) => {
+            e.addEventListener("click", () => {
+                if (userStore.user?.roles[0] != "aspirant") {
+                    logout();
+                } else {
+                    window.location.href = "/";
+                }
+            });
+        });
+
+        const logout = async (update = true) => {
+            try {
+                const res = await fetch(`${urlGlobal}/logout`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${userStore.tokens?.access_token}`,
+                        "x-refresh-token":
+                            userStore.tokens?.refresh_token ?? "",
+                    },
+                });
+            } catch (err) {
+                console.error("Error en logout:", err);
+            }
+            localStorage.clear();
+            if (update) {
+                window.location.href = "/";
+            }
+        };
 
         if (collapsed) {
             textlink.forEach((e) => e.classList.add("hidden"));
@@ -228,6 +270,20 @@ const { isMovil = false } = Astro.props;
             localStorage.setItem("navbarCollapsed", String(isNowCollapsed));
         });
 
+        document.querySelectorAll(".linksNb").forEach((link) => {
+            link.addEventListener("click", (event) => {
+                const url = link.getAttribute("href");
+                const history = JSON.parse(
+                    localStorage.getItem("recentPaths") || "[]",
+                );
+                const newHistory = [
+                    url,
+                    ...history.filter((p: string) => p !== url),
+                ].slice(0, 5);
+                localStorage.setItem("recentPaths", JSON.stringify(newHistory));
+            });
+        });
+
         bgNavbar?.addEventListener("click", hideNavbar);
 
         closeButton?.addEventListener("click", hideNavbar);
@@ -241,6 +297,9 @@ const { isMovil = false } = Astro.props;
             bgNavbar?.classList?.add("hidden");
             body.classList.remove("overflow-y-hidden");
         }
+        // Asegúrate de que window.exports exista
+        window.exports = window.exports || {};
+        window.exports.logout = logout;
     });
 </script>
 

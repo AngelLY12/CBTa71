@@ -109,15 +109,62 @@ const typeLogin = [
                             ></path>
                         </svg>
                     </div>
-                    <input
-                        class="w-full px-2 border-2 border-gray-400 rounded-sm"
-                        type="password"
-                        name="password"
-                        value=""
-                        id="password"
-                        placeholder="Contraseña"
-                        required
-                    />
+                    <div class="relative w-full flex">
+                        <input
+                            class="w-full h-full px-2 border-2 border-gray-400 rounded-sm"
+                            type="password"
+                            name="password"
+                            value=""
+                            id="password"
+                            placeholder="Contraseña"
+                            required
+                        />
+                        <div class="absolute flex items-center pr-2 right-0 inset-y-0 w-auto">
+                            <button
+                                id="togglePassword"
+                                type="button"
+                                class="cursor-pointer hover:bg-gray-300 active:bg-gray-300 rounded hidden"
+                            >
+                                <!-- Ícono ojo cerrado -->
+                                <svg
+                                    id="eyeClosed"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                    class="size-6"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"
+                                    ></path>
+                                </svg>
+                                <!-- Ícono ojo abierto -->
+                                <svg
+                                    id="eyeOpen"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                    class="size-6 hidden"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                                    ></path>
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                    ></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-1">
@@ -143,6 +190,43 @@ const typeLogin = [
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const toggleBtn = document.getElementById(
+                "togglePassword",
+            ) as HTMLButtonElement;
+            const input = document.getElementById(
+                "password",
+            ) as HTMLInputElement;
+            const eyeOpen = document.getElementById("eyeOpen") as HTMLElement;
+            const eyeClosed = document.getElementById(
+                "eyeClosed",
+            ) as HTMLElement;
+
+            input?.addEventListener("keyup", () => {
+                if (input.value == "") {
+                    toggleBtn?.classList.add("hidden");
+                    return;
+                }
+                toggleBtn?.classList.remove("hidden");
+                toggleBtn.addEventListener("click", () => {
+                    if (input.type === "password") {
+                        input.type = "text";
+                        eyeOpen.classList.remove("hidden");
+                        eyeClosed.classList.add("hidden");
+                    } else {
+                        input.type = "password";
+                        eyeClosed.classList.remove("hidden");
+                        eyeOpen.classList.add("hidden");
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        import { urlGlobal } from "../data/global";
+        import { setAuthData, userStore, setRoles } from "../data/userStore";
+
         const form = document.getElementById("loginForm") as HTMLFormElement;
         // Find all buttons with the `alert` class on the page.
         const checkRadioButtons = document.querySelectorAll("input.login-type");
@@ -155,28 +239,22 @@ const typeLogin = [
         const buttonLogin = document.getElementById(
             "loginButton",
         ) as HTMLButtonElement;
-        let selectedRole = "alumno"; // valor por defecto
-
-        // Handle clicks on each button.
-        const checSelectRadioButton = () => {
-            // Guardar cookie en el navegador
-            document.cookie = `role=${selectedRole}; path=/; SameSite=Lax`;
-            localStorage.setItem("role", selectedRole);
-        };
+        let selectedRole = "student"; // valor por defecto
 
         checkRadioButtons.forEach((checkbox) => {
             checkbox.addEventListener("change", (e) => {
                 const target = e.target as HTMLInputElement;
-                selectedRole = target.value;
-
                 switch (target.value) {
                     case "Alumno":
+                        selectedRole = "student";
                         changeNames();
                         break;
                     case "Personal":
+                        selectedRole = "staff";
                         changeNames("email", "Correo");
                         break;
                     case "Aspirantes":
+                        selectedRole = "aspirant";
                         changeNames(
                             "",
                             "Usuario (Aspirante)",
@@ -189,9 +267,13 @@ const typeLogin = [
         });
 
         form.addEventListener("submit", (e) => {
-            checSelectRadioButton();
             e.preventDefault();
-            onSubmit();
+            if (selectedRole != "aspirant") {
+                onSubmit();
+            } else {
+                setRoles([selectedRole]);
+                window.location.href = "/home";
+            }
         });
 
         function changeNames(
@@ -211,34 +293,41 @@ const typeLogin = [
         }
 
         const onSubmit = async () => {
-            // Llmar a la API con su debida ruta de auteticación de Login
-            // try {
-            //     const response = await fetch("/api/login", {
-            //         method: "POST", // o "GET" según tu API
-            //         headers: {
-            //             "Content-Type": "application/json",
-            //         },
-            //         body: JSON.stringify({
-            //             username: "tu_usuario",
-            //             password: "tu_contraseña",
-            //         }),
-            //     });
-
-            //     if (response.ok) {
-            //         // Login exitoso
-            //         window.location.href = "/home"; // o cualquier ruta que necesites
-            //     } else {
-            //         // Login fallido
-            //         const errorData = await response.json();
-            //         alert("Error de login: " + errorData.message);
-            //     }
-            // } catch (error) {
-            //     console.error("Error de red:", error);
-            //     alert("No se pudo conectar con el servidor.");
-            // }
-
-            // Ya tenemos el rol en la cookie, ahora redirigimos
-            window.location.href = "/home";
+            try {
+                const response = await fetch(`${urlGlobal}/login`, {
+                    method: "POST", // o "GET" según tu API
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email: inputUser.value,
+                        password: inputPassword.value,
+                        role: "student",
+                    }),
+                });
+                if (response.ok) {
+                    // Login exitoso
+                    const data = await response.json();
+                    setAuthData(data.data);
+                    if (userStore.user?.roles[0] === selectedRole) {
+                        window.location.href = "/home";
+                    } else {
+                        window.exports.logout(false);
+                        alert(
+                            "Error de login: " +
+                                "credenciales incorrectas, correo o contraseña incorrectos",
+                        );
+                    }
+                } else {
+                    // Login fallido
+                    alert(
+                        "Error de login: " +
+                            "credenciales incorrectas, correo o contraseña incorrectos",
+                    );
+                }
+            } catch (error) {
+                console.error("Error de red:", error);
+            }
         };
     </script>
 </div>

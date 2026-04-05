@@ -1,0 +1,17 @@
+---
+import DivWithNavbar from "../components/DivWithNavbar.astro";
+import { routes } from "../data/routes";
+import Layout from "../layouts/Layout.astro";
+import ContentMatriculeAdd from "../view/matricule/ContentMatriculeAdd";
+
+// Astro te da acceso a la URL completa
+const url = new URL(Astro.request.url);
+const id = url.searchParams.get("id");
+const mode = id ? "Editar" : "Agregar";
+---
+
+<Layout title="Formulario matriculado">
+    <DivWithNavbar title={mode} routesMiddle={[routes.matricule]}>
+        <ContentMatriculeAdd client:load />
+    </DivWithNavbar>
+</Layout>
